@@ -21,6 +21,7 @@ import {
 import { requestImageGeneration } from '@/features/image-generation/services/generate-image.client'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import {
+	type TemplateAssignedImage,
 	type TemplateBackgroundPatch,
 	type TemplateBackgroundState,
 	type TemplateImageSlotPatch,
@@ -47,6 +48,10 @@ import {
 	type TemplateRasterArtifact,
 } from '@/features/template-customization/runtime/template-runtime.client'
 import { fetchCreateNavigation } from '@/features/template-customization/services/get-create-navigation.client'
+import {
+	fetchSampleImages,
+	type SampleImageOption,
+} from '@/features/template-customization/services/list-sample-images.client'
 import { useLazyResource } from '@/hooks/use-lazy-resource'
 import {
 	acceptsControllerDraftValue,
@@ -180,6 +185,23 @@ function useTemplateImageSession(
 			),
 		[contracts, imageSlots],
 	)
+	const selectSampleImage = useCallback(
+		(slotId: string, option: SampleImageOption) =>
+			// 생성 중이던 요청 결과가 뒤늦게 덮지 않도록 error·generating도 함께 정리한다.
+			setStates((current) => ({
+				...current,
+				[slotId]: {
+					...current[slotId],
+					imageMode: current[slotId]?.imageMode ?? 'preset',
+					prompt: current[slotId]?.prompt ?? '',
+					generating: false,
+					error: null,
+					featureValues: current[slotId]?.featureValues ?? {},
+					image: toAssignedSampleImage(option),
+				},
+			})),
+		[],
+	)
 	const generate = useCallback(
 		async (slotId: string) => {
 			const state = states[slotId]
@@ -199,7 +221,8 @@ function useTemplateImageSession(
 					generated
 						? {
 								image: {
-									backgroundImage: generated.url,
+									kind: 'generated',
+									url: generated.url,
 									generatedImageId: generated.id,
 									profileId: requestProfileId,
 								},
@@ -213,8 +236,16 @@ function useTemplateImageSession(
 	)
 
 	return useMemo(
-		() => ({ states, contracts, update, updateFeature, selectProfile, generate }),
-		[contracts, generate, selectProfile, states, update, updateFeature],
+		() => ({
+			states,
+			contracts,
+			update,
+			updateFeature,
+			selectProfile,
+			selectSampleImage,
+			generate,
+		}),
+		[contracts, generate, selectProfile, selectSampleImage, states, update, updateFeature],
 	)
 }
 
@@ -320,6 +351,16 @@ function useTemplateBackgroundSession(
 			setState((current) => selectBackgroundImageProfile(current, profileId, contracts)),
 		[contracts],
 	)
+	const selectSampleImage = useCallback(
+		(option: SampleImageOption) =>
+			setState((current) => ({
+				...current,
+				generating: false,
+				error: null,
+				image: toAssignedSampleImage(option),
+			})),
+		[],
+	)
 	const selectGraphicConfig = useCallback(
 		(configId: string) =>
 			setState((current) =>
@@ -350,7 +391,14 @@ function useTemplateBackgroundSession(
 			...current,
 			generating: false,
 			...(generated
-				? { image: { url: generated.url, generatedImageId: generated.id } }
+				? {
+						image: {
+							kind: 'generated' as const,
+							url: generated.url,
+							generatedImageId: generated.id,
+							profileId: contract.config.id,
+						},
+					}
 				: { error: GENERATION_ERROR_MESSAGE }),
 		}))
 	}, [contracts, state])
@@ -367,6 +415,7 @@ function useTemplateBackgroundSession(
 			selectType,
 			updateFeature,
 			selectImageProfile,
+			selectSampleImage,
 			selectGraphicConfig,
 			updateGraphic,
 			generate,
@@ -379,6 +428,7 @@ function useTemplateBackgroundSession(
 			graphicBindings,
 			selectGraphicConfig,
 			selectImageProfile,
+			selectSampleImage,
 			selectType,
 			setColor,
 			state,
@@ -408,6 +458,8 @@ export function TemplateStudioProvider({
 }) {
 	// 교체 후보 목록은 자산 브라우저가 열릴 때 가져온다 — 페이지는 현재 카테고리 이름 하나만 싣는다.
 	const templateBrowse = useLazyResource(fetchCreateNavigation)
+	// Preset 목록도 같은 규칙이다 — 배경이든 슬롯이든 처음 여는 브라우저가 한 번만 가져온다.
+	const sampleImages = useLazyResource(fetchSampleImages)
 	const navigation = useMemo<TemplateStudioValue['navigation']>(
 		() => ({ categoryTitle, browse: templateBrowse }),
 		[categoryTitle, templateBrowse],
@@ -497,6 +549,7 @@ export function TemplateStudioProvider({
 	const value = useMemo<TemplateStudioValue>(
 		() => ({
 			navigation,
+			sampleImages,
 			config,
 			text,
 			images,
@@ -510,6 +563,7 @@ export function TemplateStudioProvider({
 			artifact,
 			background,
 			composedHtml,
+			sampleImages,
 			config,
 			controllerValues,
 			images,
@@ -797,6 +851,8 @@ function initialImageState(
 		slot.imageConfig.mode === 'pinned' ? slot.imageConfig.configId : contracts[0]?.config.id
 	return {
 		profileId,
+		// 슬롯은 생성이 먼저 있던 자리라 기존 흐름을 첫 화면으로 둔다 — Preset은 한 번 눌러 연다.
+		imageMode: 'generate',
 		prompt:
 			contracts.find((contract) => contract.config.id === profileId)?.prompt.defaultValue ??
 			'',
@@ -873,4 +929,16 @@ function resolvedPrompt(prompt: string, contract: ResolvedTemplateImageConfig) {
 
 function isBackgroundType(value: string | null): value is TemplateBackgroundType {
 	return value === 'color' || value === 'image' || value === 'graphic'
+}
+
+/** 고른 순간의 표시 정보까지 세션에 담는다 — 목록을 다시 열지 않아도 카드가 그려진다. */
+function toAssignedSampleImage(option: SampleImageOption): TemplateAssignedImage {
+	return {
+		kind: 'sample',
+		url: option.url,
+		sampleImageId: option.id,
+		name: option.name,
+		alt: option.alt,
+		thumbnailUrl: option.thumbnailUrl,
+	}
 }

@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { Controller } from '@/components/studio/shared/controller'
 import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
@@ -40,6 +41,7 @@ function Harness({
 		backgroundColor: { availability: 'disabled' },
 	},
 	initialError = null,
+	initialImage,
 	generating = false,
 	typeAvailability,
 }: {
@@ -49,6 +51,7 @@ function Harness({
 	contract?: typeof imageContract | null
 	featureBindings?: ControllerRuntimeBindings
 	initialError?: string | null
+	initialImage?: TemplateBackgroundState['image']
 	generating?: boolean
 	typeAvailability?: 'enabled' | 'readonly' | 'disabled'
 }) {
@@ -63,65 +66,84 @@ function Harness({
 		featureValues: contract ? createControllerValues(contract.config.controller.groups) : {},
 		graphicConfigId: forwardStraightRuntimeManifest.id,
 		graphicValues: createControllerValues(forwardStraightRuntimeManifest.controller.groups),
+		image: initialImage,
 	})
 	return (
-		<BackgroundSection
-			groupDefinition={{
-				id: 'background',
-				title: 'Background',
-				controls: [],
-			}}
-			typeDefinition={{
-				id: 'background.type',
-				kind: 'select',
-				label: 'Type',
-				defaultValue: allowedTypes[0] ?? 'color',
-				availability: typeAvailability,
-				options: allowedTypes.map((value) => ({
-					value,
-					label: value[0]?.toUpperCase() + value.slice(1),
-				})),
-			}}
-			colorDefinition={{
-				id: 'background.color',
-				kind: 'color',
-				label: 'Background Color',
-				defaultValue: null,
-			}}
-			imageContracts={contract ? [contract] : []}
-			featureBindings={contract ? featureBindings : {}}
-			graphicConfigs={[forwardStraightConfig]}
-			graphicBindings={{ origin: { padAspectRatio: 4 / 3 } }}
-			value={state}
-			onChange={(patch) => {
-				onChange?.(patch)
-				setState((current) => ({ ...current, ...patch }))
-			}}
-			onColorChange={(color) => {
-				if (typeof color !== 'string' && color !== null) return
-				onChange?.({ color })
-				setState((current) => ({ ...current, color }))
-			}}
-			onTypeChange={(type) =>
-				setState((current) =>
-					type === 'color' || type === 'image' || type === 'graphic'
-						? { ...current, type }
-						: current,
-				)
-			}
-			onFeatureChange={() => {}}
-			onImageProfileChange={(profileId) => setState((current) => ({ ...current, profileId }))}
-			onGraphicConfigChange={(graphicConfigId) =>
-				setState((current) => ({ ...current, graphicConfigId }))
-			}
-			onGraphicChange={(controlId, next) =>
-				setState((current) => ({
-					...current,
-					graphicValues: { ...current.graphicValues, [controlId]: next },
-				}))
-			}
-			onGenerate={onGenerate}
-		/>
+		// 살아 있는 자산 카드는 열림 상태를 킷이 소유한다 — 실제 화면과 같은 껍데기를 씌운다.
+		<Controller.Browser.Root>
+			<BackgroundSection
+				groupDefinition={{
+					id: 'background',
+					title: 'Background',
+					controls: [],
+				}}
+				typeDefinition={{
+					id: 'background.type',
+					kind: 'select',
+					label: 'Type',
+					defaultValue: allowedTypes[0] ?? 'color',
+					availability: typeAvailability,
+					options: allowedTypes.map((value) => ({
+						value,
+						label: value[0]?.toUpperCase() + value.slice(1),
+					})),
+				}}
+				colorDefinition={{
+					id: 'background.color',
+					kind: 'color',
+					label: 'Background Color',
+					defaultValue: null,
+				}}
+				imageContracts={contract ? [contract] : []}
+				featureBindings={contract ? featureBindings : {}}
+				graphicConfigs={[forwardStraightConfig]}
+				graphicBindings={{ origin: { padAspectRatio: 4 / 3 } }}
+				value={state}
+				onChange={(patch) => {
+					onChange?.(patch)
+					setState((current) => ({ ...current, ...patch }))
+				}}
+				onColorChange={(color) => {
+					if (typeof color !== 'string' && color !== null) return
+					onChange?.({ color })
+					setState((current) => ({ ...current, color }))
+				}}
+				onTypeChange={(type) =>
+					setState((current) =>
+						type === 'color' || type === 'image' || type === 'graphic'
+							? { ...current, type }
+							: current,
+					)
+				}
+				onFeatureChange={() => {}}
+				onImageProfileChange={(profileId) =>
+					setState((current) => ({ ...current, profileId }))
+				}
+				onSelectSampleImage={(option) =>
+					setState((current) => ({
+						...current,
+						image: {
+							kind: 'sample',
+							url: option.url,
+							sampleImageId: option.id,
+							name: option.name,
+							alt: option.alt,
+							thumbnailUrl: option.thumbnailUrl,
+						},
+					}))
+				}
+				onGraphicConfigChange={(graphicConfigId) =>
+					setState((current) => ({ ...current, graphicConfigId }))
+				}
+				onGraphicChange={(controlId, next) =>
+					setState((current) => ({
+						...current,
+						graphicValues: { ...current.graphicValues, [controlId]: next },
+					}))
+				}
+				onGenerate={onGenerate}
+			/>
+		</Controller.Browser.Root>
 	)
 }
 
@@ -313,15 +335,39 @@ describe('BackgroundSection', () => {
 		expect(onGenerate).toHaveBeenCalledOnce()
 	})
 
+	it('고른 샘플 이미지는 목록을 다시 열지 않아도 카드에 이름과 미리보기로 남는다', () => {
+		render(
+			<Harness
+				allowedTypes={['image']}
+				initialImage={{
+					kind: 'sample',
+					url: '/api/sample-images/file/submarine.png',
+					sampleImageId: 12,
+					name: '잠수함',
+					alt: '잠수함 사진',
+					thumbnailUrl: '/api/sample-images/file/submarine-320x240.png',
+				}}
+			/>,
+		)
+
+		// 선택 시점의 표시 정보를 세션이 들고 있어 목록 자원 없이 그려진다.
+		expect(screen.getByText('잠수함')).toBeInTheDocument()
+		// 카드 배경은 장식이라 alt가 비어 있다(AssetCard 계약) — 썸네일 URL로 확인한다.
+		expect(document.querySelector('[data-slot="controller-asset-card"] img')).toHaveAttribute(
+			'src',
+			'/api/sample-images/file/submarine-320x240.png',
+		)
+	})
+
 	it('미배선 Image 기능은 잠그고 Graphic Config는 공용 Renderer로 조작한다', async () => {
 		const user = userEvent.setup()
 		render(<Harness allowedTypes={['color', 'image', 'graphic']} />)
 
 		await selectBackgroundType(user, 'Image')
-		// Preset(브랜드 이미지 목록)과 배경 transform은 계속 잠긴다.
-		const browse = screen.getByRole('button', { name: '브랜드 이미지 선택' })
+		// Preset(샘플 이미지 목록)은 배선됐고, 배경 transform은 계속 잠긴다.
+		const browse = screen.getByRole('button', { name: '샘플 이미지 선택' })
 		expect(browse).toHaveTextContent('Browse')
-		expect(browse).toBeDisabled()
+		expect(browse).toBeEnabled()
 		expect(screen.getByRole('button', { name: 'Image Transform' })).toBeDisabled()
 		expect(screen.queryByRole('slider', { name: '이미지 위치' })).toBeNull()
 

@@ -9,7 +9,9 @@ import { FieldError } from '@/components/ui/field'
 import { acceptsImagePromptExecution } from '@/features/image-generation/domain/image-studio-config'
 import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-studio-config'
 import type { TemplateImageSlotState } from '@/features/template-customization/hooks/use-template-studio'
+import type { SampleImageOption } from '@/features/template-customization/services/list-sample-images.client'
 import type { ControllerControlValue } from '@/modules/studio-controller/controller-definition'
+import { SampleImagePicker } from './sample-image-picker'
 
 type ImageSlotInputProps = {
 	pinned: boolean
@@ -19,6 +21,9 @@ type ImageSlotInputProps = {
 	onFeatureChange: (controlId: string, value: ControllerControlValue) => void
 	onProfileChange: (profileId: number) => void
 	onPromptChange: (prompt: string) => void
+	/** Preset·Generate 전환 — 상태는 배경과 같이 Provider가 슬롯 단위로 소유한다. */
+	onImageModeChange: (mode: 'preset' | 'generate') => void
+	onSelectSampleImage: (option: SampleImageOption) => void
 	onGenerate: () => void
 }
 
@@ -34,90 +39,139 @@ export function ImageSlotInput({
 	onFeatureChange,
 	onProfileChange,
 	onPromptChange,
+	onImageModeChange,
+	onSelectSampleImage,
 	onGenerate,
 }: ImageSlotInputProps) {
 	const selected = contracts.find((contract) => contract.config.id === value.profileId)
 	const invalidPrompt = selected
 		? !acceptsImagePromptExecution(selected.prompt, value.prompt)
 		: true
+	const selectedSample = value.image?.kind === 'sample' ? value.image : undefined
+	// readonly는 전환 트리거가 없으므로 기존 화면(잠긴 생성 폼)을 그대로 본다.
+	const mode = readonly ? 'generate' : value.imageMode
 
 	return (
 		<div data-slot="image-slot-input" className="flex flex-col gap-1">
-			{pinned || readonly ? (
-				<Controller.Row label="Type" readonly>
-					<span className="flex min-w-0 items-center gap-2">
-						<span className="truncate text-sm text-muted-foreground">
-							{selected?.config.name ?? '—'}
-						</span>
-						<ChevronDown
-							aria-hidden
-							className="size-4 shrink-0 text-muted-foreground"
-						/>
-					</span>
-				</Controller.Row>
-			) : (
-				<Controller.Row label="Type">
-					<Controller.Select
-						options={contracts.map(({ config }) => ({
-							value: String(config.id),
-							label: config.name,
-						}))}
-						value={value.profileId === undefined ? undefined : String(value.profileId)}
-						onChange={(next) => onProfileChange(Number(next))}
-						placeholder="사용 가능한 프로파일 없음"
-						disabled={readonly || value.generating || contracts.length === 0}
+			{!readonly && (
+				<Controller.Row label="Image Type">
+					<Controller.Segmented
+						aria-label="슬롯 이미지 방식"
+						options={[
+							{ value: 'preset', label: 'Preset' },
+							{ value: 'generate', label: 'Generate' },
+						]}
+						value={value.imageMode}
+						onChange={onImageModeChange}
 					/>
 				</Controller.Row>
 			)}
-			{selected && (
-				<ImageProfileFeatureRenderer
-					config={selected.config}
-					values={value.featureValues}
-					bindings={
-						readonly
-							? Object.fromEntries(
-									selected.config.controller.groups.flatMap((group) =>
-										group.controls.map(({ id }) => [
-											id,
-											{ availability: 'readonly' },
-										]),
-									),
-								)
-							: undefined
-					}
-					onChange={onFeatureChange}
-				/>
-			)}
-			{selected && (
-				<>
-					<ControllerControlRenderer
-						definition={selected.ratio}
-						value={selected.ratio.defaultValue}
-						onChange={() => {}}
-					/>
-					<ControllerControlRenderer
-						definition={
-							readonly
-								? { ...selected.prompt, availability: 'readonly' }
-								: selected.prompt
+			<Controller.TabPanel tabKey={mode}>
+				{mode === 'preset' ? (
+					<Controller.AssetCard
+						title={selectedSample?.name ?? '이미지를 선택하세요'}
+						subtitle="Sample Image"
+						buttonLabel="Browse"
+						aria-label="샘플 이미지 선택"
+						tabs={['Sample Images']}
+						previewImage={
+							selectedSample && {
+								url: selectedSample.thumbnailUrl,
+								alt: selectedSample.alt,
+							}
 						}
-						value={value.prompt}
-						onChange={(next) => {
-							if (typeof next === 'string') onPromptChange(next)
-						}}
-					/>
-				</>
-			)}
-			<Button
-				type="button"
-				variant="muted"
-				className="mt-0.5 h-11 w-full text-sm font-semibold"
-				onClick={onGenerate}
-				disabled={readonly || value.generating || !selected || invalidPrompt}
-			>
-				{value.generating ? '생성 중…' : '이미지 생성'}
-			</Button>
-			{value.error && <FieldError>{value.error}</FieldError>}
+					>
+						<SampleImagePicker
+							selectedId={selectedSample?.sampleImageId}
+							onSelect={onSelectSampleImage}
+						/>
+					</Controller.AssetCard>
+				) : (
+					<>
+						{pinned || readonly ? (
+							<Controller.Row label="Type" readonly>
+								<span className="flex min-w-0 items-center gap-2">
+									<span className="truncate text-sm text-muted-foreground">
+										{selected?.config.name ?? '—'}
+									</span>
+									<ChevronDown
+										aria-hidden
+										className="size-4 shrink-0 text-muted-foreground"
+									/>
+								</span>
+							</Controller.Row>
+						) : (
+							<Controller.Row label="Type">
+								<Controller.Select
+									options={contracts.map(({ config }) => ({
+										value: String(config.id),
+										label: config.name,
+									}))}
+									value={
+										value.profileId === undefined
+											? undefined
+											: String(value.profileId)
+									}
+									onChange={(next) => onProfileChange(Number(next))}
+									placeholder="사용 가능한 프로파일 없음"
+									disabled={
+										readonly || value.generating || contracts.length === 0
+									}
+								/>
+							</Controller.Row>
+						)}
+						{selected && (
+							<ImageProfileFeatureRenderer
+								config={selected.config}
+								values={value.featureValues}
+								bindings={
+									readonly
+										? Object.fromEntries(
+												selected.config.controller.groups.flatMap((group) =>
+													group.controls.map(({ id }) => [
+														id,
+														{ availability: 'readonly' },
+													]),
+												),
+											)
+										: undefined
+								}
+								onChange={onFeatureChange}
+							/>
+						)}
+						{selected && (
+							<>
+								<ControllerControlRenderer
+									definition={selected.ratio}
+									value={selected.ratio.defaultValue}
+									onChange={() => {}}
+								/>
+								<ControllerControlRenderer
+									definition={
+										readonly
+											? { ...selected.prompt, availability: 'readonly' }
+											: selected.prompt
+									}
+									value={value.prompt}
+									onChange={(next) => {
+										if (typeof next === 'string') onPromptChange(next)
+									}}
+								/>
+							</>
+						)}
+						<Button
+							type="button"
+							variant="muted"
+							className="mt-0.5 h-11 w-full text-sm font-semibold"
+							onClick={onGenerate}
+							disabled={readonly || value.generating || !selected || invalidPrompt}
+						>
+							{value.generating ? '생성 중…' : '이미지 생성'}
+						</Button>
+						{value.error && <FieldError>{value.error}</FieldError>}
+					</>
+				)}
+			</Controller.TabPanel>
 		</div>
 	)
 }

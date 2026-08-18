@@ -75,6 +75,7 @@ export interface Config {
     'brand-typefaces': BrandTypeface;
     'brand-icons': BrandIcon;
     'application-images': ApplicationImage;
+    'sample-images': SampleImage;
     'image-profiles': ImageProfile;
     'graphic-profiles': GraphicProfile;
     'generated-images': GeneratedImage;
@@ -110,6 +111,7 @@ export interface Config {
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'brand-icons': BrandIconsSelect<false> | BrandIconsSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
+    'sample-images': SampleImagesSelect<false> | SampleImagesSelect<true>;
     'image-profiles': ImageProfilesSelect<false> | ImageProfilesSelect<true>;
     'graphic-profiles': GraphicProfilesSelect<false> | GraphicProfilesSelect<true>;
     'generated-images': GeneratedImagesSelect<false> | GeneratedImagesSelect<true>;
@@ -1127,6 +1129,37 @@ export interface BrandIcon {
   focalY?: number | null;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sample-images".
+ */
+export interface SampleImage {
+  id: number;
+  name: string;
+  alt: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
  * 이미지 유형별 시스템 프롬프트와 유저 프롬프트 후보를 관리하고 테스트합니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2117,6 +2150,10 @@ export interface PayloadLockedDocument {
         value: number | ApplicationImage;
       } | null)
     | ({
+        relationTo: 'sample-images';
+        value: number | SampleImage;
+      } | null)
+    | ({
         relationTo: 'image-profiles';
         value: number | ImageProfile;
       } | null)
@@ -2669,6 +2706,40 @@ export interface BrandIconsSelect<T extends boolean = true> {
  * via the `definition` "application-images_select".
  */
 export interface ApplicationImagesSelect<T extends boolean = true> {
+  name?: T;
+  alt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sample-images_select".
+ */
+export interface SampleImagesSelect<T extends boolean = true> {
   name?: T;
   alt?: T;
   updatedAt?: T;
@@ -3435,6 +3506,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'application-images';
           value: number | ApplicationImage;
+        } | null)
+      | ({
+          relationTo: 'sample-images';
+          value: number | SampleImage;
         } | null)
       | ({
           relationTo: 'image-profiles';

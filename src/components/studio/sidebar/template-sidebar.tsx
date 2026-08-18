@@ -219,6 +219,12 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 									images.selectProfile(slot.id, profileId)
 								}
 								onPromptChange={(prompt) => images.update(slot.id, { prompt })}
+								onImageModeChange={(imageMode) =>
+									images.update(slot.id, { imageMode })
+								}
+								onSelectSampleImage={(option) =>
+									images.selectSampleImage(slot.id, option)
+								}
 								onGenerate={() => images.generate(slot.id)}
 							/>
 							{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 섹션이다. 대상 슬롯에 종속되므로
@@ -300,6 +306,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 							onTypeChange={background.selectType}
 							onFeatureChange={background.updateFeature}
 							onImageProfileChange={background.selectImageProfile}
+							onSelectSampleImage={background.selectSampleImage}
 							onGraphicConfigChange={background.selectGraphicConfig}
 							onGraphicChange={background.updateGraphic}
 							onGenerate={background.generate}
