@@ -82,7 +82,6 @@ export interface Config {
     templates: Template;
     'template-categories': TemplateCategory;
     'template-assets': TemplateAsset;
-    plugins: Plugin;
     'check-scenarios': CheckScenario;
     rules: Rule;
     'rule-checkers': RuleChecker;
@@ -118,7 +117,6 @@ export interface Config {
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
-    plugins: PluginsSelect<false> | PluginsSelect<true>;
     'check-scenarios': CheckScenariosSelect<false> | CheckScenariosSelect<true>;
     rules: RulesSelect<false> | RulesSelect<true>;
     'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
@@ -1610,19 +1608,6 @@ export interface TemplateAsset {
   focalY?: number | null;
 }
 /**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plugins".
- */
-export interface Plugin {
-  id: number;
-  name: string;
-  description?: string | null;
-  pluginType: 'generator' | 'checker';
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
  * 검수 목적에 맞게 실행할 Check를 조립하고 발행합니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1909,10 +1894,6 @@ export interface AgentSkill {
                   relationTo: 'templates';
                   value: number | Template;
                 }
-              | {
-                  relationTo: 'plugins';
-                  value: number | Plugin;
-                }
             )[]
           | null;
         id?: string | null;
@@ -2176,10 +2157,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'template-assets';
         value: number | TemplateAsset;
-      } | null)
-    | ({
-        relationTo: 'plugins';
-        value: number | Plugin;
       } | null)
     | ({
         relationTo: 'check-scenarios';
@@ -2984,18 +2961,6 @@ export interface TemplateAssetsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plugins_select".
- */
-export interface PluginsSelect<T extends boolean = true> {
-  name?: T;
-  description?: T;
-  pluginType?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "check-scenarios_select".
  */
 export interface CheckScenariosSelect<T extends boolean = true> {
@@ -3526,10 +3491,6 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'templates';
           value: number | Template;
-        } | null)
-      | ({
-          relationTo: 'plugins';
-          value: number | Plugin;
         } | null)
       | ({
           relationTo: 'check-scenarios';

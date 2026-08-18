@@ -48,7 +48,7 @@ export async function HeroFooter() {
 						aria-hidden="true"
 						className={cn('size-6', logoClassName)}
 						height={24}
-						src="/logos/logo.svg"
+						src="/symbols/symbol_blk.svg"
 						width={24}
 					/>
 					<Typography as="p" className="mt-4 opacity-60" size="xs">
@@ -86,7 +86,7 @@ export async function HeroFooter() {
 					alt=""
 					className={`h-auto w-[18vw] min-w-28 shrink-0 ${logoClassName}`}
 					height={715}
-					src="/logos/logo.svg"
+					src="/symbols/symbol_blk.svg"
 					width={708}
 				/>*/}
 				<span className="whitespace-nowrap font-body text-[clamp(9rem,32vw,38rem)] leading-[0.68] font-semibold tracking-[-0.08em]">

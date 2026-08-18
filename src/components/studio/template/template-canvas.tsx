@@ -1,11 +1,11 @@
 'use client'
 
 import { type CSSProperties, useEffect, useRef, useState } from 'react'
+import { ControllerBar } from '@/components/shared/controller'
 import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
 import {
 	DEFAULT_PREVIEW_SIZE,
 	PreviewSizeControl,
-	StudioCanvasFooter,
 } from '@/components/studio/shared/preview-size-control'
 import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
@@ -53,7 +53,7 @@ export function TemplateCanvas() {
 		<div ref={stageRef} className="relative grid h-full min-h-0 min-w-0 overflow-hidden">
 			<div
 				data-slot="template-preview"
-				className="m-auto shrink-0 overflow-hidden shadow-lg lg:[transform:scale(var(--preview-scale))]"
+				className="m-auto shrink-0 overflow-hidden shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none lg:[transform:scale(var(--preview-scale))]"
 				style={
 					{
 						...preview,
@@ -87,9 +87,9 @@ export function TemplateCanvas() {
 					/>
 				</div>
 			</div>
-			<StudioCanvasFooter>
+			<ControllerBar placement="canvas">
 				<PreviewSizeControl value={previewSize} onChange={setPreviewSize} />
-			</StudioCanvasFooter>
+			</ControllerBar>
 		</div>
 	)
 }

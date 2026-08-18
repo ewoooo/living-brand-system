@@ -4,11 +4,11 @@ export function AdminLogo() {
 			aria-label="Living Brand System"
 			role="img"
 			style={{
-				backgroundColor: 'var(--color-text)',
+				backgroundColor: 'var(--theme-text)',
 				display: 'block',
 				height: 64,
-				mask: 'url("/logos/logo.svg") center / contain no-repeat',
-				WebkitMask: 'url("/logos/logo.svg") center / contain no-repeat',
+				mask: 'url("/symbols/symbol_blk.svg") center / contain no-repeat',
+				WebkitMask: 'url("/symbols/symbol_blk.svg") center / contain no-repeat',
 				width: 64,
 			}}
 		/>

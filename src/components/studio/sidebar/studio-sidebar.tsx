@@ -1,7 +1,7 @@
 'use client'
 
 import type * as React from 'react'
-import { Controller } from '@/components/studio/shared/controller'
+import { Controller } from '@/components/shared/controller'
 
 type StudioSidebarProps = {
 	/** 스크롤되지 않는 Studio 아이덴티티·브라우저 트리거 영역. */

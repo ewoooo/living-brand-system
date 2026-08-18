@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Slider } from '@/components/ui/slider'
+import { controllerNumber, useGuidelineController } from '../../controllers/provider'
+import { SCALE } from './manifest'
 
 // 클리어스페이스 뷰어(클라). 레이아웃 규칙:
 //  - 바깥 row = 고정 높이 + 폭 100%. 패널 2개가 그 폭을 flex-1로 균등 양분(박스는 슬라이더에 불변, 창 폭에만 반응).
@@ -26,7 +27,9 @@ const BASE_H = 640
 const SCALE_FACTOR = 0.75
 
 export function ClearspaceViewerView({ panels }: Props) {
-	const [scale, setScale] = useState(100)
+	// 배율은 이 위젯이 아니라 블록의 컨트롤러가 갖는다 — 컨트롤은 하단 알약에 뜬다(docs/11 §4.1).
+	const { values } = useGuidelineController()
+	const scale = controllerNumber(values, SCALE.id, SCALE.defaultValue)
 	const [nat, setNat] = useState<(readonly [number, number] | null)[]>([])
 
 	// 원본 높이 × 슬라이더 배율 × SCALE_FACTOR = 실제 렌더 높이(모든 패널 공통 배율).
@@ -39,7 +42,6 @@ export function ClearspaceViewerView({ panels }: Props) {
 		const h = renderedH(i)
 		return h != null && min != null && h < min
 	}
-	const anyForbidden = panels.some((p, i) => forbidden(i, p.minHeightPx))
 
 	// SSR로 이미 로드된 SVG는 onLoad가 안 터지므로 콜백 ref에서 complete면 즉시 natural 잡는다.
 	const captureNat = (i: number) => (el: HTMLImageElement | null) => {
@@ -108,30 +110,6 @@ export function ClearspaceViewerView({ panels }: Props) {
 						</span>
 					)
 				})}
-			</div>
-
-			{/* 공유 스케일 슬라이더 — 100%(원본 1:1)에서 시작해 10%까지 축소. */}
-			<div className="mx-auto flex w-full max-w-xs items-center gap-3">
-				{/*
-					🔴 위반 배색은 채움에만 건다. 네이티브의 accent-color는 트랙 채움과 손잡이를 한 번에 칠했지만
-					Radix에서는 채움이 별 요소라 slot을 겨냥해야 한다. 손잡이는 두 상태에서 같은 모습을 유지한다 —
-					금지 신호는 채움·수치·캡션 셋이 이미 말하고, 손잡이까지 물들이면 잡을 자리가 흐려진다.
-				*/}
-				<Slider
-					min={10}
-					max={100}
-					value={[scale]}
-					onValueChange={([next]) => setScale(next ?? scale)}
-					className={
-						anyForbidden ? '[&_[data-slot=slider-range]]:bg-destructive' : undefined
-					}
-					aria-label="로고 표시 배율"
-				/>
-				<span
-					className={`w-12 text-right text-xs ${anyForbidden ? 'text-destructive' : 'text-muted-foreground'}`}
-				>
-					{scale}%
-				</span>
 			</div>
 		</div>
 	)

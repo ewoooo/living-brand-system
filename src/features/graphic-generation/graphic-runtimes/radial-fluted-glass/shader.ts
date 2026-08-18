@@ -1,4 +1,11 @@
-// Shadertoy-style fragment shader; the Graphic Studio host supplies uniforms.
+/**
+ * Radial Fluted Glass의 fragment shader 원문.
+ *
+ * `.glsl` 파일이 아니라 모듈 상수인 이유는 번들러다 — Turbopack의 `?raw` 규칙은 이 버전에서
+ * default export를 만들지 않아 shader가 통째로 `undefined`로 들어갔다. public/에 두면
+ * 고정 URL로 내려받히므로 그쪽으로도 돌아가지 않는다.
+ */
+export default `// Shadertoy-style fragment shader; the Graphic Studio host supplies uniforms.
 // Seamless radial god rays + radial LinesIrregular fluted glass
 
 #define PI 3.14159265359
@@ -506,3 +513,4 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     fragColor = vec4(color, 1.0);
 }
+`

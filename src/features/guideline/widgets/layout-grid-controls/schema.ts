@@ -1,5 +1,5 @@
 import type { Block } from 'payload'
-import { GUTTER_RATIO, MARGIN_PCT } from '../layout-grid/rules'
+import { GUTTER_X, MARGIN } from '../layout-grid/manifest'
 
 // 레이아웃 그리드 컨트롤 위젯 — 같은 페이지의 layoutGridWidget 전부의 값을 소유한다.
 //
@@ -9,7 +9,10 @@ import { GUTTER_RATIO, MARGIN_PCT } from '../layout-grid/rules'
 //    (예: 수직 거터만 허용 = 수평 거터를 못 만지는 템플릿 / 마진만 허용 등)
 // 전부 불허면 패널이 아무것도 렌더하지 않지만, 고정값을 심는 역할로 여전히 배치해야 한다.
 //
-// 🔴 min·max는 정본 규칙(../layout-grid/rules)에서 가져온다 — admin 입력과 슬라이더가 같은 범위를 쓴다.
+// 🔴 이 위젯은 더 이상 화면에 컨트롤을 그리지 않는다. 지금 역할은 **admin 제한(restriction) 전달자**다 —
+//    여기 값이 매니페스트(../layout-grid/manifest)의 기본값·조절 가능 여부를 좁힌다.
+//    변환은 controllers/registry.ts가 갖고, 넓히려 들면 applyControllerRestrictions가 던진다.
+// 🔴 min·max는 정본 매니페스트에서 가져온다 — admin 입력과 컨트롤이 같은 범위를 쓴다.
 // dbName 짧게(lgc)로 중첩 테이블명 63자 방어.
 export const LayoutGridControlsWidget: Block = {
 	slug: 'layoutGridControlsWidget',
@@ -20,10 +23,10 @@ export const LayoutGridControlsWidget: Block = {
 		{
 			name: 'marginPct',
 			type: 'number',
-			defaultValue: MARGIN_PCT.default,
-			min: MARGIN_PCT.min,
-			max: MARGIN_PCT.max,
-			admin: { description: `마진(판형 긴 축의 %). ${MARGIN_PCT.min}~${MARGIN_PCT.max}.` },
+			defaultValue: MARGIN.defaultValue,
+			min: MARGIN.min,
+			max: MARGIN.max,
+			admin: { description: `마진(판형 긴 축의 %). ${MARGIN.min}~${MARGIN.max}.` },
 		},
 		{
 			name: 'marginAdjustable',
@@ -36,10 +39,10 @@ export const LayoutGridControlsWidget: Block = {
 		{
 			name: 'gutterX',
 			type: 'number',
-			defaultValue: GUTTER_RATIO.default,
-			min: GUTTER_RATIO.min,
-			max: GUTTER_RATIO.max,
-			admin: { description: `수평 거터(마진의 %). ${GUTTER_RATIO.min}~${GUTTER_RATIO.max}.` },
+			defaultValue: GUTTER_X.defaultValue,
+			min: GUTTER_X.min,
+			max: GUTTER_X.max,
+			admin: { description: `수평 거터(마진의 %). ${GUTTER_X.min}~${GUTTER_X.max}.` },
 		},
 		{
 			name: 'gutterXAdjustable',
@@ -50,10 +53,10 @@ export const LayoutGridControlsWidget: Block = {
 		{
 			name: 'gutterY',
 			type: 'number',
-			defaultValue: GUTTER_RATIO.default,
-			min: GUTTER_RATIO.min,
-			max: GUTTER_RATIO.max,
-			admin: { description: `수직 거터(마진의 %). ${GUTTER_RATIO.min}~${GUTTER_RATIO.max}.` },
+			defaultValue: GUTTER_X.defaultValue,
+			min: GUTTER_X.min,
+			max: GUTTER_X.max,
+			admin: { description: `수직 거터(마진의 %). ${GUTTER_X.min}~${GUTTER_X.max}.` },
 		},
 		{
 			name: 'gutterYAdjustable',

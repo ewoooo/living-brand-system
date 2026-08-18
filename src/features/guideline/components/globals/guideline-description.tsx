@@ -19,7 +19,12 @@ export function GuidelineDescription({
 		<section className="text-balance">
 			{variant === 'onboard' && <OnboardDescription description={description} />}
 			{variant === 'chapter' && <ChapterDescription description={description} />}
-			{variant === 'section' && <SectionDescription description={description} />}
+			{/*
+			 * 🔴 `section`은 그리지 않는다. 섹션 설명은 화면 어디에도 안 나오기 때문이다
+			 *    (`pages/guideline-section.tsx` 참조 — Figma의 Section Heading도 제목뿐이고,
+			 *    14개 섹션 전수 조사에서 값이 하나도 없었다).
+			 *    다시 그려야 하면 **호출부부터** 살려야 한다 — 여기 분기만 되살리면 아무 일도 안 난다.
+			 */}
 			{variant === 'page' && <PageDescription description={description} />}
 			{variant === 'block' && <BlockDescription description={description} />}
 		</section>
@@ -33,12 +38,6 @@ function OnboardDescription({ description }: { description: Description }) {
 }
 
 function ChapterDescription({ description }: { description: Description }) {
-	return (
-		<DescriptionContent description={description} className="font-body font-normal text-xl" />
-	)
-}
-
-function SectionDescription({ description }: { description: Description }) {
 	return (
 		<DescriptionContent description={description} className="font-body font-normal text-xl" />
 	)

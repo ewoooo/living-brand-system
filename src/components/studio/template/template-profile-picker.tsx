@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { ControllerBrowser } from '@/components/studio/shared/controller'
+import { ControllerBrowser } from '@/components/shared/controller'
 import { Typography } from '@/components/ui/typography'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import { cn } from '@/lib/utils'

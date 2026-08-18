@@ -32,7 +32,6 @@ import { GeneratedImages } from './collections/GeneratedImages'
 import { GraphicProfiles } from './collections/GraphicProfiles'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
 import { ImageProfiles } from './collections/ImageProfiles'
-import { Plugins } from './collections/Plugins'
 import { RuleCheckers } from './collections/RuleCheckers'
 import { Rules } from './collections/Rules'
 import { withFrontendRevalidation } from './collections/revalidate'
@@ -63,7 +62,7 @@ const createOwnMcpApiKey: Access = ({ data, req }) =>
 
 const BetterEditorSettings: GlobalConfig = {
 	...betterEditorSettingsGlobal,
-	label: '편집기 설정',
+	label: '편집기',
 	admin: {
 		...betterEditorSettingsGlobal.admin,
 		group: '시스템 관리',
@@ -83,12 +82,14 @@ export default buildConfig({
 			baseDir: path.resolve(dirname),
 		},
 		components: {
-			beforeDashboard: ['/components/admin/shell/dashboard-summary#DashboardSummary'],
 			graphics: {
 				Icon: '/components/admin/shell/admin-icon#AdminIcon',
 				Logo: '/components/admin/shell/admin-logo#AdminLogo',
 			},
 			providers: ['/components/admin/shell/admin-dialkit-provider#AdminDialKitProvider'],
+			views: {
+				dashboard: { Component: '/components/admin/shell/admin-dashboard#AdminDashboard' },
+			},
 		},
 	},
 	// 프리렌더된 화면의 껍데기를 콘텐츠 변경 시 버리게 한다. 컬렉션마다 손으로 달지 않고
@@ -108,7 +109,6 @@ export default buildConfig({
 		Templates,
 		TemplateCategories,
 		TemplateAssets,
-		Plugins,
 		CheckScenarios,
 		Rules,
 		RuleCheckers,
@@ -170,7 +170,7 @@ export default buildConfig({
 			},
 			overrideApiKeyCollection: (collection: CollectionConfig) => ({
 				...collection,
-				labels: { singular: 'MCP API 키', plural: 'MCP API 키' },
+				labels: { singular: 'MCP', plural: 'MCP' },
 				admin: { ...collection.admin, group: '시스템 관리' },
 				fields: [
 					...(collection.fields ?? []),

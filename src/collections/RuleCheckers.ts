@@ -33,8 +33,8 @@ export const RuleCheckers: CollectionConfig = {
 	dbName: 'rule_checkers',
 	access: managerManagedAccess,
 	labels: {
-		singular: '검수 도구',
-		plural: '검수 도구',
+		singular: '검수 도구 및 설정',
+		plural: '검수 도구 및 설정',
 	},
 	admin: {
 		group: '검수 설정',

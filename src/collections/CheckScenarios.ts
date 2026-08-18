@@ -59,8 +59,8 @@ export const CheckScenarios: CollectionConfig = {
 		description: '검수 목적에 맞게 실행할 Check를 조립하고 발행합니다.',
 	},
 	labels: {
-		singular: '검수 시나리오',
-		plural: '검수 시나리오',
+		singular: '검수 프로파일',
+		plural: '검수 프로파일',
 	},
 	versions: draftVersions,
 	hooks: {

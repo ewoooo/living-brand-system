@@ -1,10 +1,8 @@
 'use client'
 
 import { ChevronLeft, ChevronRight, Grid } from '@carbon/icons-react'
-import {
-	PreviewSizeControl,
-	StudioCanvasFooter,
-} from '@/components/studio/shared/preview-size-control'
+import { ControllerBar } from '@/components/shared/controller'
+import { PreviewSizeControl } from '@/components/studio/shared/preview-size-control'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
 import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
@@ -34,7 +32,7 @@ export function ReviewCanvasControls({
 	}
 
 	return (
-		<StudioCanvasFooter>
+		<ControllerBar placement="canvas">
 			<PreviewSizeControl value={previewSize} onChange={onPreviewSizeChange} />
 			<Button
 				type="button"
@@ -79,6 +77,6 @@ export function ReviewCanvasControls({
 			>
 				<Grid aria-hidden />
 			</Button>
-		</StudioCanvasFooter>
+		</ControllerBar>
 	)
 }

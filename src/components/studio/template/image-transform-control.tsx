@@ -1,6 +1,6 @@
 'use client'
 
-import { Controller } from '@/components/studio/shared/controller'
+import { Controller } from '@/components/shared/controller'
 import {
 	IMAGE_TRANSFORM_DEFAULT,
 	type ImageTransformValue,
