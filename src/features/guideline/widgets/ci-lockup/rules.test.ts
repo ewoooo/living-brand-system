@@ -6,6 +6,7 @@ import {
 	clearSpaceFor,
 	columnArea,
 	deriveLockups,
+	diagramSpec,
 	fontSizeFor,
 	type Lockup,
 	lockupHeight,
@@ -154,5 +155,173 @@ describe('CI 락업 조립 규칙', () => {
 	//    있어도 계층은 본사로 떨어져야 한다 — 이게 깨지면 자회사 없는 해외지사 락업을 그리게 된다.
 	it('자회사가 꺼지면 지사 켜짐이 보관돼 있어도 본사다', () => {
 		expect(tierFor(false, true)).toBe('ci')
+	})
+
+	/* ── 치수 도판 파생 ────────────────────────────────────────────────
+	 * 🔑 도판은 손으로 적은 데이터가 아니라 Lockup에서 파생된다. 그래서 이 검산이 곧
+	 *    "본사·자회사·해외지사 전부의 도판이 맞나"를 본다. 기대값은 정본 도판 실측치다
+	 *    (`.scratch/spike/SPEC.md`). */
+	const overseas = (form: string) => {
+		const lockup = deriveLockups({
+			tier: 'overseas',
+			subsidiary: SUBSIDIARIES[0],
+			branch: OVERSEAS_BRANCHES[0],
+		}).find((l) => l.form === form)
+		if (!lockup) throw new Error(`락업 없음: ${form}`)
+		return diagramSpec(lockup)
+	}
+	const sizeOf = (spec: ReturnType<typeof diagramSpec>, id: string) =>
+		[...spec.cols, ...spec.rows].find((t) => t.id === id)?.v
+	const labelOf = (spec: ReturnType<typeof diagramSpec>, id: string) =>
+		spec.spans.find((s) => s.id === id)?.label
+	const glyphOf = (spec: ReturnType<typeof diagramSpec>, id: string) =>
+		spec.glyphs.find((glyph) => glyph.id === id)
+	const envSum = (spec: ReturnType<typeof diagramSpec>) => {
+		const [a, b] = spec.envRows
+		return spec.rows.slice(a, b + 1).reduce((sum, t) => sum + (t.v ?? 0), 0)
+	}
+
+	it('가로형A — 열 간격과 행이 정본 값이다', () => {
+		const d = overseas('horizontalA')
+		expect(sizeOf(d, 'gap:hd:0')).toBe(0.25)
+		expect(sizeOf(d, 'gap:name:0')).toBe(0.2)
+		expect(sizeOf(d, 'gap:bar')).toBe(0.2)
+		expect(sizeOf(d, 'bar')).toBe(0.04)
+		expect(sizeOf(d, 'gap:branch:0')).toBe(0.2)
+		expect(sizeOf(d, 'el:name:0')).toBe(0.28)
+		expect(sizeOf(d, 'el:name:1')).toBe(0.28)
+		expect(sizeOf(d, 'gap:name:1')).toBe(0.09)
+		expect(labelOf(d, 'span:area')).toBe('0.65H')
+		// 🔴 HD가 행이 아니라 열이므로 묶음 게이지가 없어야 한다 — 파생이 꼴을 알아서 맞추는 증거
+		expect(d.spans.some((s) => s.id.startsWith('span:group:'))).toBe(false)
+		// 🔑 구분바 라벨만 아래로 내려간다(0.04H < 0.1H)
+		expect(d.labelBelow).toEqual(['bar'])
+	})
+
+	/* 🔴 이 단정이 없어서 결함이 승인됐다 — 가로형A의 지역명 열은 행이 둘인데 렌더가 첫 행만
+	      읽어 `R&D CENTER`가 통째로 사라져 있었다. */
+	it('가로형A — 행을 갖지 않는 열의 글자가 모두 나온다', () => {
+		const d = overseas('horizontalA')
+		const texts = d.glyphs.map((glyph) => glyph.text)
+		expect(texts).toContain('HD')
+		expect(texts).toContain('EUROPE')
+		expect(texts).toContain('R&D CENTER')
+		// 🔑 지역명 2행은 계열사명 행 트랙에 k→k로 앉는다 — 리듬이 같아야 도판이 성립한다
+		expect(glyphOf(d, 'el:branch:0')?.row).toBe('el:name:0')
+		expect(glyphOf(d, 'el:branch:1')?.row).toBe('el:name:1')
+		// HD는 행을 갖지 않고 영역 전체에 걸친다
+		expect(glyphOf(d, 'el:hd:0')?.row).toBeUndefined()
+	})
+
+	it('가로형B — 영역 0.9H와 매달린 지역명 총 1.12H', () => {
+		const d = overseas('horizontalB')
+		expect(labelOf(d, 'span:area')).toBe('0.9H')
+		expect(labelOf(d, 'span:group:hd')).toBe('0.4H')
+		expect(labelOf(d, 'span:group:name')).toBe('0.4H')
+		expect(labelOf(d, 'span:el:branch:0')).toBe('0.12H')
+		expect(sizeOf(d, 'gap:name:0')).toBe(0.1)
+		expect(sizeOf(d, 'gap:name:1')).toBe(0.06)
+		// 🔴 매달린 간격은 영역 하단 기준이라 봉투 패딩 0.05H를 뺀 0.05H가 트랙이 된다.
+		//    라벨은 규정값 0.1H를 그대로 적는다. 이게 깨지면 총높이가 1.17H가 된다.
+		const hanging = d.rows.find((t) => t.id === 'gap:branch:0')
+		expect(hanging?.v).toBeCloseTo(0.05, 6)
+		expect(hanging?.labelValue).toBe(0.1)
+		const [, areaEnd] = d.areaRows
+		expect(d.rows[areaEnd]?.id).toBe('el:name:1')
+		expect(d.rows.length).toBeGreaterThan(areaEnd + 1)
+	})
+
+	it('세로형 — 심볼이 행이 되고 영역이 0.9H다', () => {
+		const d = overseas('vertical')
+		expect(d.rows[0]?.kind).toBe('sym')
+		expect(sizeOf(d, 'gap:hd:0')).toBe(0.2)
+		expect(labelOf(d, 'span:area')).toBe('0.9H')
+		expect(labelOf(d, 'span:group:hd')).toBe('0.3H')
+		expect(labelOf(d, 'span:group:name')).toBe('0.3H')
+		expect(sizeOf(d, 'gap:name:1')).toBe(0.05)
+		expect(d.rows.some((t) => t.kind === 'pad')).toBe(false)
+	})
+
+	/* 🔴 봉투는 **심볼**의 위·아래다. 세로형에서 텍스트 블록을 감싸면 `span:H`가 H라고 적힌 채
+	      0.9H를 재게 된다 — 실제로 그랬다. */
+	it('봉투는 세 꼴 모두 심볼 높이 1H다', () => {
+		for (const form of ['horizontalA', 'horizontalB', 'vertical']) {
+			expect(envSum(overseas(form)), `${form} — 봉투 합`).toBeCloseTo(1, 6)
+		}
+	})
+
+	/* 🔑 「꼴을 바꿔도 새로 생기지 않고 이동한다」의 불변식. id에 축이 박혀 있으면 여기서 깨진다. */
+	it('같은 정체가 세 꼴에서 같은 것을 가리킨다', () => {
+		const specs = {
+			horizontalA: overseas('horizontalA'),
+			horizontalB: overseas('horizontalB'),
+			vertical: overseas('vertical'),
+		}
+		const shared = [
+			'sym',
+			'gap:hd:0',
+			'gap:name:0',
+			'gap:name:1',
+			'gap:branch:0',
+			'el:hd:0',
+			'el:name:0',
+			'el:name:1',
+			'el:branch:0',
+		]
+		for (const [form, d] of Object.entries(specs)) {
+			const ids = [...d.cols, ...d.rows].map((t) => t.id).filter(Boolean)
+			const glyphIds = d.glyphs.map((glyph) => glyph.id)
+			for (const id of shared) {
+				expect([...ids, ...glyphIds], `${form} — ${id}`).toContain(id)
+			}
+			expect(new Set(ids).size, `${form} — 트랙 id 중복`).toBe(ids.length)
+			expect(new Set(glyphIds).size, `${form} — 글자 id 중복`).toBe(glyphIds.length)
+		}
+		/* 🔴 존재만이 아니라 **같은 것을 가리키는지**를 본다 — 이 단정이 없어서 HD가 꼴마다 다른
+		      노드였던 것이 통과했다. */
+		for (const id of ['el:hd:0', 'el:name:0', 'el:name:1']) {
+			const a = glyphOf(specs.horizontalA, id)?.text
+			expect(glyphOf(specs.horizontalB, id)?.text, `${id} — A vs B`).toBe(a)
+			expect(glyphOf(specs.vertical, id)?.text, `${id} — A vs 세로형`).toBe(a)
+		}
+		// 🔑 같은 정체가 가로형A에서 **열**, 나머지에서 **행**이다 — 축만 바뀐다
+		expect(specs.horizontalA.cols.some((t) => t.id === 'gap:name:0')).toBe(true)
+		expect(specs.horizontalB.rows.some((t) => t.id === 'gap:name:0')).toBe(true)
+		expect(specs.horizontalA.cols.some((t) => t.id === 'sym')).toBe(true)
+		expect(specs.vertical.rows.some((t) => t.id === 'sym')).toBe(true)
+	})
+
+	/* 🔴 게이지 열 수가 꼴마다 변하면 도판 폭이 변해 판 가운데 정렬 때문에 락업이 옆으로 튄다. */
+	it('게이지 열 수는 꼴·계층과 무관하다', () => {
+		for (const tier of TIERS) {
+			for (const lockup of deriveLockups({
+				tier,
+				subsidiary: SUBSIDIARIES[0],
+				branch: OVERSEAS_BRANCHES[0],
+			})) {
+				const d = diagramSpec(lockup)
+				expect(d.gaugeLeft, `${lockup.label} — 좌`).toBe(3)
+				expect(d.gaugeRight, `${lockup.label} — 우`).toBe(2)
+			}
+		}
+	})
+
+	it('모든 계층·꼴·언어에서 도판이 파생된다', () => {
+		for (const tier of TIERS) {
+			for (const lockup of deriveLockups({
+				tier,
+				subsidiary: SUBSIDIARIES[0],
+				branch: OVERSEAS_BRANCHES[0],
+			})) {
+				const d = diagramSpec(lockup)
+				expect(d.rows.length, `${lockup.label} — 행 트랙`).toBeGreaterThan(0)
+				expect(
+					d.spans.some((s) => s.id === 'span:H'),
+					`${lockup.label} — H 게이지`,
+				).toBe(true)
+				const [start, end] = d.areaRows
+				expect(end, `${lockup.label} — 영역 범위`).toBeGreaterThanOrEqual(start)
+			}
+		}
 	})
 })

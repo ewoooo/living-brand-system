@@ -109,9 +109,18 @@ export type Orientation = 'horizontal' | 'vertical'
  *    (한글 `ㅎ`·`ㅇ`, 라틴 `U`·`S`). p28 국문은 잉크로 재면 0.7155H인데 라벨은 0.65H다.
  *    그래서 렌더는 잉크를 상자에 맞추지 않고 **평평한 기준 글자의 상자**를 맞춘다(FONT.ink 주석).
  */
+/**
+ * 행의 **의미 역할**. 🔑 치수 도판이 꼴을 넘어 같은 요소를 같은 것으로 알아보는 근거다 —
+ * 위치(몇 번째 열·행)는 꼴마다 바뀌지만 역할은 바뀌지 않는다. 그래서 꼴을 갈아도 도판의
+ * 주석 요소가 새로 생기지 않고 **이동**한다(`diagramSpec`).
+ */
+export type RowRole = 'wordmark' | 'hd' | 'name' | 'branch'
+
 export type Row = {
 	text: string
 	cap: number
+	/** 의미 역할. 도판이 이것으로 요소의 정체를 잡는다. */
+	role: RowRole
 	/** 이 행 위의 간격(H 배수). 없으면 락업의 rowGap을 쓴다. 첫 행에서는 무시된다. */
 	gapBefore?: number
 	/** 🔴 스펙에 없어 추정한 값. 화면에 표시해 브랜드팀 확인 대상임을 드러낸다. */
@@ -296,7 +305,7 @@ function ciLockups(): Lockup[] {
 			orientation,
 			gap: LAYOUT[orientation].gap,
 			rowGap: 0,
-			columns: [{ rows: [{ text, cap: LAYOUT[orientation].wordmark }] }],
+			columns: [{ rows: [{ text, cap: LAYOUT[orientation].wordmark, role: 'wordmark' }] }],
 			source: `01-specs A · ${orientation === 'horizontal' ? '가로형 워드마크 0.65H · 간격 0.25H' : '세로형 워드마크 0.3H · 간격 0.2H'}`,
 		})),
 	)
@@ -375,11 +384,12 @@ const HD_ROW_GAP = 0.1
 function nameRows(sub: Subsidiary, lang: 'ko' | 'en', form: (typeof FORMS)[FormKey]): Row[] {
 	if (lang === 'ko' || sub.en.length === 1) {
 		const text = lang === 'ko' ? sub.ko : caps(sub.en[0])
-		return [{ text, cap: form.hdCap }]
+		return [{ text, cap: form.hdCap, role: 'name' }]
 	}
 	return sub.en.map((text, i) => ({
 		text: caps(text),
 		cap: form.enCap,
+		role: 'name' as const,
 		...(i === 1 ? { gapBefore: form.enRow2Gap } : {}),
 	}))
 }
@@ -393,13 +403,13 @@ function subsidiaryLockups(sub: Subsidiary): Lockup[] {
 			// 🔴 가로형A 국문만 `HD` + 회사명이 한 행으로 붙는다. 나머지는 `HD`가 자기 행/열을 갖는다.
 			const singleRow = lang === 'ko' && form.koSingleCap !== undefined
 			const columns: Column[] = singleRow
-				? [{ rows: [{ text: `HD${sub.ko}`, cap: form.koSingleCap }] }]
+				? [{ rows: [{ text: `HD${sub.ko}`, cap: form.koSingleCap, role: 'name' }] }]
 				: formKey === 'horizontalA'
 					? [
-							{ rows: [{ text: 'HD', cap: form.hdCap }] },
+							{ rows: [{ text: 'HD', cap: form.hdCap, role: 'hd' }] },
 							{ gapBefore: form.columnGap, rows: names },
 						]
-					: [{ rows: [{ text: 'HD', cap: form.hdCap }, ...withHdGap(names)] }]
+					: [{ rows: [{ text: 'HD', cap: form.hdCap, role: 'hd' }, ...withHdGap(names)] }]
 
 			return {
 				key: `sub-${lang}-${formKey}`,
@@ -456,14 +466,19 @@ function overseasLockups(sub: Subsidiary, branch: OverseasBranch): Lockup[] {
 			// 지역명만이면 2행 그리드의 아래 행에 붙는다(실측 확정, 라벨 없음).
 			const branchRows: Row[] = branch.business
 				? [
-						{ text: caps(branch.region), cap: form.enCap },
-						{ text: caps(branch.business), cap: form.enCap, gapBefore: form.enRow2Gap },
+						{ text: caps(branch.region), cap: form.enCap, role: 'branch' },
+						{
+							text: caps(branch.business),
+							cap: form.enCap,
+							role: 'branch',
+							gapBefore: form.enRow2Gap,
+						},
 					]
-				: [{ text: caps(branch.region), cap: form.enCap }]
+				: [{ text: caps(branch.region), cap: form.enCap, role: 'branch' as const }]
 			return {
 				...base,
 				columns: [
-					{ rows: [{ text: 'HD', cap: form.hdCap }] },
+					{ rows: [{ text: 'HD', cap: form.hdCap, role: 'hd' }] },
 					{ gapBefore: form.columnGap, rows: names },
 					{ gapBefore: form.columnGap, bar: BAR_WIDTH, rows: [] },
 					{
@@ -484,9 +499,9 @@ function overseasLockups(sub: Subsidiary, branch: OverseasBranch): Lockup[] {
 			columns: [
 				{
 					rows: [
-						{ text: 'HD', cap: form.hdCap },
+						{ text: 'HD', cap: form.hdCap, role: 'hd' },
 						...withHdGap(names),
-						{ text: label, cap: branchCap, gapBefore: HD_ROW_GAP },
+						{ text: label, cap: branchCap, role: 'branch', gapBefore: HD_ROW_GAP },
 					],
 				},
 			],
@@ -674,6 +689,287 @@ export const MIN_SIZE = { digitalPx: 16, printMm: 4 } as const
  *    path mapper도 배리어블 폰트도 필요 없다.
  * 🔴 밝은초록 조각은 축을 움직여도 **형태가 변하지 않는다**(정본이 그렇다).
  */
+/* ── 치수 도판 ────────────────────────────────────────────────────────────
+ * 🔑 도판을 꼴마다 손으로 적지 않는다 — `Lockup`에서 **파생**한다. 그래서 본사·자회사·해외지사 ×
+ *    국문·영문 × 꼴 3종이 데이터 추가 없이 전부 도판을 갖는다.
+ * 🔑 모든 정체 id는 **역할 기반**이다(`role`). 위치는 꼴마다 바뀌지만 역할은 안 바뀌므로,
+ *    꼴을 갈면 도판의 주석 요소가 새로 생기지 않고 이동한다(사용자 요구 2026-08-18).
+ * 🔴 정본 도판과 의도적으로 다른 점: 「영역 게이지」(0.65H·0.9H)를 **항상 왼쪽 depth 1**에 둔다.
+ *    정본은 가로형B에서만 오른쪽에 두는데, 꼴을 바꿀 때 게이지가 좌↔우로 날아가는 궤적이
+ *    생겨 이동 전환이 오히려 읽히지 않는다. 편차를 감수하고 자리를 고정했다.
+ * 🔴 클리어스페이스(여백)는 이 스펙에 넣지 않는다 — 간격과 아예 다른 규정이고 범위 밖이다.
+ */
+
+export type DiagramTrackKind = 'sym' | 'gap' | 'bar' | 'el' | 'pad'
+
+export type DiagramTrack = {
+	/**
+	 * 트랙의 정체. 🔴 **축을 담지 않는다** — 같은 글자가 꼴에 따라 열에도 행에도 놓이므로,
+	 * id에 축을 박으면(`col:hd` / `row:hd:0`) 같은 것이 두 정체가 되어 도판이 이동하지 못하고
+	 * 한쪽이 사라지며 다른 쪽이 나타난다(실측으로 잡은 결함).
+	 */
+	id?: string
+	kind: DiagramTrackKind
+	/** H 배수. 없으면 `max-content`(글자 폭을 폰트에 맡긴다). */
+	v?: number
+	/** 라벨에 적을 값. 트랙 크기가 규정값과 다를 때만 쓴다(매달린 간격). */
+	labelValue?: number
+}
+
+/** 도판이 그리는 글자 하나. 어느 열·행 트랙에 앉는지를 **트랙 id로** 가리킨다. */
+export type DiagramGlyph = {
+	id: string
+	text: string
+	cap: number
+	role: RowRole
+	/** 앉을 열 트랙 id. */
+	col: string
+	/** 앉을 행 트랙 id. 없으면 영역 전체에 걸쳐 중앙에 놓인다(가로형A의 HD). */
+	row?: string
+}
+
+export type DiagramSpan = {
+	id: string
+	side: 'left' | 'right'
+	/** 0이 락업에 가장 가까운 게이지 열. */
+	depth: number
+	/** 시작·끝 트랙 id. `env`는 봉투(심볼 위·아래). */
+	from: string
+	to: string
+	label: string
+}
+
+export type DiagramSpec = {
+	cols: DiagramTrack[]
+	rows: DiagramTrack[]
+	glyphs: DiagramGlyph[]
+	/** 영역(로고타입 높이) 행 트랙 인덱스 범위. 그 뒤 트랙은 매달린 것이다. */
+	areaRows: readonly [number, number]
+	/** 봉투(실선) 행 트랙 인덱스 범위 — **심볼의 위·아래**다. */
+	envRows: readonly [number, number]
+	spans: DiagramSpan[]
+	/** 라벨을 하단으로 내릴 트랙 id(트랙이 좁아 위에 안 들어간다). */
+	labelBelow: string[]
+	gaugeLeft: number
+	gaugeRight: number
+	/** 글자가 기본으로 앉는 열 트랙 id. */
+	textCol: string
+}
+
+/** 라벨을 위에 못 넣는 트랙 폭(H 배수). 정본에서 그렇게 된 것은 구분바 0.04H뿐이다. */
+const LABEL_BELOW_UNDER = 0.1
+
+/**
+ * 🔴 게이지 열 수는 **상수**다. 꼴에 따라 늘렸다 줄이면 도판 폭이 변해 판 가운데 정렬 때문에
+ *    락업이 옆으로 튄다(실측: 가로형A↔B에서 32px). 안 쓰는 열이 비는 대가로 기하를 고정한다.
+ * 좌: 0=H · 1=영역 · 2=행 축 간격 라벨 자리. 우: 0=묶음 · 1=행별.
+ */
+const GAUGE_LEFT = 3
+const GAUGE_RIGHT = 2
+
+/**
+ * 🔑 간격은 **뒤에 오는 것으로만** 이름 짓는다. 쌍으로 이름 지으면(`gap:bar-branch`) 사이에 무엇이
+ *    끼는 꼴에서 이름이 바뀌어 같은 간격이 다른 정체가 된다 — 구분바가 정확히 그 경우다.
+ */
+const gapId = (after: RowRole | 'bar', index: number) =>
+	after === 'bar' ? 'gap:bar' : `gap:${after}:${index}`
+
+const hLabel = (v: number) => `${Number(v.toFixed(4))}H`
+
+/**
+ * 락업 하나의 치수 도판 스펙. 순수 함수 — 브라우저가 필요 없어 테스트로 검산된다.
+ */
+export function diagramSpec(lockup: Lockup): DiagramSpec {
+	/* 행을 정의하는 열 = 행이 가장 많은 열. 가로형A는 계열사명 열, 나머지는 유일한 열이다. */
+	const textColumn = lockup.columns.reduce(
+		(best, column) => (column.rows.length > best.rows.length ? column : best),
+		lockup.columns[0],
+	)
+	const textCol = 'col:text'
+
+	/** 역할 안 서수를 **열·행을 가로질러 한 카운터로** 센다(읽는 순서 = 열 순서). */
+	const seen: Partial<Record<RowRole, number>> = {}
+	const nextId = (role: RowRole) => {
+		const index = (seen[role] ?? -1) + 1
+		seen[role] = index
+		return `el:${role}:${index}`
+	}
+
+	const glyphs: DiagramGlyph[] = []
+
+	/* ── 행 트랙: 행 정의 열의 행과 행간 ── */
+	const rows: DiagramTrack[] = []
+	const textRowIds: string[] = []
+	textColumn.rows.forEach((row, i) => {
+		if (i > 0) {
+			const v = row.gapBefore ?? lockup.rowGap
+			/* 간격의 서수 = 그 간격이 여는 글자의 서수(뒤 이웃 규칙). */
+			const ordinal = (seen[row.role] ?? -1) + 1
+			if (v > 0) rows.push({ id: gapId(row.role, ordinal), kind: 'gap', v })
+		}
+		const id = nextId(row.role)
+		textRowIds.push(id)
+		rows.push({ id, kind: 'el', v: row.cap })
+		glyphs.push({ id, text: row.text, cap: row.cap, role: row.role, col: textCol, row: id })
+	})
+
+	/* 🔴 `baseRows`가 있으면 그 개수까지만 봉투 안이고 나머지는 매달린 것이다(해외지사 가로형B). */
+	const areaRowCount = lockup.baseRows ?? textColumn.rows.length
+	const lastAreaIndex = rows.indexOf(rows.filter((t) => t.kind === 'el')[areaRowCount - 1])
+	const areaH = rows.slice(0, lastAreaIndex + 1).reduce((sum, t) => sum + (t.v ?? 0), 0)
+
+	const horizontal = lockup.orientation === 'horizontal'
+	/* 가로형은 영역이 심볼 높이(1H) 안에 중앙으로 놓인다. 세로형은 심볼이 위에 따로 선다. */
+	const pad = horizontal ? Math.max(0, (1 - areaH) / 2) : 0
+
+	const finalRows: DiagramTrack[] = []
+	let envStart = 0
+	let envEnd = 0
+	if (!horizontal) {
+		/* 🔴 세로형 봉투는 **심볼 행**이다 — 텍스트 블록을 감싸면 `span:H`가 H라고 적힌 채 0.9H를 잰다. */
+		envStart = finalRows.length
+		finalRows.push({ id: 'sym', kind: 'sym', v: 1 })
+		envEnd = finalRows.length - 1
+		finalRows.push({ id: gapId(textColumn.rows[0].role, 0), kind: 'gap', v: lockup.gap })
+	}
+	if (pad > 0) {
+		envStart = finalRows.length
+		finalRows.push({ kind: 'pad', v: pad })
+	}
+	const areaStart = finalRows.length
+	finalRows.push(...rows.slice(0, lastAreaIndex + 1))
+	const areaEnd = finalRows.length - 1
+	if (pad > 0) {
+		finalRows.push({ kind: 'pad', v: pad })
+		envEnd = finalRows.length - 1
+	} else if (horizontal) {
+		envStart = areaStart
+		envEnd = areaEnd
+	}
+	/* 🔴 매달린 행의 간격은 **영역 하단** 기준이다 — 봉투 패딩이 이미 내려와 있으니 그만큼 뺀다.
+	   안 빼면 해외지사 가로형B 총높이가 1.12H가 아니라 1.17H가 된다. */
+	let firstHanging = true
+	for (const track of rows.slice(lastAreaIndex + 1)) {
+		if (track.kind === 'gap' && firstHanging) {
+			firstHanging = false
+			finalRows.push({ ...track, v: Math.max(0, (track.v ?? 0) - pad), labelValue: track.v })
+		} else finalRows.push(track)
+	}
+
+	/* ── 열 트랙 ── */
+	const cols: DiagramTrack[] = []
+	if (horizontal) {
+		cols.push({ id: 'sym', kind: 'sym', v: SYMBOL_ASPECT })
+		cols.push({
+			id: gapId(lockup.columns[0]?.rows[0]?.role ?? 'name', 0),
+			kind: 'gap',
+			v: lockup.gap,
+		})
+	}
+	lockup.columns.forEach((column, i) => {
+		const isText = column === textColumn
+		const role = column.bar !== undefined ? 'bar' : (column.rows[0]?.role ?? 'name')
+		const id = column.bar !== undefined ? 'bar' : isText ? textCol : `col:${role}`
+		if (i > 0 && (column.gapBefore ?? 0) > 0) {
+			cols.push({ id: gapId(role, 0), kind: 'gap', v: column.gapBefore })
+		}
+		cols.push({ id, kind: column.bar !== undefined ? 'bar' : 'el', v: column.bar })
+		if (isText || column.bar !== undefined) return
+		/* 🔑 행을 갖지 않는 열의 글자. 행이 하나면 영역 전체에 걸쳐 중앙에 놓이고(가로형A의 HD),
+		      여럿이면 **글자 열의 행 리듬에 k→k로 앉는다**(가로형A의 지역명 2행). 아래에서 붙인다.
+		   🔴 여기서 `rows[0]`만 읽으면 둘째 줄이 통째로 사라진다 — 실제로 그랬다(`R&D CENTER`). */
+		const bottomAligned = column.align === 'bottom'
+		column.rows.forEach((row, k) => {
+			const target =
+				column.rows.length === 1 && !bottomAligned
+					? undefined
+					: bottomAligned
+						? textRowIds[textRowIds.length - column.rows.length + k]
+						: textRowIds[k]
+			glyphs.push({
+				id: nextId(row.role),
+				text: row.text,
+				cap: row.cap,
+				role: row.role,
+				col: id,
+				row: target,
+			})
+		})
+	})
+
+	/* 🔴 **열** 간격만 대상이다 — 행 축 간격의 라벨은 좌측 게이지 열에 앉으므로 위/아래가 없다. */
+	const labelBelow = cols
+		.filter((t) => (t.kind === 'gap' || t.kind === 'bar') && (t.v ?? 1) < LABEL_BELOW_UNDER)
+		.map((t) => t.id as string)
+
+	/* ── 게이지(Span) ── */
+	const spans: DiagramSpan[] = []
+	spans.push({ id: 'span:H', side: 'left', depth: 0, from: 'env', to: 'env', label: 'H' })
+	spans.push({
+		id: 'span:area',
+		side: 'left',
+		depth: 1,
+		from: finalRows[areaStart]?.id ?? 'env',
+		to: finalRows[areaEnd]?.id ?? 'env',
+		label: hLabel(areaH),
+	})
+
+	/* 🔑 `hd` 행이 있는 꼴에서는 「HD」와 「계열사명 묶음」이 각각 게이지를 갖는다(정본 도판).
+	      가로형A는 HD가 행이 아니라 열이므로 이 게이지가 없다 — 파생이 그것을 알아서 맞춘다. */
+	const hdRow = finalRows.find((t) => t.kind === 'el' && t.id?.startsWith('el:hd:'))
+	const nameRows = finalRows.filter((t) => t.kind === 'el' && t.id?.startsWith('el:name:'))
+	const hasGroups = Boolean(hdRow) && nameRows.length > 0
+	if (hasGroups && hdRow) {
+		spans.push({
+			id: 'span:group:hd',
+			side: 'right',
+			depth: 0,
+			from: hdRow.id ?? '',
+			to: hdRow.id ?? '',
+			label: hLabel(hdRow.v ?? 0),
+		})
+		const first = nameRows[0]
+		const last = nameRows[nameRows.length - 1]
+		const groupH = finalRows
+			.slice(finalRows.indexOf(first), finalRows.indexOf(last) + 1)
+			.reduce((sum, t) => sum + (t.v ?? 0), 0)
+		spans.push({
+			id: 'span:group:name',
+			side: 'right',
+			depth: 0,
+			from: first.id ?? '',
+			to: last.id ?? '',
+			label: hLabel(groupH),
+		})
+	}
+
+	for (const track of finalRows) {
+		if (track.kind !== 'el' || !track.id) continue
+		if (hasGroups && track.id.startsWith('el:hd:')) continue
+		spans.push({
+			id: `span:${track.id}`,
+			side: 'right',
+			depth: hasGroups ? 1 : 0,
+			from: track.id,
+			to: track.id,
+			label: hLabel(track.v ?? 0),
+		})
+	}
+
+	return {
+		cols,
+		rows: finalRows,
+		glyphs,
+		areaRows: [areaStart, areaEnd] as const,
+		envRows: [envStart, envEnd] as const,
+		spans,
+		labelBelow,
+		gaugeLeft: GAUGE_LEFT,
+		gaugeRight: GAUGE_RIGHT,
+		textCol,
+	}
+}
+
 export const SYMBOL_CONTOURS = [
 	{
 		/** 밝은초록 — 위쪽 조각. 두 표현에서 형태 동일. */

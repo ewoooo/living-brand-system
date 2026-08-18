@@ -13,6 +13,8 @@ import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { SPEC_READOUT } from '../readout'
 import { CI_STAGE_DARK, CI_STAGE_LIGHT } from '../surface'
+import { LockupDiagram } from './diagram'
+import { easeMorph, MORPH, MORPH_EASING, MORPH_MS, reducedMotion } from './motion'
 import {
 	bearingOf,
 	branchLabel,
@@ -67,47 +69,6 @@ import {
  */
 const DEBUG_INK_BOX = false
 
-/** 표현 전환 지속시간(ms). 형태와 색이 같은 값을 써서 함께 움직인다. */
-const MORPH_MS = 420
-
-/**
- * 전환 곡선. 🔴 **한 곡선을 CSS와 JS가 같이 쓴다** — 심볼 형태는 JS가 프레임마다 계산하고
- * 색·판·위치는 CSS/WAAPI가 하므로, 곡선이 다르면 같이 움직이는 것들이 어긋나 보인다
- * (실측으로 겪은 것: 텍스트 색만 전환이 없어 점프했고, 위치만 `ease`라 따로 놀았다).
- *
- * `easeOutQuint` 계열 — 처음에 빠르게 튀어나가고 끝을 길게 눌러 앉는다. 오버슛은 넣지 않았다:
- * 색 전환이 목표를 지나치면 색역 밖으로 나가고, 로고 형태가 규정 값을 넘어가 보이는 것도 곤란하다.
- */
-const MORPH_BEZIER = [0.22, 1, 0.36, 1] as const
-const MORPH_EASING = `cubic-bezier(${MORPH_BEZIER.join(',')})`
-
-/** CSS `transition`·`animate`에 함께 쓰는 값. */
-const MORPH = `${MORPH_MS}ms ${MORPH_EASING}`
-
-/**
- * `cubic-bezier`의 y를 x로 구한다 — CSS가 이징으로 하는 계산을 JS에서 똑같이 한다.
- * x(t)를 뉴턴법으로 뒤집어 t를 찾고 y(t)를 낸다(브라우저 구현과 같은 방식).
- */
-export function easeMorph(x: number) {
-	const [x1, y1, x2, y2] = MORPH_BEZIER
-	const cx = 3 * x1
-	const bx = 3 * (x2 - x1) - cx
-	const ax = 1 - cx - bx
-	const cy = 3 * y1
-	const by = 3 * (y2 - y1) - cy
-	const ay = 1 - cy - by
-
-	let t = x
-	for (let i = 0; i < 8; i++) {
-		const dx = ((ax * t + bx) * t + cx) * t - x
-		if (Math.abs(dx) < 1e-6) break
-		const slope = (3 * ax * t + 2 * bx) * t + cx
-		if (Math.abs(slope) < 1e-6) break
-		t -= dx / slope
-	}
-	return ((ay * t + by) * t + cy) * t
-}
-
 /** H(심볼 높이). 워드마크가 읽히는 크기로 잡았다. */
 const H = 100
 
@@ -129,6 +90,8 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 	const [colorType, setColorType] = useState<ColorType>('fullColor')
 	const [mono, setMono] = useState<MonoColor>('BLACK')
 	const [clearSpaceMode, setClearSpaceMode] = useState<ClearSpaceMode>('off')
+	/** 치수 도판. 🔴 규정을 **보여주기만** 한다 — 간격은 조정 대상이 아니다(금지규정 #9). */
+	const [measured, setMeasured] = useState(false)
 
 	// 계층 파생 규칙은 rules.ts가 소유한다(`tierFor`) — 켜짐 종속·보관 이유가 그 주석에 있다.
 	const tier = tierFor(subOn, branchOn)
@@ -266,6 +229,21 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 					/>
 				</Field>
 
+				{/* 🔑 도판은 **간격 규정**을 보여준다 — 여백(클리어스페이스)과 아예 다른 규정이고
+					여기서 조정되지 않는다(금지규정 #9 「CI의 간격을 임의로 조정할 수 없습니다」).
+					그래서 값 축이 아니라 표시 축이다. */}
+				<Field label="치수">
+					<SlotChoice
+						slots={[
+							{ key: 'off', label: '숨김' },
+							{ key: 'on', label: '표시' },
+						]}
+						value={measured ? 'on' : 'off'}
+						onChange={(v) => setMeasured(v === 'on')}
+						label="치수 도판"
+					/>
+				</Field>
+
 				{/* 🔴 `예외`는 공간 제약이 있을 때만 허용되는 값이다 — 더 좁게 써도 된다는 뜻이 아니다. */}
 				<Field label={`클리어스페이스${clearSpace ? ` ${clearSpace}H` : ''}`}>
 					<SlotChoice
@@ -288,6 +266,19 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 				symbolT={symbolT}
 				symbolColors={symbolColors}
 				clearSpace={clearSpace}
+				diagram={
+					measured ? (
+						<LockupDiagram
+							lockup={lockup}
+							siblings={all}
+							h={H}
+							colors={colors}
+							stage={stage}
+							symbolT={symbolT}
+							symbolColors={symbolColors}
+						/>
+					) : null
+				}
 			/>
 
 			<dl className={`flex flex-wrap gap-x-6 gap-y-1 text-xs ${SPEC_READOUT}`}>
@@ -528,11 +519,6 @@ function Field({
 	)
 }
 
-/** 움직임 줄이기를 켠 사용자에겐 전환하지 않는다. */
-function reducedMotion() {
-	return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
-
 /**
  * 레이아웃이 바뀌어 **덩어리가 다른 자리로 옮겨갈 때** 그 이동을 이어 준다.
  *
@@ -612,7 +598,7 @@ function useApproach(target: number, ms = MORPH_MS) {
  * 심볼. 🔑 정삼각 격자 위 삼각형 3개를 좌표에서 직접 그린다 — 이미지도, 마스크도, 폰트도 아니다.
  * `t`가 0→1로 가면 이음선이 벌어지고(`symbolPoints`) 동시에 색이 단색으로 물든다.
  */
-function SymbolMark({
+export function SymbolMark({
 	h,
 	t,
 	colors,
@@ -652,6 +638,7 @@ function LockupFigure({
 	symbolT,
 	symbolColors,
 	clearSpace,
+	diagram,
 }: {
 	lockup: Lockup
 	h: number
@@ -661,6 +648,8 @@ function LockupFigure({
 	symbolColors: string[]
 	/** 여백(H 배수). 0이면 그리지 않는다. */
 	clearSpace: number
+	/** 치수 도판. 있으면 판 안의 락업을 이것으로 갈아끼운다(같은 자리·같은 판 크기). */
+	diagram: React.ReactNode
 }) {
 	const assumed =
 		lockup.columns.some((column) => column.rows.some((row) => row.assumed)) ||
@@ -681,15 +670,17 @@ function LockupFigure({
 					transition: `background-color ${MORPH}`,
 				}}
 			>
-				<ClearSpaceFrame h={h} clearSpace={clearSpace}>
-					<Composed
-						lockup={lockup}
-						h={h}
-						color={color}
-						symbolT={symbolT}
-						symbolColors={symbolColors}
-					/>
-				</ClearSpaceFrame>
+				{diagram ?? (
+					<ClearSpaceFrame h={h} clearSpace={clearSpace}>
+						<Composed
+							lockup={lockup}
+							h={h}
+							color={color}
+							symbolT={symbolT}
+							symbolColors={symbolColors}
+						/>
+					</ClearSpaceFrame>
+				)}
 			</div>
 			<figcaption className="flex flex-col gap-1">
 				<span className="font-body text-foreground text-sm">
@@ -884,7 +875,7 @@ function ColumnStack({
  * 🔴 좌우도 같이 걷어낸다 — 줄 첫 글자의 왼쪽 여백과 마지막 글자의 오른쪽 여백. 이걸 안 하면
  *    심볼–워드마크 간격이 규정(0.25H)보다 벌어지고, 세로형의 가운데 정렬도 잉크 기준이 아니게 된다.
  */
-function CapLine({
+export function CapLine({
 	text,
 	cap,
 	h,
@@ -937,3 +928,6 @@ function CapLine({
 }
 
 export default CiLockupView
+
+/* 🔑 모프 토큰은 `motion.ts`가 소유한다. 여기서 재수출하는 것은 기존 import 경로를 지키기 위함이다. */
+export { easeMorph, MORPH_EASING, MORPH_MS, reducedMotion }
