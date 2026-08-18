@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
 	deriveImageStudioConfig,
 	IMAGE_STUDIO_CONTROL_IDS,
@@ -64,24 +64,24 @@ vi.mock('@/features/studio-export/adapters/download-export-result.client', () =>
 	downloadExportResult: vi.fn(),
 }))
 
+// 세션은 테스트마다 갈아끼운다 — 카메라 seed가 참조 유무에 따라 다른 경로로 파생되기 때문이다.
+const generationMocks = vi.hoisted(() => ({ session: null as unknown }))
+
+/** 프로파일을 교체해도 남아야 하는 사용자 산출물 — 참조 없이 프롬프트로 바로 나온 세션. */
+const SESSION = {
+	images: [{ src: 'blob:1', generatedImageId: 8, profileId: 5 }],
+	reference: null,
+	output: { aspectRatio: '2:3', imageSize: '1K' },
+}
+
 vi.mock('@/features/image-generation/hooks/use-image-generation', () => ({
 	useImageGeneration: () => ({
-		adjustCamera: vi.fn(),
 		error: null,
 		generate: vi.fn(),
 		loading: false,
 		requested: 4,
-		// 프로파일을 교체해도 남아야 하는 사용자 산출물.
-		result: {
-			aspectRatio: '2:3',
-			generatedImages: [{ id: 8 }],
-			images: ['blob:1'],
-			imageSize: '1K',
-			model: 'gpt-image-2',
-			profileId: 5,
-			prompt: '{}',
-		},
 		selected: 0,
+		session: generationMocks.session,
 		setSelected: vi.fn(),
 	}),
 }))
@@ -206,12 +206,16 @@ function Probe() {
 	useEffect(() => {
 		load()
 	}, [load])
-	const result = results.result
-	const resultConfig = profiles.options.find((candidate) => candidate.id === result?.profileId)
+	const items = results.items
+	const resultConfig = profiles.options.find((candidate) => candidate.id === items[0]?.profileId)
 	const download = useImageExport({
-		artifacts: result
-			? createImageArtifacts({ images: result.images, color: results.color })
-			: null,
+		artifacts:
+			items.length > 0
+				? createImageArtifacts({
+						images: items.map((item) => item.src),
+						color: results.color,
+					})
+				: null,
 		capability: resultConfig?.output ?? { formats: [], original: false },
 		selected: results.selected,
 		size: { width: 832, height: 1248 },
@@ -221,7 +225,7 @@ function Probe() {
 			<output data-testid="browse">{`browse:${profiles.browse.status}`}</output>
 			<output data-testid="state">
 				{current.name} / {generation.batch} / {generation.ratio} / {generation.resolution} /{' '}
-				{prompt.value} / {results.result ? '결과 있음' : '결과 없음'}
+				{prompt.value} / {results.items.length > 0 ? '결과 있음' : '결과 없음'}
 			</output>
 			<output data-testid="prompt-error">
 				{controls.bindings.prompt?.error ?? '오류 없음'} /{' '}
@@ -298,6 +302,9 @@ function chooseAll() {
 }
 
 describe('ImageStudioProvider 프로파일 교체 정책', () => {
+	beforeEach(() => {
+		generationMocks.session = SESSION
+	})
 	afterEach(() => {
 		cleanup()
 		vi.clearAllMocks()
@@ -379,6 +386,22 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 		fireEvent.click(screen.getByRole('button', { name: '교체' }))
 
 		expect(screen.getByTestId('state')).toHaveTextContent('결과 있음')
+		expect(screen.getByTestId('camera-seed')).toHaveTextContent('대상 없음')
+	})
+
+	// 고정된 참조도 프로파일 게이트를 지나야 한다 — 서버가 시드를 scenario로 조회하므로
+	// 옛 프로파일의 참조를 문 채 열려 있으면 재생성 버튼이 언제나 실패한다.
+	it('참조가 남은 세션도 프로파일 교체 후에는 camera seed로 열지 않는다', async () => {
+		generationMocks.session = {
+			images: [{ src: 'blob:2', generatedImageId: 9, profileId: 5 }],
+			reference: { src: 'blob:1', generatedImageId: 8, profileId: 5 },
+			output: { aspectRatio: '2:3', imageSize: '1K' },
+		}
+		await renderStudio([config(5), config(7)])
+		expect(screen.getByTestId('camera-seed')).toHaveTextContent('blob:1')
+
+		fireEvent.click(screen.getByRole('button', { name: '교체' }))
+
 		expect(screen.getByTestId('camera-seed')).toHaveTextContent('대상 없음')
 	})
 

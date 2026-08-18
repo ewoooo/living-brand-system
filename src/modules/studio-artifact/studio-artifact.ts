@@ -2,7 +2,12 @@ export const STUDIO_ARTIFACT_KINDS = ['raster', 'vector', 'video', 'original'] a
 
 export type StudioArtifactKind = (typeof STUDIO_ARTIFACT_KINDS)[number]
 
-export type StudioVideoFrameRate = 24 | 30 | 60
+export const STUDIO_VIDEO_FPS_VALUES = [24, 30, 60] as const
+
+export type StudioVideoFrameRate = (typeof STUDIO_VIDEO_FPS_VALUES)[number]
+
+export const STUDIO_VIDEO_FPS_OPTIONS: readonly { label: string; value: StudioVideoFrameRate }[] =
+	STUDIO_VIDEO_FPS_VALUES.map((value) => ({ label: `${value}fps`, value }))
 
 export type StudioArtifactCapabilities = {
 	raster?: Record<string, never>
@@ -60,7 +65,7 @@ function parseVideoCapability(input: unknown): void {
 	if (
 		!Array.isArray(video.fps) ||
 		video.fps.length === 0 ||
-		video.fps.some((fps) => fps !== 24 && fps !== 30 && fps !== 60) ||
+		video.fps.some((fps) => !STUDIO_VIDEO_FPS_VALUES.includes(fps as StudioVideoFrameRate)) ||
 		new Set(video.fps).size !== video.fps.length
 	) {
 		throw new Error('Studio Runtime video fps가 올바르지 않습니다.')

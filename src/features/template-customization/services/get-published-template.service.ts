@@ -1,5 +1,5 @@
 import { projectTemplateRenderModel } from '@/features/template-core/domain/project-template-render-model'
-import { findPublishedTemplate } from '@/features/template-core/repositories/published-template.payload.repository'
+import { findPublishedTemplate } from '@/features/template-core/services/published-template-catalog.service'
 import type {
 	PublishedHtmlTemplate,
 	PublishedTemplateNodeConfig,
@@ -36,7 +36,7 @@ function projectStudioNodeConfigs(
 
 /**
  * Create 화면이 쓰는 published 템플릿 단건 read service.
- * Payload 조회는 published-template repository가 소유한다.
+ * Payload 조회는 template-core의 published-template-catalog service가 소유한다.
  * 읽기 계약: 렌더 가능한 canonical HTML이 아니면 노출하지 않고,
  * nodeConfigs는 projectStudioNodeConfigs가 남긴 스튜디오용 부분집합만 노출한다.
  */
