@@ -87,7 +87,22 @@
 
 🔴 **모듈 스코프 스토어는 금지입니다.** 섹션 라우트가 여러 Page를 한 화면에 렌더하므로, 페이지마다 놓인 패널이 전부 같은 값을 물어 슬라이더 하나가 판형 12개를 함께 움직입니다(실측된 사고). `set`은 `useCallback`으로 안정화해 소비자가 effect 의존에 넣을 수 있게 합니다.
 
-Block은 특정 자식을 헤더로 hoist할 수 있습니다 — 컨트롤 패널이 배치 셀을 차지하면 안 되므로 children에서 걸러 제목·설명 다음에 렌더합니다(`splitControls`).
+Block은 특정 자식을 배치에서 걷어내 **다른 자리에 렌더**할 수 있습니다 — 컨트롤 패널이 배치 셀을 차지하면 안 되기 때문입니다(`splitControls`). 지금 그 자리는 화면 하단의 **Floating Controller**입니다(§4.1).
+
+### 4.1 컨트롤은 하단 Floating Controller에 뜹니다
+
+컨트롤 위젯은 **자기 위치를 모릅니다.** 알약의 내용물만 그리고, 어디에 뜰지는 `components/globals/guideline-helper.tsx`가 정합니다. Block이 `GuidelineHelperRegion`으로 배치 면을 감싸면, 그 면이 화면에 걸려 있는 동안에만 컨트롤이 하단 알약으로 올라갑니다.
+
+| 누가 | 무엇을 |
+| --- | --- |
+| `GuidelineHelperProvider` | 관측(IntersectionObserver)과 "누가 활성인가". 🔴 **값은 갖지 않습니다** |
+| `GuidelineHelperRegion` | 블록이 선언하는 **관측 영역** = 조작 대상이 놓인 면(제목·본문 아님) |
+| `GuidelineHelperSlot` | 알약이 앉는 sticky 자리. 목차와 같은 `absolute inset-0` + sticky 방식 |
+| 컨트롤 위젯 | 알약의 내용물. 값 스코프는 **여전히 블록** |
+
+🔴 **바에 값을 올리지 마십시오.** 화면에 바는 하나뿐이라, 바가 값을 중계하는 순간 블록마다 다른 값이 하나로 합쳐져 슬라이더 하나가 여러 블록의 판형을 함께 움직입니다(2026-08-04에 12개가 함께 움직인 사고와 같은 형태). 컨트롤은 자기 블록의 React 트리 안에서 렌더되고 **DOM만** portal로 내려갑니다 — context는 트리를 따라가므로 스코프가 유지됩니다.
+
+관측 root는 뷰포트가 아니라 `[data-slot="section-scroll-container"]`입니다. 본문이 중첩 스크롤 안에 있어 root를 비우면 교차 판정이 어긋납니다. 활성은 **보이는 면적이 가장 큰** 영역이고(비율이 아닙니다 — 비율로 재면 화면에 꽉 찬 큰 판형이 구석에 다 보이는 작은 판형에게 집니다), 동률이면 문서 순서가 앞선 쪽입니다. 규칙은 `guideline-active-region.ts`가 소유하고 그 옆 테스트가 지킵니다.
 
 ### 인스턴스 오버라이드는 3형태 중에 고릅니다
 
@@ -128,7 +143,7 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 
 | 어휘 | 규칙 |
 | --- | --- |
-| **전환 컨트롤** | 앱 프리미티브를 씁니다 — 설정 on/off는 `Switch`, 2~5개 선택은 `ToggleGroup`, 연속값은 `Slider`. 🔴 `Tabs`는 **패널 내비게이션일 때만**입니다. 같은 판을 다르게 그리는 설정 전환은 Tabs가 아닙니다.<br>하나 고르기는 `type="single"`(Radix가 `radiogroup`/`radio`로 렌더), 여러 개 고르기는 `type="multiple"`입니다.<br>**모양도 그 구분을 따릅니다** — 하나 고르기는 `spacing={0}`으로 **붙은 한 덩어리**(바깥 두 끝만 둥글고 안쪽 이음새는 각짐), 여러 개 고르는 필터는 **낱개로 띄웁니다**. 같은 판을 전환하는 것과 조건을 켜고 끄는 것은 다른 일이고, 그 차이가 눈에 보여야 합니다 |
+| **전환 컨트롤** | 앱 프리미티브를 씁니다 — 설정 on/off는 `Switch`, 2~5개 선택은 `ToggleGroup`, 연속값은 `Slider`.<br>🔴 **예외: 하단 Floating Controller 안(§4.1)에서는 on/off도 `ToggleGroup`(`spacing={0}`)입니다.** 알약은 폭이 좁고 라벨이 한 번만 쓰이는 자리라 `Switch`의 "무엇이 켜졌나"를 글로 다시 적을 여백이 없습니다 — 세그먼트는 두 상태를 라벨로 직접 보여줍니다(Figma HD_LBS_UI 61:4693). 알약 밖에서는 이 예외가 적용되지 않습니다. 🔴 `Tabs`는 **패널 내비게이션일 때만**입니다. 같은 판을 다르게 그리는 설정 전환은 Tabs가 아닙니다.<br>하나 고르기는 `type="single"`(Radix가 `radiogroup`/`radio`로 렌더), 여러 개 고르기는 `type="multiple"`입니다.<br>**모양도 그 구분을 따릅니다** — 하나 고르기는 `spacing={0}`으로 **붙은 한 덩어리**(바깥 두 끝만 둥글고 안쪽 이음새는 각짐), 여러 개 고르는 필터는 **낱개로 띄웁니다**. 같은 판을 전환하는 것과 조건을 켜고 끄는 것은 다른 일이고, 그 차이가 눈에 보여야 합니다 |
 | **컨트롤의 이름** | 🔴 `Slider`의 이름·값 서술은 `aria-label`/`aria-labelledby`/`aria-valuetext`로 줍니다. `role="slider"`는 Root가 아니라 **손잡이**에 붙으므로 `<label>`로 감싸도 이어지지 않습니다(`Switch`도 같아서 `htmlFor`를 씁니다). 순번이 아니라 뜻이 읽혀야 하면 `aria-valuetext`로 덮습니다(예: `0·1·2` 대신 `Bold 700`) |
 | **스펙 판독** | 수치를 읽어주는 줄. `font-mono` + `tabular-nums` + `text-xs` + `text-muted-foreground`. 규정이 범위인데 화면이 한 값을 그리면 **적용값을 함께 적습니다**(`행간 150–160% · 150% 적용`) |
 | **캡션** | `font-body text-muted-foreground text-xs`. 상하 여백은 부모 스택의 `gap`이 소유하고 캡션이 자기 마진을 갖지 않습니다 |
