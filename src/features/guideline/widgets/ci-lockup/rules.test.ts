@@ -15,6 +15,7 @@ import {
 	SUBSIDIARIES,
 	splitScripts,
 	TIERS,
+	tierFor,
 	trimFor,
 } from './rules'
 
@@ -140,5 +141,18 @@ describe('CI 락업 조립 규칙', () => {
 			}).map((lockup) => lockup.key)
 			expect(new Set(keys).size, `${tier} — key 중복`).toBe(keys.length)
 		}
+	})
+
+	// 🔑 계층은 고르는 축이 아니라 켜기 두 개의 파생값이다. 「본사」 = 아무것도 켜지 않은 상태.
+	it('켜기 조합이 계층으로 파생된다', () => {
+		expect(tierFor(false, false)).toBe('ci')
+		expect(tierFor(true, false)).toBe('subsidiary')
+		expect(tierFor(true, true)).toBe('overseas')
+	})
+
+	// 🔴 지사명은 자회사명 위에 붙으므로 자회사가 꺼지면 성립하지 않는다. 지사 켜짐이 보관돼
+	//    있어도 계층은 본사로 떨어져야 한다 — 이게 깨지면 자회사 없는 해외지사 락업을 그리게 된다.
+	it('자회사가 꺼지면 지사 켜짐이 보관돼 있어도 본사다', () => {
+		expect(tierFor(false, true)).toBe('ci')
 	})
 })

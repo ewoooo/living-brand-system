@@ -583,13 +583,17 @@ export function lockupOptions(tier: Tier): {
 	if (tier === 'ci') {
 		return {
 			forms: [
-				{ key: 'horizontal', label: '가로' },
-				{ key: 'vertical', label: '세로' },
+				{ key: 'horizontal', label: '가로형' },
+				{ key: 'vertical', label: '세로형' },
 			],
+			// 🔑 본사 워드마크는 **HD가 base고 거기에 글자가 더해진다** — `ciLockups()`의 실제
+			//    텍스트가 그렇다: hd=`HD` · ko=`HD현대` · en=`HD HYUNDAI`. 그래서 `국문/영문/HD`가
+			//    아니라 base와 덧붙임으로 적는다. 🔴 영문은 `Hyundai`가 아니라 대문자 `HYUNDAI`다.
+			//    🔴 이 프레이밍은 본사에서만 성립한다 — 자회사·해외지사의 ko/en은 계열사 이름이다.
 			languages: [
-				{ key: 'ko', label: '국문' },
-				{ key: 'en', label: '영문' },
 				{ key: 'hd', label: 'HD' },
+				{ key: 'ko', label: '+현대' },
+				{ key: 'en', label: '+HYUNDAI' },
 			],
 		}
 	}
@@ -603,6 +607,18 @@ export function lockupOptions(tier: Tier): {
 					{ key: 'en', label: '영문' },
 				],
 			}
+}
+
+/**
+ * 계층은 **고르는 축이 아니라 파생값이다.** 「본사」는 항목이 아니라 *아무것도 켜지 않은 상태*다.
+ *
+ * 🔴 해외지사는 자회사명 **위에** 지부명이 붙는 형태라(`overseasLockups`가 둘을 다 쓴다) 자회사를
+ *    끄면 성립하지 않는다. 그래서 지사 켜짐은 자회사 켜짐에 종속된다 — 켜짐 자체는 보관하고
+ *    효력만 끊으므로, 자회사를 다시 켜면 지사까지 그대로 돌아온다.
+ */
+export function tierFor(subsidiaryOn: boolean, branchOn: boolean): Tier {
+	if (!subsidiaryOn) return 'ci'
+	return branchOn ? 'overseas' : 'subsidiary'
 }
 
 export const TIER_LABEL: Record<Tier, string> = {
