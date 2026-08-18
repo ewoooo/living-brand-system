@@ -2,7 +2,7 @@ import { projectTemplateRenderModel } from '@/features/template-core/domain/proj
 import {
 	listPublishedTemplateNavItems,
 	listTemplateCategories,
-} from '@/features/template-core/repositories/published-template.payload.repository'
+} from '@/features/template-core/services/published-template-catalog.service'
 import { getStudioTemplateRoute } from '@/lib/routes'
 import type { StudioPreviewImage } from '@/modules/studio-controller/controller-definition'
 
@@ -23,7 +23,7 @@ export interface GetCreateNavigationOutput {
 
 /**
  * Create 화면 선택기용 카테고리 → 렌더 가능한 published 템플릿 read service.
- * Payload 조회는 published-template repository가 소유한다.
+ * Payload 조회는 template-core의 published-template-catalog service가 소유한다.
  */
 export async function getCreateNavigation(): Promise<GetCreateNavigationOutput> {
 	const [categories, templates] = await Promise.all([
