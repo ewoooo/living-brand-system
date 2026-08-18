@@ -324,7 +324,8 @@ function validRequestOptions(request: ExportRequest): boolean {
 					)
 				case 'pdf':
 					return (
-						PRINT_PPI_VALUES.includes(request.options.ppi) && request.options.bleedMm >= 0
+						PRINT_PPI_VALUES.includes(request.options.ppi) &&
+						request.options.bleedMm >= 0
 					)
 				case 'mp4':
 					return validVideoExportSpec(request.options)
