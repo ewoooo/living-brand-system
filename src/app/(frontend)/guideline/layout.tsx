@@ -1,29 +1,13 @@
 import type React from 'react'
 import { SectionLayout } from '@/components/global/section-layout'
-import { PageNavigation } from '@/components/shared/navigation/page-navigation'
 import { GuidelineSideNavigation } from '@/features/guideline/components/globals/guideline-side-navigation'
-import { getSectionIcon } from '@/features/guideline/components/section-icon'
 import { getGuidelineNavigation } from '@/features/guideline/services/get-guideline-navigation.service'
 
 export default async function GuidelineLayout({ children }: { children: React.ReactNode }) {
 	const navigation = await getGuidelineNavigation()
 
 	return (
-		<SectionLayout
-			nav={<GuidelineSideNavigation chapters={navigation.chapters} />}
-			pageNavigation={
-				<PageNavigation
-					items={navigation.chapters.flatMap((chapter) =>
-						chapter.sections.map(({ title, href }) => ({
-							title,
-							href,
-							icon: getSectionIcon(href),
-						})),
-					)}
-					unitLabel="섹션"
-				/>
-			}
-		>
+		<SectionLayout nav={<GuidelineSideNavigation chapters={navigation.chapters} />}>
 			<div className="w-full py-8 md:py-20">{children}</div>
 		</SectionLayout>
 	)
