@@ -12,22 +12,28 @@ export interface StoredGeneratedImage {
 	url: string
 }
 
-export interface GeneratedImageSeed {
+/**
+ * 참조 생성에 쓸 이미지 한 장의 해석 결과 — 어느 소스에서 왔든 이 형태로 수렴한다.
+ * 소스마다 소유권 검증이 다르므로 검증은 각 해석 함수가 소유한다.
+ */
+export interface ResolvedReference {
 	data: Buffer
-	effectivePrompt: string
-	inputPrompt: string
+	/** `sourceImage`에 기록할 대상. 생성 이미지가 아닌 소스는 null. */
+	generatedImageId: number | null
+	/** 소스가 프롬프트를 함께 제공할 때만 있다. */
+	prompt?: { effective: string; input: string }
 }
 
 /**
- * 카메라 조정에 사용할 published Generated Image를 사용자 권한으로 찾고 원본 파일을 읽는다.
+ * 참조 생성에 쓸 published Generated Image를 사용자 권한으로 찾고 원본 파일을 읽는다.
  * Payload 조회와 저장 URL 다운로드 I/O는 이 repository가 소유한다.
  */
-export async function loadGeneratedImage(input: {
+export async function resolveGeneratedImageReference(input: {
 	generatedImageId: number
 	profileId: number
 	requestUrl: string
 	user: unknown
-}): Promise<GeneratedImageSeed | null> {
+}): Promise<ResolvedReference | null> {
 	const userId = getUserId(input.user)
 	if (!userId) return null
 	const payload = await getPayload({ config })
@@ -89,8 +95,8 @@ export async function loadGeneratedImage(input: {
 				response.headers.get('content-type'),
 			)
 		).data,
-		effectivePrompt: image.effectivePrompt,
-		inputPrompt: image.inputPrompt,
+		generatedImageId: input.generatedImageId,
+		prompt: { effective: image.effectivePrompt, input: image.inputPrompt },
 	}
 }
 

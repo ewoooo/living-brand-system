@@ -11,9 +11,9 @@ const mocks = vi.hoisted(() => ({
 	devGenerateImages: vi.fn(),
 	findPublishedImageProfile: vi.fn(),
 	generateBrandImages: vi.fn(),
-	loadGeneratedImage: vi.fn(),
 	normalizeImageProfilePrompt: vi.fn(),
 	releaseImageGenerationSlot: vi.fn(),
+	resolveGeneratedImageReference: vi.fn(),
 	storeGeneratedImages: vi.fn(),
 }))
 
@@ -43,7 +43,7 @@ vi.mock('@/features/image-generation/repositories/image-profile.payload.reposito
 	findPublishedImageProfile: mocks.findPublishedImageProfile,
 }))
 vi.mock('@/features/image-generation/repositories/generated-image.payload.repository', () => ({
-	loadGeneratedImage: mocks.loadGeneratedImage,
+	resolveGeneratedImageReference: mocks.resolveGeneratedImageReference,
 	storeGeneratedImages: mocks.storeGeneratedImages,
 }))
 vi.mock('@/features/image-generation/services/normalize-image-profile-prompt.service', () => ({
@@ -73,7 +73,7 @@ describe('generateImages', () => {
 		mocks.env.OPENAI_API_KEY = undefined
 		mocks.acquireImageGenerationSlot.mockReturnValue(mocks.releaseImageGenerationSlot)
 		mocks.findPublishedImageProfile.mockResolvedValue(null)
-		mocks.loadGeneratedImage.mockResolvedValue(null)
+		mocks.resolveGeneratedImageReference.mockResolvedValue(null)
 		mocks.storeGeneratedImages.mockResolvedValue([
 			{
 				collection: 'generated-images',
@@ -546,10 +546,10 @@ describe('generateImages', () => {
 			instructions: 'x'.repeat(600),
 			subject: '유조선',
 		})
-		mocks.loadGeneratedImage.mockResolvedValue({
+		mocks.resolveGeneratedImageReference.mockResolvedValue({
 			data: Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
-			effectivePrompt,
-			inputPrompt: '유조선',
+			generatedImageId: 8,
+			prompt: { effective: effectivePrompt, input: '유조선' },
 		})
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
@@ -587,7 +587,7 @@ describe('generateImages', () => {
 		expect([...generationInput.seedImage].slice(0, 8)).toEqual([
 			0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
 		])
-		expect(mocks.loadGeneratedImage).toHaveBeenCalledWith({
+		expect(mocks.resolveGeneratedImageReference).toHaveBeenCalledWith({
 			generatedImageId: 8,
 			profileId: 5,
 			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
@@ -600,10 +600,10 @@ describe('generateImages', () => {
 
 	it('참조한 원본 생성 이미지 id를 저장 인자에 담는다', async () => {
 		mocks.env.GEMINI_API_KEY = 'key'
-		mocks.loadGeneratedImage.mockResolvedValue({
+		mocks.resolveGeneratedImageReference.mockResolvedValue({
 			data: Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
-			effectivePrompt: JSON.stringify({ subject: '유조선' }),
-			inputPrompt: '유조선',
+			generatedImageId: 8,
+			prompt: { effective: JSON.stringify({ subject: '유조선' }), input: '유조선' },
 		})
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
@@ -677,17 +677,17 @@ describe('generateImages', () => {
 				user: { id: 1 },
 			}),
 		).rejects.toBeInstanceOf(InvalidImageControllerInputError)
-		expect(mocks.loadGeneratedImage).not.toHaveBeenCalled()
+		expect(mocks.resolveGeneratedImageReference).not.toHaveBeenCalled()
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
 	})
 
 	it('시드 이미지 편집은 Pollinations 개발 폴백을 사용하지 않는다', async () => {
 		mocks.env.NODE_ENV = 'development'
 		mocks.env.IMAGE_DEV_FALLBACK = 'true'
-		mocks.loadGeneratedImage.mockResolvedValue({
+		mocks.resolveGeneratedImageReference.mockResolvedValue({
 			data: Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
-			effectivePrompt: '{"subject":"유조선"}',
-			inputPrompt: '유조선',
+			generatedImageId: 8,
+			prompt: { effective: '{"subject":"유조선"}', input: '유조선' },
 		})
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,

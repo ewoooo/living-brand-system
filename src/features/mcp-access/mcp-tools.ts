@@ -21,7 +21,7 @@ import {
 	findMcpGuidelineDocuments,
 } from '@/features/guideline/services/find-mcp-guideline.service'
 import { decodeImageDataUri } from '@/features/image-generation/image-data-uri'
-import { loadGeneratedImage } from '@/features/image-generation/repositories/generated-image.payload.repository'
+import { resolveGeneratedImageReference } from '@/features/image-generation/repositories/generated-image.payload.repository'
 import { generateImages } from '@/features/image-generation/services/generate-image.service'
 import { listAvailableImageProfiles } from '@/features/image-generation/services/list-image-profiles.service'
 import { isPayloadUser } from '@/lib/auth'
@@ -220,7 +220,7 @@ export const customMcpTools = [
 			const generatedImages = result.generatedImages ?? []
 			const previews = await Promise.all(
 				generatedImages.map(async ({ id }) => {
-					const image = await loadGeneratedImage({
+					const image = await resolveGeneratedImageReference({
 						generatedImageId: id,
 						profileId: result.profileId ?? 0,
 						requestUrl,

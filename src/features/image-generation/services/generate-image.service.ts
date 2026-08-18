@@ -26,7 +26,7 @@ import {
 } from '@/features/image-generation/image-size'
 import { devGenerateImages } from '@/features/image-generation/repositories/dev-image-generation.rest.repository'
 import {
-	loadGeneratedImage,
+	resolveGeneratedImageReference,
 	storeGeneratedImages,
 } from '@/features/image-generation/repositories/generated-image.payload.repository'
 import {
@@ -252,14 +252,14 @@ export async function adjustImageCamera({
 	if (!cameraFeature) {
 		throw new InvalidImageControllerInputError('camera')
 	}
-	const seed = await loadGeneratedImage({
+	const seed = await resolveGeneratedImageReference({
 		generatedImageId,
 		profileId,
 		requestUrl,
 		user,
 	})
-	if (!seed) throw new InvalidSeedImageError()
-	const effectivePrompt = imageEffectivePromptSchema.safeParse(seed.effectivePrompt)
+	if (!seed?.prompt) throw new InvalidSeedImageError()
+	const effectivePrompt = imageEffectivePromptSchema.safeParse(seed.prompt.effective)
 	if (!effectivePrompt.success) throw new InvalidSeedImageError()
 
 	// 각도는 신뢰 경계에서 다시 검증한다 — UI가 구간을 좁혀도 요청은 임의 각도를 보낼 수 있다.
@@ -282,7 +282,7 @@ export async function adjustImageCamera({
 		user,
 	)
 	const stored = await storeProfileGeneration(result, {
-		inputPrompt: seed.inputPrompt,
+		inputPrompt: seed.prompt.input,
 		profile: {
 			id: profile.id,
 			name: profile.name,

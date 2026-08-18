@@ -12,8 +12,8 @@ const mocks = vi.hoisted(() => ({
 	generateImages: vi.fn(),
 	listAvailableImageProfiles: vi.fn(),
 	loadAiReferenceFiles: vi.fn(),
-	loadGeneratedImage: vi.fn(),
 	resizeForAiVision: vi.fn(),
+	resolveGeneratedImageReference: vi.fn(),
 	searchAgentGuidelines: vi.fn(),
 	startCheckSession: vi.fn(),
 }))
@@ -33,7 +33,7 @@ vi.mock('@/features/asset-check/repositories/ai-check.ai.repository', () => ({
 	loadAiReferenceFiles: mocks.loadAiReferenceFiles,
 }))
 vi.mock('@/features/image-generation/repositories/generated-image.payload.repository', () => ({
-	loadGeneratedImage: mocks.loadGeneratedImage,
+	resolveGeneratedImageReference: mocks.resolveGeneratedImageReference,
 }))
 vi.mock('@/features/image-generation/services/generate-image.service', () => ({
 	generateImages: mocks.generateImages,
@@ -301,10 +301,10 @@ describe('custom MCP tools', () => {
 			prompt: '{"subject":"파란 세럼병"}',
 			provider: 'openai',
 		})
-		mocks.loadGeneratedImage.mockResolvedValue({
+		mocks.resolveGeneratedImageReference.mockResolvedValue({
 			data: image,
-			effectivePrompt: '{"subject":"파란 세럼병"}',
-			inputPrompt: '파란 세럼병',
+			generatedImageId: 8,
+			prompt: { effective: '{"subject":"파란 세럼병"}', input: '파란 세럼병' },
 		})
 		const result = await getTool('generateBrandImage').handler(
 			{ prompt: '파란 세럼병', profileId: 5 },
@@ -317,7 +317,7 @@ describe('custom MCP tools', () => {
 			user: requestUser,
 			userInput: '파란 세럼병',
 		})
-		expect(mocks.loadGeneratedImage).toHaveBeenCalledWith({
+		expect(mocks.resolveGeneratedImageReference).toHaveBeenCalledWith({
 			generatedImageId: 8,
 			profileId: 5,
 			requestUrl: 'https://lbs.example/api/mcp',
