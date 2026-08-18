@@ -12,8 +12,7 @@ import {
 	toRadialFlutedGlassInput,
 	toRadialFlutedGlassShaderPoint,
 } from './model'
-
-const SHADER_URL = '/shaders/radial-fluted-glass.glsl'
+import fragmentBody from './shader.glsl?raw'
 
 export type RadialFlutedGlassRuntime = ShaderCanvasRuntime<RadialFlutedGlassInput>
 
@@ -31,7 +30,7 @@ export function createRadialFlutedGlassRuntime({
 	return createShaderCanvasRuntime({
 		container,
 		input,
-		shaderUrl: SHADER_URL,
+		fragmentBody,
 		ariaLabel: 'Radial Fluted Glass 그래픽 미리보기',
 		bindUniforms(gl, program) {
 			const uniforms = {

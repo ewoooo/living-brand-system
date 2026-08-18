@@ -12,8 +12,7 @@ import {
 	toLinearFlutedGlassInput,
 	toLinearFlutedGlassShaderPoint,
 } from './model'
-
-const SHADER_URL = '/shaders/linear-fluted-glass.glsl'
+import fragmentBody from './shader.glsl?raw'
 
 export type LinearFlutedGlassRuntime = ShaderCanvasRuntime<LinearFlutedGlassInput>
 
@@ -31,7 +30,7 @@ export function createLinearFlutedGlassRuntime({
 	return createShaderCanvasRuntime({
 		container,
 		input,
-		shaderUrl: SHADER_URL,
+		fragmentBody,
 		ariaLabel: 'Linear Fluted Glass 그래픽 미리보기',
 		bindUniforms(gl, program) {
 			const uniforms = {
