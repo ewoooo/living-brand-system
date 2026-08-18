@@ -199,4 +199,33 @@ describe('POST /api/generate-image', () => {
 		expect(response.status).toBe(400)
 		expect(await response.json()).toEqual({ message: 'Invalid seed image.' })
 	})
+
+	it('참조와 카메라 값을 서비스로 넘긴다', async () => {
+		const response = await POST(
+			imageRequest({
+				profileId: 5,
+				reference: { generatedImageId: 8 },
+				camera: { azimuthDeg: 45, elevationDeg: 20 },
+			}),
+		)
+
+		expect(response.status).toBe(200)
+		expect(mocks.generateImages).toHaveBeenCalledWith(
+			expect.objectContaining({
+				userInput: '',
+				camera: { azimuthDeg: 45, elevationDeg: 20 },
+				reference: {
+					generatedImageId: 8,
+					requestUrl: 'http://localhost/api/generate-image',
+				},
+			}),
+		)
+	})
+
+	it('프롬프트도 참조도 없으면 400으로 거부한다', async () => {
+		const response = await POST(imageRequest({ profileId: 5 }))
+
+		expect(response.status).toBe(400)
+		expect(mocks.generateImages).not.toHaveBeenCalled()
+	})
 })
