@@ -199,7 +199,8 @@ function useTemplateImageSession(
 					generated
 						? {
 								image: {
-									backgroundImage: generated.url,
+									kind: 'generated',
+									url: generated.url,
 									generatedImageId: generated.id,
 									profileId: requestProfileId,
 								},
@@ -350,7 +351,14 @@ function useTemplateBackgroundSession(
 			...current,
 			generating: false,
 			...(generated
-				? { image: { url: generated.url, generatedImageId: generated.id } }
+				? {
+						image: {
+							kind: 'generated' as const,
+							url: generated.url,
+							generatedImageId: generated.id,
+							profileId: contract.config.id,
+						},
+					}
 				: { error: GENERATION_ERROR_MESSAGE }),
 		}))
 	}, [contracts, state])

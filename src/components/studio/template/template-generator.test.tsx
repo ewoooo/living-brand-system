@@ -278,7 +278,9 @@ function ImageRaceProbe() {
 		<>
 			<span data-testid="slot-profile">{state?.profileId}</span>
 			<span data-testid="slot-generating">{String(state?.generating)}</span>
-			<span data-testid="slot-image-profile">{state?.image?.profileId ?? 'none'}</span>
+			<span data-testid="slot-image-profile">
+				{state?.image?.kind === 'generated' ? state.image.profileId : 'none'}
+			</span>
 			<button type="button" onClick={() => void images.generate('1:1')}>
 				start slot generation
 			</button>

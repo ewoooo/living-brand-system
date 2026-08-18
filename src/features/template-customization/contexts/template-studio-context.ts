@@ -18,6 +18,14 @@ import type {
 	ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 
+/**
+ * 슬롯이나 배경에 배정된 이미지. 출처가 다르면 뒤따르는 규칙이 달라 kind로 가른다 —
+ * 생성 이미지는 만든 프로파일을 기억해 색 치환을 열고, 샘플 이미지는 그대로 얹기만 한다.
+ */
+export type TemplateAssignedImage =
+	| { kind: 'generated'; url: string; generatedImageId: number; profileId: number }
+	| { kind: 'sample'; url: string; sampleImageId: number }
+
 /** 이미지 슬롯 하나의 입력·요청·결과 상태. 슬롯 단위를 쪼개지 않고 한 객체로 흐른다. */
 export type TemplateImageSlotState = {
 	profileId?: number
@@ -25,8 +33,8 @@ export type TemplateImageSlotState = {
 	generating: boolean
 	error: string | null
 	featureValues: ControllerValues
-	/** 생성으로 배정된 이미지 — 없으면 슬롯은 저작 이미지 그대로다(transform도 잠긴다). */
-	image?: { backgroundImage: string; generatedImageId: number; profileId: number }
+	/** 배정된 이미지 — 없으면 슬롯은 저작 이미지 그대로다(transform도 잠긴다). */
+	image?: TemplateAssignedImage
 	transform?: ImageTransformValue
 }
 
@@ -44,8 +52,8 @@ export type TemplateBackgroundState = {
 	featureValues: ControllerValues
 	graphicConfigId?: string
 	graphicValues: ControllerValues
-	/** 생성으로 깔린 배경 이미지 — type=image일 때만 합성된다. */
-	image?: { url: string; generatedImageId: number }
+	/** 깔린 배경 이미지 — type=image일 때만 합성된다. */
+	image?: TemplateAssignedImage
 }
 
 export type TemplateBackgroundPatch = Partial<Pick<TemplateBackgroundState, 'imageMode' | 'prompt'>>
