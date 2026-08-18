@@ -63,7 +63,14 @@ export function ImageGenerationResults({
 						</Typography>
 					)}
 
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+					{/* 배치 상한이 4장이라 2열이면 항상 2×2로 떨어진다. 한 장뿐이면 열을 나누지
+					    않아 카드가 캔버스 폭을 그대로 쓴다(Figma 16:8487). */}
+					<div
+						className={cn(
+							'grid grid-cols-1 gap-4',
+							items.length > 1 && 'sm:grid-cols-2',
+						)}
+					>
 						{items.map((item, index) => {
 							const isReference = index === referenceIndex
 							const label = isReference
@@ -150,7 +157,8 @@ function ImageGenerationSkeleton({
 			<Typography size="sm" tone="muted">
 				생성 중… 무료 서버라 최대 1~2분 걸릴 수 있어요.
 			</Typography>
-			<div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+			{/* 결과 그리드와 같은 열 구성을 쓴다 — 다르면 생성이 끝나는 순간 카드가 자리를 옮긴다. */}
+			<div className={cn('grid grid-cols-1 gap-4', count > 1 && 'sm:grid-cols-2')}>
 				{SKELETON_KEYS.slice(0, count).map((key) => (
 					<Skeleton key={key} style={{ aspectRatio: aspectRatio.replace(':', ' / ') }} />
 				))}
