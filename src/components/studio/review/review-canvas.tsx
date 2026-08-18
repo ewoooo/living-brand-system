@@ -23,7 +23,7 @@ export function ReviewCanvas() {
 	return (
 		<div
 			data-slot="review-canvas"
-			className="relative grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_auto]"
+			className="relative grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_auto]"
 		>
 			<ImageUploadCarousel previewSize={previewSize} />
 			{outcome && <ReviewRuleDetail outcome={outcome} />}

@@ -5,6 +5,20 @@ import { type PointerEvent, useRef, useState } from 'react'
 export const clampControllerValue = (value: number, min: number, max: number) =>
 	Math.min(max, Math.max(min, value))
 
+/**
+ * 값을 step 격자에 얹고 부동소수점 찌꺼기를 턴다.
+ *
+ * 🔴 `min + n * step`은 step이 정수가 아니면 그대로 쓸 수 없다 — `3 + 17 * 0.1`은 `4.7`이 아니라
+ *    `4.700000000000001`이고, 그 값이 화면(`4.699999999999999%`)과 CSS(`4.7000000000001cqmax`)까지
+ *    흘러간다. 스튜디오의 range는 step이 전부 정수라 안 드러났고, 가이드라인 마진(step 0.1)이
+ *    처음 밟았다. 유효자릿수로 자르면 step의 소수 자릿수를 따로 셀 필요가 없다.
+ */
+export function snapControllerValue(raw: number, min: number, max: number, step: number) {
+	if (step <= 0) return clampControllerValue(raw, min, max)
+	const steps = Math.round((clampControllerValue(raw, min, max) - min) / step)
+	return clampControllerValue(Number((min + steps * step).toPrecision(12)), min, max)
+}
+
 /** 클릭과 드래그를 가르는 이동 거리 — 이 안에서 손을 떼면 클릭이다(dialkit Slider와 같은 3px). */
 const CLICK_THRESHOLD_PX = 3
 

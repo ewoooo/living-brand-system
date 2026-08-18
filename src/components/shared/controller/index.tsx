@@ -1,4 +1,5 @@
 import { ControllerAssetCard } from './asset-card'
+import { ControllerBar } from './bar'
 import { ControllerBrowser } from './browser'
 import { ControllerCameraControl } from './camera-control'
 import { ControllerColorRow } from './color-row'
@@ -19,9 +20,10 @@ export type {
 } from '@/modules/studio-controller/controller-definition'
 
 /**
- * Studio 컨트롤러 킷 — 디자인 SSOT(Figma HD_LBS_UI 4:5578 "Controller API")의 dialkit 기반
+ * 컨트롤러 킷 — 디자인 SSOT(Figma HD_LBS_UI 4:5578 "Controller API")의 dialkit 기반
  * 패널 언어(36px 행·muted 채움·접이식 섹션)를 Creator UI 토큰으로 옮긴 컴파운드 세트.
- * 템플릿 컨트롤러가 첫 소비자이고, 나머지 스튜디오 화면 컨트롤러가 같은 킷을 쓴다.
+ * 템플릿 컨트롤러가 첫 소비자였고, 지금은 **스튜디오와 가이드라인이 함께 쓴다** —
+ * 그래서 자리가 `components/studio/`가 아니라 `components/shared/`다.
  * 상태 계약(readonly·disabled·isEmpty·counter)의 정본은 docs/10 §3.6.
  *
  * 표현 컨텍스트: Row/Field가 { controlId, disabled }를 내려 안의 킷 컨트롤
@@ -44,6 +46,7 @@ export const Controller = {
 	Textarea: ControllerTextarea,
 	Range: ControllerRange,
 	Pad: ControllerPad,
+	Bar: ControllerBar,
 	CameraControl: ControllerCameraControl,
 	Browser: ControllerBrowser,
 	AssetCard: ControllerAssetCard,
@@ -52,6 +55,7 @@ export const Controller = {
 // RSC에서 네임스페이스 객체의 점 접근은 client reference 제약으로 깨질 수 있다 — 개별 export가 안전판.
 export {
 	ControllerAssetCard,
+	ControllerBar,
 	ControllerBrowser,
 	ControllerCameraControl,
 	ControllerColorRow,

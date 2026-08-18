@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { ControllerBrowser } from '@/components/studio/shared/controller'
+import { ControllerBrowser } from '@/components/shared/controller'
 import { Badge } from '@/components/ui/badge'
 import { Typography } from '@/components/ui/typography'
 import {

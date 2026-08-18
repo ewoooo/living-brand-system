@@ -29,34 +29,27 @@ export function ReviewSidebar({ sections }: { sections: CheckSection[] }) {
 	return (
 		<StudioSidebar
 			footer={
-				<div className="flex flex-col gap-2">
-					{scenarios.length === 0 && (
-						<Typography as="p" size="xs" tone="muted">
-							발행된 검수 시나리오가 없습니다
-						</Typography>
-					)}
-					<div className="flex gap-2">
-						<Button
-							type="button"
-							variant="highlight"
-							className="h-11 flex-1"
-							disabled={!selectedId || !ready}
-							onClick={runCheck}
-						>
-							{/* 진행은 목록 행의 스피너가 알린다 — 버튼 이름에 "Loading"이 섞이지 않게 숨긴다. */}
-							{busy ? <Spinner aria-hidden /> : null}
-							검사
-						</Button>
-						<Button
-							type="button"
-							variant="muted"
-							className="h-11 flex-1"
-							disabled={images.length === 0 || !ready}
-							onClick={runAllChecks}
-						>
-							전부 검사
-						</Button>
-					</div>
+				<div className="flex gap-2">
+					<Button
+						type="button"
+						variant="highlight"
+						className="h-11 flex-1"
+						disabled={!selectedId || !ready}
+						onClick={runCheck}
+					>
+						{/* 진행은 목록 행의 스피너가 알린다 — 버튼 이름에 "Loading"이 섞이지 않게 숨긴다. */}
+						{busy ? <Spinner aria-hidden /> : null}
+						검사
+					</Button>
+					<Button
+						type="button"
+						variant="muted"
+						className="h-11 flex-1"
+						disabled={images.length === 0 || !ready}
+						onClick={runAllChecks}
+					>
+						전부 검사
+					</Button>
 				</div>
 			}
 		>
@@ -74,7 +67,7 @@ export function ReviewSidebar({ sections }: { sections: CheckSection[] }) {
 						<span className="sr-only">목록으로 돌아가기</span>
 					</button>
 				) : (
-					<Typography as="h2" size="sm" weight="semibold">
+					<Typography as="h2" size="sm" weight="semibold" tone="muted">
 						List
 					</Typography>
 				)}

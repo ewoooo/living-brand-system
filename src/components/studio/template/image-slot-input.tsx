@@ -1,9 +1,9 @@
 'use client'
 
 import { ChevronDown } from '@carbon/icons-react'
+import { Controller } from '@/components/shared/controller'
+import { ControllerControlRenderer } from '@/components/shared/controller-renderer'
 import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
-import { Controller } from '@/components/studio/shared/controller'
-import { ControllerControlRenderer } from '@/components/studio/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 import { acceptsImagePromptExecution } from '@/features/image-generation/domain/image-studio-config'
