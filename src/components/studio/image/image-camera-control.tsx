@@ -1,8 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { Controller } from '@/components/studio/shared/controller'
-import { snapCameraAngle } from '@/components/studio/shared/controller/camera-orbit'
+import { Controller } from '@/components/shared/controller'
+import { snapCameraAngle } from '@/components/shared/controller/camera-orbit'
 import { Button } from '@/components/ui/button'
 import {
 	type CameraAzimuth,
@@ -12,7 +12,7 @@ import {
 
 const CameraOrbitControl = dynamic(
 	() =>
-		import('@/components/studio/shared/controller/camera-orbit-control').then(
+		import('@/components/shared/controller/camera-orbit-control').then(
 			(module) => module.CameraOrbitControl,
 		),
 	{

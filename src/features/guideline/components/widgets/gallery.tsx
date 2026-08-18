@@ -1,7 +1,8 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import type { ReactNode } from 'react'
-import { GuidelineHelperBar } from '@/features/guideline/components/globals/guideline-helper'
+import { FloatingControllerSticky } from '@/components/shared/controller'
+import { helperLabel } from '@/features/guideline/components/globals/guideline-helper'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
@@ -206,9 +207,9 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 			// 이 위젯은 하단 Floating Controller 안에서만 쓰인다 — 알약 없이 보여주면 실제와 다르다.
 			name: 'layout-grid-controls',
 			node: (
-				<GuidelineHelperBar label="Layout">
+				<FloatingControllerSticky aria-label={helperLabel('Layout')}>
 					<LayoutGridControlsWidget />
-				</GuidelineHelperBar>
+				</FloatingControllerSticky>
 			),
 		},
 		{ name: 'layout-grid-overlay', node: <LayoutGridOverlayWidget /> },

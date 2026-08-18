@@ -1,10 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, it, vi } from 'vitest'
-import {
-	DEFAULT_PREVIEW_SIZE,
-	PreviewSizeControl,
-	StudioCanvasFooter,
-} from './preview-size-control'
+import { FloatingControllerFixed } from '@/components/shared/controller'
+import { DEFAULT_PREVIEW_SIZE, PreviewSizeControl } from './preview-size-control'
 
 it('프리뷰 크기를 25~100% 범위의 키보드 접근 가능한 값으로 전달한다', () => {
 	const onChange = vi.fn()
@@ -34,12 +31,12 @@ it('트랙은 킷의 Value Range 프리미티브가 그린다', () => {
 
 it('떠 있는 자리는 바가 갖고 컨트롤은 자기 폭만 갖는다', () => {
 	const { container } = render(
-		<StudioCanvasFooter>
+		<FloatingControllerFixed>
 			<PreviewSizeControl value={DEFAULT_PREVIEW_SIZE} onChange={vi.fn()} />
-		</StudioCanvasFooter>,
+		</FloatingControllerFixed>,
 	)
 
-	const footer = container.querySelector('[data-slot="studio-canvas-footer"]')
+	const footer = container.querySelector('[data-slot="floating-controller-fixed"]')
 	expect(footer).toHaveClass('absolute', 'bottom-10', 'left-1/2', 'shadow-lg')
 	// 컨트롤이 자리를 다시 잡으면 바 안에서 겹친다.
 	const control = container.querySelector('[data-slot="controller-range"]')

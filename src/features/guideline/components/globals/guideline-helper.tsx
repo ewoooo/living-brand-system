@@ -11,6 +11,7 @@ import {
 	useState,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { FloatingControllerSticky } from '@/components/shared/controller'
 import { pickActiveRegion } from './guideline-active-region'
 
 /**
@@ -150,7 +151,11 @@ export function GuidelineHelperRegion({
 			<div ref={regionRef}>{children}</div>
 			{active && registry?.slot
 				? createPortal(
-						<GuidelineHelperBar label={label}>{controls}</GuidelineHelperBar>,
+						// portal로 내려와 자기 그림에서 DOM상 떨어지므로, 어느 블록의 컨트롤인지는
+						// 이름이 유일한 단서다.
+						<FloatingControllerSticky aria-label={helperLabel(label)}>
+							{controls}
+						</FloatingControllerSticky>,
 						registry.slot,
 					)
 				: null}
@@ -158,27 +163,7 @@ export function GuidelineHelperRegion({
 	)
 }
 
-/**
- * 알약. 겉모습은 Figma `Helper.Container`(HD_LBS_UI 61:4672)에서 왔다.
- * 위젯 갤러리(`components/widgets/gallery.tsx`)도 이것으로 감싼다 — 컨트롤 위젯은 알약 밖에서
- * 쓰이지 않으므로, 감싸지 않으면 갤러리가 실제 화면과 다른 모습을 보여준다.
- */
-export function GuidelineHelperBar({
-	label,
-	children,
-}: {
-	label?: string | null
-	children: ReactNode
-}) {
-	return (
-		// biome-ignore lint/a11y/useSemanticElements: 컨트롤 묶음이지 문서 구획이 아니라 <section>이 아니다.
-		<div
-			role="region"
-			// portal로 내려와 자기 그림에서 DOM상 떨어지므로, 어느 블록의 컨트롤인지는 이름이 유일한 단서다.
-			aria-label={label ? `${label} 조절` : '레이아웃 조절'}
-			className="pointer-events-auto flex items-center gap-2 rounded-lg bg-popover p-1 text-popover-foreground shadow-lg"
-		>
-			{children}
-		</div>
-	)
+/** 블록 제목이 없으면 바는 이름을 잃으므로 총칭으로 대신한다. */
+export function helperLabel(label?: string | null) {
+	return label ? `${label} 조절` : '레이아웃 조절'
 }

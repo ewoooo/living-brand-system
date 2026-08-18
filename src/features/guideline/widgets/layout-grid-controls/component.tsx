@@ -1,11 +1,7 @@
 'use client'
 
 import { Fragment, type ReactNode, useEffect } from 'react'
-import {
-	ControllerRange,
-	ControllerRow,
-	ControllerSegmented,
-} from '@/components/studio/shared/controller'
+import { ControllerRange, ControllerRow, ControllerSegmented } from '@/components/shared/controller'
 import { Separator } from '@/components/ui/separator'
 import { GUTTER_RATIO, MARGIN_PCT } from '../layout-grid/rules'
 import { useLayoutGridScope } from '../layout-grid/store'

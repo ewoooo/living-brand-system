@@ -2,10 +2,10 @@
 
 import { Copy, Crop, SquareOutline } from '@carbon/icons-react'
 import type * as React from 'react'
+import { Controller } from '@/components/shared/controller'
 import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
 import { ImageProfilePicker } from '@/components/studio/image/image-profile-picker'
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
-import { Controller } from '@/components/studio/shared/controller'
 import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,

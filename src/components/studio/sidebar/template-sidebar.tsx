@@ -1,7 +1,7 @@
 'use client'
 
+import { Controller } from '@/components/shared/controller'
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
-import { Controller } from '@/components/studio/shared/controller'
 import {
 	CONTROLLER_TOGGLE_OPTIONS,
 	ControllerControlRenderer,

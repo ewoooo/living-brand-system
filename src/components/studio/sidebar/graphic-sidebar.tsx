@@ -1,8 +1,8 @@
 'use client'
 
+import { Controller } from '@/components/shared/controller'
 import { GraphicProfilePicker } from '@/components/studio/graphic/graphic-profile-picker'
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
-import { Controller } from '@/components/studio/shared/controller'
 import { ControllerRenderer } from '@/components/studio/shared/controller-renderer'
 import {
 	ExportAction,

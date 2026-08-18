@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { Controller } from '@/components/shared/controller'
 import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
-import { Controller } from '@/components/studio/shared/controller'
 import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
