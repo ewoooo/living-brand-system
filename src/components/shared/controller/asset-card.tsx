@@ -107,12 +107,14 @@ export function ControllerAssetCard({
 			{locked ? (
 				button
 			) : (
-				<>
+				// 열림 상태는 카드마다 하나다 — 한 Dialog를 여러 카드가 나눠 쓰면 서로의 트리거를
+				// 덮어써 패널이 열렸다 곧 닫힌다(browser.tsx의 Item 주석).
+				<ControllerBrowser.Item>
 					<ControllerBrowser.Trigger asChild>{button}</ControllerBrowser.Trigger>
 					<ControllerBrowser.Panel tabs={tabs ?? []} empty={empty}>
 						{children}
 					</ControllerBrowser.Panel>
-				</>
+				</ControllerBrowser.Item>
 			)}
 		</div>
 	)
