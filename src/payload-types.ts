@@ -1134,6 +1134,10 @@ export interface SampleImage {
   id: number;
   name: string;
   alt: string;
+  /**
+   * 흰 바탕에 선으로만 그린 이미지입니다. 켜면 템플릿 슬롯에서 프로파일의 색 조정이 이 이미지에도 걸립니다. 사진에 켜면 두 색으로 뭉개집니다.
+   */
+  lineArt?: boolean | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -2719,6 +2723,7 @@ export interface ApplicationImagesSelect<T extends boolean = true> {
 export interface SampleImagesSelect<T extends boolean = true> {
   name?: T;
   alt?: T;
+  lineArt?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

@@ -11,6 +11,8 @@ export type SampleImageOption = {
 	url: string
 	/** 목록용 축소본. 없으면 원본을 그대로 쓴다(썸네일 생성 전 문서). */
 	thumbnailUrl: string
+	/** 선으로만 그린 이미지인지 — 켜져 있어야 슬롯의 색 조정이 이 이미지에 걸린다. */
+	lineArt: boolean
 }
 
 /**
@@ -34,6 +36,7 @@ function toSampleImageOption(doc: SampleImage): SampleImageOption[] {
 			alt: doc.alt,
 			url: doc.url,
 			thumbnailUrl: doc.sizes?.thumbnail?.url ?? doc.url,
+			lineArt: doc.lineArt ?? false,
 		},
 	]
 }

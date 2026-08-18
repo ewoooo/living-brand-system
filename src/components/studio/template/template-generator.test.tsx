@@ -55,6 +55,11 @@ vi.mock(
 	() => browseMocks,
 )
 
+const sampleMocks = vi.hoisted(() => ({
+	fetchSampleImages: vi.fn(async () => [] as unknown[]),
+}))
+vi.mock('@/features/template-customization/services/list-sample-images.client', () => sampleMocks)
+
 vi.mock('next/navigation', () => ({
 	useRouter: () => ({ push: mocks.push }),
 }))
@@ -695,6 +700,45 @@ describe('TemplateGenerator', () => {
 			expect(container.innerHTML).toContain('mask-image')
 			expect(container.innerHTML).toContain('rgb(0, 255, 0)') // 사용자 색이 저작 line을 대체
 		})
+	})
+
+	// 색 치환은 라인 아트에만 뜻이 있다 — 샘플은 선화로 표시된 것만 열고 사진은 그대로 얹는다.
+	it.each([
+		{ lineArt: true, label: '선화 샘플은 색 치환을 받는다', colorized: true },
+		{ lineArt: false, label: '선화가 아닌 샘플은 그대로 얹는다', colorized: false },
+	])('$label', async ({ colorized, lineArt }) => {
+		const user = userEvent.setup()
+		sampleMocks.fetchSampleImages.mockResolvedValue([
+			{
+				id: 11,
+				name: '도면 A',
+				alt: '도면 A',
+				url: '/api/sample-images/file/drawing.png',
+				thumbnailUrl: '/api/sample-images/file/drawing-320x240.png',
+				lineArt,
+			},
+		])
+		const { container } = render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: {
+						'1:1': { imageInput: { profileId: 7 }, imageColorize: { line: '#ff0000' } },
+					},
+				}}
+			/>,
+		)
+
+		await user.click(screen.getByRole('radio', { name: 'Preset' }))
+		await user.click(await screen.findByRole('button', { name: '샘플 이미지 선택' }))
+		await user.click(await screen.findByRole('button', { name: /도면 A/ }))
+
+		await waitFor(() =>
+			expect(container.innerHTML).toContain('/api/sample-images/file/drawing.png'),
+		)
+		expect(container.innerHTML.includes('rgb(255, 0, 0)')).toBe(colorized)
 	})
 
 	it('생성 후 transform 조작이 편집 transform으로 합성되고, 생성 전에는 비활성이다', async () => {

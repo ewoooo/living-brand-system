@@ -21,7 +21,7 @@ import type {
 
 /**
  * 슬롯이나 배경에 배정된 이미지. 출처가 다르면 뒤따르는 규칙이 달라 kind로 가른다 —
- * 생성 이미지는 만든 프로파일을 기억해 색 치환을 열고, 샘플 이미지는 그대로 얹기만 한다.
+ * 생성 이미지는 만든 프로파일을 기억해 색 치환을 열고, 샘플 이미지는 선화로 표시된 것만 연다.
  */
 export type TemplateAssignedImage =
 	| { kind: 'generated'; url: string; generatedImageId: number; profileId: number }
@@ -33,6 +33,8 @@ export type TemplateAssignedImage =
 			name: string
 			alt: string
 			thumbnailUrl: string
+			/** 선화로 표시된 샘플만 색 치환 대상이다 — 사진에 걸면 두 색으로 뭉개진다. */
+			lineArt: boolean
 	  }
 
 /** 이미지 슬롯 하나의 입력·요청·결과 상태. 슬롯 단위를 쪼개지 않고 한 객체로 흐른다. */

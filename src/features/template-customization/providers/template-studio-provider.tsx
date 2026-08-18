@@ -941,5 +941,6 @@ function toAssignedSampleImage(option: SampleImageOption): TemplateAssignedImage
 		name: option.name,
 		alt: option.alt,
 		thumbnailUrl: option.thumbnailUrl,
+		lineArt: option.lineArt,
 	}
 }

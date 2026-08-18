@@ -114,10 +114,12 @@ export function composeTemplateStudioHtml({
 			const contract = imageContracts[slotId]?.find(
 				(candidate) => candidate.config.id === state.profileId,
 			)
-			// 색 치환은 프로파일이 만든 라인 아트에만 뜻이 있다 — 샘플 이미지는 그대로 얹는다.
+			// 색 치환은 라인 아트에만 뜻이 있다. 생성물은 그 프로파일이 만든 것일 때,
+			// 샘플은 선화로 표시된 것일 때만 연다 — 사진에 걸면 두 색으로 뭉개진다.
 			const colorizable =
 				!state.image ||
-				(state.image.kind === 'generated' && state.image.profileId === state.profileId)
+				(state.image.kind === 'generated' && state.image.profileId === state.profileId) ||
+				(state.image.kind === 'sample' && state.image.lineArt)
 			const colorControls =
 				contract && colorizable ? getImageColorAdjustmentControls(contract.config) : null
 			const lineColor = colorControls ? state.featureValues[colorControls.line.id] : undefined
