@@ -912,7 +912,9 @@ describe('generateImages', () => {
 			imageModelPreset: 'openai-gpt-image-2',
 			aspectRatio: '1:1',
 			imageSize: '1K',
-			features: [{ blockType: 'cameraControl', azimuths: ['front'], elevations: ['eye-level'] }],
+			features: [
+				{ blockType: 'cameraControl', azimuths: ['front'], elevations: ['eye-level'] },
+			],
 			profilePrompt: [],
 			userPromptNormalization: [],
 		})

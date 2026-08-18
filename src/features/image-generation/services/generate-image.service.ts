@@ -194,7 +194,10 @@ export async function generateImages({
 	const trimmed = userInput.trim()
 	const effective = trimmed
 		? resolveImageGenerationInput(config, { userInput, count, aspectRatio, imageSize })
-		: { userInput: '', ...resolveImageGenerationOptions(config, { count, aspectRatio, imageSize }) }
+		: {
+				userInput: '',
+				...resolveImageGenerationOptions(config, { count, aspectRatio, imageSize }),
+			}
 	const inherited = resolved?.prompt
 	if (!trimmed && !inherited) throw new InvalidImageControllerInputError('prompt')
 
@@ -211,7 +214,10 @@ export async function generateImages({
 		: (inherited as { effective: string }).effective
 
 	const prompt = camera
-		? composeCameraAdjustmentPrompt(assertFlatPrompt(composed), resolveCameraFeature(config, camera))
+		? composeCameraAdjustmentPrompt(
+				assertFlatPrompt(composed),
+				resolveCameraFeature(config, camera),
+			)
 		: composed
 
 	const plan = planImageGenerationFromProfile(profile, {

@@ -1,7 +1,10 @@
 import { getPayload } from 'payload'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MAX_IMAGE_BYTES } from '../image-data-uri'
-import { resolveGeneratedImageReference, storeGeneratedImages } from './generated-image.payload.repository'
+import {
+	resolveGeneratedImageReference,
+	storeGeneratedImages,
+} from './generated-image.payload.repository'
 
 const ONE_PIXEL_PNG =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
