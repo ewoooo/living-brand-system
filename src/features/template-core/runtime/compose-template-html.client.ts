@@ -237,11 +237,17 @@ export function composeTemplateHtml(
 				}
 				if (!carrier.style.backgroundRepeat) carrier.style.backgroundRepeat = 'no-repeat'
 			}
-			if (config.backgroundImage && config.generatedImageId) {
+			// 세션이 실은 assetRef가 우선이고, Admin이 저장한 generatedImageId가 그 다음이다.
+			const assetRef =
+				config.assetRef ??
+				(config.generatedImageId
+					? ({ collection: 'generated-images', id: config.generatedImageId } as const)
+					: undefined)
+			if (config.backgroundImage && assetRef) {
 				// 발행 검증(metadataRef)이 요소의 data-asset-*와 실제 URL의 일치를 요구하므로
-				// placeholder 에셋 참조를 생성 이미지 참조로 바꾼다.
-				carrier.setAttribute('data-asset-collection', 'generated-images')
-				carrier.setAttribute('data-asset-id', String(config.generatedImageId))
+				// placeholder 에셋 참조를 실제로 배정된 자산 참조로 바꾼다.
+				carrier.setAttribute('data-asset-collection', assetRef.collection)
+				carrier.setAttribute('data-asset-id', String(assetRef.id))
 			}
 			// 컬러 치환은 transform보다 먼저 — img 캐리어가 div로 치환될 수 있고, transform은
 			// 치환 결과(2겹 전체)의 캐리어에 붙어야 이동·회전이 컬러 결과를 통째로 움직인다.

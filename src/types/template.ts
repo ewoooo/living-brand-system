@@ -1,4 +1,7 @@
-import type { TemplateVectorAssetCollection } from '@/features/template-core/domain/template-asset-policy'
+import type {
+	AuthorizedTemplateAssetCollection,
+	TemplateVectorAssetCollection,
+} from '@/features/template-core/domain/template-asset-policy'
 
 /** Creator가 편집할 수 있는 텍스트 슬롯의 제약과 작성 지침. */
 export interface TemplateSlotSpec {
@@ -30,7 +33,14 @@ export interface TemplateNodeConfig {
 	/** 텍스트 노드(<p>)의 색 오버라이드 — 스튜디오 일괄 텍스트 색이 compose 시점에만 싣는 값(저장 안 됨). */
 	color?: string
 	backgroundImage?: string
+	/** Admin이 노드에 붙여 저장하는 생성 이미지 참조. 저장 검증이 발행 조건으로 요구한다. */
 	generatedImageId?: number
+	/**
+	 * Creator 세션이 compose에만 싣는 자산 참조(저장 안 됨). 생성 이미지든 샘플 이미지든
+	 * 같은 자리를 쓴다 — 컬렉션이 값에 들어 있어 출처가 늘어도 이 계약은 그대로다.
+	 * 없으면 compose가 generatedImageId로 물러난다.
+	 */
+	assetRef?: { collection: AuthorizedTemplateAssetCollection; id: number }
 	/** 프레임에 할당한 이미지의 자유 편집 — 이동(px)·확대(배율)·회전(deg). 캐리어에만 적용된다. */
 	imageTransform?: { x: number; y: number; scale: number; rotate: number }
 	/**

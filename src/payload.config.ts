@@ -36,6 +36,7 @@ import { Plugins } from './collections/Plugins'
 import { RuleCheckers } from './collections/RuleCheckers'
 import { Rules } from './collections/Rules'
 import { withFrontendRevalidation } from './collections/revalidate'
+import { SampleImages } from './collections/SampleImages'
 import { TemplateAssets } from './collections/TemplateAssets'
 import { TemplateCategories } from './collections/TemplateCategories'
 import { Templates } from './collections/Templates'
@@ -100,6 +101,7 @@ export default buildConfig({
 		BrandTypefaces,
 		BrandIcons,
 		ApplicationImages,
+		SampleImages,
 		ImageProfiles,
 		GraphicProfiles,
 		GeneratedImages,

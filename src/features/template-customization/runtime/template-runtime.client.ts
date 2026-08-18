@@ -1,7 +1,9 @@
 'use client'
 
 import { getImageColorAdjustmentControls } from '@/features/image-generation/domain/image-studio-config'
+import type { AuthorizedTemplateAssetCollection } from '@/features/template-core/domain/template-asset-policy'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
+import type { TemplateAssignedImage } from '@/features/template-customization/contexts/template-studio-context'
 import {
 	type ImageTransformValue,
 	toImageEditTransform,
@@ -79,7 +81,7 @@ export function composeTemplateStudioHtml({
 			{
 				profileId?: number
 				featureValues: ControllerValues
-				image?: { backgroundImage: string; generatedImageId: number; profileId: number }
+				image?: TemplateAssignedImage
 				transform?: ImageTransformValue
 			}
 		>
@@ -112,10 +114,12 @@ export function composeTemplateStudioHtml({
 			const contract = imageContracts[slotId]?.find(
 				(candidate) => candidate.config.id === state.profileId,
 			)
+			// 색 치환은 프로파일이 만든 라인 아트에만 뜻이 있다 — 샘플 이미지는 그대로 얹는다.
+			const colorizable =
+				!state.image ||
+				(state.image.kind === 'generated' && state.image.profileId === state.profileId)
 			const colorControls =
-				contract && (!state.image || state.image.profileId === state.profileId)
-					? getImageColorAdjustmentControls(contract.config)
-					: null
+				contract && colorizable ? getImageColorAdjustmentControls(contract.config) : null
 			const lineColor = colorControls ? state.featureValues[colorControls.line.id] : undefined
 			const backgroundColor = colorControls?.background
 				? state.featureValues[colorControls.background.id]
@@ -142,8 +146,8 @@ export function composeTemplateStudioHtml({
 					: {}),
 				...(state.image
 					? {
-							backgroundImage: state.image.backgroundImage,
-							generatedImageId: state.image.generatedImageId,
+							backgroundImage: state.image.url,
+							assetRef: toTemplateAssetRef(state.image),
 						}
 					: {}),
 			}
@@ -179,4 +183,14 @@ function mergeTemplateOverrides(...maps: readonly TemplateNodeConfigMap[]): Temp
 		for (const [id, value] of Object.entries(map)) merged[id] = { ...merged[id], ...value }
 	}
 	return merged
+}
+
+/** 배정 이미지를 발행 검증이 읽는 자산 참조로 옮긴다 — 출처마다 컬렉션이 다르다. */
+function toTemplateAssetRef(image: TemplateAssignedImage): {
+	collection: AuthorizedTemplateAssetCollection
+	id: number
+} {
+	return image.kind === 'generated'
+		? { collection: 'generated-images', id: image.generatedImageId }
+		: { collection: 'sample-images', id: image.sampleImageId }
 }
