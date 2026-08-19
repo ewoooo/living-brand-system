@@ -391,6 +391,21 @@ function SlotSpecEditor({
 
 type ImageSlotInput = NonNullable<TemplateNodeConfig['imageInput']>
 
+/**
+ * 프로파일 셀렉트 값을 imageInput에 반영한다 — profileId만 갈아끼우고 allowedProfileIds·transform은 보존한다.
+ * 예전엔 이 셀렉트가 imageInput 전체를 교체해 옆 필드(허용 프로파일·창작자 변형 허용)를 조용히 지웠다.
+ */
+export function applyImageSlotProfileSelection(
+	imageInput: ImageSlotInput,
+	value: string,
+): ImageSlotInput {
+	if (value === 'studio') {
+		const { profileId: _dropped, ...rest } = imageInput
+		return rest
+	}
+	return { ...imageInput, profileId: Number(value) }
+}
+
 function ImageSlotSpecEditor({
 	imageInput,
 	onChange,
@@ -409,7 +424,7 @@ function ImageSlotSpecEditor({
 				<Select
 					value={imageInput.profileId ? String(imageInput.profileId) : 'studio'}
 					onValueChange={(value) =>
-						onChange(value === 'studio' ? {} : { profileId: Number(value) })
+						onChange(applyImageSlotProfileSelection(imageInput, value))
 					}
 				>
 					<SelectTrigger id="image-slot-profile" className="w-full">
