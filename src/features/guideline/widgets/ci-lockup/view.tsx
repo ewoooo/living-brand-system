@@ -427,7 +427,9 @@ function LockupFigure({
 				style={{
 					background: stage,
 					height: h * STAGE_HEIGHT,
-					transition: `background-color ${MORPH}`,
+					// 🔴 높이에도 전환이 필요하다 — H가 컨트롤러 축이 된 뒤로 한 칸 올릴 때마다 판이
+					//    32px씩 즉시 커져 그 아래 문서 전체가 튄다(판을 고정 비율로 둔 이유가 무효화된다).
+					transition: `background-color ${MORPH}, height ${MORPH}`,
 				}}
 			>
 				{diagram ?? (
@@ -513,7 +515,9 @@ function ClearSpaceFrame({
 			className="relative"
 			style={{
 				padding: h * clearSpace,
-				transition: `padding ${MORPH}, outline-color ${MORPH}`,
+				// 🔴 `padding`에 전환을 걸지 않는다 — `useSlide`가 잉크 기준으로 이동을 이미 잇는데,
+				//    padding까지 흐르면 같은 이동을 두 번 세서 락업이 옛 자리를 지나쳐 되돌아온다.
+				transition: `outline-color ${MORPH}`,
 				outline: '1px solid',
 				outlineColor: on ? 'currentColor' : 'transparent',
 				outlineOffset: -1,
@@ -717,4 +721,4 @@ export function CapLine({
 export default CiLockupView
 
 /* 🔑 모프 토큰은 `motion.ts`가 소유한다. 여기서 재수출하는 것은 기존 import 경로를 지키기 위함이다. */
-export { easeMorph, MORPH_EASING, MORPH_MS, reducedMotion }
+export { easeMorph, type MORPH_EASING, MORPH_MS, reducedMotion }

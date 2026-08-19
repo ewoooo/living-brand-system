@@ -61,12 +61,23 @@ function useMotion() {
  *    `max-content` 트랙이 그 값을 다시 읽어 420ms 동안 트랙이 떤다(되먹임).
  * 🔑 첫 렌더에는 이전 위치가 없어 애니메이션이 돌지 않는다(깜빡임 없음).
  */
-function useDiagramFlip() {
+function useDiagramFlip(structure: string) {
 	const nodes = useRef(new Map<string, { node: HTMLElement; size: boolean }>())
 	const previous = useRef(new Map<string, { x: number; y: number; w: number; h: number }>())
+	const lastStructure = useRef(structure)
 
 	useLayoutEffect(() => {
-		const skip = reducedMotion()
+		/*
+		 * 🔑 **구조가 바뀐 렌더에서만 잇는다.** 그 밖의 렌더(H 조절 같은 크기 변화)에서는 자리만
+		 *    다시 기억하고 애니메이션을 돌리지 않는다.
+		 * 🔴 왜 필요한가: 크기를 잇는 노드(면·치수선 = size:true)와 안 잇는 노드(글자·심볼 =
+		 *    size:false)가 섞여 있어, H가 바뀌면 글자는 즉시 새 크기가 되고 밴드만 옛 크기에서
+		 *    자란다 — 420ms 동안 글자가 자기 밴드를 벗어난다. 크기는 이산으로 두는 것이 맞다
+		 *    (사용자 규칙: 위치는 연속, 크기·텍스트는 이산).
+		 */
+		const structural = lastStructure.current !== structure
+		lastStructure.current = structure
+		const skip = reducedMotion() || !structural
 		for (const [key, entry] of nodes.current) {
 			const { node, size } = entry
 			const now = {
@@ -452,7 +463,8 @@ export function LockupDiagram({
 }) {
 	const spec = useMemo(() => diagramSpec(lockup), [lockup])
 	const g = useMemo(() => resolve(spec, h), [spec, h])
-	const register = useDiagramFlip()
+	// 🔑 정체가 바뀌었는가 = 판의 구조가 바뀌었는가. H·색은 여기 안 들어간다(크기·색은 이산이다).
+	const register = useDiagramFlip(`${lockup.key}|${spec.textCol}`)
 	const motion = useMotion()
 	const guide = colors[GUIDE_COLOR_NAME] ?? 'currentColor'
 

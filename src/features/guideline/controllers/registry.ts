@@ -119,7 +119,9 @@ function usable(
 	value: unknown,
 ): value is string | number | boolean {
 	if (control.kind === 'toggle') return typeof value === 'boolean'
-	if (control.kind === 'range') return typeof value === 'number'
+	// 🔴 범위 밖 숫자도 `applyControllerRestrictions`가 던진다 — select와 같은 이유로 버린다.
+	if (control.kind === 'range')
+		return typeof value === 'number' && value >= control.min && value <= control.max
 	if (control.kind === 'select')
 		return typeof value === 'string' && control.options.some((o) => o.value === value)
 	return false
