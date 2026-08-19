@@ -240,6 +240,18 @@ function BackgroundTypeMutationProbe() {
 	)
 }
 
+function VideoArtifactProbe() {
+	const { background, canvas } = useTemplateStudio()
+	return (
+		<>
+			<span data-testid="video-artifact">{canvas.videoArtifact ? 'video' : 'none'}</span>
+			<button type="button" onClick={() => background.selectType('graphic')}>
+				select graphic background
+			</button>
+		</>
+	)
+}
+
 function GraphicCaptureProbe() {
 	const { background, canvas } = useTemplateStudio()
 	useEffect(() => {
@@ -1056,6 +1068,23 @@ describe('TemplateGenerator', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'select invalid background' }))
 		fireEvent.click(screen.getByRole('button', { name: 'patch graphic background' }))
 		expect(screen.getByTestId('background-type')).toHaveTextContent('color')
+	})
+
+	it('video artifact를 내지 않는 graphic 배경에서는 Video 경로를 열지 않는다', () => {
+		// forward-straight는 vector·raster만 낸다 — 배경 타입만 보고 MP4를 Video로 돌리면 던진다.
+		expect(forwardStraightRuntimeManifest.artifacts).not.toHaveProperty('video')
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				template={template}
+				categoryTitle="카드"
+			>
+				<VideoArtifactProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic background' }))
+		expect(screen.getByTestId('video-artifact')).toHaveTextContent('none')
 	})
 
 	it('이미지 생성 중 Profile action·generic patch를 막고 stale 응답을 기록하지 않는다', async () => {

@@ -10,8 +10,9 @@ import {
 } from 'mediabunny'
 import type { VideoExportSpec } from '../export-contract'
 
+// 코덱 미지원과 '이 해상도로는 미지원'이 같은 결과로 돌아온다 — 배율을 낮추는 길도 함께 안내한다.
 const AVC_UNSUPPORTED_MESSAGE =
-	'이 브라우저에서는 H.264 MP4 인코딩을 지원하지 않습니다. 최신 Chrome 또는 Safari에서 다시 시도해 주세요.'
+	'이 해상도로는 H.264 MP4 인코딩을 지원하지 않습니다. 배율을 낮추거나 최신 Chrome 또는 Safari에서 다시 시도해 주세요.'
 
 /** 결정론적으로 그린 canvas frame을 WebCodecs AVC 기반 MP4 Blob으로 인코딩한다. */
 export async function canvasFramesToMp4({

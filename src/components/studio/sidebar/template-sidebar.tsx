@@ -109,11 +109,13 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 									{exporting.outputSize?.height ?? canvas.height}px
 								</span>
 							</Controller.Row>
-							<ScaleControls
-								scale={exporting.scale}
-								options={exporting.scaleOptions}
-								onChange={exporting.setScale}
-							/>
+							{exporting.scaleApplies && (
+								<ScaleControls
+									scale={exporting.scale}
+									options={exporting.scaleOptions}
+									onChange={exporting.setScale}
+								/>
+							)}
 							<Controller.Row label="Format">
 								<Controller.Select
 									options={exporting.formats.map((candidate) => ({

@@ -149,6 +149,50 @@ describe('useTemplateExport', () => {
 		expect(result.current.scale).toBe(1)
 	})
 
+	it('TIFF·PDF에는 배율을 적용하지 않고 Size도 캔버스 크기로 안내한다', () => {
+		// 인쇄 크기는 ppi가 정한다 — 배율을 받은 척하면 사이드바가 안 나올 크기를 안내한다.
+		const { result } = renderHook(() =>
+			useTemplateExport({
+				artifact: () =>
+					createTemplateRasterArtifact({
+						html: '<div>card</div>',
+						width: 600,
+						height: 300,
+					}),
+				videoArtifact: null,
+				capability: {
+					formats: ['pdf'],
+					colorProfiles: { cmyk: ['cgats21-crpc6'] },
+					print: { ppi: [300] },
+				},
+				metadata: { ...MP4_METADATA, maxScale: 4 },
+			}),
+		)
+
+		act(() => result.current.setScale(4))
+		expect(result.current.scaleApplies).toBe(false)
+		expect(result.current.scale).toBe(1)
+		expect(result.current.outputSize).toEqual({ width: 600, height: 300 })
+	})
+
+	it('MP4 Size는 짝수 내림까지 거친 실제 프레임 크기를 안내한다', () => {
+		const { result } = renderHook(() =>
+			useTemplateExport({
+				artifact: () =>
+					createTemplateRasterArtifact({
+						html: '<div>card</div>',
+						width: 601,
+						height: 301,
+					}),
+				videoArtifact: null,
+				capability: MP4_CAPABILITY,
+				metadata: { ...MP4_METADATA, width: 601, height: 301, maxScale: 1 },
+			}),
+		)
+
+		expect(result.current.outputSize).toEqual({ width: 600, height: 300 })
+	})
+
 	it('시간축이 없어도 MP4는 Raster Artifact로 반드시 나온다', async () => {
 		const raster = createTemplateRasterArtifact({
 			html: '<div>card</div>',

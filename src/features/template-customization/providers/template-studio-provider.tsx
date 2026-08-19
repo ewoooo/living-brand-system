@@ -552,6 +552,15 @@ export function TemplateStudioProvider({
 			width,
 		})
 	}, [background.state.type, composedHtml, height, width])
+	// 배경이 graphic이어도 video artifact를 내지 않는 runtime이 있다(forward-straight는 vector·raster뿐).
+	// 타입만 보고 MP4를 Video 경로로 돌리면 producer가 던진다 — 선언을 보고 정적 MP4로 떨어뜨린다.
+	const supportsBackgroundVideo =
+		background.state.type === 'graphic' &&
+		Boolean(
+			background.graphicConfigs.find(
+				(candidate) => candidate.id === background.state.graphicConfigId,
+			)?.artifacts.video,
+		)
 	const videoArtifact = useCallback(
 		(size: { width: number; height: number }): Promise<TemplateVideoArtifact> => {
 			const graphicVideo = graphicVideoRef.current
@@ -581,7 +590,7 @@ export function TemplateStudioProvider({
 			canvas: {
 				html: composedHtml,
 				artifact,
-				videoArtifact: background.state.type === 'graphic' ? videoArtifact : null,
+				videoArtifact: supportsBackgroundVideo ? videoArtifact : null,
 				previewRef,
 				registerGraphicFrame,
 				registerGraphicVideo,
@@ -591,6 +600,7 @@ export function TemplateStudioProvider({
 		[
 			artifact,
 			background,
+			supportsBackgroundVideo,
 			composedHtml,
 			sampleImages,
 			config,

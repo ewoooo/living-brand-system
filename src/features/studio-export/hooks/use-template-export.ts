@@ -30,6 +30,19 @@ export type TemplateExportMetadata = {
 }
 
 export type TemplateExportView = ReturnType<typeof useTemplateExport>
+
+/** 사이드바가 안내할 출력 크기를 요청에서 되읽는다. 요청이 없으면 캔버스에 배율만 곱한다. */
+function resolveOutputSize(
+	request: TemplateExportRequest | null,
+	metadata: TemplateExportMetadata | null,
+	scale: number,
+): { width: number; height: number } | null {
+	if (!metadata) return null
+	if (request?.format === 'mp4') {
+		return { width: request.options.width, height: request.options.height }
+	}
+	return { width: metadata.width * scale, height: metadata.height * scale }
+}
 type TemplateExportRequest = Extract<ExportRequest, { artifact: 'raster' | 'video' }>
 
 /** Template Raster Artifact를 공통 ExportRequest와 Artifact executor에 연결한다. */
@@ -56,7 +69,7 @@ export function useTemplateExport({
 	const [scale, setScale] = useState(1)
 	const maxScale = Math.max(1, Math.floor(metadata?.maxScale ?? 1))
 	const scaleOptions = Array.from({ length: maxScale }, (_, index) => index + 1)
-	const effectiveScale = scaleOptions.includes(scale) ? scale : 1
+	const selectedScale = scaleOptions.includes(scale) ? scale : 1
 	const effectivePpi = ppi && capability.print?.ppi.includes(ppi) ? ppi : capability.print?.ppi[0]
 	const effectiveFps =
 		fps && capability.video?.mp4.fps.includes(fps) ? fps : capability.video?.mp4.fps[0]
@@ -67,6 +80,9 @@ export function useTemplateExport({
 	const formats = capability.formats
 	const format =
 		selectedFormat && formats.includes(selectedFormat) ? selectedFormat : (formats[0] ?? null)
+	// TIFF·PDF는 크기를 ppi가 정한다 — 배율을 받아도 쓰지 않으므로 아예 적용하지 않는다.
+	const scaleApplies = format === 'png' || format === 'jpeg' || format === 'mp4'
+	const effectiveScale = scaleApplies ? selectedScale : 1
 	const createRequest = useCallback(
 		(candidate: StudioOutputFormat | null): TemplateExportRequest | null => {
 			const request =
@@ -157,13 +173,16 @@ export function useTemplateExport({
 		},
 		scale: effectiveScale,
 		scaleOptions,
+		/** 이번 포맷이 배율을 실제로 쓰는지 — 안 쓰면 사이드바가 Scale 행을 감춘다. */
+		scaleApplies,
 		setScale: (next: number) => {
 			if (scaleOptions.includes(next)) setScale(next)
 		},
-		/** 배율을 반영한 실제 출력 픽셀 크기 — 사이드바가 Size 행에 그대로 보여 준다. */
-		outputSize: metadata
-			? { width: metadata.width * effectiveScale, height: metadata.height * effectiveScale }
-			: null,
+		/**
+		 * 실제로 나올 픽셀 크기. MP4는 짝수 내림까지 거친 요청 값을 그대로 쓴다 —
+		 * 캔버스에 배율만 곱해 보여 주면 홀수 변에서 1px 어긋난 값을 안내하게 된다.
+		 */
+		outputSize: resolveOutputSize(request, metadata, effectiveScale),
 		canExport: Boolean(request && output.canExport(request)),
 		run: () => {
 			if (request) void output.run(request)
