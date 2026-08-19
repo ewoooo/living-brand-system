@@ -33,6 +33,9 @@ export function useStudioRuntimeManifest(
 	const html = (useFormFields(([fields]) => fields.html?.value) as string | undefined) ?? ''
 	const nodeConfigs = (useFormFields(([fields]) => fields.overrides?.value) ??
 		{}) as TemplateNodeConfigMap
+	// 캔버스 크기가 MP4 상한이므로 Admin의 export policy UI도 같은 값을 읽어야 한다.
+	const width = useFormFields(([fields]) => fields.width?.value) as number | undefined
+	const height = useFormFields(([fields]) => fields.height?.value) as number | undefined
 
 	if (source === 'graphic') {
 		return baseConfigs.find((config) => config.id === runtime) ?? null
@@ -43,5 +46,5 @@ export function useStudioRuntimeManifest(
 			controller: deriveImageProfileController(imageModelPreset, imageFeatures, undefined),
 		}
 	}
-	return getTemplateRuntimeManifest({ html, nodeConfigs })
+	return getTemplateRuntimeManifest({ html, nodeConfigs, width, height })
 }

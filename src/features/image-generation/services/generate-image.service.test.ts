@@ -2,13 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
 	env: {
-		IMAGE_DEV_FALLBACK: undefined as 'true' | 'false' | undefined,
 		GEMINI_API_KEY: undefined as string | undefined,
 		NODE_ENV: 'test' as 'development' | 'production' | 'test',
 		OPENAI_API_KEY: undefined as string | undefined,
 	},
 	acquireImageGenerationSlot: vi.fn(),
-	devGenerateImages: vi.fn(),
 	findPublishedImageProfile: vi.fn(),
 	generateBrandImages: vi.fn(),
 	normalizeImageProfilePrompt: vi.fn(),
@@ -22,9 +20,6 @@ vi.mock('@/features/image-generation/image-generation-gate', () => ({
 	// 게이트 창 상태는 게이트 단위 테스트가 검증한다 — 여기서는 서비스 연결(획득·해제 순서)만 본다.
 	acquireImageGenerationSlot: mocks.acquireImageGenerationSlot,
 	ImageGenerationLimitError: class extends Error {},
-}))
-vi.mock('@/features/image-generation/repositories/dev-image-generation.rest.repository', () => ({
-	devGenerateImages: mocks.devGenerateImages,
 }))
 vi.mock(
 	'@/features/image-generation/repositories/image-generation.ai.repository',
@@ -64,7 +59,6 @@ describe('generateImages', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		mocks.env.NODE_ENV = 'test'
-		mocks.env.IMAGE_DEV_FALLBACK = undefined
 		mocks.env.GEMINI_API_KEY = undefined
 		mocks.env.OPENAI_API_KEY = undefined
 		mocks.acquireImageGenerationSlot.mockReturnValue(mocks.releaseImageGenerationSlot)
@@ -81,9 +75,6 @@ describe('generateImages', () => {
 	})
 
 	it('fails closed when no image provider is configured', async () => {
-		mocks.env.NODE_ENV = 'production'
-		mocks.env.IMAGE_DEV_FALLBACK = 'true'
-
 		await expect(
 			generateImagesWithSettings({
 				userInput: 'sample',
@@ -94,32 +85,11 @@ describe('generateImages', () => {
 				user: { id: 1 },
 			}),
 		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)
-		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
 		expect(mocks.acquireImageGenerationSlot).not.toHaveBeenCalled()
 	})
 
-	it('uses Pollinations only when development explicitly enables it', async () => {
-		mocks.env.NODE_ENV = 'development'
-		mocks.env.IMAGE_DEV_FALLBACK = 'true'
-		mocks.devGenerateImages.mockResolvedValue(['data:image/jpeg;base64,dev'])
-
-		const result = await generateImagesWithSettings({
-			userInput: 'sample',
-			count: 2,
-			aspectRatio: '1:1',
-			imageModelPreset: 'openai-gpt-image-2',
-			imageSize: '1K',
-			user: { id: 1 },
-		})
-
-		expect(mocks.devGenerateImages).toHaveBeenCalledWith('sample', '1024x1024', 2)
-		expect(result.images).toEqual(['data:image/jpeg;base64,dev'])
-	})
-
 	it('prefers the configured OpenAI provider', async () => {
-		mocks.env.NODE_ENV = 'development'
-		mocks.env.IMAGE_DEV_FALLBACK = 'true'
 		mocks.env.OPENAI_API_KEY = 'key'
 		mocks.generateBrandImages.mockResolvedValue({
 			images: ['data:image/png;base64,openai'],
@@ -143,7 +113,6 @@ describe('generateImages', () => {
 			aspectRatio: '1:1',
 			imageSize: '1K',
 		})
-		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 	})
 
 	it('published 프로파일을 정규화해 저장된 출력 계약으로 생성한다', async () => {
@@ -495,9 +464,7 @@ describe('generateImages', () => {
 		expect(mocks.acquireImageGenerationSlot).not.toHaveBeenCalled()
 	})
 
-	it('Google 키가 없는 Nano Banana 프로파일은 dev 폴백으로 보내지 않는다', async () => {
-		mocks.env.NODE_ENV = 'development'
-		mocks.env.IMAGE_DEV_FALLBACK = 'true'
+	it('Google 키가 없는 Nano Banana 프로파일은 다른 모델로 보내지 않는다', async () => {
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
 			name: 'Technical Illustration',
@@ -521,7 +488,6 @@ describe('generateImages', () => {
 				count: 1,
 			}),
 		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)
-		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
 	})
 
@@ -730,40 +696,6 @@ describe('generateImages', () => {
 			}),
 		).rejects.toBeInstanceOf(InvalidSeedImageError)
 		// 하드 거부의 실질: null이 조용히 프롬프트-only 생성으로 흘러가지 않는다.
-		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
-	})
-
-	it('시드 이미지가 있으면 dev 폴백을 쓰지 않고 불가로 거부한다', async () => {
-		mocks.env.NODE_ENV = 'development'
-		mocks.env.IMAGE_DEV_FALLBACK = 'true'
-		mocks.findPublishedImageProfile.mockResolvedValue({
-			id: 5,
-			name: 'Technical Illustration',
-			imageModelPreset: 'openai-gpt-image-2',
-			aspectRatio: '1:1',
-			imageSize: '1K',
-			profilePrompt: [],
-			userPromptNormalization: [],
-		})
-		mocks.resolveGeneratedImageReference.mockResolvedValue({
-			data: Buffer.from('seed'),
-			generatedImageId: 8,
-			prompt: { effective: '{"subject":"유조선"}', input: '유조선' },
-		})
-
-		await expect(
-			generateImages({
-				userInput: '',
-				profileId: 5,
-				user: { id: 1 },
-				count: 1,
-				reference: {
-					generatedImageId: 8,
-					requestUrl: 'http://localhost/api/generate-image',
-				},
-			}),
-		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)
-		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
 	})
 

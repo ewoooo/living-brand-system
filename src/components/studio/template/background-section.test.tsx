@@ -129,6 +129,7 @@ function Harness({
 							name: option.name,
 							alt: option.alt,
 							thumbnailUrl: option.thumbnailUrl,
+							lineArt: false,
 						},
 					}))
 				}
@@ -346,6 +347,7 @@ describe('BackgroundSection', () => {
 					name: '잠수함',
 					alt: '잠수함 사진',
 					thumbnailUrl: '/api/sample-images/file/submarine-320x240.png',
+					lineArt: false,
 				}}
 			/>,
 		)

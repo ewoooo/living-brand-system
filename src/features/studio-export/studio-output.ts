@@ -16,11 +16,32 @@ import type {
 import { STUDIO_OUTPUT_FORMATS } from './export-contract'
 import { PRINT_PPI_VALUES, type PrintPpi } from './print-policy'
 
-const DEFAULT_RASTER_VIDEO_CAPABILITY = {
+/**
+ * video 사양을 선언하지 않은 Raster runtime의 MP4 폴백.
+ * 🔴 maxWidth·maxHeight는 가로형 1080p를 가정하므로 세로형 캔버스가 자기 크기를 못 넘긴다 —
+ * 캔버스 크기를 아는 runtime은 이 정책을 쓰고 프레임 크기만 자기 값으로 덮는다.
+ */
+export const DEFAULT_RASTER_VIDEO_CAPABILITY = {
 	fps: STUDIO_VIDEO_FPS_VALUES,
 	maxWidth: 1920,
 	maxHeight: 1080,
 	maxDurationSeconds: 10,
+}
+
+/**
+ * H.264 Level 5.1이 허용하는 프레임당 매크로블록 수. 세로형 포스터는 1080p 가정보다 훨씬 큰
+ * 프레임을 내므로, 배율 상한은 고정 숫자가 아니라 캔버스 크기에서 이 예산으로 되짚어 구한다.
+ */
+const MAX_VIDEO_MACROBLOCKS = 36864
+const MAX_EXPORT_SCALE = 4
+
+/** 캔버스 한 장을 MP4로 인코딩할 수 있는 가장 큰 정수 배율. 최소 1을 보장한다. */
+export function resolveMaxExportScale(width: number, height: number): number {
+	for (let scale = MAX_EXPORT_SCALE; scale > 1; scale -= 1) {
+		const macroblocks = Math.ceil((width * scale) / 16) * Math.ceil((height * scale) / 16)
+		if (macroblocks <= MAX_VIDEO_MACROBLOCKS) return scale
+	}
+	return 1
 }
 
 export type StudioOutputCapability<Format extends StudioOutputFormat = StudioOutputFormat> = {
@@ -316,7 +337,12 @@ function validRequestOptions(request: ExportRequest): boolean {
 				case 'png':
 					return Number.isFinite(request.options.scale) && request.options.scale > 0
 				case 'jpeg':
-					return request.options.quality > 0 && request.options.quality <= 100
+					return (
+						request.options.quality > 0 &&
+						request.options.quality <= 100 &&
+						Number.isFinite(request.options.scale) &&
+						request.options.scale > 0
+					)
 				case 'tiff':
 					return (
 						PRINT_PPI_VALUES.includes(request.options.ppi) &&

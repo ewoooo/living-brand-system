@@ -478,7 +478,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     ), 0.17);
 
     color *= 0.56 + vignette * 0.54;
-    color += (hash21(fragCoord + fract(iTime) * 173.0) - 0.5) * 0.006;
+    // 프레임마다 바뀌는 그레인은 H.264가 압축할 수 없어 비트를 형태 대신 노이즈에 쓴다.
+    // 미리보기와 결과를 어긋나게 두지 않으려 export 전용 분기 대신 진폭 자체를 낮춘다.
+    color += (hash21(fragCoord + fract(iTime) * 173.0) - 0.5) * 0.003;
 
     color = 1.0 - exp(-max(color, 0.0) * 1.32);
     color = pow(color, vec3(0.86));

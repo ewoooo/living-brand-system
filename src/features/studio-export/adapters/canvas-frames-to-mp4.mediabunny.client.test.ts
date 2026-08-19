@@ -5,7 +5,7 @@ import { canvasFramesToMp4 } from './canvas-frames-to-mp4.mediabunny.client'
 const media = vi.hoisted(() => ({
 	add: vi.fn(),
 	codec: vi.fn(),
-	quality: Symbol('quality-high'),
+	quality: Symbol('quality-very-high'),
 	sourceConfig: vi.fn(),
 }))
 
@@ -39,7 +39,7 @@ vi.mock('mediabunny', () => ({
 			this.state = 'canceled'
 		}
 	},
-	QUALITY_HIGH: media.quality,
+	QUALITY_VERY_HIGH: media.quality,
 }))
 
 describe('canvasFramesToMp4', () => {

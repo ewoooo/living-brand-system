@@ -166,6 +166,7 @@ export async function exportRasterArtifactAsJpeg(
 					width: surface.width,
 					height: surface.height,
 					quality: request.options.quality,
+					scale: request.options.scale,
 				}),
 	)
 	return { data, filename: `${fileName}.jpg`, mimeType: 'image/jpeg' }

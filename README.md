@@ -105,7 +105,7 @@ PAYLOAD_DB_PUSH=false
 | Feature | Environment variables |
 | --- | --- |
 | AI Chat | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `CHAT_MODEL`, `AGENT_CHAT_TRIAGE_ENABLED` |
-| Image Generation | `OPENAI_API_KEY`, `GEMINI_API_KEY`, `IMAGE_DEV_FALLBACK` |
+| Image Generation | `OPENAI_API_KEY`, `GEMINI_API_KEY` |
 | Figma Import | `FIGMA_API_TOKEN` |
 | Object Storage | `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` |
 | Email | `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME` |

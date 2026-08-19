@@ -45,7 +45,9 @@ import {
 import {
 	composeTemplateStudioHtml,
 	createTemplateRasterArtifact,
+	createTemplateVideoArtifact,
 	type TemplateRasterArtifact,
+	type TemplateVideoArtifact,
 } from '@/features/template-customization/runtime/template-runtime.client'
 import { fetchCreateNavigation } from '@/features/template-customization/services/get-create-navigation.client'
 import {
@@ -53,6 +55,7 @@ import {
 	type SampleImageOption,
 } from '@/features/template-customization/services/list-sample-images.client'
 import { useLazyResource } from '@/hooks/use-lazy-resource'
+import type { CanvasVideoSource } from '@/modules/studio-artifact/studio-artifact'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlDefinition,
@@ -469,6 +472,10 @@ export function TemplateStudioProvider({
 	const registerGraphicFrame = useCallback((capture: (() => string) | null) => {
 		graphicFrameRef.current = capture
 	}, [])
+	const graphicVideoRef = useRef<CanvasVideoSource | null>(null)
+	const registerGraphicVideo = useCallback((source: CanvasVideoSource | null) => {
+		graphicVideoRef.current = source
+	}, [])
 	const { html, width, height } = template
 	const slots = config.template.slots
 	const partitionedSlots = useMemo(() => partitionTemplateSlots(slots), [slots])
@@ -545,6 +552,30 @@ export function TemplateStudioProvider({
 			width,
 		})
 	}, [background.state.type, composedHtml, height, width])
+	// 배경이 graphic이어도 video artifact를 내지 않는 runtime이 있다(forward-straight는 vector·raster뿐).
+	// 타입만 보고 MP4를 Video 경로로 돌리면 producer가 던진다 — 선언을 보고 정적 MP4로 떨어뜨린다.
+	const supportsBackgroundVideo =
+		background.state.type === 'graphic' &&
+		Boolean(
+			background.graphicConfigs.find(
+				(candidate) => candidate.id === background.state.graphicConfigId,
+			)?.artifacts.video,
+		)
+	const videoArtifact = useCallback(
+		(size: { width: number; height: number }): Promise<TemplateVideoArtifact> => {
+			const graphicVideo = graphicVideoRef.current
+			if (!graphicVideo) throw new Error('그래픽 배경 미리보기가 준비되지 않았습니다.')
+			// composedHtml은 배경이 graphic일 때 캔버스 배경을 transparent로 비운다 — 그 위에 겹친다.
+			// 캔버스 크기가 아니라 요청된 프레임 크기로 굽는다 — 배율을 올려도 전경이 흐려지지 않는다.
+			return createTemplateVideoArtifact({
+				background: graphicVideo,
+				height: size.height,
+				html: composedHtml,
+				width: size.width,
+			})
+		},
+		[composedHtml],
+	)
 
 	const value = useMemo<TemplateStudioValue>(
 		() => ({
@@ -556,12 +587,20 @@ export function TemplateStudioProvider({
 			vectors,
 			layers,
 			background,
-			canvas: { html: composedHtml, artifact, previewRef, registerGraphicFrame },
+			canvas: {
+				html: composedHtml,
+				artifact,
+				videoArtifact: supportsBackgroundVideo ? videoArtifact : null,
+				previewRef,
+				registerGraphicFrame,
+				registerGraphicVideo,
+			},
 			execution: { controllerValues },
 		}),
 		[
 			artifact,
 			background,
+			supportsBackgroundVideo,
 			composedHtml,
 			sampleImages,
 			config,
@@ -570,8 +609,10 @@ export function TemplateStudioProvider({
 			layers,
 			navigation,
 			registerGraphicFrame,
+			registerGraphicVideo,
 			text,
 			vectors,
+			videoArtifact,
 		],
 	)
 
@@ -683,6 +724,7 @@ function updateTemplateImageSlot(
 		...current,
 		[slotId]: {
 			...previous,
+			...(patch.imageMode === undefined ? {} : { imageMode: patch.imageMode }),
 			...(prompt === undefined ? {} : { prompt }),
 			...(patch.transform === undefined ? {} : { transform: patch.transform }),
 		},
@@ -940,5 +982,6 @@ function toAssignedSampleImage(option: SampleImageOption): TemplateAssignedImage
 		name: option.name,
 		alt: option.alt,
 		thumbnailUrl: option.thumbnailUrl,
+		lineArt: option.lineArt,
 	}
 }

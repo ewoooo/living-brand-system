@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Controller } from './index'
 
@@ -346,6 +347,37 @@ describe('Controller.AssetCard', () => {
 		const { container } = renderAssetCard()
 
 		expect(container.querySelector('img')).toBeNull()
+	})
+
+	// 한 Root 아래 카드가 여럿일 때(사이드바의 템플릿·이미지 슬롯·배경) 각자 자기 패널만 열려야 한다.
+	// 열림 상태를 카드끼리 나눠 쓰면 누른 트리거가 "패널 밖"으로 판정돼 열렸다가 곧 닫힌다.
+	it('카드가 여럿이면 각자 자기 패널만 연다', async () => {
+		const user = userEvent.setup()
+		render(
+			<Controller.Browser.Root>
+				<Controller.AssetCard
+					title="템플릿"
+					buttonLabel="Change"
+					aria-label="템플릿 변경"
+					tabs={['Templates']}
+				>
+					<div>템플릿 목록</div>
+				</Controller.AssetCard>
+				<Controller.AssetCard
+					title="이미지"
+					buttonLabel="Browse"
+					aria-label="샘플 이미지 선택"
+					tabs={['Sample Images']}
+				>
+					<div>샘플 목록</div>
+				</Controller.AssetCard>
+			</Controller.Browser.Root>,
+		)
+
+		await user.click(screen.getByRole('button', { name: '샘플 이미지 선택' }))
+
+		expect(screen.getByRole('dialog', { name: 'Sample Images' })).toBeInTheDocument()
+		expect(screen.queryByRole('dialog', { name: 'Templates' })).toBeNull()
 	})
 
 	// 배선 전 카드는 트리거 자체를 두지 않는다 — 열리는 척하는 컨트롤을 만들지 않기 위해서다.
