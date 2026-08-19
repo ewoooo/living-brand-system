@@ -96,6 +96,20 @@ export function controllerNumber(values: ControllerValues, id: string, fallback:
 	return typeof value === 'number' ? value : fallback
 }
 
+/** 🔑 `select` 값을 읽는다. 허용 목록을 함께 받아, admin이 선택지를 좁혔거나 스코프 밖일 때
+ *  위젯이 알 수 없는 문자열로 그려지지 않게 한다. */
+export function controllerString<T extends string>(
+	values: ControllerValues,
+	id: string,
+	allowed: readonly T[],
+	fallback: T,
+): T {
+	const value = values[id]
+	return typeof value === 'string' && (allowed as readonly string[]).includes(value)
+		? (value as T)
+		: fallback
+}
+
 export function controllerBoolean(
 	values: ControllerValues,
 	id: string,

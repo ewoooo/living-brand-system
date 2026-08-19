@@ -3,42 +3,32 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+	controllerBoolean,
+	controllerString,
+	useGuidelineController,
+} from '../../controllers/provider'
 import { SPEC_READOUT } from '../readout'
 import { CI_STAGE_DARK, CI_STAGE_LIGHT } from '../surface'
 import { LockupDiagram } from './diagram'
 import { downloadSvg, lockupSvg } from './export-svg'
+import { BRANCH_VALUES, FORM_VALUES, LANGUAGE_VALUES, SUBSIDIARY_VALUES } from './manifest'
 import { easeMorph, MORPH, MORPH_EASING, MORPH_MS, morph, reducedMotion } from './motion'
 import {
 	bearingOf,
 	branchLabel,
 	CLEAR_SPACE,
-	CLEAR_SPACE_MODE_LABEL,
 	CLEAR_SPACE_MODES,
-	type ClearSpaceMode,
-	COLOR_TYPE_LABEL,
 	COLOR_TYPES,
-	type ColorType,
 	type Column,
 	clearSpaceFor,
 	deriveLockups,
 	FIDELITY_CAVEAT,
 	FONT,
 	fontSizeFor,
-	type Language,
 	type Lockup,
 	lockupOptions,
 	MIN_SIZE,
 	MONO_COLORS,
-	type MonoColor,
 	OVERSEAS_BRANCHES,
 	partialColumnArea,
 	STAGE_HEIGHT,
@@ -60,9 +50,10 @@ import {
 //    "폰트로 재현 가능한가"를 판정할 수 없다 — 그 판정이 이 위젯의 목적 중 하나다.
 // 🔴 폭은 계산하지 않는다. advance width가 균일하지 않고 커닝도 있어 규칙으로 못 낸다.
 //    높이·간격만 규칙이 정하고 폭은 폰트 렌더에 맡긴다.
-// 🔴 상태를 모듈 스코프에 두지 않는다(docs/11 §4) — 섹션 라우트가 이 위젯을 여러 번 렌더하면
-//    인스턴스끼리 값이 엉킨다. 그래서 useState다.
-// 🔴 컨트롤은 `components/ui/`에서 가져온다. Studio Controller 킷을 import하지 않는다(docs/11 §8).
+// 🔴 이 위젯은 **컨트롤을 그리지 않는다**(docs/11 §4.1). 무엇을 조절할 수 있는지는 `manifest.ts`가
+//    선언하고 하단 알약이 그린다. 여기 남는 것은 Canvas — 값을 읽어 락업을 그리는 일뿐이다.
+// 🔴 값 스코프는 **블록 단위**다(`controllers/provider.tsx`). 섹션 라우트가 이 위젯을 여러 번
+//    렌더해도 블록마다 자기 값을 갖는다.
 
 /**
  * 🔴 디버그 표시. 트림된 잉크 상자를 눈으로 확인할 때만 `true`로 둔다 — 글자 뒤에 핑크 판이 깔린다.
@@ -75,25 +66,30 @@ const DEBUG_INK_BOX = false
 const H = 100
 
 /**
- * 통합 CI 위젯. 🔑 화면에는 **락업 하나**만 있고 컨트롤이 그것을 갈아끼운다 — 미리 정한 목록을
- * 나열하지 않는다. 단계가 계층을, 꼴·언어가 형태를, 색상 표현이 색과 판을 고른다.
+ * 통합 CI 위젯의 **Canvas**. 🔑 화면에는 락업 하나만 있고, 그것을 갈아끼우는 값은 알약에서 온다.
+ * 계층은 켜기 두 개에서 파생되고(본사 = 아무것도 켜지 않은 상태), 꼴·언어가 형태를,
+ * 색상 표현이 색과 판을 정한다.
  */
 export function CiLockupView({ colors }: { colors: Record<string, string> }) {
-	// 🔑 축을 내려도 상위 선택을 지우지 않고 보관한다 — 다시 올리면 그대로 돌아온다.
-	// 🔑 **단계는 컨트롤이 아니라 파생값이다.** 「본사」는 고르는 항목이 아니라 *아무것도 켜지 않은
-	//    상태*이므로 축에서 뺐다. 계열사를 켜면 자회사 CI가 되고 지사까지 켜면 해외지사 CI가 된다 —
-	//    누적 계단이 켜기 두 개로 그대로 표현된다(rules.ts `overseasLockups`가 둘을 다 쓴다).
-	const [subOn, setSubOn] = useState(false)
-	const [branchOn, setBranchOn] = useState(false)
-	const [form, setForm] = useState('horizontal')
-	const [language, setLanguage] = useState<Language>('ko')
-	const [subKo, setSubKo] = useState(SUBSIDIARIES[0].ko)
-	const [branchKey, setBranchKey] = useState(branchLabel(OVERSEAS_BRANCHES[0]))
-	const [colorType, setColorType] = useState<ColorType>('fullColor')
-	const [mono, setMono] = useState<MonoColor>('BLACK')
-	const [clearSpaceMode, setClearSpaceMode] = useState<ClearSpaceMode>('off')
+	// 🔑 값의 뜻은 여기가 갖고, 알약은 id로만 넣고 뺀다. 그래서 fallback을 여기서 준다 —
+	//    스코프 밖(위젯 갤러리처럼 블록 없이 렌더)에서도 락업이 그려져야 한다.
+	const { values } = useGuidelineController()
+	const subOn = controllerBoolean(values, 'subsidiaryOn', false)
+	const branchOn = controllerBoolean(values, 'branchOn', false)
+	const form = controllerString(values, 'form', FORM_VALUES, 'horizontal')
+	const language = controllerString(values, 'language', LANGUAGE_VALUES, 'ko')
+	const subKo = controllerString(values, 'subsidiary', SUBSIDIARY_VALUES, SUBSIDIARIES[0].ko)
+	const branchKey = controllerString(
+		values,
+		'branch',
+		BRANCH_VALUES,
+		branchLabel(OVERSEAS_BRANCHES[0]),
+	)
+	const colorType = controllerString(values, 'colorType', COLOR_TYPES, 'fullColor')
+	const mono = controllerString(values, 'mono', MONO_COLORS, 'BLACK')
+	const clearSpaceMode = controllerString(values, 'clearSpace', CLEAR_SPACE_MODES, 'off')
 	/** 치수 도판. 🔴 규정을 **보여주기만** 한다 — 간격은 조정 대상이 아니다(금지규정 #9). */
-	const [measured, setMeasured] = useState(false)
+	const measured = controllerBoolean(values, 'measured', false)
 
 	// 계층 파생 규칙은 rules.ts가 소유한다(`tierFor`) — 켜짐 종속·보관 이유가 그 주석에 있다.
 	const tier = tierFor(subOn, branchOn)
@@ -123,150 +119,8 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 	const stage = tone === 'dark' ? CI_STAGE_DARK : CI_STAGE_LIGHT
 	const clearSpace = clearSpaceFor(lockup.orientation, clearSpaceMode)
 
-	// 🔑 색을 고르는 것이 곧 단색형을 고르는 것이다 — 목록에서 색을 집으면 표현까지 따라 켜진다.
-	//    그래서 「단색형을 누르고 그다음 색을 고르는」 두 단계가 없다.
-	const pickMono = (next: string) => {
-		setMono(next as MonoColor)
-		setColorType('mono')
-	}
-
 	return (
 		<div className="flex w-full flex-col gap-8">
-			{/* 🔑 컨트롤을 **성격으로** 가른다 — 위는 「어떤 락업인가」(정체), 아래는 「어떻게 그리나」(표시).
-				평평한 그리드 하나에 흘리면 클리어스페이스가 자회사 옆에 오는 식으로 성격이 섞여
-				읽는 사람이 매번 분류부터 해야 한다. 선 하나가 그 분류를 대신한다. */}
-			<div className="flex flex-col gap-4">
-				{/* 🔑 계층을 고르는 컨트롤과 그 계층의 내용을 정하는 컨트롤을 **하나로 합쳤다.**
-					켜기가 계층을 올리고, 같은 줄의 목록이 그 계층의 내용을 정한다. 목록은 떠서 열리므로
-					(Radix Select = portal) 접혀 있을 때 자리를 먹지 않고, 접힌 상태에서도 **현재 값이
-					줄 위에 그대로 적혀 있다.** 그래서 축 3개(단계·자회사·해외지사)가 줄 2개가 된다. */}
-				{/* 🔴 두 줄을 **한 줄**에 둔다(사용자 지정 2026-08-19) — 같은 성격(계층 켜기 + 그 계층의
-					내용)이라 나란히 놓이는 것이 읽기 순서와 맞고, 폭이 내용만큼이라 남는 자리를
-					서로 밀어내지 않는다. 좁으면 `flex-wrap`이 줄을 나눈다. */}
-				<div className="flex flex-wrap items-start gap-2">
-					<EntityRow
-						name="자회사"
-						on={subOn}
-						onToggle={setSubOn}
-						value={subKo}
-						onChange={setSubKo}
-						items={SUBSIDIARIES.map((sub) => ({
-							value: sub.ko,
-							label: `HD${sub.ko}`,
-						}))}
-					/>
-					{/* 🔴 자회사가 꺼져 있으면 켤 수 없다 — 지사명은 자회사명 위에 붙는다. */}
-					<EntityRow
-						name="해외지사"
-						on={branchOn}
-						onToggle={setBranchOn}
-						disabled={!subOn}
-						value={branchKey}
-						onChange={setBranchKey}
-						items={OVERSEAS_BRANCHES.map((b) => ({
-							value: branchLabel(b),
-							label: branchLabel(b),
-						}))}
-					/>
-				</div>
-
-				<div className="flex flex-wrap items-start gap-x-6 gap-y-4">
-					{/* 🔑 슬롯은 **항상 두 개**다(가로형·세로형). 계층이 가로형A·B를 가질 때 버튼이
-						2개→3개로 늘지 않고 가로형 슬롯 안이 캡슐로 갈린다 — 계층을 올릴 때 컨트롤의
-						칸 수가 바뀌면 같은 자리를 누르던 손이 매번 다시 조준해야 한다. */}
-					<Field label="꼴">
-						<SlotChoice
-							slots={formSlots(options.forms)}
-							value={activeForm}
-							onChange={setForm}
-							label="락업 꼴"
-						/>
-					</Field>
-
-					{/* 🔴 선택지가 하나뿐이면(해외지사 = 영문 전용) 그리지 않는다 — 고를 수 없는
-						컨트롤은 자리만 먹는다. 그 사실은 판 밑 readout의 「락업」 줄이 말한다. */}
-					{options.languages.length > 1 ? (
-						<Field label="언어">
-							<SlotChoice
-								slots={options.languages.map((l) => ({
-									key: l.key,
-									label: l.label,
-								}))}
-								value={activeLanguage}
-								onChange={(v) => setLanguage(v as Language)}
-								label="워드마크 언어"
-							/>
-						</Field>
-					) : null}
-				</div>
-			</div>
-
-			<Separator />
-
-			<div className="flex flex-col gap-4">
-				{/* 🔑 세 표현은 **같은 위계**라 슬롯 셋이 같은 실루엣·같은 폭을 갖는다. 단색형만
-					자기 칸 안에 **현재 색을 적은 목록**을 달아 색을 품는다 — 계열사 줄과 **같은 어휘**다
-					(이름 + 현재값 드롭다운). 색이 둘뿐이어도 목록으로 두면 칸 폭을 색 개수가 정하지
-					않으므로 색이 늘어도 슬롯 모양이 바뀌지 않는다. */}
-				<Field label="색상 표현">
-					<SlotChoice
-						slots={COLOR_TYPES.map((t) =>
-							t === 'mono'
-								? {
-										key: t,
-										label: COLOR_TYPE_LABEL[t],
-										trailing: (
-											<Picker
-												value={mono}
-												onChange={pickMono}
-												label="단색형 색상"
-												items={MONO_COLORS.map((c) => ({
-													value: c,
-													label: c,
-												}))}
-											/>
-										),
-									}
-								: { key: t, label: COLOR_TYPE_LABEL[t] },
-						)}
-						value={colorType}
-						onChange={(v) => setColorType(v as ColorType)}
-						label="색상 표현"
-					/>
-				</Field>
-
-				{/* 🔑 치수와 클리어스페이스를 **한 줄**에 둔다(사용자 지정 2026-08-19) — 둘 다 락업을
-					바꾸지 않고 **무엇을 더 보여줄지**만 정하는 표시 축이라 성격이 같다.
-					🔴 그러면서도 별개 컨트롤로 남는다: 간격은 규정이라 조정 대상이 아니고
-					   (금지규정 #9) 여백은 모드가 있는 값이다([[clearspace-vs-gap]]). */}
-				<div className="flex flex-wrap items-start gap-x-6 gap-y-4">
-					<Field label="치수">
-						<SlotChoice
-							slots={[
-								{ key: 'off', label: '숨김' },
-								{ key: 'on', label: '표시' },
-							]}
-							value={measured ? 'on' : 'off'}
-							onChange={(v) => setMeasured(v === 'on')}
-							label="치수 도판"
-						/>
-					</Field>
-
-					{/* 🔴 `예외`는 공간 제약이 있을 때만 허용되는 값이다 — 더 좁게 써도 된다는 뜻이 아니다. */}
-					<Field label={`클리어스페이스${clearSpace ? ` ${clearSpace}H` : ''}`}>
-						<SlotChoice
-							slots={CLEAR_SPACE_MODES.map((m) => ({
-								key: m,
-								label: CLEAR_SPACE_MODE_LABEL[m],
-							}))}
-							value={clearSpaceMode}
-							onChange={(v) => setClearSpaceMode(v as ClearSpaceMode)}
-							label="클리어스페이스"
-						/>
-					</Field>
-				</div>
-			</div>
-
 			<LockupFigure
 				lockup={lockup}
 				h={H}
@@ -324,225 +178,6 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 /**
  * 전환기의 슬롯. 하위 선택이 없으면 항목 하나(`key`), 있으면 **반으로 갈린 캡슐**(`cap`+`halves`)이다.
  */
-type Slot =
-	| { key: string; label: string; trailing?: React.ReactNode }
-	| { cap: string; halves: { key: string; label: string }[] }
-
-/**
- * 슬롯 전환기. 🔑 **모든 슬롯이 같은 폭·같은 실루엣**을 갖고, 하위 선택이 있는 슬롯만 안쪽이 갈린다.
- *
- * 🔴 버튼 안에 버튼을 넣지 않는다 — 갈라진 두 반쪽은 같은 라디오 그룹의 **형제**다. 위계는 시각적
- *    묶음만으로 말하고 포커스 모델은 평평하게 남는다. 그래서 Radix의 roving tabindex가 그대로
- *    성립한다(중첩 div를 넘어 항목이 수집되는 것을 브라우저에서 실측 확인했다).
- * 🔴 캡슐 안 두 반쪽은 붙어야 하므로 모서리를 직접 정한다 — 그룹의 `spacing`이 0일 때만 도는
- *    toggle-group의 규칙(안쪽 모서리 각지게)이 여기선 걸리지 않기 때문이다.
- */
-function SlotChoice({
-	slots,
-	value,
-	onChange,
-	label,
-}: {
-	slots: Slot[]
-	value: string
-	onChange: (next: string) => void
-	label: string
-}) {
-	return (
-		<ToggleGroup
-			type="single"
-			value={value}
-			onValueChange={(next) => next && onChange(next)}
-			aria-label={label}
-			spacing={0}
-			// 🔴 flex로는 슬롯 폭이 균일해지지 않는다 — 기본 `min-width: auto`가 내용이 긴 항목을
-			//    균등 배분 위로 밀어올려 캡슐만 좁아진다(실측 194/194/178). grid 트랙을
-			//    `minmax(0, 1fr)`(= `auto-cols-fr`)로 못 박으면 내용과 무관하게 칸이 같아진다.
-			//    자식에 `min-w-0`이 함께 있어야 긴 라벨이 트랙을 다시 늘리지 않는다.
-			// 🔴 폭은 **내용만큼**이다(사용자 지정 2026-08-19) — `w-full`이면 컨트롤이 화면 폭을 따라
-			//    늘어나 두 칸짜리 「치수」가 열두 칸짜리 컨트롤과 같은 폭이 된다.
-			//    🔴 `w-auto`가 아니라 `w-fit`이다: 블록 요소의 `width: auto`는 부모를 꽉 채운다.
-			//    `fit-content`여도 `auto-cols-fr`이라 **칸끼리는 여전히 같은 폭**이다(가장 넓은 칸 기준).
-			// 🔑 그리고 그룹이 **면 하나를 공유한다** — 트랙(`bg-muted`) + `spacing={0}`. 안 채운
-			//    항목이 글자만 떠 있지 않고(사용자 지적) 셋이 한 덩어리로 읽힌다. 선택은 `primary`
-			//    짝으로 채워지고 hover는 `bg-background`로 뜬다(`toggle.tsx` 주석의 통일 규칙).
-			className="grid w-fit auto-cols-fr grid-flow-col gap-px bg-muted p-0.5"
-		>
-			{slots.map((slot) =>
-				'halves' in slot ? (
-					<div key={slot.cap} className="flex min-w-0 items-center gap-1">
-						<span className="shrink-0 font-body text-muted-foreground text-xs">
-							{slot.cap}
-						</span>
-						{slot.halves.map((half, index) => (
-							<ToggleGroupItem
-								key={half.key}
-								value={half.key}
-								className={`min-w-0 flex-1 rounded-none text-muted-foreground hover:bg-background ${
-									index === 0 ? 'rounded-l-md' : ''
-								} ${index === slot.halves.length - 1 ? 'rounded-r-md' : ''}`}
-							>
-								{half.label}
-							</ToggleGroupItem>
-						))}
-					</div>
-				) : slot.trailing ? (
-					// 🔴 목록 트리거는 그룹 **항목이 아니다** — 버튼 안에 버튼을 넣지 않으려고 형제로
-					//    둔다. 그래서 화살표는 항목만 돌고 목록에는 Tab으로 닿는다.
-					<div key={slot.key} className="flex min-w-0 items-center gap-1">
-						<ToggleGroupItem
-							value={slot.key}
-							className="shrink-0 text-muted-foreground hover:bg-background"
-						>
-							{slot.label}
-						</ToggleGroupItem>
-						{slot.trailing}
-					</div>
-				) : (
-					<ToggleGroupItem
-						key={slot.key}
-						value={slot.key}
-						className="min-w-0 text-muted-foreground hover:bg-background"
-					>
-						{slot.label}
-					</ToggleGroupItem>
-				),
-			)}
-		</ToggleGroup>
-	)
-}
-
-/**
- * 꼴 슬롯. 🔑 가로형A·B를 **가로형 하나로 합쳐** 슬롯 수를 계층과 무관하게 둘로 고정한다.
- * 본사는 가로형이 하나뿐이라 갈리지 않고, 그 아래 계층에서만 캡슐로 갈린다.
- */
-function formSlots(forms: { key: string; label: string }[]): Slot[] {
-	const horizontal = forms.filter((f) => f.key.startsWith('horizontal'))
-	const rest = forms.filter((f) => !f.key.startsWith('horizontal'))
-	const horizontalSlot: Slot =
-		horizontal.length > 1
-			? {
-					cap: '가로형',
-					// 라벨이 `가로형A`라 캡과 겹친다 — 캡슐 안에서는 갈래만 남긴다.
-					halves: horizontal.map((f) => ({
-						key: f.key,
-						label: f.label.replace('가로형', ''),
-					})),
-				}
-			: { key: horizontal[0].key, label: horizontal[0].label }
-	return [horizontalSlot, ...rest.map((f) => ({ key: f.key, label: f.label }))]
-}
-
-/**
- * 계층 한 칸. 🔑 **켜기와 내용 고르기를 한 줄로 합친다** — 켜기가 계층을 올리고 목록이 그 계층의
- * 내용을 정한다. 접혀 있어도 현재 값이 줄에 적혀 있고, 목록은 떠서 열려 자리를 먹지 않는다.
- */
-function EntityRow({
-	name,
-	on,
-	onToggle,
-	disabled,
-	value,
-	onChange,
-	items,
-}: {
-	name: string
-	on: boolean
-	onToggle: (next: boolean) => void
-	disabled?: boolean
-	value: string
-	onChange: (next: string) => void
-	items: { value: string; label: string }[]
-}) {
-	// 자회사가 꺼져 있으면 켜기 자체가 잠긴다. 켜지지 않은 줄은 목록도 고를 수 없다.
-	const listDisabled = disabled || !on
-	return (
-		<div className="flex items-center gap-3 border border-border px-3 py-2">
-			<Switch
-				checked={on && !disabled}
-				onCheckedChange={onToggle}
-				disabled={disabled}
-				aria-label={`${name} 켜기`}
-			/>
-			<span
-				className={`font-body text-sm ${listDisabled ? 'text-muted-foreground' : 'text-foreground'}`}
-			>
-				{name}
-			</span>
-			<Picker
-				value={value}
-				onChange={onChange}
-				label={name}
-				disabled={listDisabled}
-				items={items}
-			/>
-		</div>
-	)
-}
-
-/** 선택지가 많을 때 쓰는 목록. 색은 스와치를 함께 보여 준다. */
-function Picker({
-	value,
-	onChange,
-	items,
-	label,
-	disabled,
-}: {
-	value: string
-	onChange: (next: string) => void
-	items: { value: string; label: string; swatch?: string }[]
-	label: string
-	disabled?: boolean
-}) {
-	return (
-		<Select value={value} onValueChange={onChange} disabled={disabled}>
-			{/* 🔴 폭은 내용만큼이다(사용자 지정 2026-08-19) — 늘리면 옆 컨트롤을 밀어낸다. */}
-			<SelectTrigger className="w-auto" aria-label={label}>
-				<SelectValue />
-			</SelectTrigger>
-			<SelectContent>
-				{items.map((i) => (
-					<SelectItem key={i.value} value={i.value}>
-						<span className="flex items-center gap-2">
-							{i.swatch ? (
-								<span
-									className="size-3 shrink-0 border border-border"
-									style={{ background: i.swatch }}
-								/>
-							) : null}
-							{i.label}
-						</span>
-					</SelectItem>
-				))}
-			</SelectContent>
-		</Select>
-	)
-}
-
-/**
- * 컨트롤 이름표.
- * 🔴 비활성 자리를 흐려서 남겨 두지 않는다 — 고를 수 없는 컨트롤은 자리만 먹는다.
- *    쓸 수 없는 축은 아예 그리지 않고(호출부의 조건 렌더), 그 사실은 readout이 말한다.
- */
-function Field({
-	label,
-	className,
-	children,
-}: {
-	label: string
-	className?: string
-	children: React.ReactNode
-}) {
-	return (
-		<div className={`flex flex-col gap-2 ${className ?? ''}`}>
-			{/* 🔴 `<label>`이 아니라 텍스트다 — 이 이름표는 컨트롤 **하나**를 가리키지 않는다
-				(색상 표현은 항목이 넷이고 계열사 줄은 Select가 둘이다). 접근성 이름은 각 컨트롤이
-				자기 `aria-label`로 갖는다. */}
-			<span className="font-body text-foreground text-sm">{label}</span>
-			{children}
-		</div>
-	)
-}
 
 /**
  * 레이아웃이 바뀌어 **덩어리가 다른 자리로 옮겨갈 때** 그 이동을 이어 준다.

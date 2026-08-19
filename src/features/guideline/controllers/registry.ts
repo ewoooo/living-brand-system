@@ -2,6 +2,7 @@ import type {
 	ControllerControlRestriction,
 	StudioControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
+import { CI_LOCKUP_MANIFEST } from '../widgets/ci-lockup/manifest'
 import { CLEARSPACE_VIEWER_MANIFEST } from '../widgets/clearspace-viewer/manifest'
 import { LAYOUT_GRID_MANIFEST } from '../widgets/layout-grid/manifest'
 import type { GuidelineControllerManifest } from './contract'
@@ -50,12 +51,42 @@ function foldRestriction(
 	}
 }
 
+/**
+ * 알약에서 **뺄** 컨트롤 목록을 제한으로 옮긴다. 뺀 축은 그 값에 머문다(`pill.tsx`가
+ * `readonly`를 걸러낸다) — 자회사 섹션에서 해외지사 컨트롤을 빼면 그 페이지에서 해외지사 락업이
+ * 나올 길이 없어진다.
+ * 🔴 좁히기만 한다 — 목록에 없는 컨트롤은 건드리지 않는다.
+ */
+function hideRestrictions(hidden: unknown): ControllerControlRestriction[] {
+	if (!Array.isArray(hidden)) return []
+	return hidden
+		.filter((id): id is string => typeof id === 'string')
+		.map((controlId) => ({ controlId, availability: 'readonly' as const }))
+}
+
 export const GUIDELINE_CONTROLLERS: Readonly<Record<string, ControllerEntry>> = {
 	// 자기 그림을 그리면서 컨트롤도 여는 위젯 — 배치에 남는다(panelOnly 아님).
 	// admin이 좁힐 값이 없어 제한은 비운다.
 	clearspaceViewerWidget: {
 		manifest: CLEARSPACE_VIEWER_MANIFEST,
 		toRestrictions: () => ({ controls: [] }),
+	},
+	// 자기 그림(락업 Canvas)을 그리면서 컨트롤을 여는 위젯 — 배치에 남는다(panelOnly 아님).
+	ciLockupWidget: {
+		manifest: CI_LOCKUP_MANIFEST,
+		toRestrictions: (fields) => ({
+			controls: [
+				// 계층 켜기는 admin이 **초기값**을 정한다. 값만 덮고 조작은 막지 않는다 —
+				// 못 만지게 하려면 `hiddenControls`에 담는다.
+				...(typeof fields.subsidiaryOn === 'boolean'
+					? [{ controlId: 'subsidiaryOn', defaultValue: fields.subsidiaryOn }]
+					: []),
+				...(typeof fields.branchOn === 'boolean'
+					? [{ controlId: 'branchOn', defaultValue: fields.branchOn }]
+					: []),
+				...hideRestrictions(fields.hiddenControls),
+			],
+		}),
 	},
 	layoutGridControlsWidget: {
 		// 그릴 것이 없는 순수 패널 — 값을 심고 알약에 컨트롤을 올리는 일만 한다.

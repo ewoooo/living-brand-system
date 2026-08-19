@@ -615,6 +615,31 @@ export interface ImageLeaf {
  * via the `definition` "CiLockupWidget".
  */
 export interface CiLockupWidget {
+  /**
+   * 자회사 CI를 켠 상태로 엽니다.
+   */
+  subsidiaryOn?: boolean | null;
+  /**
+   * 해외지사 CI를 켠 상태로 엽니다. 자회사가 켜져 있어야 합니다.
+   */
+  branchOn?: boolean | null;
+  /**
+   * 알약에서 뺄 컨트롤. 뺀 축은 위에서 정한 값에 고정됩니다(예: 자회사 섹션에서 해외지사 두 컨트롤).
+   */
+  hiddenControls?:
+    | (
+        | 'subsidiaryOn'
+        | 'subsidiary'
+        | 'branchOn'
+        | 'branch'
+        | 'form'
+        | 'language'
+        | 'colorType'
+        | 'mono'
+        | 'clearSpace'
+        | 'measured'
+      )[]
+    | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'ciLockupWidget';
@@ -2390,6 +2415,9 @@ export interface ImageLeafSelect<T extends boolean = true> {
  * via the `definition` "CiLockupWidget_select".
  */
 export interface CiLockupWidgetSelect<T extends boolean = true> {
+  subsidiaryOn?: T;
+  branchOn?: T;
+  hiddenControls?: T;
   id?: T;
   blockName?: T;
 }
