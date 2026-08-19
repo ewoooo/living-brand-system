@@ -6,7 +6,7 @@ import {
 	getFirstEncodableVideoCodec,
 	Mp4OutputFormat,
 	Output,
-	QUALITY_HIGH,
+	QUALITY_VERY_HIGH,
 } from 'mediabunny'
 import type { VideoExportSpec } from '../export-contract'
 
@@ -34,7 +34,10 @@ export async function canvasFramesToMp4({
 	const output = new Output({ format, target })
 	// ponytail: CanvasSource는 브라우저 canvas의 RGB 색 신호를 따른다. 납품 규격이 정확한
 	// Rec.709 transfer metadata까지 요구하면 VideoSampleSource와 픽셀 버퍼 입력으로 교체한다.
-	const source = new CanvasSource(canvas, { codec, quality: QUALITY_HIGH })
+	//
+	// mediabunny는 해상도에서 비트레이트를 계산한다(3Mbps × (픽셀/1080p)^0.95 × 품질계수).
+	// 스튜디오 캔버스는 1080p보다 작아 계수가 그만큼 깎이므로 최상 품질로 되받는다 — 2.04 → 3.86.
+	const source = new CanvasSource(canvas, { codec, quality: QUALITY_VERY_HIGH })
 	const frameCount = Math.ceil(spec.durationSeconds * spec.fps)
 	const frameDuration = 1 / spec.fps
 	output.addVideoTrack(source, { frameRate: spec.fps, maximumPacketCount: frameCount })
