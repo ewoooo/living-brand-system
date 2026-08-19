@@ -756,6 +756,68 @@ describe('TemplateGenerator', () => {
 		expect(screen.queryByLabelText('Line Color 색상 선택') !== null).toBe(colorized)
 	})
 
+	it('자산 브라우저가 분류 태그로 샘플 이미지를 거른다', async () => {
+		const user = userEvent.setup()
+		// 분류 목록은 값에서 역산한다 — 분류 테이블이 없으므로 빈 값은 어느 태그에도 안 걸린다.
+		sampleMocks.fetchSampleImages.mockResolvedValue([
+			{
+				id: 11,
+				name: '엔진 A',
+				alt: '',
+				url: '/a.png',
+				thumbnailUrl: '/a.png',
+				lineArt: true,
+				group: '엔진',
+			},
+			{
+				id: 12,
+				name: '선박 B',
+				alt: '',
+				url: '/b.png',
+				thumbnailUrl: '/b.png',
+				lineArt: true,
+				group: '선박',
+			},
+			{
+				id: 13,
+				name: '미분류 C',
+				alt: '',
+				url: '/c.png',
+				thumbnailUrl: '/c.png',
+				lineArt: true,
+				group: '',
+			},
+		])
+		render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+				}}
+			/>,
+		)
+
+		await user.click(screen.getByRole('radio', { name: 'Preset' }))
+		await user.click(await screen.findByRole('button', { name: '샘플 이미지 선택' }))
+
+		// 필터를 걸기 전에는 분류가 없는 것까지 전부 보인다.
+		expect(await screen.findByRole('button', { name: /엔진 A/ })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: /선박 B/ })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: /미분류 C/ })).toBeInTheDocument()
+
+		await user.click(screen.getByRole('button', { name: '엔진' }))
+
+		expect(screen.getByRole('button', { name: /엔진 A/ })).toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: /선박 B/ })).toBeNull()
+		expect(screen.queryByRole('button', { name: /미분류 C/ })).toBeNull()
+
+		// 태그를 다시 눌러 끄면 전체로 돌아온다 — 빈 선택이 곧 전체다.
+		await user.click(screen.getByRole('button', { name: '엔진' }))
+		expect(screen.getByRole('button', { name: /선박 B/ })).toBeInTheDocument()
+	})
+
 	it('생성 후 transform 조작이 편집 transform으로 합성되고, 생성 전에는 비활성이다', async () => {
 		mocks.requestImageGeneration.mockResolvedValue({
 			generatedImages: [{ id: 5, url: '/api/generated-images/file/bg.png' }],

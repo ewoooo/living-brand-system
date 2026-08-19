@@ -13,6 +13,8 @@ export type SampleImageOption = {
 	thumbnailUrl: string
 	/** 선으로만 그린 이미지인지 — 켜져 있어야 슬롯의 색 조정이 이 이미지에 걸린다. */
 	lineArt: boolean
+	/** 브라우저의 태그 필터가 쓰는 분류. 비어 있으면 어느 태그에도 속하지 않는다. */
+	group: string
 }
 
 /**
@@ -37,6 +39,7 @@ function toSampleImageOption(doc: SampleImage): SampleImageOption[] {
 			url: doc.url,
 			thumbnailUrl: doc.sizes?.thumbnail?.url ?? doc.url,
 			lineArt: doc.lineArt ?? false,
+			group: doc.group ?? '',
 		},
 	]
 }
