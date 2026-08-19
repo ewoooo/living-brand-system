@@ -752,6 +752,8 @@ describe('TemplateGenerator', () => {
 			expect(container.innerHTML).toContain('/api/sample-images/file/drawing.png'),
 		)
 		expect(container.innerHTML.includes('rgb(255, 0, 0)')).toBe(colorized)
+		// 치환이 열린 상태에는 그 색을 바꿀 손잡이도 함께 있어야 한다 — 판정과 UI가 갈리면 손잡이 없는 색이 된다.
+		expect(screen.queryByLabelText('Line Color 색상 선택') !== null).toBe(colorized)
 	})
 
 	it('생성 후 transform 조작이 편집 transform으로 합성되고, 생성 전에는 비활성이다', async () => {

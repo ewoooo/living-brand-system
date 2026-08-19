@@ -1,10 +1,10 @@
 'use client'
 
 import { toCanvas } from 'html-to-image'
-import { getImageColorAdjustmentControls } from '@/features/image-generation/domain/image-studio-config'
 import type { AuthorizedTemplateAssetCollection } from '@/features/template-core/domain/template-asset-policy'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { TemplateAssignedImage } from '@/features/template-customization/contexts/template-studio-context'
+import { resolveTemplateImageColorControls } from '@/features/template-customization/domain/image-colorize'
 import {
 	type ImageTransformValue,
 	toImageEditTransform,
@@ -171,14 +171,9 @@ export function composeTemplateStudioHtml({
 			const contract = imageContracts[slotId]?.find(
 				(candidate) => candidate.config.id === state.profileId,
 			)
-			// 색 치환은 라인 아트에만 뜻이 있다. 생성물은 그 프로파일이 만든 것일 때,
-			// 샘플은 선화로 표시된 것일 때만 연다 — 사진에 걸면 두 색으로 뭉개진다.
-			const colorizable =
-				!state.image ||
-				(state.image.kind === 'generated' && state.image.profileId === state.profileId) ||
-				(state.image.kind === 'sample' && state.image.lineArt)
-			const colorControls =
-				contract && colorizable ? getImageColorAdjustmentControls(contract.config) : null
+			const colorControls = contract
+				? resolveTemplateImageColorControls(state, contract.config)
+				: null
 			const lineColor = colorControls ? state.featureValues[colorControls.line.id] : undefined
 			const backgroundColor = colorControls?.background
 				? state.featureValues[colorControls.background.id]
