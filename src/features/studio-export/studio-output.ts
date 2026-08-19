@@ -16,7 +16,12 @@ import type {
 import { STUDIO_OUTPUT_FORMATS } from './export-contract'
 import { PRINT_PPI_VALUES, type PrintPpi } from './print-policy'
 
-const DEFAULT_RASTER_VIDEO_CAPABILITY = {
+/**
+ * video 사양을 선언하지 않은 Raster runtime의 MP4 폴백.
+ * 🔴 maxWidth·maxHeight는 가로형 1080p를 가정하므로 세로형 캔버스가 자기 크기를 못 넘긴다 —
+ * 캔버스 크기를 아는 runtime은 이 정책을 쓰고 프레임 크기만 자기 값으로 덮는다.
+ */
+export const DEFAULT_RASTER_VIDEO_CAPABILITY = {
 	fps: STUDIO_VIDEO_FPS_VALUES,
 	maxWidth: 1920,
 	maxHeight: 1080,

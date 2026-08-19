@@ -14,6 +14,7 @@ import {
 	type ImageOutputSize,
 } from '@/features/image-generation/image-size'
 import {
+	DEFAULT_RASTER_VIDEO_CAPABILITY,
 	parseStudioOutputCapability,
 	projectStudioOutputPolicy,
 	resolveStudioArtifactOutputFormats,
@@ -511,7 +512,10 @@ function isImageAspectRatio(value: string | null): value is ImageAspectRatio {
 export function getTemplateRuntimeManifest({
 	html,
 	nodeConfigs,
-}: Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs'>): StudioRuntimeManifest {
+	width,
+	height,
+}: Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs'> &
+	Partial<Pick<PublishedHtmlTemplate, 'width' | 'height'>>): StudioRuntimeManifest {
 	const textControls: TextControlDefinition[] = collectTemplateSlots(html, nodeConfigs).map(
 		(slot) => ({
 			id: `text:${slot.nodeId}`,
@@ -526,8 +530,14 @@ export function getTemplateRuntimeManifest({
 				: { placeholder: slot.input.placeholder }),
 		}),
 	)
+	// 템플릿은 배율 컨트롤이 없어 자기 캔버스 크기로만 내보낸다 — 그 크기를 MP4 상한으로 선언해야
+	// 세로형 캔버스가 폴백의 가로형 1080p 상한에 막히지 않는다(가져오기 전에는 크기를 모른다).
+	const videoFrame =
+		width && height && width > 0 && height > 0
+			? { ...DEFAULT_RASTER_VIDEO_CAPABILITY, maxWidth: width, maxHeight: height }
+			: null
 	return {
-		artifacts: { raster: {} },
+		artifacts: { raster: {}, ...(videoFrame ? { video: videoFrame } : {}) },
 		controller: {
 			groups: [
 				...(textControls.length

@@ -3,6 +3,8 @@ import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
+import { createRasterExportRequest } from '@/features/studio-export/services/create-raster-export-request'
+import { supportsStudioExportRequest } from '@/features/studio-export/studio-output'
 import {
 	deriveTemplateStudioConfig,
 	findTemplateControl,
@@ -56,6 +58,22 @@ describe('deriveTemplateStudioConfig', () => {
 			},
 		})
 		expect(getTemplateRuntimeManifest({ ...template })).toEqual(manifest)
+	})
+
+	it('세로형 캔버스가 폴백의 가로형 1080p 상한에 막히지 않고 자기 크기로 MP4를 낸다', () => {
+		// Poster 2X = 1260×1782. 폴백 상한(1920×1080)이 걸리면 높이 1782에서 내보내기가 죽는다.
+		const poster = { ...template, width: 1260, height: 1782 }
+		const config = deriveTemplateStudioConfig(poster, [imageConfig], [forwardStraightConfig])
+
+		expect(config.output.formats).toContain('mp4')
+		expect(config.output.video?.mp4).toMatchObject({ maxWidth: 1260, maxHeight: 1782 })
+
+		const request = createRasterExportRequest('mp4', config.output, {
+			width: poster.width,
+			height: poster.height,
+		})
+		if (!request) throw new Error('MP4 요청을 만들지 못했습니다.')
+		expect(supportsStudioExportRequest(config.output, request)).toBe(true)
 	})
 
 	it('Template 도메인 계약을 멱등 검증하고 slot의 알 수 없는 필드를 거부한다', () => {
