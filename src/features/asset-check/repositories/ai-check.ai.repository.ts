@@ -117,6 +117,12 @@ export async function runAiCheck(
 						{
 							type: 'text',
 							text: JSON.stringify({ checks: observationTask.checks }),
+							// 여기까지(system + 지시문 + checks JSON)가 이미지와 무관하게 고정이다.
+							// 한 세션에서 여러 이미지를 검수하면 이 프리픽스가 매번 새 입력으로 청구된다.
+							// 🔴 breakpoint는 대상 이미지 **앞**에만 둘 수 있다 — 이미지는 요청마다 바뀌므로
+							//    그 뒤(레퍼런스 포함)는 캐시되지 않는다. 레퍼런스까지 캐시하려면 순서를
+							//    바꿔야 하는데, 프롬프트 구성이 바뀌면 판정도 바뀔 수 있어 하지 않는다.
+							providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } },
 						},
 						{ type: 'text', text: 'Target image to check:' },
 						{
