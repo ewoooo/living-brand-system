@@ -760,19 +760,23 @@ export type DiagramSpec = {
 const LABEL_BELOW_UNDER = 0.1
 
 /**
- * 🔴 게이지 열 수는 **상수**다. 꼴에 따라 늘렸다 줄이면 도판 폭이 변해 판 가운데 정렬 때문에
- *    락업이 옆으로 튄다(실측: 가로형A↔B에서 32px). 안 쓰는 열이 비는 대가로 기하를 고정한다.
- * 좌: 0=H · 1=영역 · 2=행 축 간격 라벨 자리. 우: 0=묶음 · 1=행별.
+ * 🔴 게이지 열 수는 **상수**다. 꼴에 따라 늘렸다 줄이면 도판 폭이 변한다.
+ * 좌: 0=H · 1=영역과 세로형 심볼 간격(세로로 겹치지 않아 한 열을 나눠 쓴다). 우: 0=묶음 · 1=행별.
  */
-const GAUGE_LEFT = 3
+const GAUGE_LEFT = 2
 const GAUGE_RIGHT = 2
 
 /**
  * 🔑 간격은 **뒤에 오는 것으로만** 이름 짓는다. 쌍으로 이름 지으면(`gap:bar-branch`) 사이에 무엇이
  *    끼는 꼴에서 이름이 바뀌어 같은 간격이 다른 정체가 된다 — 구분바가 정확히 그 경우다.
+ *
+ * 🔴 **축을 이름에 넣는다**(`gapX`/`gapY`). 글자와 달리 간격은 **방향이 곧 성격**이라, 맥락이 같아도
+ *    수평 간격과 수직 간격은 시각적으로 다른 것이다(사용자 지정 2026-08-19: 「요소의 방향이 다르다면
+ *    그 둘은 각기 다른 요소로 존재해야 함」). 한 정체로 묶으면 꼴 전환에서 그 요소가 축을 가로질러
+ *    날아가 정신없어진다.
  */
-const gapId = (after: RowRole | 'bar', index: number) =>
-	after === 'bar' ? 'gap:bar' : `gap:${after}:${index}`
+const gapId = (axis: 'X' | 'Y', after: RowRole | 'bar', index: number) =>
+	after === 'bar' ? `gap${axis}:bar` : `gap${axis}:${after}:${index}`
 
 const hLabel = (v: number) => `${Number(v.toFixed(4))}H`
 
@@ -805,7 +809,7 @@ export function diagramSpec(lockup: Lockup): DiagramSpec {
 			const v = row.gapBefore ?? lockup.rowGap
 			/* 간격의 서수 = 그 간격이 여는 글자의 서수(뒤 이웃 규칙). */
 			const ordinal = (seen[row.role] ?? -1) + 1
-			if (v > 0) rows.push({ id: gapId(row.role, ordinal), kind: 'gap', v })
+			if (v > 0) rows.push({ id: gapId('Y', row.role, ordinal), kind: 'gap', v })
 		}
 		const id = nextId(row.role)
 		textRowIds.push(id)
@@ -830,7 +834,7 @@ export function diagramSpec(lockup: Lockup): DiagramSpec {
 		envStart = finalRows.length
 		finalRows.push({ id: 'sym', kind: 'sym', v: 1 })
 		envEnd = finalRows.length - 1
-		finalRows.push({ id: gapId(textColumn.rows[0].role, 0), kind: 'gap', v: lockup.gap })
+		finalRows.push({ id: gapId('Y', textColumn.rows[0].role, 0), kind: 'gap', v: lockup.gap })
 	}
 	if (pad > 0) {
 		envStart = finalRows.length
@@ -852,7 +856,9 @@ export function diagramSpec(lockup: Lockup): DiagramSpec {
 	for (const track of rows.slice(lastAreaIndex + 1)) {
 		if (track.kind === 'gap' && firstHanging) {
 			firstHanging = false
-			finalRows.push({ ...track, v: Math.max(0, (track.v ?? 0) - pad), labelValue: track.v })
+			/* 부동소수점 찌꺼기를 남기지 않는다(0.1 - 0.05 = 0.05000000000000002). */
+			const remaining = Number(Math.max(0, (track.v ?? 0) - pad).toFixed(6))
+			finalRows.push({ ...track, v: remaining, labelValue: track.v })
 		} else finalRows.push(track)
 	}
 
@@ -861,7 +867,7 @@ export function diagramSpec(lockup: Lockup): DiagramSpec {
 	if (horizontal) {
 		cols.push({ id: 'sym', kind: 'sym', v: SYMBOL_ASPECT })
 		cols.push({
-			id: gapId(lockup.columns[0]?.rows[0]?.role ?? 'name', 0),
+			id: gapId('X', lockup.columns[0]?.rows[0]?.role ?? 'name', 0),
 			kind: 'gap',
 			v: lockup.gap,
 		})
@@ -871,7 +877,7 @@ export function diagramSpec(lockup: Lockup): DiagramSpec {
 		const role = column.bar !== undefined ? 'bar' : (column.rows[0]?.role ?? 'name')
 		const id = column.bar !== undefined ? 'bar' : isText ? textCol : `col:${role}`
 		if (i > 0 && (column.gapBefore ?? 0) > 0) {
-			cols.push({ id: gapId(role, 0), kind: 'gap', v: column.gapBefore })
+			cols.push({ id: gapId('X', role, 0), kind: 'gap', v: column.gapBefore })
 		}
 		cols.push({ id, kind: column.bar !== undefined ? 'bar' : 'el', v: column.bar })
 		if (isText || column.bar !== undefined) return
@@ -913,6 +919,24 @@ export function diagramSpec(lockup: Lockup): DiagramSpec {
 		to: finalRows[areaEnd]?.id ?? 'env',
 		label: hLabel(areaH),
 	})
+
+	/* 🔑 **행 간격에는 치수를 적지 않는다** — 정본 도판이 그렇다. 딱 하나 예외가 세로형의
+	      심볼↔워드마크 간격이고, 그것은 좌측 게이지에 Span으로 온다(도판 실측).
+	   🔴 그래서 이 스펙이 내는 치수는 **정본 도판에 적힌 것과 개수까지 같다**. 파생이 낼 수 있는
+	      모든 수치를 적으면 도판이 아니라 계측기가 된다(사용자 지정 2026-08-19). */
+	if (!horizontal) {
+		const symbolGap = finalRows.find((t) => t.kind === 'gap')
+		if (symbolGap?.id) {
+			spans.push({
+				id: `span:${symbolGap.id}`,
+				side: 'left',
+				depth: 1,
+				from: symbolGap.id,
+				to: symbolGap.id,
+				label: hLabel(symbolGap.v ?? 0),
+			})
+		}
+	}
 
 	/* 🔑 `hd` 행이 있는 꼴에서는 「HD」와 「계열사명 묶음」이 각각 게이지를 갖는다(정본 도판).
 	      가로형A는 HD가 행이 아니라 열이므로 이 게이지가 없다 — 파생이 그것을 알아서 맞춘다. */

@@ -183,14 +183,14 @@ describe('CI 락업 조립 규칙', () => {
 
 	it('가로형A — 열 간격과 행이 정본 값이다', () => {
 		const d = overseas('horizontalA')
-		expect(sizeOf(d, 'gap:hd:0')).toBe(0.25)
-		expect(sizeOf(d, 'gap:name:0')).toBe(0.2)
-		expect(sizeOf(d, 'gap:bar')).toBe(0.2)
+		expect(sizeOf(d, 'gapX:hd:0')).toBe(0.25)
+		expect(sizeOf(d, 'gapX:name:0')).toBe(0.2)
+		expect(sizeOf(d, 'gapX:bar')).toBe(0.2)
 		expect(sizeOf(d, 'bar')).toBe(0.04)
-		expect(sizeOf(d, 'gap:branch:0')).toBe(0.2)
+		expect(sizeOf(d, 'gapX:branch:0')).toBe(0.2)
 		expect(sizeOf(d, 'el:name:0')).toBe(0.28)
 		expect(sizeOf(d, 'el:name:1')).toBe(0.28)
-		expect(sizeOf(d, 'gap:name:1')).toBe(0.09)
+		expect(sizeOf(d, 'gapY:name:1')).toBe(0.09)
 		expect(labelOf(d, 'span:area')).toBe('0.65H')
 		// 🔴 HD가 행이 아니라 열이므로 묶음 게이지가 없어야 한다 — 파생이 꼴을 알아서 맞추는 증거
 		expect(d.spans.some((s) => s.id.startsWith('span:group:'))).toBe(false)
@@ -219,11 +219,11 @@ describe('CI 락업 조립 규칙', () => {
 		expect(labelOf(d, 'span:group:hd')).toBe('0.4H')
 		expect(labelOf(d, 'span:group:name')).toBe('0.4H')
 		expect(labelOf(d, 'span:el:branch:0')).toBe('0.12H')
-		expect(sizeOf(d, 'gap:name:0')).toBe(0.1)
-		expect(sizeOf(d, 'gap:name:1')).toBe(0.06)
+		expect(sizeOf(d, 'gapY:name:0')).toBe(0.1)
+		expect(sizeOf(d, 'gapY:name:1')).toBe(0.06)
 		// 🔴 매달린 간격은 영역 하단 기준이라 봉투 패딩 0.05H를 뺀 0.05H가 트랙이 된다.
 		//    라벨은 규정값 0.1H를 그대로 적는다. 이게 깨지면 총높이가 1.17H가 된다.
-		const hanging = d.rows.find((t) => t.id === 'gap:branch:0')
+		const hanging = d.rows.find((t) => t.id === 'gapY:branch:0')
 		expect(hanging?.v).toBeCloseTo(0.05, 6)
 		expect(hanging?.labelValue).toBe(0.1)
 		const [, areaEnd] = d.areaRows
@@ -234,11 +234,13 @@ describe('CI 락업 조립 규칙', () => {
 	it('세로형 — 심볼이 행이 되고 영역이 0.9H다', () => {
 		const d = overseas('vertical')
 		expect(d.rows[0]?.kind).toBe('sym')
-		expect(sizeOf(d, 'gap:hd:0')).toBe(0.2)
+		expect(sizeOf(d, 'gapY:hd:0')).toBe(0.2)
+		// 🔑 세로형만 행 간격에 치수가 붙는다 — 정본 도판이 좌측에 0.2H를 적는다
+		expect(labelOf(d, 'span:gapY:hd:0')).toBe('0.2H')
 		expect(labelOf(d, 'span:area')).toBe('0.9H')
 		expect(labelOf(d, 'span:group:hd')).toBe('0.3H')
 		expect(labelOf(d, 'span:group:name')).toBe('0.3H')
-		expect(sizeOf(d, 'gap:name:1')).toBe(0.05)
+		expect(sizeOf(d, 'gapY:name:1')).toBe(0.05)
 		expect(d.rows.some((t) => t.kind === 'pad')).toBe(false)
 	})
 
@@ -250,24 +252,14 @@ describe('CI 락업 조립 규칙', () => {
 		}
 	})
 
-	/* 🔑 「꼴을 바꿔도 새로 생기지 않고 이동한다」의 불변식. id에 축이 박혀 있으면 여기서 깨진다. */
-	it('같은 정체가 세 꼴에서 같은 것을 가리킨다', () => {
+	/* 🔑 「꼴을 바꿔도 새로 생기지 않고 이동한다」의 불변식. 축을 담지 않는 정체만 대상이다. */
+	it('글자와 심볼은 세 꼴에서 같은 정체다', () => {
 		const specs = {
 			horizontalA: overseas('horizontalA'),
 			horizontalB: overseas('horizontalB'),
 			vertical: overseas('vertical'),
 		}
-		const shared = [
-			'sym',
-			'gap:hd:0',
-			'gap:name:0',
-			'gap:name:1',
-			'gap:branch:0',
-			'el:hd:0',
-			'el:name:0',
-			'el:name:1',
-			'el:branch:0',
-		]
+		const shared = ['sym', 'el:hd:0', 'el:name:0', 'el:name:1', 'el:branch:0']
 		for (const [form, d] of Object.entries(specs)) {
 			const ids = [...d.cols, ...d.rows].map((t) => t.id).filter(Boolean)
 			const glyphIds = d.glyphs.map((glyph) => glyph.id)
@@ -284,11 +276,56 @@ describe('CI 락업 조립 규칙', () => {
 			expect(glyphOf(specs.horizontalB, id)?.text, `${id} — A vs B`).toBe(a)
 			expect(glyphOf(specs.vertical, id)?.text, `${id} — A vs 세로형`).toBe(a)
 		}
-		// 🔑 같은 정체가 가로형A에서 **열**, 나머지에서 **행**이다 — 축만 바뀐다
-		expect(specs.horizontalA.cols.some((t) => t.id === 'gap:name:0')).toBe(true)
-		expect(specs.horizontalB.rows.some((t) => t.id === 'gap:name:0')).toBe(true)
-		expect(specs.horizontalA.cols.some((t) => t.id === 'sym')).toBe(true)
-		expect(specs.vertical.rows.some((t) => t.id === 'sym')).toBe(true)
+	})
+
+	/* 🔴 간격은 **방향이 곧 성격**이라 축이 다르면 다른 정체여야 한다(사용자 지정 2026-08-19).
+	      한 정체로 묶으면 꼴 전환에서 그 요소가 축을 가로질러 날아가 정신없어진다. */
+	it('축이 다른 간격은 다른 정체다', () => {
+		const a = overseas('horizontalA')
+		const b = overseas('horizontalB')
+		const v = overseas('vertical')
+		const idsOf = (d: ReturnType<typeof diagramSpec>) =>
+			[...d.cols, ...d.rows].map((t) => t.id).filter(Boolean)
+
+		// HD↔회사명 간격: 가로형A는 **열**(0.2H), 가로형B·세로형은 **행**(0.1H)
+		expect(a.cols.some((t) => t.id === 'gapX:name:0')).toBe(true)
+		expect(idsOf(a)).not.toContain('gapY:name:0')
+		expect(b.rows.some((t) => t.id === 'gapY:name:0')).toBe(true)
+		expect(idsOf(b)).not.toContain('gapX:name:0')
+		expect(v.rows.some((t) => t.id === 'gapY:name:0')).toBe(true)
+
+		// 심볼↔워드마크 간격: 가로형은 열, 세로형은 행
+		expect(a.cols.some((t) => t.id === 'gapX:hd:0')).toBe(true)
+		expect(v.rows.some((t) => t.id === 'gapY:hd:0')).toBe(true)
+		expect(idsOf(v)).not.toContain('gapX:hd:0')
+
+		// 모든 간격 id가 축 접두어를 갖는다
+		for (const [form, d] of Object.entries({ a, b, v })) {
+			for (const track of [...d.cols, ...d.rows]) {
+				if (track.kind !== 'gap') continue
+				expect(track.id, `${form} — ${track.id}`).toMatch(/^gap[XY]:/)
+			}
+		}
+	})
+
+	/* 🔴 파생이 낼 수 있는 **모든** 수치를 적으면 도판이 아니라 계측기가 된다. 정본 도판이 적은 것과
+	      개수가 같아야 한다(사용자 지정 2026-08-19: 「이미지에 적힌 것만」). 기대값은 도판 3장 실측. */
+	it('치수는 정본 도판이 적은 것과 개수가 같다', () => {
+		const expected = {
+			horizontalA: { ticks: 5, spans: 4 },
+			horizontalB: { ticks: 1, spans: 7 },
+			vertical: { ticks: 0, spans: 8 },
+		}
+		for (const [form, want] of Object.entries(expected)) {
+			const d = overseas(form)
+			const ticks = d.cols.filter((t) => t.kind === 'gap' || t.kind === 'bar')
+			expect(ticks.length, `${form} — 치수선`).toBe(want.ticks)
+			expect(d.spans.length, `${form} — 게이지`).toBe(want.spans)
+			// 🔑 행 간격에는 치수가 없다 — 세로형의 심볼 간격만 좌측 게이지로 예외
+			const rowGaps = d.rows.filter((t) => t.kind === 'gap')
+			const labelled = rowGaps.filter((t) => d.spans.some((sp) => sp.id === `span:${t.id}`))
+			expect(labelled.length, `${form} — 라벨 붙은 행 간격`).toBe(form === 'vertical' ? 1 : 0)
+		}
 	})
 
 	/* 🔴 게이지 열 수가 꼴마다 변하면 도판 폭이 변해 판 가운데 정렬 때문에 락업이 옆으로 튄다. */
@@ -300,7 +337,7 @@ describe('CI 락업 조립 규칙', () => {
 				branch: OVERSEAS_BRANCHES[0],
 			})) {
 				const d = diagramSpec(lockup)
-				expect(d.gaugeLeft, `${lockup.label} — 좌`).toBe(3)
+				expect(d.gaugeLeft, `${lockup.label} — 좌`).toBe(2)
 				expect(d.gaugeRight, `${lockup.label} — 우`).toBe(2)
 			}
 		}

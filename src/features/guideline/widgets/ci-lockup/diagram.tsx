@@ -159,7 +159,6 @@ const trackSize = (track: DiagramTrack, h: number) =>
 	track.v === undefined ? 'max-content' : `${track.v * h}px`
 
 type Placement = { column: [number, number]; row: [number, number] }
-type Axis = 'col' | 'row' | null
 type Item = { placement: Placement; node: ReactNode; z: number; flow: boolean; size: boolean }
 
 /** 스펙 하나를 grid 좌표로 푼다. 트랙 배열의 인덱스가 곧 grid line이라 좌표 실수가 구조적으로 안 난다. */
@@ -206,45 +205,18 @@ function resolve(spec: DiagramSpec, h: number) {
 
 type Geometry = ReturnType<typeof resolve>
 
-/**
- * 🔑 축 규칙 하나. 정체가 열 트랙을 가지면 「자기 열 × 판 전높이」, 행 트랙을 가지면
- *    「판 전폭 × 자기 행」이다. 그래서 축이 바뀌면 **같은 사각형이 재비율**되고, FLIP이
- *    그 변형을 이어 준다 — 회전이 아니다.
- */
-function cross(g: Geometry, id: string): { axis: Axis; placement: Placement } {
-	const column = g.colLine[id]
-	if (column)
-		return { axis: 'col', placement: { column: [column, column + 1], row: [1, g.lastRow] } }
-	const row = g.rowLine[id]
-	if (row) return { axis: 'row', placement: { column: [1, g.lastColumn], row: [row, row + 1] } }
-	/* 🔴 이 꼴에 트랙이 없는 정체. **건너뛰지 않는다** — 건너뛰면 그 key가 배열에서 사라져
-	   React가 언마운트하고, 돌아올 때 새로 만들어져 이동 전환이 죽는다(실측: childList 16건).
-	   자리는 임의로 두고 호출부가 이음선으로 덮는다. */
-	return { axis: null, placement: { column: [1, 2], row: [1, 2] } }
-}
-
 /* ── 주석 프리미티브 ─────────────────────────────────────────────────── */
 
 /**
- * 간격의 경계. 🔑 **네 변을 항상 갖고 색만 바꾼다** — 열 간격이면 좌·우, 행 간격이면 상·하가
- * 점선이 된다. `border-color`는 보간되므로 축이 바뀌는 동안 크로스페이드하고, 상자 자체는
- * FLIP이 재비율한다. 회전을 쓰지 않는 이유: 1px 점선이 중간 각도에서 죽이 된다.
+ * 간격의 경계 — 점선 세로선 한 쌍.
+ * 🔑 **열 간격에만 그린다**(정본 도판). 행 간격은 면(Band) 사이로 읽히고 치수를 적지 않는다.
+ *    간격 정체가 축별로 갈려 있으므로(`gapX`/`gapY`) 이 마크가 축을 넘나드는 일이 없다.
  */
-function Tick({ axis, guide, motion }: { axis: Axis; guide: string; motion: boolean }) {
-	const vertical = axis === 'col' ? guide : 'transparent'
-	const horizontal = axis === 'row' ? guide : 'transparent'
+function Tick({ guide }: { guide: string }) {
 	return (
 		<div
 			className="size-full"
-			style={{
-				borderStyle: 'dashed',
-				borderWidth: 1,
-				borderLeftColor: vertical,
-				borderRightColor: vertical,
-				borderTopColor: horizontal,
-				borderBottomColor: horizontal,
-				transition: motion ? `border-color ${MORPH}` : undefined,
-			}}
+			style={{ borderLeft: `1px dashed ${guide}`, borderRight: `1px dashed ${guide}` }}
 		/>
 	)
 }
@@ -257,16 +229,11 @@ function GapLabel({
 	stage,
 }: {
 	value: number
-	place: 'above' | 'below' | 'left'
+	place: 'above' | 'below'
 	guide: string
 	stage: string
 }) {
-	const align =
-		place === 'below'
-			? 'items-start pt-2.5'
-			: place === 'above'
-				? 'items-end pb-2.5'
-				: 'items-center'
+	const align = place === 'below' ? 'items-start pt-2.5' : 'items-end pb-2.5'
 	return (
 		<span className={`relative grid size-full justify-center ${align}`}>
 			{place === 'below' ? (
@@ -360,44 +327,32 @@ function buildItems(
 		)
 	}
 
-	/* Tick + 라벨 — 🔑 **두 축 모두** 그린다. 열 간격은 상단(좁으면 하단) 라벨, 행 간격은 좌측 라벨 열. */
-	for (const track of [...spec.cols, ...spec.rows]) {
+	/* Tick + 라벨 — 🔑 **열 간격에만**. 행 간격은 치수를 적지 않는다(정본 도판).
+	   🔴 파생이 낼 수 있는 모든 수치를 적으면 도판이 아니라 계측기가 된다(사용자 지정 2026-08-19). */
+	for (const track of spec.cols) {
 		if ((track.kind !== 'gap' && track.kind !== 'bar') || !track.id) continue
-		const { axis, placement } = cross(g, track.id)
+		const column = g.colLine[track.id] ?? 1
 		mark(
 			`tick:${track.id}`,
-			placement,
-			<Tick axis={axis} guide={ctx.guide} motion={ctx.motion} />,
+			{ column: [column, column + 1], row: [1, g.lastRow] },
+			<Tick guide={ctx.guide} />,
 			2,
 		)
-		const value = track.labelValue ?? track.v ?? 0
-		if (axis !== 'row') {
-			const column = g.colLine[track.id] ?? 1
-			const below = spec.labelBelow.includes(track.id)
-			mark(
-				`label:${track.id}`,
-				{
-					column: [column, column + 1],
-					row: below ? [g.lastRow, g.lastRow + 1] : [1, 2],
-				},
-				<GapLabel
-					value={value}
-					place={below ? 'below' : 'above'}
-					guide={ctx.guide}
-					stage={ctx.stage}
-				/>,
-				3,
-			)
-		} else {
-			const row = g.rowLine[track.id]
-			const column = g.leftGauge(2)
-			mark(
-				`label:${track.id}`,
-				{ column: [column, column + 1], row: [row, row + 1] },
-				<GapLabel value={value} place="left" guide={ctx.guide} stage={ctx.stage} />,
-				3,
-			)
-		}
+		const below = spec.labelBelow.includes(track.id)
+		mark(
+			`label:${track.id}`,
+			{
+				column: [column, column + 1],
+				row: below ? [g.lastRow, g.lastRow + 1] : [1, 2],
+			},
+			<GapLabel
+				value={track.labelValue ?? track.v ?? 0}
+				place={below ? 'below' : 'above'}
+				guide={ctx.guide}
+				stage={ctx.stage}
+			/>,
+			3,
+		)
 	}
 
 	/* 심볼 — 열이면 봉투 전체, 행이면 그 행 */
