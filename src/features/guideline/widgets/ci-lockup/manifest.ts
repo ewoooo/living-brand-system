@@ -23,6 +23,23 @@ import {
  *    기본값으로 돌아간다 — 매니페스트와 위젯이 id로 묶인 것이 현재 계약의 천장이다.
  */
 
+/**
+ * 심볼 높이(px). 🔑 락업의 **모든 치수가 이 값의 배수**라 이 하나가 판형을 정한다.
+ * 🔴 하한 60은 도판 라벨(고정 크기 글자)이 트랙보다 커지지 않는 선이고, 상한 240은 해외지사
+ *    가로형A 도판이 판 폭을 넘지 않는 선이다. 규정 최소 크기(디지털 16px)는 **사용 하한**이고
+ *    설명 판의 하한이 아니다 — 그 값은 판 밑 readout이 글로 말한다.
+ */
+export const HEIGHT = {
+	id: 'h',
+	kind: 'range',
+	label: 'H',
+	defaultValue: 100,
+	min: 60,
+	max: 240,
+	step: 10,
+	display: { unit: 'px' },
+} as const satisfies ControllerControlDefinition
+
 /** 🔑 꼴은 계층에 따라 실제로 열리는 것이 다르다(본사는 `horizontal`, 계열사는 A/B). 매니페스트는
  *  정적이므로 **합집합**을 싣고, 그 계층에 없는 값이 골라지면 렌더가 첫 항목으로 떨어뜨린다
  *  (`rules.ts`의 `lockupOptions`). 알약에서 계층별로 좁히려면 admin이 `optionValues`로 줄인다. */
@@ -129,6 +146,7 @@ export const CI_LOCKUP_MANIFEST = {
 		{ id: 'shape', title: '형태', controls: [FORM, LANGUAGE] },
 		{ id: 'color', title: '색', controls: [COLOR_TYPE, MONO] },
 		{ id: 'display', title: '표시', controls: [CLEAR_SPACE, MEASURED] },
+		{ id: 'size', title: '크기', controls: [HEIGHT] },
 	],
 } as const satisfies GuidelineControllerManifest
 
@@ -145,6 +163,7 @@ export const BRANCH_VALUES = BRANCH.options.map((option) => option.value)
  * ① 페이지를 처음 열었을 때의 상태 ② 그 축을 알약에 낼지.
  */
 export const CI_LOCKUP_CONTROLS = [
+	HEIGHT,
 	SUBSIDIARY_ON,
 	SUBSIDIARY,
 	BRANCH_ON,

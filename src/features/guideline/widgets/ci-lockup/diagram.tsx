@@ -17,10 +17,14 @@ import { CapLine, SymbolMark } from './view'
  * 🔴 클리어스페이스(여백)는 여기 없다 — 간격과 아예 다른 규정이고 이번 범위 밖이다.
  */
 
-/** 라벨행 높이(px). 🔴 절대 px이다 — H가 100 고정이라 지금은 안 드러나는 부채고, 이 파일이 소유한다. */
-const LABEL_ROW = 44
-/** 게이지 열 하나의 폭(px). */
-const GAUGE_COL = 64
+/**
+ * 라벨행 높이와 게이지 열 폭. 🔑 **H 배수다** — H가 컨트롤러로 열리면서 절대 px이던 부채를 갚았다.
+ * 값은 H=100에서 예전 절대값(44·64)과 정확히 같게 골랐다: 44/100 = 0.44, 64/100 = 0.64.
+ * 🔴 라벨 글자 크기는 따라 커지지 않는다(`text-xs`) — 도판이 아주 작아지면 라벨이 트랙보다 커진다.
+ *    그래서 H 하한을 매니페스트가 60으로 잡았다.
+ */
+const LABEL_ROW_RATIO = 0.44
+const GAUGE_COL_RATIO = 0.64
 /** 치수선·게이지 색은 브랜드 색을 **이름으로** 찾는다(생 팔레트 금지). */
 const GUIDE_COLOR_NAME = 'HD HERITAGE GREEN'
 /**
@@ -136,6 +140,8 @@ const FLEX = 'minmax(0, 1fr)'
 
 /** 스펙 하나를 grid 좌표로 푼다. 트랙 배열의 인덱스가 곧 grid line이라 좌표 실수가 구조적으로 안 난다. */
 function resolve(spec: DiagramSpec, h: number) {
+	const LABEL_ROW = LABEL_ROW_RATIO * h
+	const GAUGE_COL = GAUGE_COL_RATIO * h
 	const columns: string[] = [FLEX]
 	const colLine: Record<string, number> = {}
 	for (let d = 0; d < spec.gaugeLeft; d++) columns.push(`${GAUGE_COL}px`)

@@ -616,6 +616,10 @@ export interface ImageLeaf {
  */
 export interface CiLockupWidget {
   /**
+   * 초기값 — H (60~240).
+   */
+  h?: number | null;
+  /**
    * 초기값 — 자회사.
    */
   subsidiaryOn?: boolean | null;
@@ -702,6 +706,7 @@ export interface CiLockupWidget {
    */
   hiddenControls?:
     | (
+        | 'h'
         | 'subsidiaryOn'
         | 'subsidiary'
         | 'branchOn'
@@ -2489,6 +2494,7 @@ export interface ImageLeafSelect<T extends boolean = true> {
  * via the `definition` "CiLockupWidget_select".
  */
 export interface CiLockupWidgetSelect<T extends boolean = true> {
+  h?: T;
   subsidiaryOn?: T;
   subsidiary?: T;
   branchOn?: T;

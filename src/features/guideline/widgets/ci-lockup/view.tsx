@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
 	controllerBoolean,
+	controllerNumber,
 	controllerString,
 	useGuidelineController,
 } from '../../controllers/provider'
@@ -11,7 +12,7 @@ import { SPEC_READOUT } from '../readout'
 import { CI_STAGE_DARK, CI_STAGE_LIGHT } from '../surface'
 import { LockupDiagram } from './diagram'
 import { downloadSvg, lockupSvg } from './export-svg'
-import { BRANCH_VALUES, FORM_VALUES, LANGUAGE_VALUES, SUBSIDIARY_VALUES } from './manifest'
+import { BRANCH_VALUES, FORM_VALUES, HEIGHT, LANGUAGE_VALUES, SUBSIDIARY_VALUES } from './manifest'
 import { easeMorph, MORPH, MORPH_EASING, MORPH_MS, morph, reducedMotion } from './motion'
 import {
 	bearingOf,
@@ -62,9 +63,6 @@ import {
  */
 const DEBUG_INK_BOX = false
 
-/** H(심볼 높이). 워드마크가 읽히는 크기로 잡았다. */
-const H = 100
-
 /**
  * 통합 CI 위젯의 **Canvas**. 🔑 화면에는 락업 하나만 있고, 그것을 갈아끼우는 값은 알약에서 온다.
  * 계층은 켜기 두 개에서 파생되고(본사 = 아무것도 켜지 않은 상태), 꼴·언어가 형태를,
@@ -74,6 +72,8 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 	// 🔑 값의 뜻은 여기가 갖고, 알약은 id로만 넣고 뺀다. 그래서 fallback을 여기서 준다 —
 	//    스코프 밖(위젯 갤러리처럼 블록 없이 렌더)에서도 락업이 그려져야 한다.
 	const { values } = useGuidelineController()
+	/** H(심볼 높이). 🔑 락업의 모든 치수가 이 값의 배수다 — 판형을 정하는 단 하나의 값이다. */
+	const H = controllerNumber(values, 'h', HEIGHT.defaultValue)
 	const subOn = controllerBoolean(values, 'subsidiaryOn', false)
 	const branchOn = controllerBoolean(values, 'branchOn', false)
 	const form = controllerString(values, 'form', FORM_VALUES, 'horizontal')

@@ -72,6 +72,7 @@ import * as migration_20260818_102721_sample_image_line_art from './20260818_102
 import * as migration_20260819_054538_sample_image_group from './20260819_054538_sample_image_group';
 import * as migration_20260819_084217_ci_lockup_controller_fields from './20260819_084217_ci_lockup_controller_fields';
 import * as migration_20260819_085700_ci_lockup_axis_defaults from './20260819_085700_ci_lockup_axis_defaults';
+import * as migration_20260819_090805_ci_lockup_height_axis from './20260819_090805_ci_lockup_height_axis';
 
 export const migrations = [
   {
@@ -442,6 +443,11 @@ export const migrations = [
   {
     up: migration_20260819_085700_ci_lockup_axis_defaults.up,
     down: migration_20260819_085700_ci_lockup_axis_defaults.down,
-    name: '20260819_085700_ci_lockup_axis_defaults'
+    name: '20260819_085700_ci_lockup_axis_defaults',
+  },
+  {
+    up: migration_20260819_090805_ci_lockup_height_axis.up,
+    down: migration_20260819_090805_ci_lockup_height_axis.down,
+    name: '20260819_090805_ci_lockup_height_axis'
   },
 ];

@@ -26,6 +26,17 @@ function initialValueField(control: (typeof CI_LOCKUP_CONTROLS)[number]): Field 
 	if (control.kind === 'toggle') {
 		return { name: control.id, type: 'checkbox', defaultValue: control.defaultValue, admin }
 	}
+	if (control.kind === 'range') {
+		// 🔴 범위는 매니페스트에서 온다 — admin 입력과 알약이 같은 범위를 쓴다.
+		return {
+			name: control.id,
+			type: 'number',
+			defaultValue: control.defaultValue,
+			min: control.min,
+			max: control.max,
+			admin: { description: `초기값 — ${control.label} (${control.min}~${control.max}).` },
+		}
+	}
 	return {
 		name: control.id,
 		type: 'select',
