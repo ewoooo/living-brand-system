@@ -74,7 +74,7 @@ describe('CI 락업 조립 규칙', () => {
 	// 🔴 이 위젯이 성립하는 조건 — 정본은 라틴 대문자와 한글의 위아래 끝이 같은데(0.65H로 실측)
 	//    배포 폰트는 한글을 24% 크게 그린다. 스크립트별 크기·트림이 그 차이를 흡수해야 한다.
 	// ⚠️ 지키는 것은 **역산식**이지 실측값이 아니다. `FONT[script].ink` 숫자가 틀려도 이 테스트는 통과한다
-	//    (양쪽이 같은 값을 쓰므로). 숫자의 근거는 `.scratch/scripts/measure-cap-vs-hangul.py`뿐이다.
+	//    (양쪽이 같은 값을 쓰므로). 숫자의 근거는 `scripts/measure-cap-vs-hangul.py`뿐이다.
 	it('스크립트가 달라도 그려지는 잉크 높이가 같다', () => {
 		const cap = 0.65
 		const h = 100
@@ -160,7 +160,7 @@ describe('CI 락업 조립 규칙', () => {
 	/* ── 치수 도판 파생 ────────────────────────────────────────────────
 	 * 🔑 도판은 손으로 적은 데이터가 아니라 Lockup에서 파생된다. 그래서 이 검산이 곧
 	 *    "본사·자회사·해외지사 전부의 도판이 맞나"를 본다. 기대값은 정본 도판 실측치다
-	 *    (`.scratch/spike/SPEC.md`). */
+	 *    (정본 도판 3장 실측 — `docs/12-ci-lockup-canon.md`). */
 	const overseas = (form: string) => {
 		const lockup = deriveLockups({
 			tier: 'overseas',
