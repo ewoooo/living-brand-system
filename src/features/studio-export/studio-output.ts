@@ -29,17 +29,30 @@ export const DEFAULT_RASTER_VIDEO_CAPABILITY = {
 }
 
 /**
- * H.264 Level 5.1이 허용하는 프레임당 매크로블록 수. 세로형 포스터는 1080p 가정보다 훨씬 큰
- * 프레임을 내므로, 배율 상한은 고정 숫자가 아니라 캔버스 크기에서 이 예산으로 되짚어 구한다.
+ * H.264 Level 5.2의 두 예산. 세로형 포스터는 1080p 가정보다 훨씬 큰 프레임을 내므로,
+ * 배율 상한은 고정 숫자가 아니라 캔버스 크기에서 이 예산으로 되짚어 구한다.
+ * MaxFS는 프레임 한 장의 크기를, MaxMBPS는 초당 처리량을 묶는다 — 후자는 fps를 봐야 나온다.
+ *
+ * VideoEncoder.isConfigSupported로 재 보면 브라우저는 짝수 변과 MaxFS만 강제하고
+ * MaxMBPS는 보지 않는다(4K 60fps를 Level 5.1 문자열로도 지원한다고 답한다).
+ * 그래도 예산에 두는 이유는 재생 쪽이다 — 레벨을 넘긴 파일은 제약 있는 디코더에서 튄다.
+ * 5.1(983,040)이면 4K 60fps가 막힌다. 4K 60fps가 요구하는 레벨이 5.2다.
  */
 const MAX_VIDEO_MACROBLOCKS = 36864
+const MAX_VIDEO_MACROBLOCKS_PER_SECOND = 2073600
 const MAX_EXPORT_SCALE = 4
 
-/** 캔버스 한 장을 MP4로 인코딩할 수 있는 가장 큰 정수 배율. 최소 1을 보장한다. */
-export function resolveMaxExportScale(width: number, height: number): number {
+/**
+ * 캔버스 한 장을 인코딩할 수 있는 가장 큰 정수 배율. 최소 1을 보장한다.
+ * `fps`를 주면 초당 처리량까지 본다 — 같은 프레임도 60fps면 30fps의 절반 배율까지만 간다.
+ * 시간축이 없는 PNG·JPEG는 fps를 주지 않아 프레임 크기 예산만 걸린다.
+ */
+export function resolveMaxExportScale(width: number, height: number, fps?: number): number {
 	for (let scale = MAX_EXPORT_SCALE; scale > 1; scale -= 1) {
 		const macroblocks = Math.ceil((width * scale) / 16) * Math.ceil((height * scale) / 16)
-		if (macroblocks <= MAX_VIDEO_MACROBLOCKS) return scale
+		if (macroblocks > MAX_VIDEO_MACROBLOCKS) continue
+		if (fps && macroblocks * fps > MAX_VIDEO_MACROBLOCKS_PER_SECOND) continue
+		return scale
 	}
 	return 1
 }
