@@ -5,19 +5,8 @@
  * 값만 담은 이 모듈은 누구도 import하지 않으므로 순환에 끼지 않는다.
  */
 
-/** 정본 전환 지속시간(ms). 🔴 확정 값은 이것이고 아래 조절 장치는 디버그다. */
-export const MORPH_DEFAULT_MS = 420
-
-/**
- * 표현 전환 지속시간(ms). 형태와 색이 같은 값을 써서 함께 움직인다.
- *
- * 🔴 **`let`인 것이 의도다.** ESM 라이브 바인딩이라 `import { MORPH_MS }`가 매 접근에 현재 값을
- *    읽는다 — 그래서 `setMorphMs`로 한 번 바꾸면 락업·도판·FLIP·심볼 보간이 **전부** 따라온다
- *    (모두 렌더·이펙트 시점에 이 값을 읽는다). prop으로 내리면 파일 두 개를 관통해야 한다.
- * 🔴 이 조절 장치는 **전환을 눈으로 뜯어보기 위한 임시 장치**다. 전환 정리가 끝나면 위젯의 「전환」
- *    컨트롤과 함께 지우고 `MORPH_DEFAULT_MS`를 그대로 쓰는 `const`로 되돌린다.
- */
-export let MORPH_MS = MORPH_DEFAULT_MS
+/** 표현 전환 지속시간(ms). 형태와 색이 같은 값을 써서 함께 움직인다. */
+export const MORPH_MS = 420
 
 /**
  * 전환 곡선. 🔴 **한 곡선을 CSS와 JS가 같이 쓴다** — 심볼 형태는 JS가 프레임마다 계산하고
@@ -54,14 +43,8 @@ export function easeMorph(x: number) {
 	return ((ay * t + by) * t + cy) * t
 }
 
-/** CSS `transition`·`animate`에 함께 쓰는 값. `MORPH_MS`와 같은 이유로 `let`이다. */
-export let MORPH = `${MORPH_MS}ms ${MORPH_EASING}`
-
-/** 위 둘을 함께 갈아 준다. 🔴 값을 바꾼 뒤 **리렌더가 필요하다** — 호출부가 상태로 그것을 만든다. */
-export function setMorphMs(ms: number) {
-	MORPH_MS = ms
-	MORPH = `${ms}ms ${MORPH_EASING}`
-}
+/** CSS `transition`·`animate`에 함께 쓰는 값. */
+export const MORPH = `${MORPH_MS}ms ${MORPH_EASING}`
 
 /** 움직임 줄이기를 켠 사용자에겐 전환하지 않는다. */
 export function reducedMotion() {

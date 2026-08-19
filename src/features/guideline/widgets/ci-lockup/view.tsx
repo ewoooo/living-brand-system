@@ -10,23 +10,13 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { SPEC_READOUT } from '../readout'
 import { CI_STAGE_DARK, CI_STAGE_LIGHT } from '../surface'
 import { LockupDiagram } from './diagram'
 import { downloadSvg, lockupSvg } from './export-svg'
-import {
-	easeMorph,
-	MORPH,
-	MORPH_DEFAULT_MS,
-	MORPH_EASING,
-	MORPH_MS,
-	morph,
-	reducedMotion,
-	setMorphMs,
-} from './motion'
+import { easeMorph, MORPH, MORPH_EASING, MORPH_MS, morph, reducedMotion } from './motion'
 import {
 	bearingOf,
 	branchLabel,
@@ -104,12 +94,6 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 	const [clearSpaceMode, setClearSpaceMode] = useState<ClearSpaceMode>('off')
 	/** 치수 도판. 🔴 규정을 **보여주기만** 한다 — 간격은 조정 대상이 아니다(금지규정 #9). */
 	const [measured, setMeasured] = useState(false)
-	/**
-	 * 🔴 **디버그 컨트롤.** 전환을 늘려 어디가 어긋나는지 눈으로 보기 위한 것이고 규정이 아니다.
-	 * 상태는 리렌더를 만들기 위해서만 있다 — 값의 소유자는 `motion.ts`다(라이브 바인딩).
-	 * 🔴 전환 정리가 끝나면 이 상태와 아래 「전환」 Field를 함께 지운다.
-	 */
-	const [morphMs, setMorph] = useState(MORPH_MS)
 
 	// 계층 파생 규칙은 rules.ts가 소유한다(`tierFor`) — 켜짐 종속·보관 이유가 그 주석에 있다.
 	const tier = tierFor(subOn, branchOn)
@@ -281,24 +265,6 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 						/>
 					</Field>
 				</div>
-
-				{/* 🔴 임시. 정본은 `MORPH_DEFAULT_MS`이고 이 컨트롤은 전환을 다듬는 동안만 둔다. */}
-				<Field label={`전환 ${morphMs}ms${morphMs === MORPH_DEFAULT_MS ? ' (정본)' : ''}`}>
-					<Slider
-						className="w-48"
-						min={60}
-						max={6000}
-						step={60}
-						value={[morphMs]}
-						onValueChange={([next]) => {
-							const ms = next ?? MORPH_DEFAULT_MS
-							setMorphMs(ms)
-							setMorph(ms)
-						}}
-						aria-label="전환 지속시간"
-						aria-valuetext={`${morphMs}밀리초`}
-					/>
-				</Field>
 			</div>
 
 			<LockupFigure
