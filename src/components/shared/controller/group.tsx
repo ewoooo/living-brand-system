@@ -11,6 +11,12 @@ type ControllerGroupProps =
 	| (Omit<React.ComponentProps<'section'>, 'title'> & {
 			title: string
 			collapsible: false
+			/**
+			 * 제목 행 오른끝의 표시 하나(디자인 56:2087의 Summary 옆 상태 타일).
+			 * 🔴 접히는 그룹에는 줄 수 없다 — 그 자리는 chevron이 쓰고 있고, 트리거 안에 다른 요소를
+			 *    넣으면 눌리는 영역이 갈린다.
+			 */
+			trailing?: React.ReactNode
 			defaultOpen?: never
 			disabled?: never
 			attached?: never
@@ -35,15 +41,24 @@ type ControllerGroupProps =
 export function ControllerGroup(props: ControllerGroupProps) {
 	if (props.collapsible !== false) return <ControllerCollapsibleGroup {...props} />
 
-	const { title, collapsible: _collapsible, className, children, ...sectionProps } = props
+	const {
+		title,
+		collapsible: _collapsible,
+		trailing,
+		className,
+		children,
+		...sectionProps
+	} = props
 	return (
 		<section
 			data-slot="controller-group"
 			className={cn('flex shrink-0 flex-col gap-1 pb-3', className)}
 			{...sectionProps}
 		>
-			<header className="flex h-9 shrink-0 items-center pt-1 text-sm font-semibold text-muted-foreground">
-				{title}
+			<header className="flex h-9 shrink-0 items-center justify-between gap-2 pt-1">
+				{/* 제목 스타일은 span이 갖는다 — header에 두면 trailing이 muted 색을 물려받는다. */}
+				<span className="font-semibold text-muted-foreground text-sm">{title}</span>
+				{trailing}
 			</header>
 			{children}
 		</section>

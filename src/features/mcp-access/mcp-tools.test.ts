@@ -175,7 +175,7 @@ describe('custom MCP tools', () => {
 		})
 		expect(mocks.startCheckSession).toHaveBeenCalledWith({
 			buffer: expect.any(Buffer),
-			deferHeuristic: true,
+			deferHeuristic: 'always',
 			imageName: 'logo.png',
 			scenarioKey: 'logo',
 			source: 'mcp-call',

@@ -124,7 +124,7 @@ export const customMcpTools = [
 			const { checkSessionId, pendingCheckKeys, results, rulesetSnapshot } =
 				await startCheckSession({
 					buffer: image.data,
-					deferHeuristic: true,
+					deferHeuristic: 'always',
 					imageName: args.imageName ?? 'mcp-image',
 					scenarioKey: args.scenarioKey,
 					source: 'mcp-call',

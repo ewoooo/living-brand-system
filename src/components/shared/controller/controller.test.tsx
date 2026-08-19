@@ -460,3 +460,46 @@ describe('Controller.Action', () => {
 		expect(action).toHaveClass('hover:bg-foreground/5', 'dark:hover:bg-foreground/5')
 	})
 })
+
+describe('Controller.Status', () => {
+	afterEach(cleanup)
+
+	it('면 위에서 묻히지 않게 muted를 겹침으로 낸다', () => {
+		const { container } = render(
+			<Controller.Row readonly label="Key">
+				<Controller.Status label="미검사" />
+			</Controller.Row>,
+		)
+
+		const status = container.querySelector('[data-slot="controller-status"]')
+		// 🔴 Row가 bg-muted다 — 타일도 bg-muted면 같은 색으로 사라진다.
+		expect(status).not.toHaveClass('bg-muted')
+		expect(status).toHaveClass('bg-foreground/5')
+	})
+
+	it('아이콘뿐이어도 라벨로 읽힌다', () => {
+		render(
+			<Controller.Status tone="success" label="통과">
+				<svg aria-hidden />
+			</Controller.Status>,
+		)
+
+		expect(screen.getByText('통과')).toHaveClass('sr-only')
+	})
+})
+
+describe('Controller.ListRow', () => {
+	afterEach(cleanup)
+
+	it('누를 수 있으면 button, 표시만 하면 div로 렌더한다', () => {
+		const { container: staticRow } = render(
+			<Controller.ListRow caption="Scenario Name" label="File Name" />,
+		)
+		// 🔴 눌러도 아무 일이 없는 button은 거짓 어포던스다(Row의 readonly와 같은 이유).
+		expect(staticRow.querySelector('button')).toBeNull()
+
+		cleanup()
+		render(<Controller.ListRow label="File Name" onClick={() => {}} />)
+		expect(screen.getByRole('button', { name: 'File Name' })).toBeInTheDocument()
+	})
+})
