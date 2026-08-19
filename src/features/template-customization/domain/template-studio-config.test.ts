@@ -343,6 +343,34 @@ describe('deriveTemplateStudioConfig', () => {
 			maxLength: 10,
 		})
 	})
+
+	it('배경 정책이 허용 이미지 프로파일을 배경 슬롯에 싣는다', () => {
+		const config = deriveTemplateStudioConfig(
+			{ ...template, backgroundPolicy: { imageConfigIds: [3] } },
+			[imageConfig],
+		)
+		const background = config.template.slots.find(isBackgroundSlot)
+		if (!background) throw new Error('배경 슬롯이 파생되지 않았다')
+
+		expect(background.imageConfig).toEqual({ mode: 'selectable', allowedConfigIds: [3] })
+		expect(listCompatibleTemplateImageConfigs(background, [imageConfig])).toHaveLength(1)
+	})
+
+	it('배경 정책이 그래픽 런타임 목록을 좁힌다', () => {
+		const allowed = deriveTemplateStudioConfig(
+			{ ...template, backgroundPolicy: { graphicConfigIds: [forwardStraightConfig.id] } },
+			[],
+			[forwardStraightConfig],
+		)
+		const blocked = deriveTemplateStudioConfig(
+			{ ...template, backgroundPolicy: { graphicConfigIds: [] } },
+			[],
+			[forwardStraightConfig],
+		)
+
+		expect(allowed.template.graphicConfigs).toHaveLength(1)
+		expect(blocked.template.graphicConfigs).toHaveLength(0)
+	})
 })
 
 describe('resolveTemplateImageConfig', () => {

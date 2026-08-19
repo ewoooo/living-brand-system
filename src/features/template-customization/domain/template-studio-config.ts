@@ -637,6 +637,12 @@ export function deriveTemplateStudioConfig(
 	graphicConfigs: readonly GraphicStudioConfig[] = [],
 ): TemplateStudioConfig {
 	const { html, nodeConfigs } = template
+	const backgroundPolicy = template.backgroundPolicy
+	// ponytail: template.graphicConfigs는 배경 그래픽에서만 소비된다 — 슬롯에 id 목록을 더하지 않고 목록 자체를 좁힌다.
+	const allowedGraphicIds = backgroundPolicy?.graphicConfigIds
+	const scopedGraphicConfigs = allowedGraphicIds
+		? graphicConfigs.filter((config) => allowedGraphicIds.includes(config.id))
+		: graphicConfigs
 	const textSlots = collectTemplateSlots(html, nodeConfigs)
 	const vectorSlots = collectTemplateVectorSlots(html, nodeConfigs)
 	const slots: TemplateStudioConfigSlot[] = [
@@ -695,7 +701,12 @@ export function deriveTemplateStudioConfig(
 			kind: 'background',
 			typeControlId: BACKGROUND_TYPE_CONTROL_ID,
 			colorControlId: BACKGROUND_COLOR_CONTROL_ID,
-			imageConfig: { mode: 'selectable' },
+			imageConfig: {
+				mode: 'selectable',
+				...(backgroundPolicy?.imageConfigIds
+					? { allowedConfigIds: backgroundPolicy.imageConfigIds }
+					: {}),
+			},
 		},
 	]
 
@@ -727,7 +738,7 @@ export function deriveTemplateStudioConfig(
 			slots,
 			...(textSlots.length ? { textColorControlId: TEXT_COLOR_CONTROL_ID } : {}),
 			imageConfigs,
-			graphicConfigs,
+			graphicConfigs: scopedGraphicConfigs,
 			exportOption: {
 				canvas: { width: template.width, height: template.height },
 				maxScale: resolveMaxExportScale(template.width, template.height),
