@@ -1,3 +1,4 @@
+import { ControllerAction } from './action'
 import { ControllerAssetCard } from './asset-card'
 import { ControllerBar } from './bar'
 import { ControllerBrowser } from './browser'
@@ -46,6 +47,7 @@ export const Controller = {
 	Textarea: ControllerTextarea,
 	Range: ControllerRange,
 	Pad: ControllerPad,
+	Action: ControllerAction,
 	Bar: ControllerBar,
 	CameraControl: ControllerCameraControl,
 	Browser: ControllerBrowser,
@@ -54,6 +56,7 @@ export const Controller = {
 
 // RSC에서 네임스페이스 객체의 점 접근은 client reference 제약으로 깨질 수 있다 — 개별 export가 안전판.
 export {
+	ControllerAction,
 	ControllerAssetCard,
 	ControllerBar,
 	ControllerBrowser,

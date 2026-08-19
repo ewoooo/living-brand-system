@@ -4,16 +4,16 @@ import { z } from 'zod'
 import { env } from '@/env'
 import type { AiUsage, CheckerContext } from '@/features/asset-check/checkers/types'
 import { buildAiObservationTask } from '@/features/asset-check/domain/ai-observation-task'
-import {
-	type AiCheckPlan,
-	NEEDS_REVIEW_DETAILS,
-	type NeedsReviewReasonCode,
-} from '@/features/asset-check/domain/check-plan'
+import type { AiCheckPlan } from '@/features/asset-check/domain/check-plan'
 import {
 	type HeuristicObservation,
 	measureObservationSchema,
 	presenceObservationSchema,
 } from '@/features/asset-check/domain/heuristic.evaluator'
+import {
+	NEEDS_REVIEW_DETAILS,
+	type NeedsReviewReasonCode,
+} from '@/features/asset-check/domain/needs-review'
 import type { CheckReferenceAsset, RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
 	compressForAiReference,

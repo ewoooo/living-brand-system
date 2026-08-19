@@ -47,6 +47,20 @@ export const ROW_SELECT_CONTENT =
 export const ROW_SELECT_ITEM =
 	'rounded-md px-2 py-2 pe-8 text-muted-foreground data-[state=checked]:bg-muted data-[state=checked]:text-foreground'
 
+/**
+ * Row/Field 면 위에 앉는 아이콘 버튼 — `ControllerAction`이 소비한다.
+ *
+ * 🔑 **면 위에서는 색을 바꾸지 않고 겹친다.** ghost 버튼의 기본 hover는 `bg-muted`인데 Row/Field가
+ *    이미 `bg-muted`라, 그대로 두면 hover가 같은 색으로 묻혀 아무 일도 안 일어난 것처럼 보인다.
+ *    위 `ROW_SELECT_TRIGGER`가 같은 문제를 같은 값(`foreground/5`)으로 이미 풀어놨다 — 겹침 단계를
+ *    바꿀 일이 생기면 두 상수를 함께 옮긴다.
+ *
+ * 🔴 면 상태를 네 개 다 덮어야 한다. ghost는 `hover`·`focus-visible`과 각각의 `dark:` 쌍을 갖고 있어,
+ *    hover만 덮으면 키보드 포커스와 다크 모드에서 muted가 도로 올라와 묻힌다.
+ */
+export const ROW_ACTION =
+	'hover:bg-foreground/5 focus-visible:bg-foreground/5 dark:hover:bg-foreground/5 dark:focus-visible:bg-foreground/5'
+
 /** Row/Field 안에 투명하게 앉는 입력 — 포커스 링은 행이 소유한다. */
 export const BARE_INPUT =
 	'h-auto min-h-0 rounded-none border-0 bg-transparent p-0 focus-visible:ring-0 dark:bg-transparent'

@@ -18,6 +18,8 @@ export function useMcpKeyIssuance() {
 	const [copyMessage, setCopyMessage] = useState('')
 
 	async function issueKey() {
+		// 발급 버튼은 진행 중에도 그라디언트를 흘려야 해서 disabled로 막지 않는다 — 중복 요청은 여기서 끊는다.
+		if (loading) return
 		setError('')
 		setLoading(true)
 		const result = await requestMcpApiKey()

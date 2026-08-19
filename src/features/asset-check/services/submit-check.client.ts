@@ -15,9 +15,11 @@
  * POST /api/check/{checkSessionId}/ai
  *   req : FormData { image: File }  // 대상 룰은 서버가 세션에서 읽음
  *   res : { results: Record<checkKey, CheckResult> }
- *   실패: pendingCheckKeys 전체를 status 'needs_review'("AI 평가 실패") 폴백으로 채움
+ *   실패: pendingCheckKeys 전체를 status 'needs_review'(reasonCode 'ai_request_unreachable') 폴백으로 채움.
+ *         모델까지 못 간 실패라 서버가 남기는 'ai_request_failed'(모델이 답을 못 준 실패)와 사유를 구분한다.
  */
 import type { CheckResult } from '@/features/asset-check/checkers/types'
+import { needsReview } from '@/features/asset-check/domain/needs-review'
 import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 
 export interface SubmitCheckResult {
@@ -75,22 +77,25 @@ export async function runFullCheck(
 	if (serverResult.pendingCheckKeys.length === 0) return
 
 	const aiResults = await submitAiCheck(file, serverResult.checkSessionId).catch(() =>
-		aiFailureResults(serverResult.pendingCheckKeys),
+		aiUnreachableResults(serverResult.pendingCheckKeys),
 	)
 	onAiResult(serverResult.checkSessionId, aiResults)
 }
 
-/** AI 검수 실패 시 해당 룰들을 "담당자 검토 필요"로 채우는 폴백 결과. */
-function aiFailureResults(checkKeys: string[]): Record<string, CheckResult> {
-	const detail = 'AI 평가 실패'
+/**
+ * AI 요청이 응답을 돌려주지 못했을 때 해당 룰들을 "담당자 검토 필요"로 채우는 폴백 결과.
+ * 모델은 호출되지 않았으므로 서버의 'ai_request_failed'(모델 호출 후 실패)와 사유를 나눈다.
+ */
+function aiUnreachableResults(checkKeys: string[]): Record<string, CheckResult> {
+	const rawResult = needsReview('ai_request_unreachable')
 	return Object.fromEntries(
 		checkKeys.map((key) => [
 			key,
 			{
 				rule: { key, title: key, executor: 'heuristic' },
 				checker: { key: 'ai', type: 'ai' },
-				rawResult: { status: 'needs_review', fulfillment: null, detail },
-				message: detail,
+				rawResult,
+				message: rawResult.detail,
 			} satisfies CheckResult,
 		]),
 	)
