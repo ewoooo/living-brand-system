@@ -7,10 +7,8 @@ afterEach(cleanup)
 
 describe('NavigationBlock', () => {
 	it.each([
-		['featured', '6xl', 'p-6'],
 		['prominent', '5xl', 'p-6'],
 		['default', '2xl', 'p-4'],
-		['compact', 'base', 'p-3'],
 	] as const)('%s variant의 크기 체계를 적용한다', (variant, textSize, padding) => {
 		const { container } = render(
 			<NavigationBlock variant={variant} href="/guideline" label="Guideline" />,
@@ -40,7 +38,7 @@ describe('NavigationBlock', () => {
 	it('부모가 전달한 layout class를 루트에 적용한다', () => {
 		const { container } = render(
 			<NavigationBlock
-				variant="featured"
+				variant="prominent"
 				href="/guideline"
 				label="Guideline"
 				className="aspect-square"
@@ -53,7 +51,7 @@ describe('NavigationBlock', () => {
 		)
 		expect(container.querySelector('[data-slot="typography"]')).toHaveAttribute(
 			'data-size',
-			'6xl',
+			'5xl',
 		)
 		expect(container.querySelector('[data-slot="typography"]')).not.toHaveClass('aspect-square')
 	})
