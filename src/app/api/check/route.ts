@@ -3,7 +3,9 @@ import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 import { readCheckImage } from './read-check-image'
 
-export const maxDuration = 30
+// 즉시 판정이 0건인 시나리오에서는 이 라우트가 AI 판정까지 이어서 돌린다(중복 업로드 제거).
+// 예산은 AI 라우트와 같아야 한다 — 20~25초 모델 호출에 30초는 여유가 없다.
+export const maxDuration = 60
 
 function parseScenarioKey(value: FormDataEntryValue | null | undefined): string | undefined {
 	return typeof value === 'string' && value ? value : undefined
@@ -30,7 +32,7 @@ export async function POST(req: Request) {
 	try {
 		const result = await startCheckSession({
 			buffer: image.buffer,
-			deferHeuristic: true,
+			deferHeuristic: 'when-showable',
 			imageName: image.name,
 			scenarioKey: parseScenarioKey(form?.get('scenarioKey')),
 			source: 'review-page',
