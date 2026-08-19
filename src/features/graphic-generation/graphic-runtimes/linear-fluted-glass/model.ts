@@ -1,11 +1,15 @@
 import { z } from 'zod'
 import type { GraphicModelAdapter } from '@/features/graphic-generation/runtime/graphic-plugin'
-import {
-	type ControllerRuntimeBindings,
-	type ControllerValues,
-	isControllerPadValue,
+import type {
+	ControllerControlValue,
+	ControllerRuntimeBindings,
+	ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
-import { LINEAR_FLUTED_GLASS_DEFAULT_INPUT } from './definition'
+import {
+	LINEAR_FLUTED_GLASS_DEFAULT_INPUT,
+	LINEAR_FLUTED_GLASS_PRESETS,
+	type LinearFlutedGlassPresetId,
+} from './definition'
 
 export { LINEAR_FLUTED_GLASS_DEFAULT_INPUT } from './definition'
 
@@ -69,56 +73,42 @@ export const linearFlutedGlassInputSchema = z.strictObject({
 
 export type LinearFlutedGlassInput = z.infer<typeof linearFlutedGlassInputSchema>
 
-/** Controller 값을 Linear Fluted Glass shader uniform 입력으로 검증한다. */
+/** 컨트롤러가 고른 프리셋. 알 수 없는 값이면 기본으로 떨어진다 — 저장된 값이 낡아도 화면은 뜬다. */
+function resolveLinearFlutedGlassPreset(value: ControllerControlValue) {
+	const id = typeof value === 'string' ? value : ''
+	return id in LINEAR_FLUTED_GLASS_PRESETS
+		? LINEAR_FLUTED_GLASS_PRESETS[id as LinearFlutedGlassPresetId]
+		: LINEAR_FLUTED_GLASS_PRESETS.basic
+}
+
+/**
+ * Controller 값을 shader uniform 입력으로 검증한다.
+ *
+ * 컨트롤러는 노출된 값만 갖는다 — 나머지는 프리셋이 정한다. 셰이더는 여전히 전체 uniform을
+ * 요구하므로 여기서 기본값 → 프리셋 → 노출 값 순으로 덮어 완전한 입력을 만든다.
+ */
 export function toLinearFlutedGlassInput(values: ControllerValues): LinearFlutedGlassInput {
+	const base = {
+		...LINEAR_FLUTED_GLASS_DEFAULT_INPUT,
+		...resolveLinearFlutedGlassPreset(values.preset),
+	}
 	return linearFlutedGlassInputSchema.parse({
-		source: isControllerPadValue(values.source) ? values.source : undefined,
-		sourceOffsetX: values.sourceOffsetX,
-		sourceOffsetY: values.sourceOffsetY,
-		bloomColor: values.bloomColor ?? LINEAR_FLUTED_GLASS_DEFAULT_INPUT.bloomColor,
-		rayColor1: values.rayColor1 ?? LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor1,
-		rayColor2: values.rayColor2 ?? LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor2,
-		rayColor3: values.rayColor3 ?? LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor3,
-		rayColor4: values.rayColor4 ?? LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor4,
-		rayColor5: values.rayColor5 ?? LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor5,
-		rayBackgroundColor:
-			values.rayBackgroundColor ?? LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayBackgroundColor,
-		rayBloom: values.rayBloom,
-		rayIntensity: values.rayIntensity,
-		rayDensity: values.rayDensity,
-		raySpotty: values.raySpotty,
-		rayMidSize: values.rayMidSize,
-		rayMidIntensity: values.rayMidIntensity,
-		speed: values.speed,
-		frameOffsetMs: values.frameOffsetMs,
-		rayScale: values.rayScale,
-		rayRotation: values.rayRotation,
-		axisFalloff: values.axisFalloff,
-		flowSpeed: values.flowSpeed,
-		paletteShift: values.paletteShift,
-		paletteDrift: values.paletteDrift,
-		pulseIntensity: values.pulseIntensity,
-		pulseSpeed: values.pulseSpeed,
-		pulseDensity: values.pulseDensity,
-		pulseWidth: values.pulseWidth,
-		glassSize: values.glassSize,
-		ribCurve: values.ribCurve,
-		glassAngle: values.glassAngle,
-		glassOriginOffset: isControllerPadValue(values.glassOriginOffset)
-			? values.glassOriginOffset
-			: undefined,
-		glassOffset: values.glassOffset,
-		glassSpeed: values.glassSpeed,
-		glassDrift: isControllerPadValue(values.glassDrift) ? values.glassDrift : undefined,
-		glassDriftSpeedX: values.glassDriftSpeedX,
-		glassDriftSpeedY: values.glassDriftSpeedY,
-		glassDistortion: values.glassDistortion,
-		glassEdgeSoftness: values.glassEdgeSoftness,
-		glassBlur: values.glassBlur,
-		glassScattering: values.glassScattering,
-		glassHighlights: values.glassHighlights,
-		glassShadows: values.glassShadows,
-		distortionShape: values.distortionShape,
+		...base,
+		rayColor1: values.rayColor1 ?? base.rayColor1,
+		rayColor2: values.rayColor2 ?? base.rayColor2,
+		rayColor3: values.rayColor3 ?? base.rayColor3,
+		rayColor4: values.rayColor4 ?? base.rayColor4,
+		rayColor5: values.rayColor5 ?? base.rayColor5,
+		paletteDrift: values.paletteDrift ?? base.paletteDrift,
+		rayBloom: values.rayBloom ?? base.rayBloom,
+		rayIntensity: values.rayIntensity ?? base.rayIntensity,
+		raySpotty: values.raySpotty ?? base.raySpotty,
+		rayMidSize: values.rayMidSize ?? base.rayMidSize,
+		speed: values.speed ?? base.speed,
+		rayScale: values.rayScale ?? base.rayScale,
+		glassSize: values.glassSize ?? base.glassSize,
+		ribCurve: values.ribCurve ?? base.ribCurve,
+		distortionShape: values.distortionShape ?? base.distortionShape,
 	})
 }
 

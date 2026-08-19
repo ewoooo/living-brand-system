@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import linearFlutedGlassRuntimeManifest, {
 	LINEAR_FLUTED_GLASS_DEFAULT_INPUT,
+	LINEAR_FLUTED_GLASS_PRESET_IDS,
+	LINEAR_FLUTED_GLASS_PRESETS,
 } from '@/features/graphic-generation/graphic-runtimes/linear-fluted-glass/definition'
 import {
 	linearFlutedGlassColorToRgb,
@@ -17,13 +19,43 @@ describe('linearFlutedGlass', () => {
 		expect(linearFlutedGlassColorToRgb('#37f08c')).toEqual([55 / 255, 240 / 255, 140 / 255])
 	})
 
-	it('색상 reset은 기본 블룸으로 되돌리고 범위 밖 값은 거부한다', () => {
+	it('노출된 값은 범위를 지키고, 색상 reset은 기본값으로 되돌아간다', () => {
 		const values = createControllerValues(linearFlutedGlassRuntimeManifest.controller.groups)
-		expect(toLinearFlutedGlassInput({ ...values, bloomColor: null }).bloomColor).toBe(
-			LINEAR_FLUTED_GLASS_DEFAULT_INPUT.bloomColor,
+		expect(toLinearFlutedGlassInput({ ...values, rayColor1: null }).rayColor1).toBe(
+			LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor1,
 		)
 		expect(() => toLinearFlutedGlassInput({ ...values, speed: 2.01 })).toThrow()
-		expect(() => toLinearFlutedGlassInput({ ...values, axisFalloff: 3.01 })).toThrow()
+	})
+
+	it('컨트롤러에 없는 값은 프리셋이 정하고 컨트롤러 값으로 덮이지 않는다', () => {
+		const values = createControllerValues(linearFlutedGlassRuntimeManifest.controller.groups)
+		// axisFalloff는 노출되지 않는다 — 값을 밀어 넣어도 프리셋이 이긴다.
+		const input = toLinearFlutedGlassInput({ ...values, preset: 'focused', axisFalloff: 3.01 })
+		expect(input.axisFalloff).toBe(LINEAR_FLUTED_GLASS_PRESETS.focused.axisFalloff)
+		expect(input.rayDensity).toBe(LINEAR_FLUTED_GLASS_PRESETS.focused.rayDensity)
+	})
+
+	it('프리셋이 정하지 않은 숨은 값은 기본값을 그대로 쓴다', () => {
+		const values = createControllerValues(linearFlutedGlassRuntimeManifest.controller.groups)
+		const input = toLinearFlutedGlassInput({ ...values, preset: 'upperAxis' })
+		expect(input.source).toEqual(LINEAR_FLUTED_GLASS_PRESETS.upperAxis.source)
+		expect(input.rayBackgroundColor).toBe(LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayBackgroundColor)
+	})
+
+	it('알 수 없는 프리셋은 기본으로 떨어진다 — 저장된 값이 낡아도 화면은 뜬다', () => {
+		const values = createControllerValues(linearFlutedGlassRuntimeManifest.controller.groups)
+		expect(toLinearFlutedGlassInput({ ...values, preset: 'no-such-preset' })).toEqual(
+			LINEAR_FLUTED_GLASS_DEFAULT_INPUT,
+		)
+	})
+
+	it('모든 프리셋이 수평을 지킨다 — 앵글은 프리셋이 건드리지 않는다', () => {
+		const values = createControllerValues(linearFlutedGlassRuntimeManifest.controller.groups)
+		for (const preset of LINEAR_FLUTED_GLASS_PRESET_IDS) {
+			const input = toLinearFlutedGlassInput({ ...values, preset })
+			expect(input.rayRotation).toBe(0)
+			expect(input.glassAngle).toBe(0)
+		}
 	})
 
 	it('Controller 화면 좌표의 Y축을 WebGL 좌표로 반전한다', () => {
