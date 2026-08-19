@@ -55,9 +55,6 @@ export function LayoutGridWidget({
 	marginPct: marginOverride,
 	gutterX: gutterXOverride,
 	gutterY: gutterYOverride,
-	lockMargin,
-	lockGutterX,
-	lockGutterY,
 }: {
 	sample?: LayoutGridSample | null
 	caption?: string | null
@@ -66,23 +63,18 @@ export function LayoutGridWidget({
 	marginPct?: number | null
 	gutterX?: number | null
 	gutterY?: number | null
-	/** 값을 적지 않고 패널 초기값에 붙여 고정한다 — 한 슬라이더가 일부 판형만 움직이게 하려는 것. */
-	lockMargin?: boolean | null
-	lockGutterX?: boolean | null
-	lockGutterY?: boolean | null
 }) {
 	// 컨트롤러 스코프 밖(컨트롤 없이 판형만 둔 블록)이면 값이 비어 매니페스트 기본값으로 떨어진다.
-	const { values, defaults } = useGuidelineController()
+	const { values } = useGuidelineController()
 
-	// 판형에 값이 있으면 그것이 이기고, 없으면 lock은 초기값·아니면 컨트롤 현재값을 따른다.
+	// 판형에 값이 있으면 그것이 이기고, 없으면 컨트롤 현재값을 따른다.
 	const resolve = (
 		override: number | null | undefined,
-		locked: boolean | null | undefined,
 		control: typeof MARGIN | typeof GUTTER_X | typeof GUTTER_Y,
-	) => override ?? controllerNumber(locked ? defaults : values, control.id, control.defaultValue)
-	const marginPct = resolve(marginOverride, lockMargin, MARGIN)
-	const gutterX = resolve(gutterXOverride, lockGutterX, GUTTER_X)
-	const gutterY = resolve(gutterYOverride, lockGutterY, GUTTER_Y)
+	) => override ?? controllerNumber(values, control.id, control.defaultValue)
+	const marginPct = resolve(marginOverride, MARGIN)
+	const gutterX = resolve(gutterXOverride, GUTTER_X)
+	const gutterY = resolve(gutterYOverride, GUTTER_Y)
 
 	// 같은 블록의 판형이 서로 다른 그리드 상태를 가질 수 있어야 한다.
 	const guidesOn =
