@@ -20,7 +20,7 @@ import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/s
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/schema'
 import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/schema'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
-import { baseBlockFields } from '../shared/fields'
+import { backgroundToneField, baseBlockFields } from '../shared/fields'
 
 // page 바로 하위의 레이아웃 컨테이너. widget/image(leaf)들을 품고 배치(width·arrangement·columns)를 소유한다.
 // 🔴 rules는 컨테이너(Block)에만 = provenance 불변식(collectGuidelineCheckSources가 block.rules를 훑음).
@@ -62,6 +62,7 @@ export const LayoutBlock: Block = {
 			relationTo: 'brand-colors',
 			admin: { description: '블록 전체(전체 폭) 배경색입니다. 비우면 기본.' },
 		},
+		backgroundToneField(),
 		{
 			name: 'innerBackground',
 			type: 'relationship',

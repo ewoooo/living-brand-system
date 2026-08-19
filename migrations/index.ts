@@ -71,6 +71,8 @@ import * as migration_20260818_093907_remove_plugins_collection from './20260818
 import * as migration_20260818_102721_sample_image_line_art from './20260818_102721_sample_image_line_art';
 import * as migration_20260819_054538_sample_image_group from './20260819_054538_sample_image_group';
 import * as migration_20260819_075057_drop_layout_grid_locks from './20260819_075057_drop_layout_grid_locks';
+import * as migration_20260819_090753_ci_lockup_snapshot_repair from './20260819_090753_ci_lockup_snapshot_repair';
+import * as migration_20260819_090804_guideline_background_tone from './20260819_090804_guideline_background_tone';
 
 export const migrations = [
   {
@@ -436,6 +438,16 @@ export const migrations = [
   {
     up: migration_20260819_075057_drop_layout_grid_locks.up,
     down: migration_20260819_075057_drop_layout_grid_locks.down,
-    name: '20260819_075057_drop_layout_grid_locks'
+    name: '20260819_075057_drop_layout_grid_locks',
+  },
+  {
+    up: migration_20260819_090753_ci_lockup_snapshot_repair.up,
+    down: migration_20260819_090753_ci_lockup_snapshot_repair.down,
+    name: '20260819_090753_ci_lockup_snapshot_repair',
+  },
+  {
+    up: migration_20260819_090804_guideline_background_tone.up,
+    down: migration_20260819_090804_guideline_background_tone.down,
+    name: '20260819_090804_guideline_background_tone'
   },
 ];

@@ -2,6 +2,10 @@ import type { ReactNode } from 'react'
 import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 import { GuidelineHelperRegion } from '@/features/guideline/components/globals/guideline-helper'
+import {
+	surfaceScopeClass,
+	surfaceStyle,
+} from '@/features/guideline/components/globals/guideline-surface'
 import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
 import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
 import { controllerEntryFor } from '@/features/guideline/controllers/registry'
@@ -24,7 +28,6 @@ import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/c
 import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/component'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
 import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/component'
-import { isLightColor } from '@/lib/color'
 import type { GuidelineDocument } from '@/payload-types'
 import { IMAGE_RATIO_CLASS_NAMES, type ImageRatio } from '@/types/image-ratio'
 import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
@@ -254,30 +257,6 @@ function Arrange({
 	)
 }
 
-// brand-colors 참조에서 hex를 뽑는다(데이터 색 → inline style, 닫힌 토큰 규칙의 색-데이터 예외).
-function bgHex(color: LayoutBlockType['background']): string | undefined {
-	return color && typeof color === 'object' && color.hex ? color.hex : undefined
-}
-
-/**
- * 색을 데이터로 주입한 면의 **토큰 스코프**를 함께 선언한다.
- *
- * 🔴 배경 hex만 인라인으로 넣으면 프레임 variant가 배경·전경을 짝으로 갖고 있던 것을 우회한다.
- *    라이트 모드 페이지에 어두운 브랜드 색을 깔면 면만 어두워지고, 안쪽 위젯은 라이트 팔레트의
- *    near-black 컨트롤을 그대로 그려 어두운 면에 묻힌다. 반대도 같다 — 다크 모드에 흰 면을 깔면
- *    밝은 전경이 흰 면에서 사라진다. 면을 칠하는 자리에서 스코프를 뒤집어 두면 시맨틱 토큰만 쓰는
- *    위젯은 전경·테두리·muted가 전부 따라온다.
- *
- * 위젯·블록에 `dark:` 변형은 0건이라 토큰 재선언만으로 충분하다. `dark:`를 쓰기 시작하면 다크
- * 페이지 안의 밝은 섬에서는 그 변형이 여전히 걸린다는 점(`.dark *` 후손 선택자)을 같이 봐야 한다.
- */
-function surfaceScopeClass(hex: string | undefined): string | undefined {
-	if (!hex) return undefined
-	// text-foreground를 함께 준다 — 색 클래스가 없는 면은 바깥에서 **계산된** 색을 상속하므로
-	// 토큰만 다시 선언해서는 글자 색이 따라오지 않는다.
-	return `${isLightColor(hex) ? 'light' : 'dark'} text-foreground`
-}
-
 // 컨트롤은 배치 영역이 아니라 **화면 하단의 Floating Controller**에 온다
 // (components/globals/guideline-helper.tsx). 배치 셀 안에 두면 셀 하나를 차지하고 판형과 같은
 // 어두운 면에 얹혀 읽기 어려우며, 스크롤을 내리면 조작 대상만 남고 손잡이가 화면 밖으로 나간다.
@@ -305,14 +284,13 @@ function splitControls(children: NonNullable<LayoutBlockType['children']>) {
 }
 
 export function LayoutBlock({ block }: { block: LayoutBlockType }) {
-	const outerBg = bgHex(block.background)
-	const innerBg = bgHex(block.innerBackground)
+	// 톤은 `background`에만 붙는다 — 배치 영역 면(innerBackground)을 옅게 깐 자리가 아직 없다.
 	const { controller, arranged } = splitControls(block.children ?? [])
 
 	const arrangedSurface = (
 		<div
-			className={surfaceScopeClass(innerBg)}
-			style={innerBg ? { background: innerBg } : undefined}
+			className={surfaceScopeClass(block.innerBackground, 'solid')}
+			style={surfaceStyle(block.innerBackground, 'solid')}
 		>
 			<Arrange
 				arrangement={block.arrangement}
@@ -342,8 +320,8 @@ export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 	return (
 		<GuidelineBlockFrame
 			layout={block.width ?? 'padded'}
-			className={surfaceScopeClass(outerBg)}
-			style={outerBg ? { background: outerBg } : undefined}
+			className={surfaceScopeClass(block.background, block.backgroundTone)}
+			style={surfaceStyle(block.background, block.backgroundTone)}
 		>
 			{block.title ? <GuidelineHeader variant="block" title={block.title} /> : null}
 			{block.description ? (
