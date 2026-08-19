@@ -25,7 +25,7 @@ export function ImageUploadCarousel({ previewSize }: { previewSize: number }) {
 	const [carouselApi, setCarouselApi] = useState<CarouselApi>()
 	const selectStateRef = useRef({ images, select })
 	selectStateRef.current = { images, select }
-	const stageRef = useRef<HTMLElement>(null)
+	const stageRef = useRef<HTMLDivElement>(null)
 	// 캐러셀 트랙(embla viewport)은 높이를 물려주지 않는다 — 슬라이드 상자 높이는 실측값으로 준다.
 	const [stageHeight, setStageHeight] = useState(0)
 
@@ -70,21 +70,29 @@ export function ImageUploadCarousel({ previewSize }: { previewSize: number }) {
 
 	return (
 		<section
-			ref={stageRef}
 			data-slot="image-upload-carousel"
 			aria-label="이미지 업로드 및 미리보기"
-			className="relative flex h-full min-h-0 items-center justify-center overflow-hidden rounded-lg border-2 border-border bg-background"
+			// 하단만 두꺼운 이유: 플로팅 바가 bottom-10(40px)에 높이 60px으로 떠 있어서,
+			// 대칭 패딩이면 100% 배율의 미리보기가 바 뒤로 들어간다(디자인 56:2087도 바 위가 비어 있다).
+			className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-lg border-2 border-border bg-background p-6 pb-28"
 			onDragOver={(event) => event.preventDefault()}
 			onDrop={handleDrop}
 		>
-			{images.length === 0 ? null : (
-				<CheckCarouselActive
-					images={images}
-					previewSize={previewSize}
-					stageHeight={stageHeight}
-					setCarouselApi={setCarouselApi}
-				/>
-			)}
+			{/*
+			 * 🔴 실측 대상은 패딩 **안쪽**이다. 패딩을 가진 section을 재면 초기값으로 쓰는
+			 *    clientHeight가 패딩을 포함해(ResizeObserver의 contentRect는 제외한다) 첫 프레임에만
+			 *    슬라이드가 패딩만큼 크게 잡힌다. 겹을 하나 두는 편이 두 경로를 맞추는 것보다 싸다.
+			 */}
+			<div ref={stageRef} className="flex min-h-0 flex-1 items-center justify-center">
+				{images.length === 0 ? null : (
+					<CheckCarouselActive
+						images={images}
+						previewSize={previewSize}
+						stageHeight={stageHeight}
+						setCarouselApi={setCarouselApi}
+					/>
+				)}
+			</div>
 		</section>
 	)
 }

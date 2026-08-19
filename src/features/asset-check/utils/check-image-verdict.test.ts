@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import type { CheckImage } from '@/features/asset-check/types'
-import { checkImageVerdict, ruleConfidence } from '@/features/asset-check/utils/check-image-verdict'
+import {
+	checkImageVerdict,
+	formatConfidence,
+	ruleConfidence,
+} from '@/features/asset-check/utils/check-image-verdict'
 
 describe('checkImageVerdict', () => {
 	it('reports progress before any judgement', () => {
@@ -46,7 +50,7 @@ describe('checkImageVerdict', () => {
 
 describe('ruleConfidence', () => {
 	it('takes the weakest observation', () => {
-		expect(ruleConfidence(aiResult([0.9, 0.75, 0.82]))).toBe(0.75)
+		expect(ruleConfidence(aiResult([90, 75, 82]))).toBe(75)
 	})
 
 	it('returns null when the rule has no observation', () => {
@@ -95,3 +99,17 @@ function aiResult(confidences: number[]): CheckResult {
 		rawResult: { status: 'pass', fulfillment: null, observations },
 	}
 }
+
+describe('formatConfidence', () => {
+	// 🔴 confidence는 이미 0~100이다(ai-observation-task의 프롬프트 계약). 0~1로 보고 100을 곱하면
+	//    요약·근거 화면에 5800%가 찍힌다 — 실제로 그렇게 나갔던 회귀다.
+	it('0~100 정수를 그대로 백분율로 쓴다', () => {
+		expect(formatConfidence(58)).toBe('58%')
+		expect(formatConfidence(100)).toBe('100%')
+		expect(formatConfidence(0)).toBe('0%')
+	})
+
+	it('소수점은 반올림한다', () => {
+		expect(formatConfidence(74.5)).toBe('75%')
+	})
+})
