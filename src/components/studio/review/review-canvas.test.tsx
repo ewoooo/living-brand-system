@@ -40,6 +40,25 @@ describe('ReviewCanvas', () => {
 		expect(screen.getByText('로고가 있어야 합니다')).toBeInTheDocument()
 	})
 
+	it('하단 바는 근거 패널을 뺀 캔버스 열 안에 뜬다', () => {
+		// 🔴 바는 absolute left-1/2다 — relative 조상이 패널까지 품으면 패널이 열릴 때마다
+		//    바가 패널 폭의 절반만큼 오른쪽으로 밀린다(디자인 56:2087은 캔버스 중앙).
+		useCheckImages.mockReturnValue(
+			context({
+				selected: image({ results: { 'color.palette': aiResult() } }),
+				selectedRuleKey: 'color.palette',
+			}),
+		)
+		const { container } = render(<ReviewCanvas />)
+
+		const stage = container.querySelector('[data-slot="review-canvas-stage"]')
+		const bar = container.querySelector('[data-slot="controller-bar"]')
+		const detail = container.querySelector('[data-slot="review-rule-detail"]')
+
+		expect(stage).toContainElement(bar as HTMLElement)
+		expect(stage).not.toContainElement(detail as HTMLElement)
+	})
+
 	it('판정이 사라진 룰은 패널이 스스로 닫힌다', () => {
 		// 재검수·시나리오 변경으로 results가 비면 selectedRuleKey가 남아 있어도 그릴 것이 없다.
 		useCheckImages.mockReturnValue(
@@ -78,6 +97,8 @@ function image(patch: Partial<CheckImage>): CheckImage {
 	}
 }
 
+// 🔴 confidence는 0~1이 아니라 0~100이다(ai-observation-task의 프롬프트 계약).
+//    이 픽스처가 0.9였던 탓에 화면이 100을 곱해 5800%로 나가는 동안 테스트는 통과했다.
 function aiResult(): CheckResult {
 	const observations: AiCheckResult['observations'] = [
 		{
@@ -85,7 +106,7 @@ function aiResult(): CheckResult {
 			question: '로고가 있어야 합니다',
 			expected: 'present',
 			actual: 'present',
-			confidence: 0.9,
+			confidence: 90,
 			reason: '좌상단에서 로고를 찾았습니다',
 			satisfied: true,
 		},
@@ -94,7 +115,7 @@ function aiResult(): CheckResult {
 			question: '여백이 충분해야 합니다',
 			expected: 'present',
 			actual: 'uncertain',
-			confidence: 0.4,
+			confidence: 40,
 			reason: '경계가 흐려 판단하지 못했습니다',
 			satisfied: null,
 		},

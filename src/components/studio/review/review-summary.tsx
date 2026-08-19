@@ -12,7 +12,7 @@ import {
 	type CheckReviewRow,
 } from '@/features/asset-check/utils/build-check-review-view'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
-import { ruleConfidence } from '@/features/asset-check/utils/check-image-verdict'
+import { formatConfidence, ruleConfidence } from '@/features/asset-check/utils/check-image-verdict'
 
 /**
  * 선택한 파일의 룰별 판정 요약 — 카드 1장 = 룰 1개.
@@ -83,7 +83,7 @@ function ReviewSummaryCard({
 				</Badge>
 				{confidence !== null && (
 					<Typography as="span" size="xs" tone="muted" className="font-mono">
-						{Math.round(confidence * 100)}%
+						{formatConfidence(confidence)}
 					</Typography>
 				)}
 			</div>

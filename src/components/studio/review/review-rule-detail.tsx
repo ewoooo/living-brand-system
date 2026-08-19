@@ -10,6 +10,7 @@ import { Empty, EmptyTitle } from '@/components/ui/empty'
 import { Typography } from '@/components/ui/typography'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
+import { formatConfidence } from '@/features/asset-check/utils/check-image-verdict'
 
 type Observation = NonNullable<AiCheckResult['observations']>[number]
 
@@ -74,7 +75,7 @@ function ObservationItem({ observation }: { observation: Observation }) {
 					{verdict.label}
 				</Typography>
 				<Typography as="span" size="xs" tone="muted" className="font-mono">
-					{Math.round(observation.confidence * 100)}%
+					{formatConfidence(observation.confidence)}
 				</Typography>
 			</div>
 			<Typography as="h3" size="sm" weight="medium">
