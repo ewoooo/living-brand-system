@@ -71,25 +71,6 @@ export const LayoutGridWidget: Block = {
 				description: `수직 거터를 이 판형만 고정합니다(${GUTTER_X.min}~${GUTTER_X.max}). 비우면 패널을 따릅니다.`,
 			},
 		},
-		// lock = 값을 직접 적지 않고 "패널 초기값에 붙어 있어라"로 고정하는 방법.
-		{
-			name: 'lockMargin',
-			type: 'checkbox',
-			defaultValue: false,
-			admin: { description: '마진을 패널에서 분리해 초기값에 고정합니다.' },
-		},
-		{
-			name: 'lockGutterX',
-			type: 'checkbox',
-			defaultValue: false,
-			admin: { description: '수평 거터를 패널에서 분리해 초기값에 고정합니다.' },
-		},
-		{
-			name: 'lockGutterY',
-			type: 'checkbox',
-			defaultValue: false,
-			admin: { description: '수직 거터를 패널에서 분리해 초기값에 고정합니다.' },
-		},
 	],
 }
 
