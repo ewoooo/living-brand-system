@@ -17,6 +17,8 @@ import { FONT, INK_BASELINE } from './rules'
 /** 🔴 정본 서체가 오면 `rules.ts`의 `FONT`와 함께 이 둘도 간다(임시 대체 서체다). */
 const FONT_FILE = '/fonts/hd/Isamanru-Medium.woff2'
 const FONT_FAMILY = 'Isamanru'
+/** 글자를 윤곽선으로 바꿔 주는 곳. em 좌표계의 path만 주고 배치는 이 파일이 한다. */
+const OUTLINE_API = '/api/ci-outline'
 
 /** 파일이 사람 눈에 읽히게 소수점을 자른다. 0.01px은 어차피 아무 의미가 없다. */
 const n = (v: number) => Math.round(v * 100) / 100
@@ -38,6 +40,29 @@ async function fontStyle(): Promise<string> {
 		return `<style>@font-face{font-family:"${FONT_FAMILY}";font-weight:${FONT.weight};src:url(data:font/woff2;base64,${btoa(raw)}) format("woff2")}</style>`
 	} catch {
 		return ''
+	}
+}
+
+type Outline = { d: string; advance: number }
+
+/**
+ * 글자마다 윤곽선을 받아 온다. 🔴 실패하면 `null` — 그때는 `<text>` + 서체 임베드로 내보낸다.
+ * 파일이 도구를 덜 타는 쪽이 낫지만, 아무 파일도 안 나가는 것보다는 텍스트로라도 나가는 게 낫다.
+ */
+async function outlines(
+	runs: { text: string }[],
+): Promise<{ upm: number; runs: Outline[] } | null> {
+	try {
+		const response = await fetch(OUTLINE_API, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ runs }),
+		})
+		if (!response.ok) return null
+		const data = (await response.json()) as { upm: number; runs: Outline[] }
+		return data.runs?.length === runs.length ? data : null
+	} catch {
+		return null
 	}
 }
 
@@ -78,20 +103,40 @@ export async function lockupSvg(root: HTMLElement, withBackground: boolean): Pro
 	}
 
 	// 글자 — 조각(라틴/한글)마다 한 줄이다. 조판은 브라우저가 한 그대로 옮긴다.
-	for (const run of root.querySelectorAll<HTMLElement>('[data-ink="text"]')) {
+	const runs = [...root.querySelectorAll<HTMLElement>('[data-ink="text"]')]
+	const shapes = await outlines(runs.map((run) => ({ text: run.textContent ?? '' })))
+
+	runs.forEach((run, index) => {
 		const r = run.getBoundingClientRect()
 		const style = getComputedStyle(run)
 		const size = Number.parseFloat(style.fontSize)
 		// 🔑 베이스라인은 재는 것이 아니라 계산이다 — `line-height: 1`이라 줄상자 위에서 정확히
 		//    `INK_BASELINE × font-size` 아래다. rect는 줄상자를 주므로 그 차이를 여기서 더한다.
+		const x = n(r.left - box.left)
+		const y = n(r.top - box.top + INK_BASELINE * size)
+		const shape = shapes?.runs[index]
+		const upm = shapes?.upm ?? 0
+		if (shape?.d && upm) {
+			// 🔑 **글자를 도형으로 내보낸다** — 파일이 서체에 의존하지 않게 하려는 것이다(디자인
+			//    도구는 SVG의 `@font-face`를 무시한다). 모양은 em 좌표계로 오고 배치는 여기서 한다:
+			//    베이스라인으로 옮기고 `size/upm`으로 줄이며 y를 뒤집는다(em은 위로 +, SVG는 아래로 +).
+			const s = size / upm
+			body.push(
+				`<path transform="translate(${x} ${y}) scale(${n(s * 1000) / 1000} ${-n(s * 1000) / 1000})" fill="${style.color}" d="${shape.d}"/>`,
+			)
+			return
+		}
+		// 🔴 폴백: 윤곽선을 못 받으면 글자 그대로 내보내고 서체를 파일에 심는다.
 		body.push(
-			`<text x="${n(r.left - box.left)}" y="${n(r.top - box.top + INK_BASELINE * size)}" font-family="${FONT_FAMILY}" font-size="${n(size)}" font-weight="${style.fontWeight}" fill="${style.color}" xml:space="preserve">${esc(run.textContent ?? '')}</text>`,
+			`<text x="${x}" y="${y}" font-family="${FONT_FAMILY}" font-size="${n(size)}" font-weight="${style.fontWeight}" fill="${style.color}" xml:space="preserve">${esc(run.textContent ?? '')}</text>`,
 		)
-	}
+	})
 
 	const w = n(box.width)
 	const h = n(box.height)
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${await fontStyle()}${body.join('')}</svg>`
+	// 서체는 폴백에서만 필요하다 — 도형으로 나갔으면 파일에 심지 않는다(430KB가 사라진다).
+	const style = body.some((part) => part.startsWith('<text')) ? await fontStyle() : ''
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${style}${body.join('')}</svg>`
 }
 
 /** 브라우저에 파일로 내려 준다. */
