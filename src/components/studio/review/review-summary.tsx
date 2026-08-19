@@ -1,10 +1,11 @@
 'use client'
 
 import { useMemo } from 'react'
+import { Controller } from '@/components/shared/controller'
 import { CHECK_STATUS } from '@/components/studio/review/result/check-status'
+import { CheckVerdictStatus } from '@/components/studio/review/result/check-verdict-status'
 import { Badge } from '@/components/ui/badge'
 import { Empty, EmptyTitle } from '@/components/ui/empty'
-import { Typography } from '@/components/ui/typography'
 import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
 import { useCheckImages } from '@/features/asset-check/hooks/use-check-images'
 import {
@@ -13,10 +14,11 @@ import {
 } from '@/features/asset-check/utils/build-check-review-view'
 import { checkDisplayStatus } from '@/features/asset-check/utils/check-display-status'
 import { formatConfidence, ruleConfidence } from '@/features/asset-check/utils/check-image-verdict'
+import { getCheckScenario } from '@/features/quality-rule/check-scenario'
 
 /**
  * 선택한 파일의 룰별 판정 요약 — 카드 1장 = 룰 1개.
- * 행 구성은 buildCheckReviewView가 그대로 소유하고, 여기서는 카드로만 다시 그린다.
+ * 행 구성은 buildCheckReviewView가 그대로 소유하고, 여기서는 킷 카드에 꽂기만 한다.
  * 디자인 SSOT: Figma HD_LBS_UI 56:3 "Review - Result".
  */
 export function ReviewSummary({ sections }: { sections: CheckSection[] }) {
@@ -29,27 +31,54 @@ export function ReviewSummary({ sections }: { sections: CheckSection[] }) {
 	const judged = rows.filter((row) => row.outcome)
 
 	return (
-		<section data-slot="review-summary" className="flex flex-col gap-2 py-2">
-			<Typography as="h2" size="sm" weight="semibold" tone="muted">
-				Summary
-			</Typography>
-			{judged.length === 0 ? (
-				<Empty className="gap-2 py-8">
-					<EmptyTitle>아직 검수 결과가 없습니다</EmptyTitle>
-				</Empty>
-			) : (
-				judged.map((row) => (
-					<ReviewSummaryCard
-						key={row.rowId}
-						row={row}
-						open={row.check.key === selectedRuleKey}
-						onOpen={() =>
-							selectRule(row.check.key === selectedRuleKey ? null : row.check.key)
-						}
-					/>
-				))
+		<>
+			{/* 어느 파일의 요약인지가 목록 행과 같은 모양으로 남는다(디자인 56:3). 정적 행이다. */}
+			{selected && (
+				<Controller.ListRow
+					caption={
+						scenarios.length > 0 && selected.scenarioKey
+							? getCheckScenario(scenarios, selected.scenarioKey).title
+							: '시나리오 없음'
+					}
+					label={selected.name}
+					trailing={<CheckVerdictStatus image={selected} />}
+				/>
 			)}
-		</section>
+			<Controller.Group
+				collapsible={false}
+				title="Summary"
+				data-slot="review-summary"
+				/*
+				 * 🔴 바로 위 파일 행이 같은 판정을 이미 이름과 함께 싣고 있다 — 여기서 또 읽히면
+				 *    스크린리더에 "미통과 미통과"가 된다. 디자인이 두 번 그린 것은 시각적 반복이므로
+				 *    이쪽은 장식으로 둔다.
+				 */
+				trailing={
+					selected ? (
+						<span aria-hidden>
+							<CheckVerdictStatus image={selected} />
+						</span>
+					) : undefined
+				}
+			>
+				{judged.length === 0 ? (
+					<Empty className="gap-2 py-8">
+						<EmptyTitle>아직 검수 결과가 없습니다</EmptyTitle>
+					</Empty>
+				) : (
+					judged.map((row) => (
+						<ReviewSummaryCard
+							key={row.rowId}
+							row={row}
+							open={row.check.key === selectedRuleKey}
+							onOpen={() =>
+								selectRule(row.check.key === selectedRuleKey ? null : row.check.key)
+							}
+						/>
+					))
+				)}
+			</Controller.Group>
+		</>
 	)
 }
 
@@ -69,32 +98,18 @@ function ReviewSummaryCard({
 	const confidence = ruleConfidence(outcome)
 
 	return (
-		<button
-			type="button"
-			data-slot="review-summary-card"
-			data-open={open || undefined}
-			aria-expanded={open}
-			onClick={onOpen}
-			className="flex flex-col gap-2 rounded-lg bg-muted px-3 py-3 text-left transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:outline-none data-[open]:ring-2 data-[open]:ring-foreground/20"
-		>
-			<div className="flex items-start justify-between gap-2">
+		<Controller.Card
+			badge={
 				<Badge variant={status.variant} shape="rounded">
 					{status.label}
 				</Badge>
-				{confidence !== null && (
-					<Typography as="span" size="xs" tone="muted" className="font-mono">
-						{formatConfidence(confidence)}
-					</Typography>
-				)}
-			</div>
-			<Typography as="h3" size="sm" weight="medium">
-				{row.check.titleKo ?? row.check.title}
-			</Typography>
-			{row.detail && (
-				<Typography as="p" size="xs" tone="muted">
-					{row.detail}
-				</Typography>
-			)}
-		</button>
+			}
+			meta={confidence === null ? undefined : formatConfidence(confidence)}
+			heading={row.check.titleKo ?? row.check.title}
+			open={open}
+			onClick={onOpen}
+		>
+			{row.detail}
+		</Controller.Card>
 	)
 }
