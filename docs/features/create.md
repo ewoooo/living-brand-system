@@ -28,7 +28,7 @@ Template·Graphic·Image가 Runtime Manifest부터 Artifact와 Export까지 공�
 
 출력 capability는 `Runtime Artifact → 실제 Exporter 호환 형식 → Admin exportPolicy = Effective StudioConfig.output` 순서로 계산합니다. Raster는 PNG·JPEG·TIFF·PDF·정지 MP4, Vector는 SVG, Video는 MP4로 변환할 수 있습니다. Admin의 형식 목록을 비우면 실제 Exporter 호환 형식을 모두 허용하며, 호환되지 않는 형식으로 범위를 넓히면 발행 검증이 거부합니다. Controller의 현재 선택값과 버튼 배치는 이 capability와 별개입니다. Export Layer는 I/O 직전에도 Artifact, 요청값, Effective capability를 다시 확인합니다. 원본 다운로드 capability와 ZIP 묶음은 파일 형식과 분리합니다.
 
-Controller 그룹 구조는 Runtime Manifest가 소유합니다. Admin은 `controllerRestrictions`에서 컨트롤의 실행 범위를 좁히고, `controllerPresentation`에서 그룹의 접힘 가능 여부와 최초 열림값을 정합니다. Creator가 열고 닫은 현재 상태는 화면의 로컬 React 상태이며 DB에 저장하지 않습니다.
+Controller 그룹 구조는 Runtime Manifest가 소유합니다. Admin은 배경(`backgroundPolicy`)과 레이어별 `overrides[nodeId]`로 컨트롤의 실행 범위를 좁히며, `controllerPresentation`(그룹의 접힘 가능 여부·최초 열림값)은 계산된 기본값입니다. Creator가 열고 닫은 현재 상태는 화면의 로컬 React 상태이며 DB에 저장하지 않습니다.
 
 Template의 텍스트·이미지·벡터 레이어는 같은 Creator 정책을 사용합니다. `hidden`은 Creator 패널에서 레이어를 숨기고, `readonly`는 값을 보여주되 바꾸지 못하게 하며, `editable`은 편집을 허용합니다. Visibility는 `editable` 레이어에서만 설정할 수 있습니다. Admin은 기본 표시값과 Creator의 표시 전환 허용 여부를 각각 정합니다. Creator의 현재 표시값은 미리보기와 export가 공유하는 합성 HTML에 반영합니다.
 
