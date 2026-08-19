@@ -668,7 +668,12 @@ export function deriveTemplateStudioConfig(
 				box: { width: slot.boxWidth, height: slot.boxHeight },
 				imageConfig: slot.profileId
 					? { mode: 'pinned', configId: slot.profileId }
-					: { mode: 'selectable' },
+					: {
+							mode: 'selectable',
+							...(slot.allowedProfileIds
+								? { allowedConfigIds: slot.allowedProfileIds }
+								: {}),
+						},
 				...(nodeConfigs[slot.nodeId]?.imageColorize
 					? {
 							featureOverrides: {
@@ -676,7 +681,7 @@ export function deriveTemplateStudioConfig(
 							},
 						}
 					: {}),
-				transform: { enabled: true, limits: IMAGE_EDIT_TRANSFORM_LIMITS },
+				transform: { enabled: slot.transformEnabled, limits: IMAGE_EDIT_TRANSFORM_LIMITS },
 			}),
 		),
 		...vectorSlots.map(

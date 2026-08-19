@@ -427,6 +427,60 @@ function ImageSlotSpecEditor({
 					</SelectContent>
 				</Select>
 			</Field>
+			{imageInput.profileId ? null : (
+				<Field>
+					<FieldLabel htmlFor="image-slot-allowed-profiles">
+						허용 프로파일 — 고르지 않으면 전부
+					</FieldLabel>
+					<div id="image-slot-allowed-profiles" className="flex flex-wrap gap-2">
+						{profiles?.map((profile) => {
+							const all = profiles.map((candidate) => candidate.id)
+							const on = (imageInput.allowedProfileIds ?? all).includes(profile.id)
+							const next = on
+								? (imageInput.allowedProfileIds ?? all).filter(
+										(id) => id !== profile.id,
+									)
+								: [...(imageInput.allowedProfileIds ?? all), profile.id]
+							return (
+								<Button
+									key={profile.id}
+									type="button"
+									size="sm"
+									aria-pressed={on}
+									variant={on ? 'muted' : 'outline'}
+									onClick={() =>
+										onChange({
+											...imageInput,
+											allowedProfileIds:
+												next.length === all.length ? undefined : next,
+										})
+									}
+								>
+									{profile.name}
+								</Button>
+							)
+						})}
+					</div>
+				</Field>
+			)}
+			<Field>
+				<FieldLabel htmlFor="image-slot-transform">창작자 변형 허용</FieldLabel>
+				<Button
+					id="image-slot-transform"
+					type="button"
+					size="sm"
+					aria-pressed={imageInput.transform?.enabled ?? true}
+					variant={(imageInput.transform?.enabled ?? true) ? 'muted' : 'outline'}
+					onClick={() =>
+						onChange({
+							...imageInput,
+							transform: { enabled: !(imageInput.transform?.enabled ?? true) },
+						})
+					}
+				>
+					{(imageInput.transform?.enabled ?? true) ? 'On' : 'Off'}
+				</Button>
+			</Field>
 		</FieldGroup>
 	)
 }

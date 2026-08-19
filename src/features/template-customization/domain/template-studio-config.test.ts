@@ -297,6 +297,51 @@ describe('deriveTemplateStudioConfig', () => {
 		expect(allowed.template.graphicConfigs).toHaveLength(1)
 		expect(blocked.template.graphicConfigs).toHaveLength(0)
 	})
+
+	it('이미지 레이어 정책이 허용 프로파일과 창작자 변형 허용을 슬롯에 싣는다', () => {
+		const config = deriveTemplateStudioConfig(
+			{
+				...template,
+				nodeConfigs: {
+					...template.nodeConfigs,
+					'2:1': {
+						imageInput: { allowedProfileIds: [3], transform: { enabled: false } },
+						imageColorize: { line: '#112233' },
+					},
+				},
+			},
+			[imageConfig],
+		)
+		const slot = config.template.slots.find(isImageSlot)
+
+		expect(slot?.imageConfig).toEqual({ mode: 'selectable', allowedConfigIds: [3] })
+		expect(slot?.transform.enabled).toBe(false)
+	})
+
+	it('변형 허용을 적지 않으면 지금까지처럼 허용이다', () => {
+		const config = deriveTemplateStudioConfig(template, [imageConfig])
+
+		expect(config.template.slots.find(isImageSlot)?.transform.enabled).toBe(true)
+	})
+
+	it('레이어 정책이 readonly면 텍스트 컨트롤도 readonly다', () => {
+		const readonly = deriveTemplateStudioConfig({
+			...template,
+			nodeConfigs: {
+				...template.nodeConfigs,
+				'1:1': {
+					input: { label: '제목', maxLength: 20, maxLines: 1 },
+					creator: { access: 'readonly' },
+				},
+			},
+		})
+		expect(findTemplateControl(readonly, 'text:1:1')).toMatchObject({
+			availability: 'readonly',
+		})
+
+		const editable = deriveTemplateStudioConfig(template)
+		expect(findTemplateControl(editable, 'text:1:1')).not.toHaveProperty('availability')
+	})
 })
 
 describe('resolveTemplateImageConfig', () => {

@@ -77,7 +77,15 @@ describe('collectTemplateImageSlots', () => {
 			'1:1': { imageInput: { profileId: 7 } },
 		})
 
-		expect(slots).toEqual([{ nodeId: '1:1', name: 'Card', profileId: 7, ...editablePolicy }])
+		expect(slots).toEqual([
+			{
+				nodeId: '1:1',
+				name: 'Card',
+				profileId: 7,
+				transformEnabled: true,
+				...editablePolicy,
+			},
+		])
 	})
 
 	it('profileId가 없으면 개방만 표시한다', () => {
@@ -85,7 +93,9 @@ describe('collectTemplateImageSlots', () => {
 			'1:1': { imageInput: {} },
 		})
 
-		expect(slots).toEqual([{ nodeId: '1:1', name: 'Card', ...editablePolicy }])
+		expect(slots).toEqual([
+			{ nodeId: '1:1', name: 'Card', transformEnabled: true, ...editablePolicy },
+		])
 	})
 
 	it('슬롯 요소 자신의 inline width/height(px)를 박스로 읽는다 — emit의 여러 줄 style 그대로', () => {
@@ -108,6 +118,7 @@ describe('collectTemplateImageSlots', () => {
 				name: 'Image Area',
 				boxWidth: 911.5,
 				boxHeight: 492,
+				transformEnabled: true,
 				...editablePolicy,
 			},
 		])
@@ -119,7 +130,9 @@ describe('collectTemplateImageSlots', () => {
 			{ '1:1': { imageInput: {} } },
 		)
 
-		expect(slots).toEqual([{ nodeId: '1:1', name: 'Fluid', ...editablePolicy }])
+		expect(slots).toEqual([
+			{ nodeId: '1:1', name: 'Fluid', transformEnabled: true, ...editablePolicy },
+		])
 	})
 
 	it('> 가 든 레이어 이름의 실제 emit 출력에서도 이름·텍스트·박스를 정확히 읽는다', () => {
@@ -156,6 +169,7 @@ describe('collectTemplateImageSlots', () => {
 				name: 'Image > Area',
 				boxWidth: 300,
 				boxHeight: 150,
+				transformEnabled: true,
 				...editablePolicy,
 			},
 		])
@@ -171,6 +185,7 @@ describe('collectTemplateImageSlots', () => {
 				name: 'Image > Area',
 				boxWidth: 300,
 				boxHeight: 150,
+				transformEnabled: true,
 				...editablePolicy,
 			},
 		])
