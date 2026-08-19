@@ -56,3 +56,48 @@ describe('매니페스트', () => {
 		expect(LAYOUT_GRID_MANIFEST.groups.map((group) => group.controls.length)).toEqual([1, 2, 1])
 	})
 })
+
+/* ── CI 락업: 축마다 초기값 + 노출 여부 ─────────────────────────── */
+
+const ciEntry = controllerEntryFor('ciLockupWidget')
+
+function ciEffective(fields: Record<string, unknown>) {
+	if (!ciEntry) throw new Error('ciLockupWidget 엔트리가 없습니다')
+	const groups = applyControllerRestrictions(
+		ciEntry.manifest.groups,
+		ciEntry.toRestrictions(fields),
+	)
+	return new Map(
+		groups.flatMap((group) => group.controls.map((control) => [control.id, control] as const)),
+	)
+}
+
+describe('CI 락업 admin 값 → restriction', () => {
+	it('숫자 초기값(H)이 살아남는다', () => {
+		// 🔴 회귀 방어: `defaultValue` 가드에서 number를 빼면 이 값이 조용히 버려진다.
+		expect(ciEffective({ h: 80 }).get('h')?.defaultValue).toBe(80)
+	})
+
+	it('hiddenControls에 담은 축만 readonly가 된다', () => {
+		const controls = ciEffective({ hiddenControls: ['form', 'language'] })
+
+		expect(controls.get('form')?.availability).toBe('readonly')
+		expect(controls.get('language')?.availability).toBe('readonly')
+		expect(controls.get('h')?.availability).toBeUndefined()
+		expect(controls.get('clearSpace')?.availability).toBeUndefined()
+	})
+
+	it('🔴 options에 없는 select 값은 버린다 — 렌더 중 throw로 페이지가 죽지 않게', () => {
+		// 계열사 목록이 바뀌면 저장된 값이 고아가 된다. 그때 던지는 대신 기본값으로 그려야 한다.
+		expect(() => ciEffective({ subsidiary: '없어진회사' })).not.toThrow()
+		expect(ciEffective({ subsidiary: '없어진회사' }).get('subsidiary')?.defaultValue).toBe(
+			ciEntry?.manifest.groups
+				.flatMap((group) => group.controls)
+				.find((control) => control.id === 'subsidiary')?.defaultValue,
+		)
+	})
+
+	it('정상 select 값은 초기값을 덮는다', () => {
+		expect(ciEffective({ colorType: 'mono' }).get('colorType')?.defaultValue).toBe('mono')
+	})
+})

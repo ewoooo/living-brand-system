@@ -67,12 +67,30 @@ function ciLockupRestrictions(fields: Record<string, unknown>): ControllerContro
 		return {
 			controlId: control.id,
 			// 🔴 `number`를 빼면 range 축(H)의 초기값이 **조용히 버려진다**. 실제로 그렇게 겪었다.
-			...(typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number'
-				? { defaultValue: value }
-				: {}),
+			...(usable(control, value) ? { defaultValue: value } : {}),
 			...(hidden.includes(control.id) ? { availability: 'readonly' as const } : {}),
 		}
 	})
+}
+
+/**
+ * admin 값을 초기값으로 쓸 수 있는가.
+ *
+ * 🔴 **`select` 값이 options에 없으면 버린다.** 그러지 않으면 `applyControllerRestrictions`가 렌더
+ *    중에 던져 **페이지가 죽는다**(`controller-definition.ts`: `defaultValue: options에 포함되어야
+ *    합니다`). 선택지는 `rules.ts`에서 파생하므로 계열사·지사 목록이 바뀌면 저장된 값이 고아가 되고,
+ *    그때 페이지가 죽는 것보다 매니페스트 기본값으로 그려지는 것이 낫다 — 화면은 서고 admin이
+ *    다시 고르면 된다.
+ */
+function usable(
+	control: (typeof CI_LOCKUP_CONTROLS)[number],
+	value: unknown,
+): value is string | number | boolean {
+	if (control.kind === 'toggle') return typeof value === 'boolean'
+	if (control.kind === 'range') return typeof value === 'number'
+	if (control.kind === 'select')
+		return typeof value === 'string' && control.options.some((o) => o.value === value)
+	return false
 }
 
 export const GUIDELINE_CONTROLLERS: Readonly<Record<string, ControllerEntry>> = {
