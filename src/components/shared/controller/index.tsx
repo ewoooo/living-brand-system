@@ -3,16 +3,21 @@ import { ControllerAssetCard } from './asset-card'
 import { ControllerBar } from './bar'
 import { ControllerBrowser } from './browser'
 import { ControllerCameraControl } from './camera-control'
+import { ControllerCard } from './card'
 import { ControllerColorRow } from './color-row'
 import { ControllerField } from './field'
 import { ControllerGroup } from './group'
 import { ControllerInput, ControllerTextarea } from './input'
+import { ControllerItem } from './item'
 import { ControllerContent, ControllerFooter, ControllerHeader, ControllerRoot } from './layout'
+import { ControllerListRow } from './list-row'
 import { ControllerPad } from './pad'
+import { ControllerPagination } from './pagination'
 import { ControllerRange } from './range'
 import { ControllerRow } from './row'
 import { ControllerSegmented } from './segmented'
 import { ControllerSelect } from './select'
+import { ControllerStatus } from './status'
 import { ControllerTabPanel } from './tab-panel'
 
 export type {
@@ -38,7 +43,10 @@ export const Controller = {
 	Group: ControllerGroup,
 	Footer: ControllerFooter,
 	Row: ControllerRow,
+	ListRow: ControllerListRow,
 	Field: ControllerField,
+	Card: ControllerCard,
+	Item: ControllerItem,
 	Segmented: ControllerSegmented,
 	TabPanel: ControllerTabPanel,
 	ColorRow: ControllerColorRow,
@@ -47,7 +55,9 @@ export const Controller = {
 	Textarea: ControllerTextarea,
 	Range: ControllerRange,
 	Pad: ControllerPad,
+	Pagination: ControllerPagination,
 	Action: ControllerAction,
+	Status: ControllerStatus,
 	Bar: ControllerBar,
 	CameraControl: ControllerCameraControl,
 	Browser: ControllerBrowser,
@@ -61,6 +71,7 @@ export {
 	ControllerBar,
 	ControllerBrowser,
 	ControllerCameraControl,
+	ControllerCard,
 	ControllerColorRow,
 	ControllerContent,
 	ControllerField,
@@ -68,12 +79,16 @@ export {
 	ControllerGroup,
 	ControllerHeader,
 	ControllerInput,
+	ControllerItem,
+	ControllerListRow,
 	ControllerPad,
+	ControllerPagination,
 	ControllerRange,
 	ControllerRoot,
 	ControllerRow,
 	ControllerSegmented,
 	ControllerSelect,
+	ControllerStatus,
 	ControllerTabPanel,
 	ControllerTextarea,
 }

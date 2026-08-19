@@ -241,6 +241,21 @@ type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
 
 현재 공용 `ControllerControlDefinition`은 데이터만으로 바로 그릴 수 있는 `text`·`toggle`·`select`·`color`·`range`·`pad`를 제공합니다. `orbit`은 도메인 프리뷰 슬롯이 필요하고 `asset`은 대응 primitive가 아직 없어 화면 컴포지션에 남깁니다. 두 종류는 실제 공용 renderer가 생길 때 Definition에 합류합니다.
 
+읽기·탐색 파츠 6종 — 값을 조작하지 않고 결과를 보여주거나 위치를 옮기는 자리입니다. 검수 화면이 첫 소비자이고(디자인 `56:2` "Review Usecase"), 리프 컨트롤과 달리 직렬화 Definition의 어휘가 아니라 **컴포지션 파츠**입니다.
+
+| 파츠 | 무엇 | 디자인 |
+| --- | --- | --- |
+| `Controller.Status` | 행·섹션 끝의 상태 타일(36px). 정적 표시이며 버튼이 아닙니다 — 이름은 필수 `label`이 sr-only로 갖습니다 | `59:2885` |
+| `Controller.ListRow` | 두 줄 목록 행(48px). `onClick`이 없으면 `div`로 렌더해 눌러도 아무 일 없는 버튼을 만들지 않습니다 | `59:2757` |
+| `Controller.Group`의 `trailing` | 제목 행 오른끝 표시. 🔴 접히는 그룹에는 줄 수 없습니다 — 그 자리는 chevron이 씁니다 | `56:2087` |
+| `Controller.Card` | 접힌 판정 하나. 채움(`bg-muted`) + 배지 | `56:3` |
+| `Controller.Item` | 펼친 판정 항목. 구분선 + 색 글자 | `56:2087` |
+| `Controller.Pagination` | 바 안의 위치 이동 `‹ n / N ›`. 숫자는 `aria-hidden`이고 위치는 sr-only 한 문장이 말합니다 | `56:2471` |
+
+🔴 **`Card`와 `Item`의 시각을 통일하지 마십시오.** 같은 내용을 다른 밀도로 보여주는 짝이고, 채움(카드)과 구분선(항목)의 차이가 "접힌 것"과 "펼친 것"을 가르는 유일한 단서입니다. 상태도 카드는 배지, 항목은 색 글자입니다 — 항목이 쌓이는 자리에서 배지를 반복하면 목록이 배지 벽이 됩니다.
+
+🔴 `Status`의 `muted`와 `ListRow`·`Card`의 hover는 `bg-muted`가 아니라 `foreground/5` **겹침**입니다. 이 파츠들이 앉는 면이 이미 `bg-muted`라 같은 토큰을 쓰면 보이지 않습니다(`ROW_ACTION`·`ROW_SELECT_TRIGGER`와 같은 규칙).
+
 경계 규칙:
 
 - **`isEmpty`는 파생 상태입니다.** `value === null`에서 계산하고, 별도 진실로 두지 않습니다. 비어 있으면 원본 값을 사칭하지 않고 `—`로 보입니다(`Controller.ColorRow`의 `isEmpty` 원형).

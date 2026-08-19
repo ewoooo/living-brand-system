@@ -23,11 +23,21 @@ export function ReviewCanvas() {
 	return (
 		<div
 			data-slot="review-canvas"
-			className="relative grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_auto]"
+			className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_auto]"
 		>
-			<ImageUploadCarousel previewSize={previewSize} />
+			{/*
+			 * 🔴 하단 바의 relative 기준은 이 열이지 바깥 그리드가 아니다. 바깥에 두면
+			 *    `left-1/2`가 근거 패널까지 포함한 폭의 절반을 재서, 패널이 열릴 때마다 바가
+			 *    패널 폭의 절반만큼 오른쪽으로 밀린다(디자인 56:2087은 캔버스 중앙).
+			 */}
+			<div data-slot="review-canvas-stage" className="relative flex min-h-0 min-w-0 flex-col">
+				<ImageUploadCarousel previewSize={previewSize} />
+				<ReviewCanvasControls
+					previewSize={previewSize}
+					onPreviewSizeChange={setPreviewSize}
+				/>
+			</div>
 			{outcome && <ReviewRuleDetail outcome={outcome} />}
-			<ReviewCanvasControls previewSize={previewSize} onPreviewSizeChange={setPreviewSize} />
 		</div>
 	)
 }
