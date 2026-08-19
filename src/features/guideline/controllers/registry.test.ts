@@ -101,3 +101,42 @@ describe('CI 락업 admin 값 → restriction', () => {
 		expect(ciEffective({ colorType: 'mono' }).get('colorType')?.defaultValue).toBe('mono')
 	})
 })
+
+describe('CI 락업 계층별 선택지 좁히기', () => {
+	it('본사에는 가로형A·B가 뜨지 않는다', () => {
+		const form = ciEffective({}).get('form')
+		expect(form?.kind).toBe('select')
+		if (form?.kind !== 'select') throw new Error('form이 select가 아니다')
+		expect(form.options.map((option) => option.value)).toEqual(['horizontal', 'vertical'])
+	})
+
+	it('자회사에는 HD형이 뜨지 않고 꼴이 A·B·세로가 된다', () => {
+		const controls = ciEffective({ subsidiaryOn: true, form: 'horizontalA' })
+		const form = controls.get('form')
+		const language = controls.get('language')
+		if (form?.kind !== 'select' || language?.kind !== 'select')
+			throw new Error('select가 아니다')
+
+		expect(form.options.map((option) => option.value)).toEqual([
+			'horizontalA',
+			'horizontalB',
+			'vertical',
+		])
+		expect(language.options.map((option) => option.value)).toEqual(['ko', 'en'])
+	})
+
+	it('해외지사는 영문 전용이다', () => {
+		const language = ciEffective({ subsidiaryOn: true, branchOn: true, language: 'en' }).get(
+			'language',
+		)
+		if (language?.kind !== 'select') throw new Error('select가 아니다')
+
+		expect(language.options.map((option) => option.value)).toEqual(['en'])
+	})
+
+	it('🔴 좁힌 목록에 없는 초기값은 버린다 — 좁히기와 초기값이 함께 던지지 않게', () => {
+		// 본사 페이지에 자회사 꼴이 저장돼 있으면(계층을 내린 경우) 그 값을 초기값으로 쓸 수 없다.
+		expect(() => ciEffective({ form: 'horizontalA' })).not.toThrow()
+		expect(ciEffective({ form: 'horizontalA' }).get('form')?.defaultValue).toBe('horizontal')
+	})
+})
