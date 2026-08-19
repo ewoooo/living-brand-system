@@ -70,6 +70,44 @@ const BetterEditorSettings: GlobalConfig = {
 	access: { read: authenticated, update: managerOrAdmin },
 }
 
+/**
+ * Payload에 등록하는 컬렉션 전부. 업로드 저장 대상을 여기서 파생하므로 순서가 곧 등록 순서다.
+ */
+const collections = [
+	GuidelineDocuments,
+	BrandLogos,
+	BrandColors,
+	BrandColorGroups,
+	BrandTypefaces,
+	BrandIcons,
+	ApplicationImages,
+	SampleImages,
+	ImageProfiles,
+	GraphicProfiles,
+	GeneratedImages,
+	Templates,
+	TemplateCategories,
+	TemplateAssets,
+	CheckScenarios,
+	Rules,
+	RuleCheckers,
+	CheckSessions,
+	AgentChatSessions,
+	AgentSkills,
+	Users,
+]
+
+/**
+ * upload를 갖는 컬렉션은 전부 S3에 저장한다.
+ *
+ * 🔴 손으로 나열하지 않는다. 등록에서 빠진 업로드 컬렉션은 Payload 기본 동작인 로컬 디스크 쓰기로
+ * 떨어진다. 로컬 개발에서는 조용히 성공하고, 읽기 전용 파일시스템인 Vercel에서만 500이 난다
+ * (sample-images가 실제로 그렇게 새어 나갔다). 파생으로 두면 그 어긋남이 생길 수 없다.
+ */
+const s3UploadCollections = Object.fromEntries(
+	collections.flatMap((collection) => (collection.upload ? [[collection.slug, true]] : [])),
+)
+
 export default buildConfig({
 	admin: {
 		user: Users.slug,
@@ -94,29 +132,7 @@ export default buildConfig({
 	},
 	// 프리렌더된 화면의 껍데기를 콘텐츠 변경 시 버리게 한다. 컬렉션마다 손으로 달지 않고
 	// 배열째 감싸므로 새 컬렉션이 자동으로 덮인다(`collections/revalidate.ts`).
-	collections: withFrontendRevalidation([
-		GuidelineDocuments,
-		BrandLogos,
-		BrandColors,
-		BrandColorGroups,
-		BrandTypefaces,
-		BrandIcons,
-		ApplicationImages,
-		SampleImages,
-		ImageProfiles,
-		GraphicProfiles,
-		GeneratedImages,
-		Templates,
-		TemplateCategories,
-		TemplateAssets,
-		CheckScenarios,
-		Rules,
-		RuleCheckers,
-		CheckSessions,
-		AgentChatSessions,
-		AgentSkills,
-		Users,
-	]),
+	collections: withFrontendRevalidation(collections),
 	editor: lexicalEditor({
 		// 가이드라인 수치 규정 표(최소 사이즈, 자간 등) 입력용. EXPERIMENTAL: 업그레이드 시 변경 가능성 있음.
 		features: ({ defaultFeatures }) => [...defaultFeatures, EXPERIMENTAL_TableFeature()],
@@ -225,14 +241,7 @@ export default buildConfig({
 			},
 		}),
 		s3Storage({
-			collections: {
-				'brand-logos': true,
-				'brand-typefaces': true,
-				'brand-icons': true,
-				'application-images': true,
-				'generated-images': true,
-				'template-assets': true,
-			},
+			collections: s3UploadCollections,
 			bucket: env.S3_BUCKET || '',
 			config: {
 				region: env.S3_REGION || '',
