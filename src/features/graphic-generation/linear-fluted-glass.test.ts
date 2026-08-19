@@ -42,7 +42,10 @@ describe('linearFlutedGlass', () => {
 	it('shader가 선언한 uniform과 runtime이 쓰는 uniform이 정확히 일치한다', async () => {
 		const { readFile } = await import('node:fs/promises')
 		const [shader, runtime] = await Promise.all([
-			readFile('public/shaders/linear-fluted-glass.glsl', 'utf8'),
+			readFile(
+				'src/features/graphic-generation/graphic-runtimes/linear-fluted-glass/shader.ts',
+				'utf8',
+			),
 			readFile(
 				'src/features/graphic-generation/graphic-runtimes/linear-fluted-glass/runtime.client.ts',
 				'utf8',

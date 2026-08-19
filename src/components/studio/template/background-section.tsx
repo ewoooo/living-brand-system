@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
-import { Controller } from '@/components/studio/shared/controller'
+import { Controller } from '@/components/shared/controller'
 import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
 	ControllerRenderer,
-} from '@/components/studio/shared/controller-renderer'
+} from '@/components/shared/controller-renderer'
+import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'

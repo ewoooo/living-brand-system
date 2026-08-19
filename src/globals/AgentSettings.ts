@@ -4,7 +4,7 @@ import { authenticated, managerOrAdmin } from '@/lib/auth'
 
 export const AgentSettings: GlobalConfig = {
 	slug: 'agent-settings',
-	label: '에이전트 기본 설정',
+	label: '에이전트 설정',
 	admin: {
 		group: '에이전트',
 	},

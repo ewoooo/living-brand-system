@@ -2,14 +2,14 @@
 
 import { Copy, Crop, SquareOutline } from '@carbon/icons-react'
 import type * as React from 'react'
-import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
-import { ImageProfilePicker } from '@/components/studio/image/image-profile-picker'
-import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
-import { Controller } from '@/components/studio/shared/controller'
+import { Controller } from '@/components/shared/controller'
 import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
-} from '@/components/studio/shared/controller-renderer'
+} from '@/components/shared/controller-renderer'
+import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
+import { ImageProfilePicker } from '@/components/studio/image/image-profile-picker'
+import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import { PrintControls, VideoControls } from '@/components/studio/shared/output-controls'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { Button } from '@/components/ui/button'

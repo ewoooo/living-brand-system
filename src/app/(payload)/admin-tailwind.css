@@ -8,6 +8,18 @@
 @source "../../components/ui";
 @source not inline("table");
 
+/* 대시보드 표면의 브랜드 녹색. Payload 테마에 대응 색이 없어 여기서 연다(정본: Figma HD_LBS_UI 67:2468).
+   deep은 글자색이라 어두운 테마에서 뒤집는다 — 표면 두 색은 알파로 얹히므로 그대로 둔다. */
+:root {
+	--brand: #00ad45;
+	--brand-tint: #73d75a;
+	--brand-deep: #003f08;
+}
+
+[data-theme="dark"] {
+	--brand-deep: #b9ecc6;
+}
+
 @theme inline {
 	--font-sans: var(--font-body);
 	--color-background: var(--theme-bg);
@@ -30,6 +42,9 @@
 	--color-success: var(--theme-success-700);
 	--color-info: var(--theme-success-600);
 	--color-warning: var(--theme-warning-600);
+	--color-brand: var(--brand);
+	--color-brand-tint: var(--brand-tint);
+	--color-brand-deep: var(--brand-deep);
 	--color-border: var(--theme-elevation-200);
 	--color-input: var(--theme-elevation-200);
 	--color-ring: var(--theme-elevation-400);
