@@ -46,5 +46,12 @@ export function useStudioRuntimeManifest(
 			controller: deriveImageProfileController(imageModelPreset, imageFeatures, undefined),
 		}
 	}
-	return getTemplateRuntimeManifest({ html, nodeConfigs, width, height })
+	try {
+		// 배경 정책이 형식을 전부 비우면 getTemplateRuntimeManifest가 던진다(도메인 계약).
+		// 어드민에서 손으로 심은 값이 그 상태를 만들 수 있으므로, 던지는 대신 null을 돌려
+		// 폼이 흰 화면이 되지 않고 소비 필드들의 기존 빈 상태 UI로 대체되게 한다.
+		return getTemplateRuntimeManifest({ html, nodeConfigs, width, height })
+	} catch {
+		return null
+	}
 }

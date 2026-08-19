@@ -6,6 +6,7 @@ import {
 import { projectTemplateRenderModel } from '@/features/template-core/domain/project-template-render-model'
 import {
 	deriveTemplateStudioConfig,
+	type PublishedHtmlTemplate,
 	type TemplateStudioConfig,
 } from '@/features/template-customization/domain/template-studio-config'
 import { AgentConfigurationError } from '@/lib/errors'
@@ -104,6 +105,7 @@ export async function prepareTemplateImage(
 		controllerRestrictions: template.controllerRestrictions,
 		controllerPresentation: template.controllerPresentation,
 		exportPolicy: template.exportPolicy,
+		backgroundPolicy: template.backgroundPolicy as PublishedHtmlTemplate['backgroundPolicy'],
 	})
 	return {
 		type: 'template-image' as const,

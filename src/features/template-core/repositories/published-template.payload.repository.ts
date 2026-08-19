@@ -106,6 +106,7 @@ export async function findPublishedTemplate(templateSlug: string): Promise<
 	| (Template & {
 			controllerRestrictions?: unknown
 			controllerPresentation?: unknown
+			backgroundPolicy?: unknown
 			previewImage?: unknown
 	  })
 	| null
@@ -130,6 +131,7 @@ export async function findPublishedTemplate(templateSlug: string): Promise<
 		select: {
 			controllerRestrictions: true,
 			controllerPresentation: true,
+			backgroundPolicy: true,
 			name: true,
 			updatedAt: true,
 			html: true,
@@ -146,6 +148,7 @@ export async function findPublishedTemplate(templateSlug: string): Promise<
 			| (Template & {
 					controllerRestrictions?: unknown
 					controllerPresentation?: unknown
+					backgroundPolicy?: unknown
 					previewImage?: unknown
 			  })
 			| undefined) ?? null

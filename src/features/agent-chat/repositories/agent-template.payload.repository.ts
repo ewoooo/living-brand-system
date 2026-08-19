@@ -14,7 +14,11 @@ export type AgentTemplateDocument = Pick<
 	| 'overrides'
 	| 'updatedAt'
 	| 'width'
-> & { controllerRestrictions?: unknown; controllerPresentation?: unknown }
+> & {
+	controllerRestrictions?: unknown
+	controllerPresentation?: unknown
+	backgroundPolicy?: unknown
+}
 
 /**
  * 두 조회가 공유하는 published 템플릿 질의 기본값.
@@ -44,6 +48,7 @@ function publishedTemplateQuery(user: unknown) {
 			updatedAt: true,
 			controllerRestrictions: true,
 			controllerPresentation: true,
+			backgroundPolicy: true,
 		},
 	} as const
 }
