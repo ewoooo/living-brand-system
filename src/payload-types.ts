@@ -1499,6 +1499,15 @@ export interface Template {
     | number
     | boolean
     | null;
+  backgroundPolicy?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * 비우면 Exporter가 지원하는 형식을 모두 허용합니다.
    */
@@ -2926,6 +2935,7 @@ export interface TemplatesSelect<T extends boolean = true> {
   description?: T;
   controllerRestrictions?: T;
   controllerPresentation?: T;
+  backgroundPolicy?: T;
   exportPolicy?:
     | T
     | {
