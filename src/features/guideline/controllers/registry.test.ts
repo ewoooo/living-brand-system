@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { applyControllerRestrictions } from '@/modules/studio-controller/controller-definition'
+import { CI_LOCKUP_CONTROLS, CI_LOCKUP_MANIFEST } from '../widgets/ci-lockup/manifest'
 import { LAYOUT_GRID_MANIFEST } from '../widgets/layout-grid/manifest'
 import { controllerEntryFor } from './registry'
 
@@ -99,6 +100,47 @@ describe('CI 락업 admin 값 → restriction', () => {
 
 	it('정상 select 값은 초기값을 덮는다', () => {
 		expect(ciEffective({ colorType: 'mono' }).get('colorType')?.defaultValue).toBe('mono')
+	})
+})
+
+describe('CI 락업 축 목록', () => {
+	it('🔴 축 목록과 매니페스트 그룹이 어긋나지 않는다', () => {
+		// 어긋나면 `applyControllerRestrictions`가 「control을 찾을 수 없습니다」로 던져
+		// 저작된 모든 페이지가 렌더 중 죽는다. 목록을 손으로 두는 대가가 이 테스트다.
+		const inGroups = CI_LOCKUP_MANIFEST.groups.flatMap((group) =>
+			group.controls.map((control) => control.id),
+		)
+		const inList = CI_LOCKUP_CONTROLS.map((control) => control.id)
+
+		expect([...inList].sort()).toEqual([...inGroups].sort())
+		expect(new Set(inList).size, '중복된 축 id').toBe(inList.length)
+	})
+
+	it('저작된 실제 형태로 제한을 적용해도 던지지 않는다', () => {
+		// 로컬 DB의 색상 변형 블록 첫 자식과 같은 모양이다.
+		expect(() =>
+			ciEffective({
+				h: 80,
+				subsidiaryOn: true,
+				branchOn: true,
+				subsidiary: '현대중공업',
+				branch: 'EUROPE R&D CENTER',
+				form: 'horizontalA',
+				language: 'en',
+				colorType: 'fullColor',
+				mono: 'BLACK',
+				clearSpace: 'off',
+				measured: false,
+				hiddenControls: [
+					'subsidiaryOn',
+					'branchOn',
+					'form',
+					'language',
+					'colorType',
+					'mono',
+				],
+			}),
+		).not.toThrow()
 	})
 })
 

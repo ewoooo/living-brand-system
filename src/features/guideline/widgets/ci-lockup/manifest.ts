@@ -163,6 +163,11 @@ export const BRANCH_VALUES = BRANCH.options.map((option) => option.value)
  * 축 전체의 순서 있는 목록. 🔑 **schema·registry·알약이 같은 목록을 읽는다** — 축이 늘면
  * admin 필드와 제한 변환이 저절로 따라온다. 축마다 필요한 것은 둘이다(사용자 지정 2026-08-19):
  * ① 페이지를 처음 열었을 때의 상태 ② 그 축을 알약에 낼지.
+ *
+ * 🔴 **그룹과 어긋나면 저작된 모든 페이지가 렌더 중 죽는다** — 제한 변환이 없는 축을 가리키면
+ *    `applyControllerRestrictions`가 던진다. 파생시키면 그 불변식이 사라지지만 리터럴 타입도 함께
+ *    사라져(`schema.ts`가 `kind`로 필드를 가른다) 목록은 손으로 두고 **테스트가 일치를 지킨다**
+ *    (`registry.test.ts`의 「축 목록과 그룹이 어긋나지 않는다」).
  */
 export const CI_LOCKUP_CONTROLS = [
 	HEIGHT,
