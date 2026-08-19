@@ -12,13 +12,13 @@ import type {
 import {
 	type AiCheckPlan,
 	type CheckPlan,
-	needsReview,
 	planChecks,
 } from '@/features/asset-check/domain/check-plan'
 import {
 	evaluateAdvisory,
 	evaluateHeuristic,
 } from '@/features/asset-check/domain/heuristic.evaluator'
+import { needsReview } from '@/features/asset-check/domain/needs-review'
 import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
 	type AiCheckRunResult,
