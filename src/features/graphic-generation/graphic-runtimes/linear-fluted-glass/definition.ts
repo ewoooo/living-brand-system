@@ -48,6 +48,86 @@ export const LINEAR_FLUTED_GLASS_DEFAULT_INPUT = {
 	distortionShape: 'lens',
 } as const
 
+/**
+ * 컨트롤러에 노출하지 않는 값의 묶음. 프리셋이 배경의 성격을 정하고, 노출된 컨트롤이 그 위를 조정한다.
+ *
+ * 🔴 rayRotation과 glassAngle은 모든 프리셋에서 0이다 — 수평은 의도된 것이라 프리셋이 기울이지 않는다.
+ * 그래서 프리셋을 가르는 축은 질감(광선 밀도·축 감쇠·유리)과 구도(광원 축 위치) 둘뿐이다.
+ */
+export const LINEAR_FLUTED_GLASS_PRESETS = {
+	basic: {},
+	focused: {
+		source: { x: -0.62, y: 0 },
+		axisFalloff: 2.6,
+		rayDensity: 0.45,
+		rayMidIntensity: 0.22,
+		glassEdgeSoftness: 0.2,
+		glassBlur: 0.12,
+		glassScattering: 0.1,
+		glassHighlights: 0.9,
+		glassShadows: 0.82,
+		glassDistortion: 0.7,
+		pulseIntensity: 0.1,
+		pulseWidth: 0.14,
+		flowSpeed: 0.04,
+		glassDrift: { x: 0, y: 0.01 },
+	},
+	diffused: {
+		source: { x: -0.62, y: 0.1 },
+		axisFalloff: 0.7,
+		rayDensity: 0.08,
+		rayMidIntensity: 0.55,
+		glassEdgeSoftness: 0.9,
+		glassBlur: 0.85,
+		glassScattering: 0.7,
+		glassHighlights: 0.3,
+		glassShadows: 0.4,
+		glassDistortion: 0.35,
+		paletteShift: 0.5,
+		pulseIntensity: 0.45,
+		pulseWidth: 0.45,
+		pulseSpeed: 0.16,
+		flowSpeed: 0.12,
+	},
+	// 광원 축을 크게 올려 밝은 대역을 위로 몰고 아래를 비운다. uSource.y = -source.y라 음수가 위다.
+	upperAxis: {
+		source: { x: -0.62, y: -0.7 },
+		axisFalloff: 1.1,
+		rayDensity: 0.3,
+		rayMidIntensity: 0.4,
+		glassEdgeSoftness: 0.45,
+		glassBlur: 0.35,
+		glassScattering: 0.3,
+		glassHighlights: 0.8,
+		glassShadows: 0.7,
+		glassDistortion: 0.6,
+		paletteShift: 1.6,
+		pulseIntensity: 0.3,
+		flowSpeed: 0.08,
+	},
+	lowerAxis: {
+		source: { x: -0.62, y: 0.7 },
+		axisFalloff: 1.1,
+		rayDensity: 0.3,
+		rayMidIntensity: 0.4,
+		glassEdgeSoftness: 0.45,
+		glassBlur: 0.35,
+		glassScattering: 0.3,
+		glassHighlights: 0.8,
+		glassShadows: 0.7,
+		glassDistortion: 0.6,
+		paletteShift: 1.6,
+		pulseIntensity: 0.3,
+		flowSpeed: 0.08,
+	},
+} as const
+
+export const LINEAR_FLUTED_GLASS_PRESET_IDS = Object.keys(
+	LINEAR_FLUTED_GLASS_PRESETS,
+) as readonly LinearFlutedGlassPresetId[]
+
+export type LinearFlutedGlassPresetId = keyof typeof LINEAR_FLUTED_GLASS_PRESETS
+
 type RangeControl = Extract<ControllerControlDefinition, { kind: 'range' }>
 
 function rangeControl(
@@ -84,6 +164,25 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 	controller: {
 		groups: [
 			{
+				id: 'preset',
+				title: 'Preset',
+				controls: [
+					{
+						id: 'preset',
+						kind: 'select' as const,
+						label: '프리셋',
+						defaultValue: 'basic',
+						options: [
+							{ value: 'basic', label: '기본' },
+							{ value: 'focused', label: '집중' },
+							{ value: 'diffused', label: '확산' },
+							{ value: 'upperAxis', label: '상단 축' },
+							{ value: 'lowerAxis', label: '하단 축' },
+						],
+					},
+				],
+			},
+			{
 				id: 'ray-palette',
 				title: 'Ray Palette',
 				controls: [
@@ -112,18 +211,6 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 						'광선 색상 5',
 						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor5,
 					),
-					colorControl(
-						'rayBackgroundColor',
-						'배경 색상',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayBackgroundColor,
-					),
-					rangeControl(
-						'paletteShift',
-						'팔레트 위상',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.paletteShift,
-						0,
-						4,
-					),
 					rangeControl(
 						'paletteDrift',
 						'팔레트 위상 속도',
@@ -137,11 +224,6 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 				id: 'rays',
 				title: 'Rays',
 				controls: [
-					colorControl(
-						'bloomColor',
-						'블룸 색상',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.bloomColor,
-					),
 					rangeControl(
 						'rayBloom',
 						'블룸 강도',
@@ -153,13 +235,6 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 						'rayIntensity',
 						'광선 강도',
 						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayIntensity,
-						0,
-						1,
-					),
-					rangeControl(
-						'rayDensity',
-						'광선 밀도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayDensity,
 						0,
 						1,
 					),
@@ -177,86 +252,20 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 						0,
 						1,
 					),
+					// 🔴 최소가 0.1이라 정지가 불가능하다 — 정지 배경이 필요해지면 이 하한을 먼저 본다.
 					rangeControl(
-						'rayMidIntensity',
-						'중앙광 강도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayMidIntensity,
-						0,
-						1,
+						'speed',
+						'속도',
+						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.speed,
+						0.1,
+						1.4,
 					),
-					rangeControl('speed', '속도', LINEAR_FLUTED_GLASS_DEFAULT_INPUT.speed, 0, 2),
 					rangeControl(
 						'rayScale',
 						'광선 스케일',
 						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayScale,
-						0.1,
-						2,
-					),
-					rangeControl(
-						'rayRotation',
-						'광선 기울기',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayRotation,
-						-180,
-						180,
-						1,
-						{ precision: 0, unit: '°' },
-					),
-					rangeControl(
-						'frameOffsetMs',
-						'프레임 오프셋',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.frameOffsetMs,
-						0,
-						1000,
-						1,
-						{ precision: 0, unit: 'ms' },
-					),
-				],
-			},
-			{
-				id: 'pulse',
-				title: 'Pulse',
-				controls: [
-					rangeControl(
-						'axisFalloff',
-						'축 감쇠',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.axisFalloff,
-						0,
-						3,
-					),
-					rangeControl(
-						'flowSpeed',
-						'흐름 속도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.flowSpeed,
-						0,
-						1,
-					),
-					rangeControl(
-						'pulseIntensity',
-						'펄스 강도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.pulseIntensity,
-						0,
-						2,
-					),
-					rangeControl(
-						'pulseSpeed',
-						'펄스 속도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.pulseSpeed,
-						0,
-						2,
-					),
-					rangeControl(
-						'pulseDensity',
-						'펄스 밀도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.pulseDensity,
-						0.1,
-						4,
-					),
-					rangeControl(
-						'pulseWidth',
-						'펄스 폭',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.pulseWidth,
-						0.01,
 						0.5,
+						1.5,
 					),
 				],
 			},
@@ -268,7 +277,7 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 						'glassSize',
 						'플루트 크기',
 						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassSize,
-						0,
+						0.1,
 						1,
 					),
 					rangeControl(
@@ -278,16 +287,9 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 						0.2,
 						3,
 					),
-					rangeControl(
-						'glassDistortion',
-						'유리 왜곡',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassDistortion,
-						0,
-						1,
-					),
 					{
 						id: 'distortionShape',
-						kind: 'select',
+						kind: 'select' as const,
 						label: '왜곡 형태',
 						defaultValue: LINEAR_FLUTED_GLASS_DEFAULT_INPUT.distortionShape,
 						options: [
@@ -297,125 +299,6 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 							{ value: 'lens', label: 'Lens' },
 						],
 					},
-					rangeControl(
-						'glassAngle',
-						'플루트 기울기',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassAngle,
-						-180,
-						180,
-						1,
-						{
-							precision: 0,
-							unit: '°',
-						},
-					),
-					rangeControl(
-						'glassEdgeSoftness',
-						'경계 부드러움',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassEdgeSoftness,
-						0,
-						1,
-					),
-					rangeControl(
-						'glassBlur',
-						'블러',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassBlur,
-						0,
-						1,
-					),
-					rangeControl(
-						'glassScattering',
-						'산란',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassScattering,
-						0,
-						1,
-					),
-					rangeControl(
-						'glassHighlights',
-						'하이라이트',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassHighlights,
-						0,
-						1,
-					),
-					rangeControl(
-						'glassShadows',
-						'그림자',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassShadows,
-						0,
-						1,
-					),
-				],
-			},
-			{
-				id: 'glass-motion',
-				title: 'Glass Motion',
-				controls: [
-					{
-						id: 'glassOriginOffset',
-						kind: 'pad',
-						label: '유리 원점 오프셋',
-						defaultValue: LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassOriginOffset,
-					},
-					rangeControl(
-						'glassOffset',
-						'플루트 오프셋',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassOffset,
-						-2,
-						2,
-					),
-					rangeControl(
-						'glassSpeed',
-						'플루트 속도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassSpeed,
-						-1,
-						1,
-					),
-					{
-						id: 'glassDrift',
-						kind: 'pad',
-						label: '드리프트 범위',
-						defaultValue: LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassDrift,
-					},
-					rangeControl(
-						'glassDriftSpeedX',
-						'드리프트 X 속도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassDriftSpeedX,
-						0,
-						2,
-					),
-					rangeControl(
-						'glassDriftSpeedY',
-						'드리프트 Y 속도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassDriftSpeedY,
-						0,
-						2,
-					),
-				],
-			},
-			{
-				id: 'position',
-				title: 'Position',
-				controls: [
-					{
-						id: 'source',
-						kind: 'pad',
-						label: '광원 축',
-						defaultValue: LINEAR_FLUTED_GLASS_DEFAULT_INPUT.source,
-					},
-					rangeControl(
-						'sourceOffsetX',
-						'광원 X 오프셋',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.sourceOffsetX,
-						-2,
-						2,
-					),
-					rangeControl(
-						'sourceOffsetY',
-						'광원 Y 오프셋',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.sourceOffsetY,
-						-2,
-						2,
-					),
 				],
 			},
 		],

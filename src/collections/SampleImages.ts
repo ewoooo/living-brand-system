@@ -45,6 +45,15 @@ export const SampleImages: CollectionConfig = {
 			localized: true,
 		},
 		{
+			name: 'group',
+			type: 'text',
+			label: '분류',
+			admin: {
+				description:
+					'스튜디오 자산 브라우저의 태그 필터에 쓰는 분류입니다(예: 엔진). 비워 두면 필터에 나타나지 않습니다.',
+			},
+		},
+		{
 			name: 'lineArt',
 			type: 'checkbox',
 			defaultValue: false,
