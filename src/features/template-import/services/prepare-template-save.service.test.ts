@@ -129,4 +129,37 @@ describe('prepareTemplateSave', () => {
 		expect(req.payload.find).not.toHaveBeenCalled()
 		expect(req.payload.update).not.toHaveBeenCalled()
 	})
+
+	it('배경 형식을 모두 끄면 발행을 거부하고, 정책이 없으면 통과한다', async () => {
+		const req = buildRequest()
+
+		await expect(
+			prepareTemplateSave({
+				data: {
+					_status: 'published',
+					baseHtml: '<p data-node-id="name">이름</p>',
+					html: '<p data-node-id="name">이름</p>',
+					overrides: {},
+					width: 1200,
+					height: 800,
+					backgroundPolicy: { types: [] },
+				},
+				req: req as never,
+			}),
+		).resolves.toContain('배경 형식')
+
+		await expect(
+			prepareTemplateSave({
+				data: {
+					_status: 'published',
+					baseHtml: '<p data-node-id="name">이름</p>',
+					html: '<p data-node-id="name">이름</p>',
+					overrides: {},
+					width: 1200,
+					height: 800,
+				},
+				req: req as never,
+			}),
+		).resolves.toBeNull()
+	})
 })
