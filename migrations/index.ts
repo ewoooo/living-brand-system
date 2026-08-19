@@ -71,6 +71,7 @@ import * as migration_20260818_093907_remove_plugins_collection from './20260818
 import * as migration_20260818_102721_sample_image_line_art from './20260818_102721_sample_image_line_art';
 import * as migration_20260819_054538_sample_image_group from './20260819_054538_sample_image_group';
 import * as migration_20260819_084217_ci_lockup_controller_fields from './20260819_084217_ci_lockup_controller_fields';
+import * as migration_20260819_085700_ci_lockup_axis_defaults from './20260819_085700_ci_lockup_axis_defaults';
 
 export const migrations = [
   {
@@ -436,6 +437,11 @@ export const migrations = [
   {
     up: migration_20260819_084217_ci_lockup_controller_fields.up,
     down: migration_20260819_084217_ci_lockup_controller_fields.down,
-    name: '20260819_084217_ci_lockup_controller_fields'
+    name: '20260819_084217_ci_lockup_controller_fields',
+  },
+  {
+    up: migration_20260819_085700_ci_lockup_axis_defaults.up,
+    down: migration_20260819_085700_ci_lockup_axis_defaults.down,
+    name: '20260819_085700_ci_lockup_axis_defaults'
   },
 ];

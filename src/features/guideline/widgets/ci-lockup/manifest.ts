@@ -139,8 +139,12 @@ export const LANGUAGE_VALUES = LANGUAGE.options.map((option) => option.value)
 export const SUBSIDIARY_VALUES = SUBSIDIARY.options.map((option) => option.value)
 export const BRANCH_VALUES = BRANCH.options.map((option) => option.value)
 
-/** admin이 알약에서 뺄 수 있는 컨트롤 목록. 🔑 schema와 registry가 같은 목록을 읽는다. */
-export const CI_LOCKUP_CONTROL_IDS = [
+/**
+ * 축 전체의 순서 있는 목록. 🔑 **schema·registry·알약이 같은 목록을 읽는다** — 축이 늘면
+ * admin 필드와 제한 변환이 저절로 따라온다. 축마다 필요한 것은 둘이다(사용자 지정 2026-08-19):
+ * ① 페이지를 처음 열었을 때의 상태 ② 그 축을 알약에 낼지.
+ */
+export const CI_LOCKUP_CONTROLS = [
 	SUBSIDIARY_ON,
 	SUBSIDIARY,
 	BRANCH_ON,
@@ -151,4 +155,10 @@ export const CI_LOCKUP_CONTROL_IDS = [
 	MONO,
 	CLEAR_SPACE,
 	MEASURED,
-].map((control) => ({ value: control.id, label: control.label }))
+] as const
+
+/** admin이 알약에서 뺄 수 있는 컨트롤 목록. */
+export const CI_LOCKUP_CONTROL_IDS = CI_LOCKUP_CONTROLS.map((control) => ({
+	value: control.id,
+	label: control.label,
+}))

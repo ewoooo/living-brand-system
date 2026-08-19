@@ -616,15 +616,89 @@ export interface ImageLeaf {
  */
 export interface CiLockupWidget {
   /**
-   * 자회사 CI를 켠 상태로 엽니다.
+   * 초기값 — 자회사.
    */
   subsidiaryOn?: boolean | null;
   /**
-   * 해외지사 CI를 켠 상태로 엽니다. 자회사가 켜져 있어야 합니다.
+   * 초기값 — 자회사명.
+   */
+  subsidiary?:
+    | (
+        | '현대중공업'
+        | '현대삼호'
+        | '현대마린솔루션'
+        | '현대마린엔진'
+        | '현대이엔티'
+        | '현대오일뱅크'
+        | '현대케미칼'
+        | '현대쉘베이스오일'
+        | '현대오씨아이'
+        | '현대이앤에프'
+        | '현대일렉트릭'
+        | '현대에너지솔루션'
+        | '현대사이트솔루션'
+        | '현대로보틱스'
+        | '현대스포츠'
+        | '하이드로젠'
+        | '건설기계'
+        | '한국조선해양'
+      )
+    | null;
+  /**
+   * 초기값 — 해외지사.
    */
   branchOn?: boolean | null;
   /**
-   * 알약에서 뺄 컨트롤. 뺀 축은 위에서 정한 값에 고정됩니다(예: 자회사 섹션에서 해외지사 두 컨트롤).
+   * 초기값 — 지사명.
+   */
+  branch?:
+    | (
+        | 'EUROPE R&D CENTER'
+        | 'LONDON'
+        | 'GERMANY'
+        | 'ATHENS'
+        | 'OSLO'
+        | 'SINGAPORE'
+        | 'TOKYO'
+        | 'CHINA'
+        | 'VIETNAM'
+        | 'INDIA'
+        | 'PHILIPPINES'
+        | 'DUBAI'
+        | 'SAUDI ARABIA'
+        | 'HOUSTON'
+        | 'ATLANTA'
+        | 'PANAMA'
+        | 'BRAZIL'
+        | 'SOUTH AFRICA'
+      )
+    | null;
+  /**
+   * 초기값 — 꼴.
+   */
+  form?: ('horizontal' | 'horizontalA' | 'horizontalB' | 'vertical') | null;
+  /**
+   * 초기값 — 언어.
+   */
+  language?: ('ko' | 'en' | 'hd') | null;
+  /**
+   * 초기값 — 색상 표현.
+   */
+  colorType?: ('fullColor' | 'whiteWordmark' | 'mono') | null;
+  /**
+   * 초기값 — 단색 색상.
+   */
+  mono?: ('BLACK' | 'WHITE') | null;
+  /**
+   * 초기값 — 클리어스페이스.
+   */
+  clearSpace?: ('off' | 'normal' | 'exception') | null;
+  /**
+   * 초기값 — 치수.
+   */
+  measured?: boolean | null;
+  /**
+   * 알약에서 뺄 축. 뺀 축은 위 초기값에 고정됩니다(예: 자회사 섹션에서 해외지사·지사명).
    */
   hiddenControls?:
     | (
@@ -2416,7 +2490,15 @@ export interface ImageLeafSelect<T extends boolean = true> {
  */
 export interface CiLockupWidgetSelect<T extends boolean = true> {
   subsidiaryOn?: T;
+  subsidiary?: T;
   branchOn?: T;
+  branch?: T;
+  form?: T;
+  language?: T;
+  colorType?: T;
+  mono?: T;
+  clearSpace?: T;
+  measured?: T;
   hiddenControls?: T;
   id?: T;
   blockName?: T;
