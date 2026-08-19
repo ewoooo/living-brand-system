@@ -14,6 +14,7 @@ import type {
 	TemplateBackgroundPolicy,
 	TemplateBackgroundType,
 } from '@/features/template-customization/domain/template-studio-config'
+import { toggleAllowedId } from './template-layers'
 
 const TYPE_ROWS: readonly { value: TemplateBackgroundType; label: string }[] = [
 	{ value: 'color', label: '색' },
@@ -26,19 +27,9 @@ type Props = ComponentProps<JSONFieldClientComponent> & {
 }
 
 function readPolicy(value: unknown): TemplateBackgroundPolicy {
-	return value && typeof value === 'object' ? (value as TemplateBackgroundPolicy) : {}
-}
-
-/**
- * 목록을 켜고 끈다. 전부 켜진 상태는 목록 자체를 지워 "전부 허용"으로 되돌린다.
- * 저장값에 현재 보이지 않는 id(미발행 등)가 섞여 있을 수 있으므로 `all`로 먼저 걸러야
- * length 비교가 "보이는 옵션을 전부 켰다"를 정확히 뜻한다 — 안 그러면 그 값들이 다 켜진
- * 것으로 잘못 세어져 하나를 꺼도 "전부 허용"으로 조용히 넓어진다.
- */
-function toggleId<T>(current: readonly T[] | undefined, all: readonly T[], id: T): T[] | undefined {
-	const base = (current ?? all).filter((value) => all.includes(value))
-	const next = base.includes(id) ? base.filter((value) => value !== id) : [...base, id]
-	return next.length === all.length ? undefined : next
+	const policy = value && typeof value === 'object' ? (value as TemplateBackgroundPolicy) : {}
+	// REST/local API로만 도달 가능한 malformed shape(예: types가 배열이 아님) 방어.
+	return Array.isArray(policy.types) ? policy : { ...policy, types: undefined }
 }
 
 export function TemplateBackgroundPolicyField({ path, graphicOptions = [] }: Props) {
@@ -121,7 +112,7 @@ export function TemplateBackgroundPolicyField({ path, graphicOptions = [] }: Pro
 										variant={on ? 'muted' : 'outline'}
 										onClick={() =>
 											patch({
-												imageConfigIds: toggleId(
+												imageConfigIds: toggleAllowedId(
 													policy.imageConfigIds,
 													all,
 													profile.id,
@@ -160,7 +151,7 @@ export function TemplateBackgroundPolicyField({ path, graphicOptions = [] }: Pro
 										variant={on ? 'muted' : 'outline'}
 										onClick={() =>
 											patch({
-												graphicConfigIds: toggleId(
+												graphicConfigIds: toggleAllowedId(
 													policy.graphicConfigIds,
 													all,
 													option.value,

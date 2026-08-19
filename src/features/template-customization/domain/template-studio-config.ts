@@ -144,7 +144,7 @@ export type PublishedHtmlTemplate = {
 
 /**
  * 클라이언트(Provider·Canvas)로 건너가는 published 템플릿 뷰.
- * Admin 정책(exportPolicy)은 derive 입력일 뿐이므로 타입에서 제외해
+ * Admin 정책(exportPolicy·backgroundPolicy)은 derive 입력일 뿐이므로 타입에서 제외해
  * RSC payload로 직렬화될 수 없게 한다.
  */
 export type PublishedTemplateView = Pick<

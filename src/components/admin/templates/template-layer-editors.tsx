@@ -11,6 +11,8 @@ import {
 	FieldError,
 	FieldGroup,
 	FieldLabel,
+	FieldLegend,
+	FieldSet,
 	FieldTitle,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -38,7 +40,13 @@ import { IDENTITY_TRANSFORM, isIdentityTransform } from '@/lib/template-image-tr
 import type { TemplateLayerAccess, TemplateNodeConfig, TemplateSlotSpec } from '@/types/template'
 import { BrandColorSwatches, usePublishedBrandColors } from './brand-color-swatches'
 import type { ImageTransform } from './image-transform-gestures'
-import { canAssignImage, IMAGE_CONFIG_KEYS, type LayerRow, typeLabel } from './template-layers'
+import {
+	canAssignImage,
+	IMAGE_CONFIG_KEYS,
+	type LayerRow,
+	toggleAllowedId,
+	typeLabel,
+} from './template-layers'
 import { VectorLayerEditor } from './vector-layer-editor'
 
 function usePublishedImageProfiles() {
@@ -443,19 +451,12 @@ function ImageSlotSpecEditor({
 				</Select>
 			</Field>
 			{imageInput.profileId ? null : (
-				<Field>
-					<FieldLabel htmlFor="image-slot-allowed-profiles">
-						허용 프로파일 — 고르지 않으면 전부
-					</FieldLabel>
-					<div id="image-slot-allowed-profiles" className="flex flex-wrap gap-2">
+				<FieldSet className="gap-2">
+					<FieldLegend variant="label">허용 프로파일 — 고르지 않으면 전부</FieldLegend>
+					<div className="flex flex-wrap gap-2">
 						{profiles?.map((profile) => {
 							const all = profiles.map((candidate) => candidate.id)
 							const on = (imageInput.allowedProfileIds ?? all).includes(profile.id)
-							const next = on
-								? (imageInput.allowedProfileIds ?? all).filter(
-										(id) => id !== profile.id,
-									)
-								: [...(imageInput.allowedProfileIds ?? all), profile.id]
 							return (
 								<Button
 									key={profile.id}
@@ -466,8 +467,11 @@ function ImageSlotSpecEditor({
 									onClick={() =>
 										onChange({
 											...imageInput,
-											allowedProfileIds:
-												next.length === all.length ? undefined : next,
+											allowedProfileIds: toggleAllowedId(
+												imageInput.allowedProfileIds,
+												all,
+												profile.id,
+											),
 										})
 									}
 								>
@@ -476,7 +480,7 @@ function ImageSlotSpecEditor({
 							)
 						})}
 					</div>
-				</Field>
+				</FieldSet>
 			)}
 			<Field>
 				<FieldLabel htmlFor="image-slot-transform">창작자 변형 허용</FieldLabel>
