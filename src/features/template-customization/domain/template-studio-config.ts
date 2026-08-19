@@ -37,9 +37,7 @@ import type {
 	StudioRuntimeManifest,
 } from '@/modules/studio-controller/controller-definition'
 import {
-	applyControllerRestrictions,
 	parseStudioControllerConfig,
-	projectPayloadControllerRestrictions,
 	resolveControllerPresentation,
 } from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfig } from '@/types/template'
@@ -139,16 +137,14 @@ export type PublishedHtmlTemplate = {
 	width: number
 	height: number
 	templateVersion: string
-	controllerRestrictions?: unknown
 	exportPolicy?: unknown
-	controllerPresentation?: unknown
 	backgroundPolicy?: TemplateBackgroundPolicy
 	previewImage?: StudioPreviewImage
 }
 
 /**
  * 클라이언트(Provider·Canvas)로 건너가는 published 템플릿 뷰.
- * Admin 정책(controllerRestrictions·exportPolicy)은 derive 입력일 뿐이므로 타입에서 제외해
+ * Admin 정책(exportPolicy)은 derive 입력일 뿐이므로 타입에서 제외해
  * RSC payload로 직렬화될 수 없게 한다.
  */
 export type PublishedTemplateView = Pick<
@@ -711,10 +707,7 @@ export function deriveTemplateStudioConfig(
 	]
 
 	const runtimeManifest = getTemplateRuntimeManifest(template)
-	const controllerGroups = applyControllerRestrictions(
-		runtimeManifest.controller.groups,
-		projectPayloadControllerRestrictions(template.controllerRestrictions),
-	)
+	const controllerGroups = runtimeManifest.controller.groups
 
 	const config: TemplateStudioConfig = {
 		studio: 'template',
@@ -729,10 +722,8 @@ export function deriveTemplateStudioConfig(
 		controller: {
 			groups: controllerGroups,
 		},
-		controllerPresentation: resolveControllerPresentation(
-			controllerGroups,
-			template.controllerPresentation,
-		),
+		// 어드민 입력을 없앤 뒤에도 창작자 사이드바가 이 값을 읽으므로 기본값을 계산해 싣는다.
+		controllerPresentation: resolveControllerPresentation(controllerGroups, undefined),
 		previewImage: template.previewImage,
 		template: {
 			slots,

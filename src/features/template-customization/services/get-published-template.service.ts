@@ -58,8 +58,6 @@ export async function getPublishedTemplate(
 		id: template.id,
 		name: template.name,
 		templateVersion: template.updatedAt,
-		controllerRestrictions: template.controllerRestrictions,
-		controllerPresentation: template.controllerPresentation,
 		exportPolicy: template.exportPolicy,
 		backgroundPolicy: template.backgroundPolicy as PublishedHtmlTemplate['backgroundPolicy'],
 		previewImage: toStudioPreviewImage(template.previewImage),

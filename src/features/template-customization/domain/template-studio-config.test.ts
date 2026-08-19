@@ -261,87 +261,13 @@ describe('deriveTemplateStudioConfig', () => {
 		).toThrow('maxLength')
 	})
 
-	it('Restrictions와 Admin 그룹 표현을 분리해 Effective Config에 적용한다', () => {
-		const config = deriveTemplateStudioConfig({
-			...template,
-			controllerPresentation: {
-				groups: [{ groupId: 'text', defaultOpen: false }],
-			},
-			controllerRestrictions: {
-				controls: [
-					{
-						controlId: 'text:1:1',
-						availability: 'readonly',
-						defaultValue: '고정 제목',
-						maxLength: 10,
-					},
-					{
-						controlId: 'text.color',
-						availability: 'readonly',
-						defaultValue: '#112233',
-					},
-					{
-						controlId: 'background.type',
-						availability: 'readonly',
-						defaultValue: 'color',
-						optionValues: ['color'],
-					},
-					{
-						controlId: 'background.color',
-						availability: 'disabled',
-						defaultValue: '#ffffff',
-					},
-				],
-			},
-		})
+	it('Controller 표현은 어드민 입력 없이 기본값으로 채워진다', () => {
+		const config = deriveTemplateStudioConfig(template)
 
-		expect(config.controller.groups[0]).toMatchObject({
-			title: 'Text',
-		})
-		expect(config.controllerPresentation?.groups[0]).toEqual({
-			groupId: 'text',
-			collapsible: true,
-			defaultOpen: false,
-		})
-		expect(config.controller.groups[0]?.controls[0]).toMatchObject({
-			availability: 'readonly',
-			defaultValue: '고정 제목',
-			maxLength: 10,
-		})
-		expect(config.controller.groups[1]?.controls[0]).toMatchObject({
-			availability: 'readonly',
-			options: [{ value: 'color', label: 'Color' }],
-		})
-		expect(findTemplateControl(config, 'text.color')).toMatchObject({
-			availability: 'readonly',
-			defaultValue: '#112233',
-		})
-		expect(findTemplateControl(config, 'background.color')).toMatchObject({
-			availability: 'disabled',
-			defaultValue: '#ffffff',
-		})
-	})
-
-	it('sparse Restrictions는 쓰지 않은 Definition 필드를 Runtime Manifest에서 상속한다', () => {
-		const config = deriveTemplateStudioConfig({
-			...template,
-			controllerRestrictions: {
-				controls: [
-					{
-						controlId: 'text:1:1',
-						availability: 'readonly',
-						maxLength: 10,
-					},
-				],
-			},
-		})
-
-		expect(findTemplateControl(config, 'text:1:1')).toMatchObject({
-			label: '제목',
-			defaultValue: '기본 제목',
-			availability: 'readonly',
-			maxLength: 10,
-		})
+		expect(config.controllerPresentation?.groups).toEqual([
+			{ groupId: 'text', collapsible: true, defaultOpen: true },
+			{ groupId: 'background', collapsible: true, defaultOpen: true },
+		])
 	})
 
 	it('배경 정책이 허용 이미지 프로파일을 배경 슬롯에 싣는다', () => {

@@ -14,8 +14,8 @@ function namedField(fields: Field[], name: string): Field & { name: string } {
 }
 
 describe('studioControllerRestrictionsField', () => {
-	it('세 Studio가 full Controller를 저장하지 않고 같은 Restrictions만 저작한다', () => {
-		for (const collection of [ImageProfiles, Templates, GraphicProfiles]) {
+	it('두 Profile Studio가 full Controller를 저장하지 않고 같은 Restrictions만 저작한다', () => {
+		for (const collection of [ImageProfiles, GraphicProfiles]) {
 			const restrictions = namedField(collection.fields, 'controllerRestrictions')
 			expect(restrictions).toMatchObject({ type: 'json' })
 			expect('admin' in restrictions ? restrictions.admin : undefined).toHaveProperty(
@@ -25,6 +25,19 @@ describe('studioControllerRestrictionsField', () => {
 				collection.fields.some((field) => 'name' in field && field.name === 'controller'),
 			).toBe(false)
 		}
+	})
+
+	it('템플릿에는 Controller 제한·표현 필드를 두지 않는다 — 레이어와 배경 설정이 소유한다', () => {
+		const findField = (name: string) =>
+			Templates.fields.find((candidate) => 'name' in candidate && candidate.name === name)
+		expect(findField('controllerRestrictions')).toBeUndefined()
+		expect(findField('controllerPresentation')).toBeUndefined()
+		expect(namedField(Templates.fields, 'backgroundPolicy')).toBeDefined()
+	})
+
+	it('프로파일 컬렉션에는 그대로 남는다 — 거기엔 파생 순환이 없다', () => {
+		expect(namedField(GraphicProfiles.fields, 'controllerRestrictions')).toBeDefined()
+		expect(namedField(ImageProfiles.fields, 'controllerRestrictions')).toBeDefined()
 	})
 
 	it('Image Profile은 legacy capability 필드를 저장하지 않는다', () => {

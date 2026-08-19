@@ -15,8 +15,6 @@ export type AgentTemplateDocument = Pick<
 	| 'updatedAt'
 	| 'width'
 > & {
-	controllerRestrictions?: unknown
-	controllerPresentation?: unknown
 	backgroundPolicy?: unknown
 }
 
@@ -46,8 +44,6 @@ function publishedTemplateQuery(user: unknown) {
 			height: true,
 			exportPolicy: true,
 			updatedAt: true,
-			controllerRestrictions: true,
-			controllerPresentation: true,
 			backgroundPolicy: true,
 		},
 	} as const
