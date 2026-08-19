@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
-import { TemplateGenerator } from '@/components/studio/template/template-generator'
+import { TemplateGeneratorClient } from '@/components/studio/template/template-generator-client'
 import { getCreateNavigation } from '@/features/template-customization/services/get-create-navigation.service'
 import { getTemplateStudio } from '@/features/template-customization/services/get-template-studio.service'
 import { requireUser } from '@/lib/request-auth'
@@ -28,7 +28,7 @@ export default async function CreateTemplatePage({
 			description="열린 슬롯을 편집하고 미리보기를 확인한 뒤 원하는 형식으로 내보냅니다."
 			hideHeading
 		>
-			<TemplateGenerator
+			<TemplateGeneratorClient
 				key={studio.template.id}
 				config={studio.config}
 				// 분류는 URL이 아니라 템플릿 자신이 갖는다 — 이 템플릿을 담고 있는 카테고리에서 읽는다.
