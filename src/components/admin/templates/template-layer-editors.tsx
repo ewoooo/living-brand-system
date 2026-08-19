@@ -24,7 +24,6 @@ import {
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import { generateOneText } from '@/features/generate-text/services/generate-text.client'
 import {
 	type ImageAspectRatio,
 	nearestImageAspectRatio,
@@ -69,49 +68,6 @@ function AiPopupTrigger({ render }: { render: ComponentProps<typeof Popup>['rend
 			}
 			render={render}
 		/>
-	)
-}
-
-function AiTextForm({ rule, onApply }: { rule?: string; onApply: (text: string) => void }) {
-	const [prompt, setPrompt] = useState('')
-	const [loading, setLoading] = useState(false)
-
-	async function run() {
-		const trimmed = prompt.trim()
-		if (!trimmed || loading) return
-		setLoading(true)
-		try {
-			const text = await generateOneText(trimmed, rule)
-			if (text) onApply(text)
-			else toast.error('생성 실패 — 프롬프트를 바꾸거나 잠시 후 다시 시도하세요.')
-		} finally {
-			setLoading(false)
-		}
-	}
-
-	return (
-		<FieldGroup data-popup-prevent-close className="w-64 gap-2 p-2">
-			<Field>
-				<FieldLabel htmlFor="template-ai-text-prompt">AI 텍스트 생성</FieldLabel>
-				<Textarea
-					id="template-ai-text-prompt"
-					value={prompt}
-					onChange={(event) => setPrompt(event.target.value)}
-					rows={3}
-					placeholder="예: 12자 이내 캐치프레이즈, 존댓말"
-				/>
-			</Field>
-			<Button
-				type="button"
-				variant="tint"
-				size="sm"
-				disabled={loading || !prompt.trim()}
-				onClick={run}
-			>
-				{loading && <Spinner data-icon="inline-start" />}
-				{loading ? '생성 중...' : '생성'}
-			</Button>
-		</FieldGroup>
 	)
 }
 
@@ -720,19 +676,6 @@ export function TemplateLayerEditor({
 							rows={2}
 						/>
 					</Field>
-					<div>
-						<AiPopupTrigger
-							render={({ close }) => (
-								<AiTextForm
-									rule={config.input?.aiInstruction}
-									onApply={(text) => {
-										onCommit({ text })
-										close()
-									}}
-								/>
-							)}
-						/>
-					</div>
 				</FieldGroup>
 				{access !== 'hidden' && (
 					<SlotSpecEditor

@@ -16,7 +16,6 @@ Payload collection REST, GraphQL, 인증 endpoint는 Payload가 소유하므로 
 | Graphic | `GET` | `/api/studio/graphic` | 로그인 사용자 |
 | Create | `GET` | `/api/studio/template` | same-origin |
 | Image | `POST` | `/api/admin/generate-image` | Manager/Admin |
-| Create | `POST` | `/api/generate-text` | 로그인 사용자 |
 | AI Chat | `POST` | `/api/agent-chat` | 로그인 사용자 |
 | AI Chat | `POST` | `/api/agent-chat/reaction` | 로그인 사용자 |
 | Review | `POST` | `/api/check` | 로그인 사용자 |
