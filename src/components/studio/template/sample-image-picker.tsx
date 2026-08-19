@@ -9,6 +9,9 @@ import { useTemplateStudio } from '@/features/template-customization/hooks/use-t
 import type { SampleImageOption } from '@/features/template-customization/services/list-sample-images.client'
 import { cn } from '@/lib/utils'
 
+/** 빈 목록의 신원을 고정한다 — 렌더마다 새 배열을 만들면 useMemo가 매번 다시 돈다. */
+const NO_OPTIONS: readonly SampleImageOption[] = []
+
 /**
  * 자산 브라우저 본문의 샘플 이미지 카드 그리드 — 킷(Controller.Browser)이 크롬을, 이 컴포넌트가 도메인을 갖는다.
  * 배경과 이미지 슬롯이 같은 목록을 쓰므로 고른 뒤 무엇을 하는지는 onSelect가 갖는다.
@@ -31,18 +34,20 @@ export function SampleImagePicker({
 		load()
 	}, [load])
 
-	const options = sampleImages.data ?? []
+	// `?? []`를 렌더 본문에 두면 매 렌더마다 새 배열이라 아래 useMemo가 memo 구실을 못 한다.
+	const options = sampleImages.data ?? NO_OPTIONS
 	// 분류 목록은 값에서 역산한다 — 분류 테이블이 없어도 태그 필터가 성립한다(BrandIcons와 같다).
 	const groups = useMemo(
-		() => [...new Set(options.map((option) => option.group).filter(Boolean))].sort(),
+		() =>
+			[...new Set(options.flatMap((option) => (option.group ? [option.group] : [])))].sort(),
 		[options],
 	)
+	// 필터가 걸린 목록을 훑으므로 배열 대신 Set으로 조회한다 — 선택이 늘어도 비용이 안 곱해진다.
+	const selected = useMemo(() => new Set(selectedGroups), [selectedGroups])
 	const visible = useMemo(
 		() =>
-			selectedGroups.length === 0
-				? options
-				: options.filter((option) => selectedGroups.includes(option.group)),
-		[options, selectedGroups],
+			selected.size === 0 ? options : options.filter((option) => selected.has(option.group)),
+		[options, selected],
 	)
 
 	// 목록이 언제 오는지는 이 컴포넌트만 안다 — 빈 자리 안내도 여기가 갖는다(부모는 목록을 모른다).
