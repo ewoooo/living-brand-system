@@ -1,7 +1,7 @@
 'use client'
 
 import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { MORPH, MORPH_EASING, MORPH_MS, reducedMotion } from './motion'
+import { MORPH, morph, reducedMotion } from './motion'
 import { type DiagramSpec, type DiagramTrack, diagramSpec, type Lockup } from './rules'
 import { CapLine, SymbolMark } from './view'
 
@@ -23,8 +23,16 @@ const LABEL_ROW = 44
 const GAUGE_COL = 64
 /** 치수선·게이지 색은 브랜드 색을 **이름으로** 찾는다(생 팔레트 금지). */
 const GUIDE_COLOR_NAME = 'HD HERITAGE GREEN'
-/** 면(밴드)의 투명도. 정본 도판의 연한 초록 띠. */
-const BAND_OPACITY = 0.12
+/**
+ * 면(밴드)의 투명도. 정본 도판의 연한 초록 띠.
+ * 🔴 판 색으로 갈린다 — 검은 판에서 0.12는 아예 안 보인다(사용자 지적 2026-08-19). 어두운 면에서는
+ *    같은 초록이 배경과 겹쳐 대비를 잃으므로 알파로 벌린다. 색을 바꾸지 않는 이유는 치수선·라벨과
+ *    **같은 초록이어야** 「이 면과 이 선이 같은 것을 말한다」가 읽히기 때문이다.
+ * 🔴 갈리는 기준은 테마가 아니라 **판**이다 — 판 색은 색상 표현이 정하고 사용자의 라이트/다크
+ *    설정을 따르지 않는다. 그래서 테마 변형이 아니라 이 인자로 갈라야 한다(`surface.ts` 주석,
+ *    `visual-vocabulary.test.ts`가 테마 변형 사용을 막는다).
+ */
+const bandOpacity = (tone: 'light' | 'dark') => (tone === 'light' ? 0.12 : 0.32)
 
 /**
  * 첫 렌더에는 전환을 끈다 — 마운트 순간 CSS 전환이 걸려 있으면 초기 상태가 흘러 들어온다.
@@ -73,21 +81,13 @@ function useDiagramFlip() {
 			const moved = Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5
 			const resized = size && (Math.abs(dw) > 0.5 || Math.abs(dh) > 0.5)
 			if (!moved && !resized) continue
-			// 전환 중 재전환: 앞선 것을 지우고 새 좌표로 다시 잇는다.
-			for (const animation of node.getAnimations()) animation.cancel()
-			node.animate(
-				[
-					{
-						transform: `translate(${dx}px, ${dy}px)`,
-						...(resized ? { width: `${before.w}px`, height: `${before.h}px` } : null),
-					},
-					{
-						transform: 'none',
-						...(resized ? { width: `${now.w}px`, height: `${now.h}px` } : null),
-					},
-				],
-				{ duration: MORPH_MS, easing: MORPH_EASING },
-			)
+			// 전환 중 재전환: `morph`가 앞선 FLIP을 지우고 새 좌표로 다시 잇는다.
+			// 🔑 출발값만 준다 — 비행 중 측정값이 출발값으로는 오히려 옳다(지금 보이는 자리에서
+			//    이어진다). 도착값을 적지 않는 이유는 `morph` 주석에 있다.
+			morph(node, {
+				transform: `translate(${dx}px, ${dy}px)`,
+				...(resized ? { width: `${before.w}px`, height: `${before.h}px` } : null),
+			})
 		}
 	})
 
@@ -145,11 +145,7 @@ function useBlockFlip() {
 		const dx = before.x - now.x
 		const dy = before.y - now.y
 		if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return
-		for (const animation of element.getAnimations()) animation.cancel()
-		element.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], {
-			duration: MORPH_MS,
-			easing: MORPH_EASING,
-		})
+		morph(element, { transform: `translate(${dx}px, ${dy}px)` })
 	})
 
 	return node
@@ -161,12 +157,21 @@ const trackSize = (track: DiagramTrack, h: number) =>
 type Placement = { column: [number, number]; row: [number, number] }
 type Item = { placement: Placement; node: ReactNode; z: number; flow: boolean; size: boolean }
 
+/**
+ * 🔑 사방 신축 트랙. 판이 **캔버스를 꽉 채우게** 하는 장치다 — 면·선·점선이 도판 내용 폭이 아니라
+ * **캔버스 끝까지** 닿아야 하고(사용자 지정 2026-08-19), 정본 도판도 그렇게 그린다.
+ * 🔴 양쪽이 같은 신축이라 이것이 곧 가운데 정렬이다(`mx-auto`를 대신한다). 내용이 캔버스보다
+ *    넓어지면 `minWidth: max-content`가 이겨서 신축이 0으로 접히고 왼쪽부터 보인다.
+ * 🔴 `minmax(0, 1fr)`이어야 한다 — 맨 `1fr`은 최소 크기가 auto라 안의 것이 넘치면 트랙이 벌어진다.
+ */
+const FLEX = 'minmax(0, 1fr)'
+
 /** 스펙 하나를 grid 좌표로 푼다. 트랙 배열의 인덱스가 곧 grid line이라 좌표 실수가 구조적으로 안 난다. */
 function resolve(spec: DiagramSpec, h: number) {
-	const columns: string[] = []
+	const columns: string[] = [FLEX]
 	const colLine: Record<string, number> = {}
 	for (let d = 0; d < spec.gaugeLeft; d++) columns.push(`${GAUGE_COL}px`)
-	const leftGauge = (depth: number) => spec.gaugeLeft - depth
+	const leftGauge = (depth: number) => 1 + spec.gaugeLeft - depth
 	for (const track of spec.cols) {
 		if (track.id) colLine[track.id] = columns.length + 1
 		columns.push(trackSize(track, h))
@@ -174,16 +179,20 @@ function resolve(spec: DiagramSpec, h: number) {
 	const rightGaugeStart = columns.length + 1
 	for (let d = 0; d < spec.gaugeRight; d++) columns.push(`${GAUGE_COL}px`)
 	const rightGauge = (depth: number) => rightGaugeStart + depth
+	columns.push(FLEX)
+	/** 판의 오른쪽 끝 선 = 캔버스 오른쪽 끝. 전폭 마크(면·실선)가 여기까지 걸린다. */
 	const lastColumn = columns.length + 1
 
-	const rows: string[] = [`${LABEL_ROW}px`]
+	const rows: string[] = [FLEX, `${LABEL_ROW}px`]
 	const rowLine: Record<string, number> = {}
 	for (const track of spec.rows) {
 		if (track.id) rowLine[track.id] = rows.length + 1
 		rows.push(trackSize(track, h))
 	}
 	const lastRow = rows.length + 1
-	rows.push(`${LABEL_ROW}px`)
+	rows.push(`${LABEL_ROW}px`, FLEX)
+	/** 판의 아래쪽 끝 선 = 캔버스 아래 끝. 세로 점선이 여기까지 걸린다. */
+	const lastRowEdge = rows.length + 1
 
 	const [envStart, envEnd] = spec.envRows
 	const [areaStart, areaEnd] = spec.areaRows
@@ -196,10 +205,12 @@ function resolve(spec: DiagramSpec, h: number) {
 		rightGauge,
 		lastColumn,
 		lastRow,
-		envTop: 2 + envStart,
-		envBottom: 2 + envEnd + 1,
-		areaTop: 2 + areaStart,
-		areaBottom: 2 + areaEnd + 1,
+		lastRowEdge,
+		/* 신축 트랙 하나 + 라벨 행 하나가 스펙 행보다 앞에 있다. */
+		envTop: 3 + envStart,
+		envBottom: 3 + envEnd + 1,
+		areaTop: 3 + areaStart,
+		areaBottom: 3 + areaEnd + 1,
 	}
 }
 
@@ -242,9 +253,11 @@ function GapLabel({
 					style={{ borderLeft: `1px dashed ${guide}` }}
 				/>
 			) : null}
+			{/* 🔴 knockout 배경에도 판과 **같은** 전환이 필요하다 — 없으면 판 색이 흐르는 동안 이
+				배경만 즉시 갈려 라벨 상자의 윤곽이 드러난다(사용자 지적 2026-08-19). */}
 			<span
 				className="whitespace-nowrap px-1 font-body text-xs tabular-nums"
-				style={{ color: guide, background: stage }}
+				style={{ color: guide, background: stage, transition: `background-color ${MORPH}` }}
 			>
 				{Number(value.toFixed(4))}H
 			</span>
@@ -290,6 +303,8 @@ function buildItems(
 		h: number
 		guide: string
 		stage: string
+		/** 판이 밝은가 어두운가. 면의 알파가 이것으로 갈린다(`BAND_OPACITY`). */
+		tone: 'light' | 'dark'
 		motion: boolean
 		symbol: ReactNode
 		centered: boolean
@@ -306,7 +321,14 @@ function buildItems(
 		mark(
 			`band:${track.id}`,
 			{ column: [1, g.lastColumn], row: [line, line + 1] },
-			<div className="size-full" style={{ background: ctx.guide, opacity: BAND_OPACITY }} />,
+			<div
+				className="size-full"
+				style={{
+					background: ctx.guide,
+					opacity: bandOpacity(ctx.tone),
+					transition: ctx.motion ? `opacity ${MORPH}` : undefined,
+				}}
+			/>,
 			0,
 		)
 	}
@@ -334,7 +356,7 @@ function buildItems(
 		const column = g.colLine[track.id] ?? 1
 		mark(
 			`tick:${track.id}`,
-			{ column: [column, column + 1], row: [1, g.lastRow] },
+			{ column: [column, column + 1], row: [1, g.lastRowEdge] },
 			<Tick guide={ctx.guide} />,
 			2,
 		)
@@ -343,7 +365,7 @@ function buildItems(
 			`label:${track.id}`,
 			{
 				column: [column, column + 1],
-				row: below ? [g.lastRow, g.lastRow + 1] : [1, 2],
+				row: below ? [g.lastRow, g.lastRow + 1] : [2, 3],
 			},
 			<GapLabel
 				value={track.labelValue ?? track.v ?? 0}
@@ -400,7 +422,7 @@ function buildItems(
 		const column = g.colLine[track.id] ?? 1
 		items.set(`bar:${track.id}`, {
 			placement: { column: [column, column + 1], row: [g.areaTop, g.areaBottom] },
-			node: <div className="size-full" style={{ background: ctx.guide }} />,
+			node: <div className="size-full" style={{ background: 'currentColor' }} />,
 			z: 1,
 			flow: true,
 			size: true,
@@ -429,6 +451,8 @@ export function LockupDiagram({
 	lockup,
 	siblings,
 	h,
+	tone,
+	color,
 	colors,
 	stage,
 	symbolT,
@@ -438,6 +462,14 @@ export function LockupDiagram({
 	/** 같은 계층의 다른 꼴들. 🔑 그 스펙까지 만들어 정체의 **합집합**을 마운트해 둔다. */
 	siblings: Lockup[]
 	h: number
+	/** 판이 밝은가 어두운가. 🔴 판 **색**만으로는 알파를 정할 수 없어 따로 받는다. */
+	tone: 'light' | 'dark'
+	/**
+	 * 락업(글자·구분바)의 색. 🔴 도판에도 **색상 표현이 그대로 적용된다** — 도판은 락업을 치수와
+	 * 함께 보여주는 같은 락업이지, 다른 그림이 아니다. 안 넘기면 글자가 페이지 전경색을 상속해
+	 * 표현을 바꿔도 안 물든다(실제 결함이었다). 주석(치수선·라벨·면)은 `guide`가 따로 가진다.
+	 */
+	color: string
 	colors: Record<string, string>
 	/** 판 색. 라벨의 knockout 배경으로 쓴다(테마 토큰이 아니라 판이 기준이다). */
 	stage: string
@@ -456,6 +488,7 @@ export function LockupDiagram({
 			h,
 			guide,
 			stage,
+			tone,
 			motion,
 			symbol: <SymbolMark h={h} t={symbolT} colors={symbolColors} marginTop={undefined} />,
 			centered: lockup.orientation === 'vertical',
@@ -472,7 +505,7 @@ export function LockupDiagram({
 			}
 		}
 		return merged
-	}, [spec, g, siblings, lockup, h, guide, stage, motion, symbolT, symbolColors])
+	}, [spec, g, siblings, lockup, h, guide, stage, tone, motion, symbolT, symbolColors])
 
 	/* 🔴 순서를 고정한다 — 자리가 흔들리면 DOM이 재배열되어 같은 값을 잃는다.
 	   🔴 「보이는 것」과 「숨은 것」을 두 배열로 나누면 안 된다. 같은 key라도 React는 다른 자식
@@ -489,19 +522,28 @@ export function LockupDiagram({
 	}
 
 	return (
-		<div className="w-full overflow-x-auto">
-			{/* 🔑 덩어리는 판에 **수직·수평 중앙 정렬**된다(사용자 지정 2026-08-19). 정렬 때문에 생기는
-				덩어리 자신의 이동은 `useBlockFlip`이 잇는다 — 그래서 심볼을 한 자리에 못 박지 않아도
-				튀지 않고, 텍스트가 아무리 길어져도 정렬이 무너지지 않는다.
-				🔴 `w-max mx-auto`여야 한다: 들어가면 가운데, 넘치면 마진이 0으로 접혀 왼쪽부터 보인다.
-				   넘칠 때 가운데 정렬은 왼쪽을 잘라 먹는다. */}
+		/* 🔴 `h-full`이 있어야 판의 `size-full`이 캔버스 높이를 받는다 — 없으면 내용 높이가 되어
+		   세로 신축 트랙이 0으로 접히고 세로 점선이 캔버스 위아래에 못 닿는다. */
+		<div className="h-full w-full overflow-x-auto">
+			{/* 🔑 판이 **캔버스를 꽉 채운다** — 사방 신축 트랙(`FLEX`)이 남는 자리를 먹으므로 덩어리는
+				여전히 가운데에 놓이고, 면·선·점선은 캔버스 끝까지 닿는다.
+				🔴 `minWidth: max-content`가 안전망이다: 내용이 캔버스보다 넓어지면 신축이 0으로 접히고
+				   판이 내용 폭으로 자라 왼쪽부터 보인다(캔버스가 가로로 스크롤된다).
+				🔑 그래서 판 자신은 더 이상 움직이지 않는다 — `useBlockFlip`은 사실상 아무 일도 하지
+				   않고, 덩어리가 가운데 정렬 때문에 옮겨가는 것은 안쪽 FLIP이 판을 기준으로 잡는다.
+				   판이 다시 내용 폭이 되면 되살아나므로 남겨 둔다. */}
 			<div
 				ref={blockRef}
-				className="relative mx-auto grid w-max"
+				className="relative grid size-full"
 				style={{
 					gridTemplateColumns: g.columns.join(' '),
 					gridTemplateRows: g.rows.join(' '),
+					minWidth: 'max-content',
 					alignItems: 'stretch',
+					/* 🔑 색은 여기 한 번만 얹는다 — 글자·구분바가 상속하고, 주석 마크는 전부
+					   `guide`를 명시로 갖고 있어 영향을 받지 않는다. 전환은 락업과 같은 토큰이다. */
+					color,
+					transition: motion ? `color ${MORPH}` : undefined,
 				}}
 			>
 				{order.map((key) => {

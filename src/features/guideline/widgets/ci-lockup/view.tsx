@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
 import {
 	Select,
 	SelectContent,
@@ -9,12 +10,23 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { SPEC_READOUT } from '../readout'
 import { CI_STAGE_DARK, CI_STAGE_LIGHT } from '../surface'
 import { LockupDiagram } from './diagram'
-import { easeMorph, MORPH, MORPH_EASING, MORPH_MS, reducedMotion } from './motion'
+import { downloadSvg, lockupSvg } from './export-svg'
+import {
+	easeMorph,
+	MORPH,
+	MORPH_DEFAULT_MS,
+	MORPH_EASING,
+	MORPH_MS,
+	morph,
+	reducedMotion,
+	setMorphMs,
+} from './motion'
 import {
 	bearingOf,
 	branchLabel,
@@ -92,6 +104,12 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 	const [clearSpaceMode, setClearSpaceMode] = useState<ClearSpaceMode>('off')
 	/** 치수 도판. 🔴 규정을 **보여주기만** 한다 — 간격은 조정 대상이 아니다(금지규정 #9). */
 	const [measured, setMeasured] = useState(false)
+	/**
+	 * 🔴 **디버그 컨트롤.** 전환을 늘려 어디가 어긋나는지 눈으로 보기 위한 것이고 규정이 아니다.
+	 * 상태는 리렌더를 만들기 위해서만 있다 — 값의 소유자는 `motion.ts`다(라이브 바인딩).
+	 * 🔴 전환 정리가 끝나면 이 상태와 아래 「전환」 Field를 함께 지운다.
+	 */
+	const [morphMs, setMorph] = useState(MORPH_MS)
 
 	// 계층 파생 규칙은 rules.ts가 소유한다(`tierFor`) — 켜짐 종속·보관 이유가 그 주석에 있다.
 	const tier = tierFor(subOn, branchOn)
@@ -117,7 +135,8 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 		? SYMBOL_CONTOURS.map(() => hex(mono))
 		: SYMBOL_CONTOURS.map((c) => hex(c.colorName))
 	// 판은 취향이 아니라 규정이다 — 표현이 정하고 테마를 따르지 않는다(surface.ts).
-	const stage = stageTone(colorType, mono) === 'dark' ? CI_STAGE_DARK : CI_STAGE_LIGHT
+	const tone = stageTone(colorType, mono)
+	const stage = tone === 'dark' ? CI_STAGE_DARK : CI_STAGE_LIGHT
 	const clearSpace = clearSpaceFor(lockup.orientation, clearSpaceMode)
 
 	// 🔑 색을 고르는 것이 곧 단색형을 고르는 것이다 — 목록에서 색을 집으면 표현까지 따라 켜진다.
@@ -137,7 +156,10 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 					켜기가 계층을 올리고, 같은 줄의 목록이 그 계층의 내용을 정한다. 목록은 떠서 열리므로
 					(Radix Select = portal) 접혀 있을 때 자리를 먹지 않고, 접힌 상태에서도 **현재 값이
 					줄 위에 그대로 적혀 있다.** 그래서 축 3개(단계·자회사·해외지사)가 줄 2개가 된다. */}
-				<div className="flex flex-col gap-2">
+				{/* 🔴 두 줄을 **한 줄**에 둔다(사용자 지정 2026-08-19) — 같은 성격(계층 켜기 + 그 계층의
+					내용)이라 나란히 놓이는 것이 읽기 순서와 맞고, 폭이 내용만큼이라 남는 자리를
+					서로 밀어내지 않는다. 좁으면 `flex-wrap`이 줄을 나눈다. */}
+				<div className="flex flex-wrap items-start gap-2">
 					<EntityRow
 						name="자회사"
 						on={subOn}
@@ -164,7 +186,7 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 					/>
 				</div>
 
-				<div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+				<div className="flex flex-wrap items-start gap-x-6 gap-y-4">
 					{/* 🔑 슬롯은 **항상 두 개**다(가로형·세로형). 계층이 가로형A·B를 가질 때 버튼이
 						2개→3개로 늘지 않고 가로형 슬롯 안이 캡슐로 갈린다 — 계층을 올릴 때 컨트롤의
 						칸 수가 바뀌면 같은 자리를 누르던 손이 매번 다시 조준해야 한다. */}
@@ -197,7 +219,7 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 
 			<Separator />
 
-			<div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+			<div className="flex flex-col gap-4">
 				{/* 🔑 세 표현은 **같은 위계**라 슬롯 셋이 같은 실루엣·같은 폭을 갖는다. 단색형만
 					자기 칸 안에 **현재 색을 적은 목록**을 달아 색을 품는다 — 계열사 줄과 **같은 어휘**다
 					(이름 + 현재값 드롭다운). 색이 둘뿐이어도 목록으로 두면 칸 폭을 색 개수가 정하지
@@ -229,31 +251,52 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 					/>
 				</Field>
 
-				{/* 🔑 도판은 **간격 규정**을 보여준다 — 여백(클리어스페이스)과 아예 다른 규정이고
-					여기서 조정되지 않는다(금지규정 #9 「CI의 간격을 임의로 조정할 수 없습니다」).
-					그래서 값 축이 아니라 표시 축이다. */}
-				<Field label="치수">
-					<SlotChoice
-						slots={[
-							{ key: 'off', label: '숨김' },
-							{ key: 'on', label: '표시' },
-						]}
-						value={measured ? 'on' : 'off'}
-						onChange={(v) => setMeasured(v === 'on')}
-						label="치수 도판"
-					/>
-				</Field>
+				{/* 🔑 치수와 클리어스페이스를 **한 줄**에 둔다(사용자 지정 2026-08-19) — 둘 다 락업을
+					바꾸지 않고 **무엇을 더 보여줄지**만 정하는 표시 축이라 성격이 같다.
+					🔴 그러면서도 별개 컨트롤로 남는다: 간격은 규정이라 조정 대상이 아니고
+					   (금지규정 #9) 여백은 모드가 있는 값이다([[clearspace-vs-gap]]). */}
+				<div className="flex flex-wrap items-start gap-x-6 gap-y-4">
+					<Field label="치수">
+						<SlotChoice
+							slots={[
+								{ key: 'off', label: '숨김' },
+								{ key: 'on', label: '표시' },
+							]}
+							value={measured ? 'on' : 'off'}
+							onChange={(v) => setMeasured(v === 'on')}
+							label="치수 도판"
+						/>
+					</Field>
 
-				{/* 🔴 `예외`는 공간 제약이 있을 때만 허용되는 값이다 — 더 좁게 써도 된다는 뜻이 아니다. */}
-				<Field label={`클리어스페이스${clearSpace ? ` ${clearSpace}H` : ''}`}>
-					<SlotChoice
-						slots={CLEAR_SPACE_MODES.map((m) => ({
-							key: m,
-							label: CLEAR_SPACE_MODE_LABEL[m],
-						}))}
-						value={clearSpaceMode}
-						onChange={(v) => setClearSpaceMode(v as ClearSpaceMode)}
-						label="클리어스페이스"
+					{/* 🔴 `예외`는 공간 제약이 있을 때만 허용되는 값이다 — 더 좁게 써도 된다는 뜻이 아니다. */}
+					<Field label={`클리어스페이스${clearSpace ? ` ${clearSpace}H` : ''}`}>
+						<SlotChoice
+							slots={CLEAR_SPACE_MODES.map((m) => ({
+								key: m,
+								label: CLEAR_SPACE_MODE_LABEL[m],
+							}))}
+							value={clearSpaceMode}
+							onChange={(v) => setClearSpaceMode(v as ClearSpaceMode)}
+							label="클리어스페이스"
+						/>
+					</Field>
+				</div>
+
+				{/* 🔴 임시. 정본은 `MORPH_DEFAULT_MS`이고 이 컨트롤은 전환을 다듬는 동안만 둔다. */}
+				<Field label={`전환 ${morphMs}ms${morphMs === MORPH_DEFAULT_MS ? ' (정본)' : ''}`}>
+					<Slider
+						className="w-48"
+						min={60}
+						max={6000}
+						step={60}
+						value={[morphMs]}
+						onValueChange={([next]) => {
+							const ms = next ?? MORPH_DEFAULT_MS
+							setMorphMs(ms)
+							setMorph(ms)
+						}}
+						aria-label="전환 지속시간"
+						aria-valuetext={`${morphMs}밀리초`}
 					/>
 				</Field>
 			</div>
@@ -272,6 +315,8 @@ export function CiLockupView({ colors }: { colors: Record<string, string> }) {
 							lockup={lockup}
 							siblings={all}
 							h={H}
+							tone={tone}
+							color={hex(textColorName(colorType, mono))}
 							colors={colors}
 							stage={stage}
 							symbolT={symbolT}
@@ -343,11 +388,19 @@ function SlotChoice({
 			value={value}
 			onValueChange={(next) => next && onChange(next)}
 			aria-label={label}
+			spacing={0}
 			// 🔴 flex로는 슬롯 폭이 균일해지지 않는다 — 기본 `min-width: auto`가 내용이 긴 항목을
 			//    균등 배분 위로 밀어올려 캡슐만 좁아진다(실측 194/194/178). grid 트랙을
 			//    `minmax(0, 1fr)`(= `auto-cols-fr`)로 못 박으면 내용과 무관하게 칸이 같아진다.
 			//    자식에 `min-w-0`이 함께 있어야 긴 라벨이 트랙을 다시 늘리지 않는다.
-			className="grid w-full auto-cols-fr grid-flow-col"
+			// 🔴 폭은 **내용만큼**이다(사용자 지정 2026-08-19) — `w-full`이면 컨트롤이 화면 폭을 따라
+			//    늘어나 두 칸짜리 「치수」가 열두 칸짜리 컨트롤과 같은 폭이 된다.
+			//    🔴 `w-auto`가 아니라 `w-fit`이다: 블록 요소의 `width: auto`는 부모를 꽉 채운다.
+			//    `fit-content`여도 `auto-cols-fr`이라 **칸끼리는 여전히 같은 폭**이다(가장 넓은 칸 기준).
+			// 🔑 그리고 그룹이 **면 하나를 공유한다** — 트랙(`bg-muted`) + `spacing={0}`. 안 채운
+			//    항목이 글자만 떠 있지 않고(사용자 지적) 셋이 한 덩어리로 읽힌다. 선택은 `primary`
+			//    짝으로 채워지고 hover는 `bg-background`로 뜬다(`toggle.tsx` 주석의 통일 규칙).
+			className="grid w-fit auto-cols-fr grid-flow-col gap-px bg-muted p-0.5"
 		>
 			{slots.map((slot) =>
 				'halves' in slot ? (
@@ -359,7 +412,7 @@ function SlotChoice({
 							<ToggleGroupItem
 								key={half.key}
 								value={half.key}
-								className={`min-w-0 flex-1 rounded-none ${
+								className={`min-w-0 flex-1 rounded-none text-muted-foreground hover:bg-background ${
 									index === 0 ? 'rounded-l-md' : ''
 								} ${index === slot.halves.length - 1 ? 'rounded-r-md' : ''}`}
 							>
@@ -371,13 +424,20 @@ function SlotChoice({
 					// 🔴 목록 트리거는 그룹 **항목이 아니다** — 버튼 안에 버튼을 넣지 않으려고 형제로
 					//    둔다. 그래서 화살표는 항목만 돌고 목록에는 Tab으로 닿는다.
 					<div key={slot.key} className="flex min-w-0 items-center gap-1">
-						<ToggleGroupItem value={slot.key} className="shrink-0">
+						<ToggleGroupItem
+							value={slot.key}
+							className="shrink-0 text-muted-foreground hover:bg-background"
+						>
 							{slot.label}
 						</ToggleGroupItem>
-						<div className="min-w-0 flex-1">{slot.trailing}</div>
+						{slot.trailing}
 					</div>
 				) : (
-					<ToggleGroupItem key={slot.key} value={slot.key} className="min-w-0">
+					<ToggleGroupItem
+						key={slot.key}
+						value={slot.key}
+						className="min-w-0 text-muted-foreground hover:bg-background"
+					>
 						{slot.label}
 					</ToggleGroupItem>
 				),
@@ -443,15 +503,13 @@ function EntityRow({
 			>
 				{name}
 			</span>
-			<div className="min-w-0 flex-1">
-				<Picker
-					value={value}
-					onChange={onChange}
-					label={name}
-					disabled={listDisabled}
-					items={items}
-				/>
-			</div>
+			<Picker
+				value={value}
+				onChange={onChange}
+				label={name}
+				disabled={listDisabled}
+				items={items}
+			/>
 		</div>
 	)
 }
@@ -472,7 +530,8 @@ function Picker({
 }) {
 	return (
 		<Select value={value} onValueChange={onChange} disabled={disabled}>
-			<SelectTrigger className="w-full" aria-label={label}>
+			{/* 🔴 폭은 내용만큼이다(사용자 지정 2026-08-19) — 늘리면 옆 컨트롤을 밀어낸다. */}
+			<SelectTrigger className="w-auto" aria-label={label}>
 				<SelectValue />
 			</SelectTrigger>
 			<SelectContent>
@@ -538,20 +597,35 @@ function useSlide() {
 	useLayoutEffect(() => {
 		const el = ref.current
 		if (!el) return
-		const now = { x: el.offsetLeft, y: el.offsetTop }
+		const now = anchorOf(el)
 		const before = previous.current
 		previous.current = now
 		if (!before || reducedMotion()) return
 		const dx = before.x - now.x
 		const dy = before.y - now.y
 		if (dx === 0 && dy === 0) return
-		el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], {
-			duration: MORPH_MS,
-			easing: MORPH_EASING,
-		})
+		morph(el, { transform: `translate(${dx}px, ${dy}px)` })
 	})
 
 	return ref
+}
+
+/**
+ * 🔑 **상자가 아니라 심볼을 기준으로 잰다.** 상자(`ClearSpaceFrame`)는 판 가운데에 놓이므로, 글자가
+ * 길어지면 상자의 왼쪽 끝은 움직이는데 그 안에서 **가운데 정렬된** 심볼은 제자리다. 상자 기준으로
+ * 되돌리면 심볼이 그 차이만큼 끌려갔다 돌아온다(실측: 세로형 본사 언어 전환에서 16px 왕복 —
+ * 사용자 지적 「로고가 순간이동」). 크기를 함께 이어도 안 된다: 판이 상자를 가운데 두므로 폭을
+ * 되돌리는 것만으로 이미 옛 자리가 재현되어, 이동까지 얹으면 **같은 이동을 두 번** 센다.
+ *
+ * 🔴 심볼 좌표는 상자와의 **차이**로 잰다 — 두 rect가 같은 페인트에서 나오므로 스크롤도, 전환 중인
+ *    translate도 상쇄된다. 거기에 레이아웃 값인 `offsetLeft/Top`을 더해 절대 좌표를 만든다.
+ */
+function anchorOf(el: HTMLElement) {
+	const symbol = el.querySelector('svg')
+	if (!symbol) return { x: el.offsetLeft, y: el.offsetTop }
+	const box = el.getBoundingClientRect()
+	const ink = symbol.getBoundingClientRect()
+	return { x: el.offsetLeft + (ink.left - box.left), y: el.offsetTop + (ink.top - box.top) }
 }
 
 /**
@@ -655,15 +729,30 @@ function LockupFigure({
 		lockup.columns.some((column) => column.rows.some((row) => row.assumed)) ||
 		Boolean(lockup.note)
 
+	const stageRef = useRef<HTMLDivElement>(null)
+	/* 🔑 내보내기는 **화면에 있는 것을 옮겨 적는다** — 좌표를 다시 만들지 않는다(`export-svg.ts`).
+	   🔴 치수 도판이 켜져 있으면 락업이 판에서 빠져 있어 내보낼 잉크가 없다. */
+	const download = async (withBackground: boolean) => {
+		const stage = stageRef.current
+		const root = withBackground ? stage : stage?.querySelector<HTMLElement>('[data-lockup]')
+		if (!root) return
+		const what = withBackground ? '판' : '로고'
+		downloadSvg(`${lockup.label} ${what}.svg`, await lockupSvg(root, withBackground))
+	}
+
 	return (
 		<figure className="flex flex-col gap-3">
 			{/* 🔴 판은 밝아야 한다(기본형 Full Color는 밝은 배경 전용). 다크 모드에서도 마찬가지다.
 				overflow-x-auto는 안전망이다 — 좁은 자리에서도 로고를 자르지 않고 흘려보낸다. */}
+			{/* 🔴 안쪽 패딩을 두지 않는다(사용자 지정 2026-08-19) — 판은 캔버스이고, 그 안의 것이
+				판 끝까지 닿을 수 있어야 한다. 여백이 필요한 것은 판이 아니라 락업이고 그것은
+				클리어스페이스가 규정으로 갖는다. */}
 			{/* 🔴 판 크기는 **고정**이다(`STAGE_HEIGHT`). 선택에 따라 판이 커졌다 작아지면 위젯이
 				위아래로 튀어 락업이 아니라 화면이 움직이는 것처럼 보인다. 안의 락업만 변한다.
 				판 색은 표현이 정하고 테마를 따르지 않으므로 전환도 여기서 이어 준다. */}
 			<div
-				className="flex items-center justify-center overflow-x-auto border border-border px-8"
+				ref={stageRef}
+				className="flex items-center justify-center overflow-x-auto border border-border"
 				style={{
 					background: stage,
 					height: h * STAGE_HEIGHT,
@@ -682,6 +771,30 @@ function LockupFigure({
 					</ClearSpaceFrame>
 				)}
 			</div>
+			{/* 🔴 도판 모드에서는 락업이 판에 없다 — 내보낼 것이 없으므로 잠근다. */}
+			<div className="flex flex-wrap gap-2">
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					shape="sharp"
+					disabled={Boolean(diagram)}
+					onClick={() => void download(false)}
+				>
+					SVG — 로고만
+				</Button>
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					shape="sharp"
+					disabled={Boolean(diagram)}
+					onClick={() => void download(true)}
+				>
+					SVG — 배경·판 크기 포함
+				</Button>
+			</div>
+
 			<figcaption className="flex flex-col gap-1">
 				<span className="font-body text-foreground text-sm">
 					{lockup.label}
@@ -780,6 +893,7 @@ function Composed({
 
 	return (
 		<div
+			data-lockup=""
 			className={`flex ${horizontal ? `flex-row ${baseTop === undefined ? 'items-center' : 'items-start'}` : 'flex-col items-center'}`}
 			style={{ gap: h * lockup.gap }}
 		>
@@ -830,6 +944,7 @@ function ColumnStack({
 		// 구분바 높이는 열 영역 전체다(실측). 영역이 없으면 그릴 근거가 없어 렌더하지 않는다.
 		return areaPx === undefined ? null : (
 			<div
+				data-ink="bar"
 				style={{
 					marginLeft,
 					width: h * column.bar,
@@ -905,6 +1020,7 @@ export function CapLine({
 				return (
 					<span
 						key={`${run.script}-${run.text}`}
+						data-ink="text"
 						className="whitespace-pre"
 						style={{
 							fontFamily: FONT.family,

@@ -5,8 +5,19 @@
  * 값만 담은 이 모듈은 누구도 import하지 않으므로 순환에 끼지 않는다.
  */
 
-/** 표현 전환 지속시간(ms). 형태와 색이 같은 값을 써서 함께 움직인다. */
-export const MORPH_MS = 420
+/** 정본 전환 지속시간(ms). 🔴 확정 값은 이것이고 아래 조절 장치는 디버그다. */
+export const MORPH_DEFAULT_MS = 420
+
+/**
+ * 표현 전환 지속시간(ms). 형태와 색이 같은 값을 써서 함께 움직인다.
+ *
+ * 🔴 **`let`인 것이 의도다.** ESM 라이브 바인딩이라 `import { MORPH_MS }`가 매 접근에 현재 값을
+ *    읽는다 — 그래서 `setMorphMs`로 한 번 바꾸면 락업·도판·FLIP·심볼 보간이 **전부** 따라온다
+ *    (모두 렌더·이펙트 시점에 이 값을 읽는다). prop으로 내리면 파일 두 개를 관통해야 한다.
+ * 🔴 이 조절 장치는 **전환을 눈으로 뜯어보기 위한 임시 장치**다. 전환 정리가 끝나면 위젯의 「전환」
+ *    컨트롤과 함께 지우고 `MORPH_DEFAULT_MS`를 그대로 쓰는 `const`로 되돌린다.
+ */
+export let MORPH_MS = MORPH_DEFAULT_MS
 
 /**
  * 전환 곡선. 🔴 **한 곡선을 CSS와 JS가 같이 쓴다** — 심볼 형태는 JS가 프레임마다 계산하고
@@ -43,10 +54,36 @@ export function easeMorph(x: number) {
 	return ((ay * t + by) * t + cy) * t
 }
 
-/** CSS `transition`·`animate`에 함께 쓰는 값. */
-export const MORPH = `${MORPH_MS}ms ${MORPH_EASING}`
+/** CSS `transition`·`animate`에 함께 쓰는 값. `MORPH_MS`와 같은 이유로 `let`이다. */
+export let MORPH = `${MORPH_MS}ms ${MORPH_EASING}`
+
+/** 위 둘을 함께 갈아 준다. 🔴 값을 바꾼 뒤 **리렌더가 필요하다** — 호출부가 상태로 그것을 만든다. */
+export function setMorphMs(ms: number) {
+	MORPH_MS = ms
+	MORPH = `${ms}ms ${MORPH_EASING}`
+}
 
 /** 움직임 줄이기를 켠 사용자에겐 전환하지 않는다. */
 export function reducedMotion() {
 	return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+/**
+ * FLIP 한 번 — **모든 전환이 이 함수 하나를 지난다**(락업 덩어리·도판 판·도판 요소 셋 다).
+ * 지속시간·곡선을 호출부가 다시 적지 않게 하려는 것이 목적이다. 값이 바뀌면 세 군데가 함께 바뀐다.
+ *
+ * 🔴 **출발값만 받고 도착 키프레임은 빈 객체다**(`[from, {}]`). 그러면 WAAPI가 도착값을 요소의
+ *    기본 스타일에서 가져온다(암묵 to-키프레임). 도착값을 적으면 `width`·`height`처럼 **레이아웃을
+ *    바꾸는** 속성에서 사고가 난다 — 전환 중에 다시 전환하면 측정이 비행 중인 값을 읽고, 그 값이
+ *    도착점으로 박혀 애니메이션이 끝나 기본 스타일로 돌아가는 순간 그만큼 툭 튄다.
+ * 🔴 빈 객체를 빼고 **키프레임을 하나만 주면 거꾸로 돈다** — 키프레임 하나는 offset 0이 아니라
+ *    **offset 1(도착)** 으로 놓이고 출발이 기본 스타일이 된다. 실측으로 확인했다(`[{x:-40}]`는
+ *    t=0에 x=0, `[{x:-40},{}]`는 t=0에 x=-40).
+ * 🔴 CSS 전환(`CSSTransition`)은 지우지 않는다 — 색·배경 전환이 같은 요소에서 돌고 있을 수 있고,
+ *    그것을 지우면 색이 중간에서 스냅한다. 지우는 것은 우리가 만든 FLIP뿐이다.
+ */
+export function morph(element: Element, from: Keyframe) {
+	for (const animation of element.getAnimations())
+		if (!(animation instanceof CSSTransition)) animation.cancel()
+	return element.animate([from, {}], { duration: MORPH_MS, easing: MORPH_EASING })
 }

@@ -51,10 +51,11 @@ export function fontSizeFor(cap: number, h: number, script: Script) {
  * 🔑 경우별 잉크 상자를 각각 걷어내는 것이 곧 높이·위치를 맞추는 방법이다 — 남는 상자가
  *    양쪽 다 `cap × H`가 되므로 한 줄에 나란히 놓으면 위아래 끝이 정본처럼 일치한다.
  */
-const BASELINE = FONT.ascender + (1 - (FONT.ascender + FONT.descender)) / 2
+/** 줄상자(`line-height: 1`) 위에서 베이스라인까지의 거리(em). 🔑 SVG 내보내기도 이 값을 쓴다. */
+export const INK_BASELINE = FONT.ascender + (1 - (FONT.ascender + FONT.descender)) / 2
 export function trimFor(script: Script) {
 	const { top, bottom } = FONT.ink[script]
-	return { top: -(BASELINE - top), bottom: -(1 - BASELINE + bottom) }
+	return { top: -(INK_BASELINE - top), bottom: -(1 - INK_BASELINE + bottom) }
 }
 
 /**
@@ -967,9 +968,14 @@ export function diagramSpec(lockup: Lockup): DiagramSpec {
 		})
 	}
 
-	for (const track of finalRows) {
+	/* 🔴 영역이 이 행 하나뿐이면 좌측 `span:area`가 **같은 수치**를 이미 적었다. 두 번 적으면 같은
+	      값의 라벨이 좌·우에 하나씩 생겨, 꼴·언어를 바꿀 때 어느 쪽을 보고 있었는지 눈이 잃는다
+	      (사용자 지적 2026-08-19: 같은 라벨이 「3번씩이나 이동」한다). 정본 도판도 한 번만 적는다. */
+	const areaIsSingleRow = areaStart === areaEnd
+	for (const [index, track] of finalRows.entries()) {
 		if (track.kind !== 'el' || !track.id) continue
 		if (hasGroups && track.id.startsWith('el:hd:')) continue
+		if (areaIsSingleRow && index === areaStart) continue
 		spans.push({
 			id: `span:${track.id}`,
 			side: 'right',
