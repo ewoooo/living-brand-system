@@ -45,9 +45,11 @@ type StudioWorkspaceProps = {
 export function StudioWorkspace({ sidebar, children }: StudioWorkspaceProps) {
 	return (
 		// lg 행을 1fr로 못 박아야 컨트롤러가 길어져도 페이지 대신 패널 내부가 스크롤된다.
+		// 사이드바 열은 auto다 — 기본 폭(lg:w-80)은 StudioSidebar가 갖고, Review처럼 패널이
+		// 둘로 늘어나는 화면은 사이드바 쪽이 넓어지고 캔버스가 줄어든다(디자인 78:2706).
 		<section
 			data-slot="studio-workspace"
-			className="grid min-h-0 lg:h-full lg:max-h-full lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden"
+			className="grid min-h-0 lg:h-full lg:max-h-full lg:grid-cols-[minmax(0,1fr)_auto] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden"
 		>
 			{/*
 			 * 🔴 overflow를 잠그지 않는다 — 자산 브라우저 패널이 컨트롤러 왼쪽(캔버스 위)으로
