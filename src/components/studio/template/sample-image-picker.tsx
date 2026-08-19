@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ControllerBrowser } from '@/components/shared/controller'
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Typography } from '@/components/ui/typography'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import type { SampleImageOption } from '@/features/template-customization/services/list-sample-images.client'
@@ -22,16 +23,32 @@ export function SampleImagePicker({
 }) {
 	const { sampleImages } = useTemplateStudio()
 	const { load } = sampleImages
+	// ToggleGroup이 선택 목록을 배열로 주고받는다 — Set으로 들고 있으면 변환만 오간다.
+	const [selectedGroups, setSelectedGroups] = useState<string[]>([])
 	// 이 컴포넌트는 패널이 열릴 때 마운트된다(radix가 닫힌 콘텐츠를 언마운트한다) — mount가 곧 "열림"이다.
 	// 실패했다면 다시 열 때 재시도된다.
 	useEffect(() => {
 		load()
 	}, [load])
 
+	const options = sampleImages.data ?? []
+	// 분류 목록은 값에서 역산한다 — 분류 테이블이 없어도 태그 필터가 성립한다(BrandIcons와 같다).
+	const groups = useMemo(
+		() => [...new Set(options.map((option) => option.group).filter(Boolean))].sort(),
+		[options],
+	)
+	const visible = useMemo(
+		() =>
+			selectedGroups.length === 0
+				? options
+				: options.filter((option) => selectedGroups.includes(option.group)),
+		[options, selectedGroups],
+	)
+
 	// 목록이 언제 오는지는 이 컴포넌트만 안다 — 빈 자리 안내도 여기가 갖는다(부모는 목록을 모른다).
 	const empty = browseEmptyMessage(
 		sampleImages.status,
-		(sampleImages.data?.length ?? 0) > 0,
+		options.length > 0,
 		'고를 수 있는 샘플 이미지가 없습니다.',
 	)
 	if (empty) {
@@ -43,36 +60,65 @@ export function SampleImagePicker({
 	}
 
 	return (
-		<div data-slot="sample-image-picker" className="grid shrink-0 grid-cols-3 gap-3 pr-1">
-			{(sampleImages.data ?? []).map((option) => {
-				const current = option.id === selectedId
+		<div data-slot="sample-image-picker" className="flex shrink-0 flex-col gap-3 pr-1">
+			{groups.length > 0 && (
+				<ToggleGroup
+					type="multiple"
+					variant="outline"
+					value={selectedGroups}
+					onValueChange={setSelectedGroups}
+					aria-label="샘플 이미지 분류 필터"
+					className="flex-wrap justify-start"
+				>
+					{groups.map((group) => (
+						<ToggleGroupItem key={group} value={group} className="px-3">
+							{group}
+						</ToggleGroupItem>
+					))}
+				</ToggleGroup>
+			)}
+			{visible.length === 0 ? (
+				<Typography as="p" size="sm" className="px-1 py-2">
+					고른 분류에 맞는 샘플 이미지가 없습니다.
+				</Typography>
+			) : (
+				<div className="grid grid-cols-3 gap-3">
+					{visible.map((option) => {
+						const current = option.id === selectedId
 
-				return (
-					<ControllerBrowser.Close key={option.id} asChild>
-						<button
-							type="button"
-							// 브라우저는 현재 선택을 보여야 한다 — 테두리 두께와 aria-current로 함께 알린다.
-							aria-current={current || undefined}
-							onClick={() => onSelect(option)}
-							className={cn(
-								'flex h-48 flex-col overflow-hidden rounded-lg border bg-background/5 text-left outline-none focus-visible:ring-2 focus-visible:ring-background/50',
-								current
-									? 'border-2 border-background/60'
-									: 'border-background/10 hover:bg-background/10',
-							)}
-						>
-							<ControllerBrowser.Thumbnail
-								image={{ url: option.thumbnailUrl, alt: option.alt }}
-							/>
-							<div className="flex shrink-0 flex-col bg-background/5 px-1.5 py-2">
-								<Typography as="p" size="xs" weight="medium" className="truncate">
-									{option.name}
-								</Typography>
-							</div>
-						</button>
-					</ControllerBrowser.Close>
-				)
-			})}
+						return (
+							<ControllerBrowser.Close key={option.id} asChild>
+								<button
+									type="button"
+									// 브라우저는 현재 선택을 보여야 한다 — 테두리 두께와 aria-current로 함께 알린다.
+									aria-current={current || undefined}
+									onClick={() => onSelect(option)}
+									className={cn(
+										'flex h-48 flex-col overflow-hidden rounded-lg border bg-background/5 text-left outline-none focus-visible:ring-2 focus-visible:ring-background/50',
+										current
+											? 'border-2 border-background/60'
+											: 'border-background/10 hover:bg-background/10',
+									)}
+								>
+									<ControllerBrowser.Thumbnail
+										image={{ url: option.thumbnailUrl, alt: option.alt }}
+									/>
+									<div className="flex shrink-0 flex-col bg-background/5 px-1.5 py-2">
+										<Typography
+											as="p"
+											size="xs"
+											weight="medium"
+											className="truncate"
+										>
+											{option.name}
+										</Typography>
+									</div>
+								</button>
+							</ControllerBrowser.Close>
+						)
+					})}
+				</div>
+			)}
 		</div>
 	)
 }
