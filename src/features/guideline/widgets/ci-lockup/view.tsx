@@ -587,7 +587,7 @@ function useSlide() {
  *    translate도 상쇄된다. 거기에 레이아웃 값인 `offsetLeft/Top`을 더해 절대 좌표를 만든다.
  */
 function anchorOf(el: HTMLElement) {
-	const symbol = el.querySelector('svg')
+	const symbol = el.querySelector('[data-ink="symbol"]')
 	if (!symbol) return { x: el.offsetLeft, y: el.offsetTop }
 	const box = el.getBoundingClientRect()
 	const ink = symbol.getBoundingClientRect()
@@ -651,6 +651,9 @@ export function SymbolMark({
 }) {
 	return (
 		<svg
+			// 🔑 잉크 마커. 심볼을 「그 안의 유일한 svg」로 짐작하지 않게 글자·구분바와 같은 어휘를
+			//    쓴다 — 내보내기(`export-svg.ts`)와 덩어리 이동 기준(`anchorOf`)이 이것으로 찾는다.
+			data-ink="symbol"
 			viewBox={`0 0 ${SYMBOL_ASPECT} 1`}
 			width={h * SYMBOL_ASPECT}
 			height={h}

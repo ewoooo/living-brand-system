@@ -119,38 +119,6 @@ function useDiagramFlip() {
 	}
 }
 
-/**
- * 덩어리 **자체**의 이동을 잇는다.
- *
- * 🔑 안쪽 FLIP(`useDiagramFlip`)은 판(grid)을 `offsetParent`로 삼아 재므로 **판 자신이 움직인 것을
- *    못 본다.** 그 사각지대가 꼴 전환에서 심볼이 딱 튀는 원인이었다 — 실측으로 심볼의 `offsetTop`은
- *    세 꼴 모두 44로 고정인데 화면 y는 110→102→55로 변했다. 도판 총높이가 188→205→298로 바뀌고
- *    판이 중앙 정렬하니 **상자째로** 올라간 것이다.
- * 🔴 기준이 달라 같은 이동을 두 번 세지 않는다 — 안쪽은 「덩어리 **안에서** 얼마나」, 바깥은
- *    「덩어리가 얼마나」. 둘의 transform이 합성되어 화면에서 보이는 총 이동이 정확히 이어진다.
- * 🔑 크기는 잇지 않는다(위치만). 사용자 규칙: 「텍스트가 딱 생기는 건 자연스럽고, 이 덩어리 **전체의
- *    위치**가 연속적이면 된다」(2026-08-19).
- */
-function useBlockFlip() {
-	const node = useRef<HTMLDivElement | null>(null)
-	const previous = useRef<{ x: number; y: number } | null>(null)
-
-	useLayoutEffect(() => {
-		const element = node.current
-		if (!element) return
-		const now = { x: element.offsetLeft, y: element.offsetTop }
-		const before = previous.current
-		previous.current = now
-		if (!before || reducedMotion()) return
-		const dx = before.x - now.x
-		const dy = before.y - now.y
-		if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return
-		morph(element, { transform: `translate(${dx}px, ${dy}px)` })
-	})
-
-	return node
-}
-
 const trackSize = (track: DiagramTrack, h: number) =>
 	track.v === undefined ? 'max-content' : `${track.v * h}px`
 
@@ -479,7 +447,6 @@ export function LockupDiagram({
 	const spec = useMemo(() => diagramSpec(lockup), [lockup])
 	const g = useMemo(() => resolve(spec, h), [spec, h])
 	const register = useDiagramFlip()
-	const blockRef = useBlockFlip()
 	const motion = useMotion()
 	const guide = colors[GUIDE_COLOR_NAME] ?? 'currentColor'
 
@@ -529,11 +496,11 @@ export function LockupDiagram({
 				여전히 가운데에 놓이고, 면·선·점선은 캔버스 끝까지 닿는다.
 				🔴 `minWidth: max-content`가 안전망이다: 내용이 캔버스보다 넓어지면 신축이 0으로 접히고
 				   판이 내용 폭으로 자라 왼쪽부터 보인다(캔버스가 가로로 스크롤된다).
-				🔑 그래서 판 자신은 더 이상 움직이지 않는다 — `useBlockFlip`은 사실상 아무 일도 하지
-				   않고, 덩어리가 가운데 정렬 때문에 옮겨가는 것은 안쪽 FLIP이 판을 기준으로 잡는다.
-				   판이 다시 내용 폭이 되면 되살아나므로 남겨 둔다. */}
+				🔑 **판 자신은 움직이지 않는다**(실측: 꼴·언어·계층을 바꿔도 `offsetLeft/Top`이 불변).
+				   그래서 덩어리의 이동을 따로 이을 필요가 없고, 가운데 정렬 때문에 생기는 이동은
+				   판을 기준으로 재는 안쪽 FLIP이 그대로 잡는다. 판이 내용 폭으로 돌아가면 그때는
+				   판 자신의 이동을 다시 이어야 한다. */}
 			<div
-				ref={blockRef}
 				className="relative grid size-full"
 				style={{
 					gridTemplateColumns: g.columns.join(' '),

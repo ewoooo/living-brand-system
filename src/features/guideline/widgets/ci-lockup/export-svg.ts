@@ -88,11 +88,12 @@ export async function lockupSvg(root: HTMLElement, withBackground: boolean): Pro
 	}
 
 	// 심볼 — 화면의 것을 **그대로 복제**한다. 이미 좌표로 그린 SVG라 다시 만들 이유가 없다.
-	for (const symbol of root.querySelectorAll('svg')) {
+	for (const symbol of root.querySelectorAll<SVGSVGElement>('[data-ink="symbol"]')) {
 		const r = symbol.getBoundingClientRect()
 		const clone = symbol.cloneNode(true) as SVGSVGElement
 		clone.removeAttribute('class')
 		clone.removeAttribute('aria-hidden')
+		clone.removeAttribute('data-ink')
 		// 전환용 인라인 스타일은 파일에서 의미가 없다.
 		for (const styled of clone.querySelectorAll('[style]')) styled.removeAttribute('style')
 		clone.setAttribute('x', String(n(r.left - box.left)))
