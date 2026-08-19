@@ -5,6 +5,7 @@ import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import { createRasterExportRequest } from '@/features/studio-export/services/create-raster-export-request'
 import { supportsStudioExportRequest } from '@/features/studio-export/studio-output'
+import type { StudioRuntimeManifest } from '@/modules/studio-controller/controller-definition'
 import {
 	deriveTemplateStudioConfig,
 	findTemplateControl,
@@ -43,6 +44,13 @@ const forwardStraightConfig = {
 	output: resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
 }
 
+// 매니페스트에는 findTemplateControl(Config용)이 닿지 않으므로 그룹을 펼쳐 찾는다.
+function findManifestControl(manifest: StudioRuntimeManifest, id: string) {
+	return manifest.controller.groups
+		.flatMap((group) => group.controls)
+		.find((control) => control.id === id)
+}
+
 describe('deriveTemplateStudioConfig', () => {
 	it('Runtime Manifest는 같은 Template 문서에서 같은 controller와 Artifact를 파생한다', () => {
 		const manifest = getTemplateRuntimeManifest(template)
@@ -58,6 +66,59 @@ describe('deriveTemplateStudioConfig', () => {
 			},
 		})
 		expect(getTemplateRuntimeManifest({ ...template })).toEqual(manifest)
+	})
+
+	it('배경 정책이 형식을 좁히고 하나만 남으면 읽기 전용이 된다', () => {
+		const manifest = getTemplateRuntimeManifest({
+			...template,
+			backgroundPolicy: { types: ['color'] },
+		})
+
+		expect(findManifestControl(manifest, 'background.type')).toMatchObject({
+			availability: 'readonly',
+			defaultValue: 'color',
+			options: [{ value: 'color', label: 'Color' }],
+		})
+	})
+
+	it('둘 이상 허용하면 읽기 전용이 아니고 기본값은 첫 허용 형식이다', () => {
+		const manifest = getTemplateRuntimeManifest({
+			...template,
+			backgroundPolicy: { types: ['image', 'graphic'] },
+		})
+		const control = findManifestControl(manifest, 'background.type')
+
+		expect(control).toMatchObject({
+			defaultValue: 'image',
+			options: [
+				{ value: 'image', label: 'Image' },
+				{ value: 'graphic', label: 'Graphic' },
+			],
+		})
+		expect(
+			control && 'availability' in control ? control.availability : undefined,
+		).toBeUndefined()
+	})
+
+	it('색을 형식에서 막아도 background.color 컨트롤은 남는다', () => {
+		const manifest = getTemplateRuntimeManifest({
+			...template,
+			backgroundPolicy: { types: ['image'] },
+		})
+
+		expect(findManifestControl(manifest, 'background.color')).toMatchObject({ kind: 'color' })
+	})
+
+	it('배경 형식을 전부 막으면 파생이 거부한다', () => {
+		expect(() =>
+			getTemplateRuntimeManifest({ ...template, backgroundPolicy: { types: [] } }),
+		).toThrow('배경 형식')
+	})
+
+	it('정책이 없으면 지금까지의 매니페스트와 같다', () => {
+		expect(getTemplateRuntimeManifest({ ...template, backgroundPolicy: {} })).toEqual(
+			getTemplateRuntimeManifest(template),
+		)
 	})
 
 	it('세로형 캔버스가 폴백의 가로형 1080p 상한에 막히지 않고 자기 크기로 MP4를 낸다', () => {

@@ -48,6 +48,12 @@ const BACKGROUND_TYPE_CONTROL_ID = 'background.type'
 const BACKGROUND_COLOR_CONTROL_ID = 'background.color'
 const TEXT_COLOR_CONTROL_ID = 'text.color'
 
+const BACKGROUND_TYPE_OPTIONS: readonly { value: TemplateBackgroundType; label: string }[] = [
+	{ value: 'color', label: 'Color' },
+	{ value: 'image', label: 'Image' },
+	{ value: 'graphic', label: 'Graphic' },
+]
+
 type TemplateSlotBindingBase = {
 	/** DOM 합성 주소. Label과 분리되어 Admin에서 이름을 바꿔도 binding은 유지된다. */
 	id: string
@@ -107,6 +113,13 @@ export type TemplateStudioConfigSlot = TemplateEditableLayer | TemplateBackgroun
 
 export type TemplateBackgroundType = 'color' | 'image' | 'graphic'
 
+/** Admin이 정하는 배경 정책. 목록이 없으면 전부 허용이다 — exportPolicy와 같은 규칙. */
+export type TemplateBackgroundPolicy = {
+	types?: readonly TemplateBackgroundType[]
+	imageConfigIds?: readonly number[]
+	graphicConfigIds?: readonly string[]
+}
+
 /** Template Studio SSR에 노출하는 node config 부분집합. */
 export type PublishedTemplateNodeConfig = {
 	input?: Omit<NonNullable<TemplateNodeConfig['input']>, 'aiInstruction'>
@@ -129,6 +142,7 @@ export type PublishedHtmlTemplate = {
 	controllerRestrictions?: unknown
 	exportPolicy?: unknown
 	controllerPresentation?: unknown
+	backgroundPolicy?: TemplateBackgroundPolicy
 	previewImage?: StudioPreviewImage
 }
 
@@ -512,14 +526,57 @@ function isImageAspectRatio(value: string | null): value is ImageAspectRatio {
 	return IMAGE_ASPECT_RATIOS.includes(value as ImageAspectRatio)
 }
 
+/**
+ * 배경 그룹을 정책으로 좁혀 만든다.
+ *
+ * 🔴 background.color 컨트롤은 형식에서 색을 막아도 지운다 — TemplateBackgroundSlot.colorControlId가
+ * 필수고 parse가 그 존재를 검증하므로, 없애면 슬롯 계약과 소비 컴포넌트까지 optional이 번진다.
+ * 색이 형식에 없으면 창작자가 그 자리에 닿지 못하므로 남겨 두어도 해가 없다.
+ */
+function buildBackgroundGroup(
+	policy: TemplateBackgroundPolicy | undefined,
+): ControllerGroupDefinition {
+	const allowed = policy?.types
+	const options = allowed
+		? BACKGROUND_TYPE_OPTIONS.filter((option) => allowed.includes(option.value))
+		: BACKGROUND_TYPE_OPTIONS
+	if (options.length === 0) {
+		throw new Error('Template 배경 형식은 최소 하나를 허용해야 합니다.')
+	}
+	return {
+		id: 'background',
+		title: 'Background',
+		controls: [
+			{
+				id: BACKGROUND_TYPE_CONTROL_ID,
+				kind: 'select',
+				label: 'Type',
+				defaultValue: options[0].value,
+				options,
+				// 고를 것이 하나면 열어 둘 이유가 없다.
+				...(options.length === 1 ? { availability: 'readonly' as const } : {}),
+			},
+			{
+				id: BACKGROUND_COLOR_CONTROL_ID,
+				kind: 'color',
+				label: 'Background Color',
+				defaultValue: null,
+			},
+		],
+	}
+}
+
 /** Template 문서 구조에서 Admin 제한 전의 결정적 Runtime Manifest를 파생한다. */
 export function getTemplateRuntimeManifest({
 	html,
 	nodeConfigs,
 	width,
 	height,
+	backgroundPolicy,
 }: Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs'> &
-	Partial<Pick<PublishedHtmlTemplate, 'width' | 'height'>>): StudioRuntimeManifest {
+	Partial<
+		Pick<PublishedHtmlTemplate, 'width' | 'height' | 'backgroundPolicy'>
+	>): StudioRuntimeManifest {
 	const textControls: TextControlDefinition[] = collectTemplateSlots(html, nodeConfigs).map(
 		(slot) => ({
 			id: `text:${slot.nodeId}`,
@@ -567,29 +624,7 @@ export function getTemplateRuntimeManifest({
 							},
 						]
 					: []),
-				{
-					id: 'background',
-					title: 'Background',
-					controls: [
-						{
-							id: BACKGROUND_TYPE_CONTROL_ID,
-							kind: 'select' as const,
-							label: 'Type',
-							defaultValue: 'color',
-							options: [
-								{ value: 'color', label: 'Color' },
-								{ value: 'image', label: 'Image' },
-								{ value: 'graphic', label: 'Graphic' },
-							],
-						},
-						{
-							id: BACKGROUND_COLOR_CONTROL_ID,
-							kind: 'color' as const,
-							label: 'Background Color',
-							defaultValue: null,
-						},
-					],
-				},
+				buildBackgroundGroup(backgroundPolicy),
 			],
 		},
 	}
