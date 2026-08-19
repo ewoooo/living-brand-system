@@ -193,6 +193,54 @@ describe('useTemplateExport', () => {
 		expect(result.current.outputSize).toEqual({ width: 600, height: 300 })
 	})
 
+	it('fps를 올리면 MP4가 갈 수 있는 배율이 줄고 고른 값도 따라 붙는다', () => {
+		const { result } = renderHook(() =>
+			useTemplateExport({
+				artifact: () =>
+					createTemplateRasterArtifact({
+						html: '<div>card</div>',
+						width: 630,
+						height: 891,
+					}),
+				videoArtifact: null,
+				capability: {
+					...MP4_CAPABILITY,
+					video: { mp4: { ...MP4_CAPABILITY.video.mp4, fps: [24, 30, 60] } },
+				},
+				metadata: { ...MP4_METADATA, width: 630, height: 891, maxScale: 4 },
+			}),
+		)
+
+		act(() => result.current.setFps(24))
+		expect(result.current.scaleOptions).toEqual([1, 2, 3, 4])
+
+		act(() => result.current.setScale(4))
+		expect(result.current.scale).toBe(4)
+
+		// 60fps로 올리면 4배는 초당 처리량 예산을 넘는다 — 1로 떨어지지 않고 3으로 붙는다.
+		act(() => result.current.setFps(60))
+		expect(result.current.scaleOptions).toEqual([1, 2, 3])
+		expect(result.current.scale).toBe(3)
+	})
+
+	it('PNG는 fps와 무관하게 프레임 크기 예산까지 배율을 쓴다', () => {
+		const { result } = renderHook(() =>
+			useTemplateExport({
+				artifact: () =>
+					createTemplateRasterArtifact({
+						html: '<div>card</div>',
+						width: 630,
+						height: 891,
+					}),
+				videoArtifact: null,
+				capability: { formats: ['png'], colorProfiles: { rgb: ['srgb'] } },
+				metadata: { ...MP4_METADATA, width: 630, height: 891, maxScale: 4 },
+			}),
+		)
+
+		expect(result.current.scaleOptions).toEqual([1, 2, 3, 4])
+	})
+
 	it('시간축이 없어도 MP4는 Raster Artifact로 반드시 나온다', async () => {
 		const raster = createTemplateRasterArtifact({
 			html: '<div>card</div>',

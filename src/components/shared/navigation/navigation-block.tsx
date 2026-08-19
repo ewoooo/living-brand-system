@@ -10,10 +10,8 @@ const navigationBlockVariants = cva(
 	{
 		variants: {
 			variant: {
-				featured: 'bg-foreground p-6 text-background hover:opacity-60',
 				prominent: 'border-border bg-background p-6 hover:bg-accent',
 				default: 'border-border bg-background p-4 hover:bg-accent',
-				compact: 'border-border bg-background p-3 hover:bg-accent',
 			},
 		},
 		defaultVariants: {
@@ -23,17 +21,13 @@ const navigationBlockVariants = cva(
 )
 
 const labelSize = {
-	featured: '6xl',
 	prominent: '5xl',
 	default: '2xl',
-	compact: 'base',
 } as const
 
 const tailPadding = {
-	featured: 'pt-6',
 	prominent: 'pt-6',
 	default: 'pt-4',
-	compact: 'pt-3',
 } as const
 
 type NavigationBlockProps = VariantProps<typeof navigationBlockVariants> & {
@@ -62,22 +56,11 @@ export function NavigationBlock({
 			className={cn(navigationBlockVariants({ variant }), className)}
 		>
 			<hgroup>
-				<Typography
-					as={resolvedVariant === 'featured' ? 'span' : 'h3'}
-					size={labelSize[resolvedVariant]}
-					className={cn(resolvedVariant === 'featured' && 'leading-none font-light')}
-				>
+				<Typography as="h3" size={labelSize[resolvedVariant]}>
 					{label}
 				</Typography>
 				{description && (
-					<Typography
-						size="sm"
-						tone="muted"
-						className={cn(
-							'mt-3',
-							resolvedVariant === 'featured' && 'text-background/70',
-						)}
-					>
+					<Typography size="sm" tone="muted" className="mt-3">
 						{description}
 					</Typography>
 				)}

@@ -1,4 +1,3 @@
-import { HeroFeatureSection } from '@/components/home/hero-feature-section'
 import { HeroFooter } from '@/components/home/hero-footer'
 import { HeroMainSection } from '@/components/home/hero-main-section'
 
@@ -9,10 +8,6 @@ export function HeroSection() {
 				<GridLines col={12} gap={16} padding={16} />
 				<HeroMainSection />
 			</section>
-			<div className="relative min-h-full p-4 md:h-full">
-				<GridLines col={12} gap={16} padding={16} />
-				<HeroFeatureSection />
-			</div>
 			<HeroFooter />
 		</>
 	)
