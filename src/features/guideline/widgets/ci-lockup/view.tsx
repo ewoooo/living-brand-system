@@ -13,23 +13,27 @@ import { CI_STAGE_DARK, CI_STAGE_LIGHT } from '../surface'
 import { LockupDiagram } from './diagram'
 import { downloadSvg, lockupSvg } from './export-svg'
 import { BRANCH_VALUES, FORM_VALUES, HEIGHT, LANGUAGE_VALUES, SUBSIDIARY_VALUES } from './manifest'
-import { easeMorph, MORPH, MORPH_EASING, MORPH_MS, morph, reducedMotion } from './motion'
+import { easeMorph, MORPH, type MORPH_EASING, MORPH_MS, morph, reducedMotion } from './motion'
 import {
 	bearingOf,
 	branchLabel,
 	CLEAR_SPACE,
 	CLEAR_SPACE_MODES,
+	type ClearSpaceMode,
 	COLOR_TYPES,
+	type ColorType,
 	type Column,
 	clearSpaceFor,
 	deriveLockups,
 	FIDELITY_CAVEAT,
 	FONT,
 	fontSizeFor,
+	type Language,
 	type Lockup,
 	lockupOptions,
 	MIN_SIZE,
 	MONO_COLORS,
+	type MonoColor,
 	OVERSEAS_BRANCHES,
 	partialColumnArea,
 	STAGE_HEIGHT,
@@ -68,28 +72,91 @@ const DEBUG_INK_BOX = false
  * 계층은 켜기 두 개에서 파생되고(본사 = 아무것도 켜지 않은 상태), 꼴·언어가 형태를,
  * 색상 표현이 색과 판을 정한다.
  */
-export function CiLockupView({ colors }: { colors: Record<string, string> }) {
+/**
+ * 인스턴스 고정값. admin이 이 블록 자식에 넣은 값이고, **알약에서 뺀 축에만** 적용된다.
+ *
+ * 🔑 그래서 한 블록에 위젯을 여럿 둘 수 있다 — 스코프는 블록당 하나이므로 알약에 남은 축은
+ *    판들이 **함께** 움직이고(H·클리어스페이스·치수), 뺀 축은 판마다 자기 값에 머문다(꼴·색상 표현).
+ *    정본 지면이 그렇게 구성돼 있다: 가로형·세로형을 나란히, 표현 3종을 나란히.
+ * 🔴 규칙은 하나다 — 뺀 축이면 자기 값, 아니면 컨트롤러 값. `layout-grid`의 `override ??` 선례에
+ *    「무엇을 뺐나」를 더한 형태다(그쪽은 lock 플래그를 따로 받는다).
+ */
+export type CiLockupFixed = {
+	h?: number | null
+	subsidiaryOn?: boolean | null
+	subsidiary?: string | null
+	branchOn?: boolean | null
+	branch?: string | null
+	form?: string | null
+	language?: string | null
+	colorType?: string | null
+	mono?: string | null
+	clearSpace?: string | null
+	measured?: boolean | null
+	/** 알약에서 뺀 축 목록. 이것이 「어느 값을 자기 것으로 쓸지」를 정한다. */
+	hiddenControls?: (string | null)[] | null
+}
+
+export function CiLockupView({
+	colors,
+	fixed = {},
+}: {
+	colors: Record<string, string>
+	fixed?: CiLockupFixed
+}) {
 	// 🔑 값의 뜻은 여기가 갖고, 알약은 id로만 넣고 뺀다. 그래서 fallback을 여기서 준다 —
 	//    스코프 밖(위젯 갤러리처럼 블록 없이 렌더)에서도 락업이 그려져야 한다.
 	const { values } = useGuidelineController()
+	// 🔑 뺀 축이면 자기 값, 아니면 알약 값. 스코프 밖이면 알약 값이 매니페스트 기본값으로 떨어진다.
+	const off = new Set((fixed.hiddenControls ?? []).filter((id): id is string => Boolean(id)))
+	const pick = <T,>(id: string, own: T | null | undefined, live: T): T =>
+		off.has(id) && own !== null && own !== undefined ? own : live
+
 	/** H(심볼 높이). 🔑 락업의 모든 치수가 이 값의 배수다 — 판형을 정하는 단 하나의 값이다. */
-	const H = controllerNumber(values, 'h', HEIGHT.defaultValue)
-	const subOn = controllerBoolean(values, 'subsidiaryOn', false)
-	const branchOn = controllerBoolean(values, 'branchOn', false)
-	const form = controllerString(values, 'form', FORM_VALUES, 'horizontal')
-	const language = controllerString(values, 'language', LANGUAGE_VALUES, 'ko')
-	const subKo = controllerString(values, 'subsidiary', SUBSIDIARY_VALUES, SUBSIDIARIES[0].ko)
-	const branchKey = controllerString(
-		values,
-		'branch',
-		BRANCH_VALUES,
-		branchLabel(OVERSEAS_BRANCHES[0]),
+	const H = pick('h', fixed.h, controllerNumber(values, 'h', HEIGHT.defaultValue))
+	const subOn = pick(
+		'subsidiaryOn',
+		fixed.subsidiaryOn,
+		controllerBoolean(values, 'subsidiaryOn', false),
 	)
-	const colorType = controllerString(values, 'colorType', COLOR_TYPES, 'fullColor')
-	const mono = controllerString(values, 'mono', MONO_COLORS, 'BLACK')
-	const clearSpaceMode = controllerString(values, 'clearSpace', CLEAR_SPACE_MODES, 'off')
+	const branchOn = pick('branchOn', fixed.branchOn, controllerBoolean(values, 'branchOn', false))
+	const form = pick(
+		'form',
+		fixed.form,
+		controllerString(values, 'form', FORM_VALUES, 'horizontal'),
+	)
+	const language = pick(
+		'language',
+		fixed.language as Language | null | undefined,
+		controllerString(values, 'language', LANGUAGE_VALUES, 'ko'),
+	)
+	const subKo = pick(
+		'subsidiary',
+		fixed.subsidiary,
+		controllerString(values, 'subsidiary', SUBSIDIARY_VALUES, SUBSIDIARIES[0].ko),
+	)
+	const branchKey = pick(
+		'branch',
+		fixed.branch,
+		controllerString(values, 'branch', BRANCH_VALUES, branchLabel(OVERSEAS_BRANCHES[0])),
+	)
+	const colorType = pick(
+		'colorType',
+		fixed.colorType as ColorType | null | undefined,
+		controllerString(values, 'colorType', COLOR_TYPES, 'fullColor'),
+	)
+	const mono = pick(
+		'mono',
+		fixed.mono as MonoColor | null | undefined,
+		controllerString(values, 'mono', MONO_COLORS, 'BLACK'),
+	)
+	const clearSpaceMode = pick(
+		'clearSpace',
+		fixed.clearSpace as ClearSpaceMode | null | undefined,
+		controllerString(values, 'clearSpace', CLEAR_SPACE_MODES, 'off'),
+	)
 	/** 치수 도판. 🔴 규정을 **보여주기만** 한다 — 간격은 조정 대상이 아니다(금지규정 #9). */
-	const measured = controllerBoolean(values, 'measured', false)
+	const measured = pick('measured', fixed.measured, controllerBoolean(values, 'measured', false))
 
 	// 계층 파생 규칙은 rules.ts가 소유한다(`tierFor`) — 켜짐 종속·보관 이유가 그 주석에 있다.
 	const tier = tierFor(subOn, branchOn)

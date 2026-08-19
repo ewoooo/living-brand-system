@@ -58,7 +58,26 @@ function renderWidget(child: Child): ReactNode {
 				/>
 			)
 		case 'ciLockupWidget':
-			return <CiLockupWidget />
+			// 🔑 축마다의 고정값을 그대로 넘긴다 — **알약에서 뺀 축에만** 적용된다(`view.tsx`의 `pick`).
+			//    그래서 한 블록에 판을 여럿 두고 꼴·표현만 다르게 고정할 수 있다(정본 지면 구성).
+			return (
+				<CiLockupWidget
+					fixed={{
+						h: child.h,
+						subsidiaryOn: child.subsidiaryOn,
+						subsidiary: child.subsidiary,
+						branchOn: child.branchOn,
+						branch: child.branch,
+						form: child.form,
+						language: child.language,
+						colorType: child.colorType,
+						mono: child.mono,
+						clearSpace: child.clearSpace,
+						measured: child.measured,
+						hiddenControls: child.hiddenControls,
+					}}
+				/>
+			)
 		case 'iconGridWidget':
 			return <IconGridWidget />
 		case 'stemClearSpaceWidget':

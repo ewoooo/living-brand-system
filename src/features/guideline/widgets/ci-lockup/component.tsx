@@ -1,7 +1,7 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { MONO_COLORS, SYMBOL_CONTOURS, WORDMARK_COLOR_NAME } from './rules'
-import { CiLockupView } from './view'
+import { type CiLockupFixed, CiLockupView } from './view'
 
 // 위젯(서버): 색 값만 brand-colors에서 꺼내 뷰에 넘긴다. 고르는 것은 화면이 하고 값의 정본은 컬렉션이다.
 //
@@ -16,8 +16,8 @@ const COLOR_NAMES = [
 	...SYMBOL_CONTOURS.map((c) => c.colorName),
 ]
 
-export async function CiLockupWidget() {
-	return <CiLockupView colors={await brandColors()} />
+export async function CiLockupWidget({ fixed }: { fixed?: CiLockupFixed }) {
+	return <CiLockupView colors={await brandColors()} fixed={fixed} />
 }
 
 /** 색을 못 찾아도 판이 서야 한다 — 위젯 하나가 페이지 전체를 죽이지 않게 한다. */
