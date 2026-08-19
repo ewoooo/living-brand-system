@@ -43,6 +43,8 @@ export function CameraOrbitControl({
 	const mountRef = useRef<HTMLDivElement>(null)
 	const controllerRef = useRef<SceneController | null>(null)
 	const onChangeRef = useRef(onChange)
+	const azimuthStepsKey = azimuthSteps.join(',')
+	const elevationStepsKey = elevationSteps.join(',')
 	const initialAnglesRef = useRef({ azimuthDeg, elevationDeg })
 	const [unsupported, setUnsupported] = useState(false)
 
@@ -54,7 +56,12 @@ export function CameraOrbitControl({
 		controllerRef.current?.update({ azimuthDeg, elevationDeg })
 	}, [azimuthDeg, elevationDeg])
 
+	// 구간 배열은 부모가 매 렌더 새로 만든다(filter().map()). 그 참조를 의존성에 두면 드래그가
+	// 일으킨 리렌더마다 씬이 다시 지어지고, 그 순간 pointer capture와 dragTarget이 함께 사라져
+	// 핸들을 잡자마자 놓친다. 그래서 참조가 아니라 값(문자열 키)이 재생성을 정한다.
 	useEffect(() => {
+		const azimuthSteps = azimuthStepsKey.split(',').map(Number)
+		const elevationSteps = elevationStepsKey.split(',').map(Number)
 		const mount = mountRef.current
 		if (!mount || typeof WebGL2RenderingContext === 'undefined') {
 			setUnsupported(true)
@@ -401,7 +408,7 @@ export function CameraOrbitControl({
 			renderer.dispose()
 			renderer.domElement.remove()
 		}
-	}, [azimuthSteps, elevationSteps, seedImage])
+	}, [azimuthStepsKey, elevationStepsKey, seedImage])
 
 	// 프레임(정사각 컨테이너·표면색)은 소비자인 킷의 CameraControl이 소유한다 — 여기서는 채우기만 한다.
 	return (

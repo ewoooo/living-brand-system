@@ -1,9 +1,10 @@
 'use client'
 
-import { getImageColorAdjustmentControls } from '@/features/image-generation/domain/image-studio-config'
+import { toCanvas } from 'html-to-image'
 import type { AuthorizedTemplateAssetCollection } from '@/features/template-core/domain/template-asset-policy'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { TemplateAssignedImage } from '@/features/template-customization/contexts/template-studio-context'
+import { resolveTemplateImageColorControls } from '@/features/template-customization/domain/image-colorize'
 import {
 	type ImageTransformValue,
 	toImageEditTransform,
@@ -16,8 +17,10 @@ import type {
 	TemplateVectorSlot,
 } from '@/features/template-customization/domain/template-studio-config'
 import type {
+	CanvasVideoSource,
 	RasterArtifact,
 	StudioArtifactProducer,
+	VideoArtifact,
 } from '@/modules/studio-artifact/studio-artifact'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfigMap } from '@/types/template'
@@ -48,6 +51,60 @@ export function createTemplateRasterArtifact(
 						height: source.height,
 					}),
 				),
+		},
+	}
+}
+
+export type TemplateVideoArtifact = VideoArtifact<CanvasVideoSource>
+/**
+ * Raster와 달리 목표 프레임 크기를 인자로 받는다 — 전경 오버레이를 그 해상도로 한 번 구워야
+ * 배율을 올려도 텍스트가 확대되지 않고 그 크기로 다시 래스터화된다.
+ */
+export type TemplateVideoArtifactProducer = (size: {
+	width: number
+	height: number
+}) => Promise<TemplateVideoArtifact>
+
+/**
+ * 배경 Graphic만 시간에 따라 변하고 템플릿 레이어는 변하지 않는다 — 정지 레이어를 한 번만
+ * rasterize하고 프레임마다 배경 shader만 다시 그려 2D canvas에 겹친다. 프레임마다 HTML을
+ * 다시 rasterize하면 5초 영상 하나에 DOM 직렬화를 150번 하게 된다.
+ * `html`은 캔버스 배경이 transparent로 비워진 합성 HTML이어야 한다 — 아니면 배경을 덮는다.
+ * `width`·`height`는 캔버스 크기가 아니라 **내보낼 프레임 크기**다.
+ */
+export async function createTemplateVideoArtifact({
+	background,
+	height,
+	html,
+	width,
+}: {
+	background: CanvasVideoSource
+	height: number
+	html: string
+	width: number
+}): Promise<TemplateVideoArtifact> {
+	const overlay = await withTemplateRasterStage(html, (element) =>
+		toCanvas(element, { canvasHeight: height, canvasWidth: width, pixelRatio: 1 }),
+	)
+	const canvas = document.createElement('canvas')
+	const context = canvas.getContext('2d')
+	if (!context) throw new Error('MP4 합성용 2D 컨텍스트를 만들지 못했습니다.')
+	return {
+		kind: 'video',
+		source: {
+			canvas,
+			renderFrame(timeSeconds, frameWidth, frameHeight) {
+				// 인코더는 첫 프레임의 canvas 크기로 설정되므로 요청 해상도를 그대로 따른다.
+				if (canvas.width !== frameWidth || canvas.height !== frameHeight) {
+					canvas.width = frameWidth
+					canvas.height = frameHeight
+				}
+				background.renderFrame(timeSeconds, frameWidth, frameHeight)
+				context.clearRect(0, 0, frameWidth, frameHeight)
+				context.drawImage(background.canvas, 0, 0, frameWidth, frameHeight)
+				context.drawImage(overlay, 0, 0, frameWidth, frameHeight)
+			},
+			restore: () => background.restore(),
 		},
 	}
 }
@@ -114,12 +171,9 @@ export function composeTemplateStudioHtml({
 			const contract = imageContracts[slotId]?.find(
 				(candidate) => candidate.config.id === state.profileId,
 			)
-			// 색 치환은 프로파일이 만든 라인 아트에만 뜻이 있다 — 샘플 이미지는 그대로 얹는다.
-			const colorizable =
-				!state.image ||
-				(state.image.kind === 'generated' && state.image.profileId === state.profileId)
-			const colorControls =
-				contract && colorizable ? getImageColorAdjustmentControls(contract.config) : null
+			const colorControls = contract
+				? resolveTemplateImageColorControls(state, contract.config)
+				: null
 			const lineColor = colorControls ? state.featureValues[colorControls.line.id] : undefined
 			const backgroundColor = colorControls?.background
 				? state.featureValues[colorControls.background.id]

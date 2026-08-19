@@ -117,38 +117,54 @@ void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
 		animationFrame = requestAnimationFrame(animate)
 	}
 
+	/**
+	 * canvas.width/height는 같은 값을 다시 넣어도 드로잉 버퍼를 통째로 재할당하고 비운다.
+	 * export는 프레임마다 이 경로를 지나므로, 값이 바뀔 때만 써서 재할당을 없앤다.
+	 */
+	function setSurface(width: number, height: number) {
+		const nextWidth = Math.max(1, Math.floor(width))
+		const nextHeight = Math.max(1, Math.floor(height))
+		if (canvas.width === nextWidth && canvas.height === nextHeight) return
+		canvas.width = nextWidth
+		canvas.height = nextHeight
+	}
+
 	function resize(width: number, height: number) {
 		viewport = {
 			width: Math.max(1, Math.floor(width)),
 			height: Math.max(1, Math.floor(height)),
 		}
-		canvas.width = Math.max(1, Math.floor(width * pixelRatio))
-		canvas.height = Math.max(1, Math.floor(height * pixelRatio))
+		setSurface(width * pixelRatio, height * pixelRatio)
 		draw(currentTime)
 	}
 
 	resize(container.clientWidth, container.clientHeight)
 	if (!reducedMotion) animationFrame = requestAnimationFrame(animate)
-	const restore = () => resize(viewport.width, viewport.height)
+	const restorePreviewSurface = () => resize(viewport.width, viewport.height)
 	const raster = createGraphicRasterArtifact({
 		canvas,
 		getViewport: () => viewport,
 		render(width, height) {
-			canvas.width = Math.max(1, Math.floor(width))
-			canvas.height = Math.max(1, Math.floor(height))
+			setSurface(width, height)
 			draw(currentTime)
 		},
 	})
 	const videoSource: CanvasVideoSource = {
 		canvas,
 		renderFrame(timeSeconds, width, height) {
+			// 미리보기 루프는 export가 읽어 가는 바로 그 canvas에 계속 그린다. 인코더가
+			// 프레임을 스냅숏하는 사이에 GL 작업이 겹치게 두지 않는다 — restore()가 되켠다.
+			cancelAnimationFrame(animationFrame)
+			animationFrame = 0
 			const previewTime = currentTime
-			canvas.width = Math.max(1, Math.floor(width))
-			canvas.height = Math.max(1, Math.floor(height))
+			setSurface(width, height)
 			draw(timeSeconds)
 			currentTime = previewTime
 		},
-		restore,
+		restore() {
+			restorePreviewSurface()
+			if (!reducedMotion && !animationFrame) animationFrame = requestAnimationFrame(animate)
+		},
 	}
 
 	return {

@@ -18,31 +18,39 @@ type ControllerBrowserRootProps = {
 }
 
 /**
- * 자산 브라우저 컴파운드의 뿌리 — 열림 상태와 패널의 위치 기준을 함께 소유한다.
+ * 자산 브라우저 컴파운드의 뿌리 — 패널이 뜰 위치 기준(프레임)을 소유한다.
+ * 여러 자산 카드가 이 하나의 프레임을 공유하고, 열림 상태는 카드마다 Item이 따로 갖는다.
+ */
+function ControllerBrowserRoot({ className, children }: ControllerBrowserRootProps) {
+	const [frame, setFrame] = React.useState<HTMLDivElement | null>(null)
+
+	return (
+		<div
+			ref={setFrame}
+			data-slot="controller-browser"
+			className={cn('relative h-full', className)}
+		>
+			<BrowserFrameContext.Provider value={frame}>{children}</BrowserFrameContext.Provider>
+		</div>
+	)
+}
+
+/**
+ * 자산 하나의 열림 상태 — 트리거·패널 한 짝을 감싼다.
  *
  * 열림은 radix가 소유하는 비제어 상태다. 소비자는 useState를 들지 않고, 트리거·닫기·Esc가
  * 그 상태를 움직인다. ui/dialog의 DialogContent는 스크림(DialogOverlay)과 화면 중앙 고정을
  * 함께 소유해서 쓸 수 없어 radix Dialog를 modal={false}로 직접 감싼다 — 스크림 없이 캔버스가
  * 계속 보이고 조작되면서도 Esc 닫기·role="dialog"·닫은 뒤 트리거로 포커스 복귀는 radix가 갖는다.
  *
- * Trigger·Panel은 이 Root의 Dialog 컨텍스트가 없으면 렌더에서 죽는다 — 짝이 구조로 강제된다.
+ * 🔴 카드마다 하나여야 한다 — radix Dialog는 Root마다 triggerRef를 하나만 들어서, 한 Dialog에
+ * 트리거가 둘 이상 붙으면 서로 덮어쓴다. 그러면 누른 트리거가 "패널 밖"으로 판정돼(포커스가
+ * 트리거로 들어오는 순간 dismiss) 패널이 열렸다가 곧바로 닫힌다.
+ *
+ * Trigger·Panel은 이 Item의 Dialog 컨텍스트가 없으면 렌더에서 죽는다 — 짝이 구조로 강제된다.
  */
-function ControllerBrowserRoot({ className, children }: ControllerBrowserRootProps) {
-	const [frame, setFrame] = React.useState<HTMLDivElement | null>(null)
-
-	return (
-		<DialogPrimitive.Root modal={false}>
-			<div
-				ref={setFrame}
-				data-slot="controller-browser"
-				className={cn('relative h-full', className)}
-			>
-				<BrowserFrameContext.Provider value={frame}>
-					{children}
-				</BrowserFrameContext.Provider>
-			</div>
-		</DialogPrimitive.Root>
-	)
+function ControllerBrowserItem({ children }: { children: React.ReactNode }) {
+	return <DialogPrimitive.Root modal={false}>{children}</DialogPrimitive.Root>
 }
 
 /** 패널을 여는 버튼 자리 — 자산 브라우저 안에만 존재한다(무엇을 여는지가 계약으로 남는다). */
@@ -168,6 +176,7 @@ function ControllerBrowserPanel({ tabs, empty, className, children }: Controller
  */
 export const ControllerBrowser = {
 	Root: ControllerBrowserRoot,
+	Item: ControllerBrowserItem,
 	Trigger: ControllerBrowserTrigger,
 	Panel: ControllerBrowserPanel,
 	Thumbnail: ControllerBrowserThumbnail,
@@ -176,6 +185,7 @@ export const ControllerBrowser = {
 
 export {
 	ControllerBrowserClose,
+	ControllerBrowserItem,
 	ControllerBrowserPanel,
 	ControllerBrowserRoot,
 	ControllerBrowserThumbnail,

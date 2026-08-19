@@ -7,6 +7,7 @@ import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-pro
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 import { acceptsImagePromptExecution } from '@/features/image-generation/domain/image-studio-config'
+import { resolveTemplateImageColorControls } from '@/features/template-customization/domain/image-colorize'
 import type { ResolvedTemplateImageConfig } from '@/features/template-customization/domain/template-studio-config'
 import type { TemplateImageSlotState } from '@/features/template-customization/hooks/use-template-studio'
 import type { SampleImageOption } from '@/features/template-customization/services/list-sample-images.client'
@@ -48,6 +49,10 @@ export function ImageSlotInput({
 		? !acceptsImagePromptExecution(selected.prompt, value.prompt)
 		: true
 	const selectedSample = value.image?.kind === 'sample' ? value.image : undefined
+	// 샘플에는 프로파일 선택·프롬프트가 없지만 색 치환은 선화라면 뜻이 있다 — 판정은 도메인이 소유한다.
+	const colorControls = selected
+		? resolveTemplateImageColorControls(value, selected.config)
+		: null
 	// readonly는 전환 트리거가 없으므로 기존 화면(잠긴 생성 폼)을 그대로 본다.
 	const mode = readonly ? 'generate' : value.imageMode
 
@@ -68,24 +73,42 @@ export function ImageSlotInput({
 			)}
 			<Controller.TabPanel tabKey={mode}>
 				{mode === 'preset' ? (
-					<Controller.AssetCard
-						title={selectedSample?.name ?? '이미지를 선택하세요'}
-						subtitle="Sample Image"
-						buttonLabel="Browse"
-						aria-label="샘플 이미지 선택"
-						tabs={['Sample Images']}
-						previewImage={
-							selectedSample && {
-								url: selectedSample.thumbnailUrl,
-								alt: selectedSample.alt,
+					<>
+						<Controller.AssetCard
+							title={selectedSample?.name ?? '이미지를 선택하세요'}
+							subtitle="Sample Image"
+							buttonLabel="Browse"
+							aria-label="샘플 이미지 선택"
+							tabs={['Sample Images']}
+							previewImage={
+								selectedSample && {
+									url: selectedSample.thumbnailUrl,
+									alt: selectedSample.alt,
+								}
 							}
-						}
-					>
-						<SampleImagePicker
-							selectedId={selectedSample?.sampleImageId}
-							onSelect={onSelectSampleImage}
-						/>
-					</Controller.AssetCard>
+						>
+							<SampleImagePicker
+								selectedId={selectedSample?.sampleImageId}
+								onSelect={onSelectSampleImage}
+							/>
+						</Controller.AssetCard>
+						{colorControls &&
+							[
+								colorControls.line,
+								...(colorControls.background ? [colorControls.background] : []),
+							].map((definition) => (
+								<ControllerControlRenderer
+									key={definition.id}
+									definition={definition}
+									value={
+										definition.id in value.featureValues
+											? value.featureValues[definition.id]
+											: definition.defaultValue
+									}
+									onChange={(next) => onFeatureChange(definition.id, next)}
+								/>
+							))}
+					</>
 				) : (
 					<>
 						{pinned || readonly ? (

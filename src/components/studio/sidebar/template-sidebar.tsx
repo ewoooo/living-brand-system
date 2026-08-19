@@ -10,6 +10,7 @@ import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import {
 	ExportAction,
 	PrintControls,
+	ScaleControls,
 	VideoControls,
 } from '@/components/studio/shared/output-controls'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
@@ -104,9 +105,17 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 							</div>
 							<Controller.Row label="Size" readonly>
 								<span className="text-sm text-muted-foreground">
-									{canvas.width} × {canvas.height}px
+									{exporting.outputSize?.width ?? canvas.width} ×{' '}
+									{exporting.outputSize?.height ?? canvas.height}px
 								</span>
 							</Controller.Row>
+							{exporting.scaleApplies && (
+								<ScaleControls
+									scale={exporting.scale}
+									options={exporting.scaleOptions}
+									onChange={exporting.setScale}
+								/>
+							)}
 							<Controller.Row label="Format">
 								<Controller.Select
 									options={exporting.formats.map((candidate) => ({

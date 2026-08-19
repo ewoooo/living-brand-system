@@ -450,7 +450,7 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 					artifact: 'raster',
 					format: 'jpeg',
 					colorProfile: { space: 'rgb', icc: 'srgb' },
-					options: { quality: 90 },
+					options: { quality: 90, scale: 1 },
 					scope: 'selected',
 				},
 			}),

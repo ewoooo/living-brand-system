@@ -74,7 +74,7 @@ function SidebarRoot({
 	const navigation = (
 		<nav
 			aria-label={ariaLabel}
-			className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-hidden rounded-xl bg-background p-4 text-foreground shadow-lg transition-[padding] duration-200 ease-linear motion-reduce:transition-none xl:group-data-[collapsed=false]/sidebar-api:p-3"
+			className="flex min-h-0 w-full flex-col gap-2 overflow-hidden rounded-xl bg-background p-4 text-foreground shadow-lg transition-[padding] duration-200 ease-linear motion-reduce:transition-none xl:group-data-[collapsed=false]/sidebar-api:p-3"
 		>
 			{children}
 		</nav>
