@@ -105,6 +105,8 @@ export async function getGuidelineSectionPreview(
 			slug: page.slug,
 			description: page.description,
 			displayOrder: page.displayOrder,
+			background: page.background,
+			backgroundTone: page.backgroundTone,
 			blocks: page.blocks,
 		})),
 	}
