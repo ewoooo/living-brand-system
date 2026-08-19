@@ -5,14 +5,14 @@ import { toJpeg } from 'html-to-image'
 /** DOM element 하나를 RGB JPEG Blob으로 변환한다. 다운로드는 공통 useExport가 소유한다. */
 export async function elementToJpeg(
 	element: HTMLElement,
-	options: { width: number; height: number; quality: number },
+	options: { width: number; height: number; quality: number; scale: number },
 ): Promise<Blob> {
 	const dataUrl = await toJpeg(element, {
 		backgroundColor: '#fff',
 		cacheBust: true,
 		canvasHeight: options.height,
 		canvasWidth: options.width,
-		pixelRatio: 1,
+		pixelRatio: options.scale,
 		quality: options.quality / 100,
 	})
 	const response = await fetch(dataUrl)

@@ -46,7 +46,7 @@ export type ExportRequest =
 			artifact: 'raster'
 			format: 'jpeg'
 			colorProfile: ColorProfile
-			options: { quality: number }
+			options: { quality: number; scale: number }
 	  }
 	| {
 			artifact: 'raster'

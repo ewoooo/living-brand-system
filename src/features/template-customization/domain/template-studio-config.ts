@@ -17,6 +17,7 @@ import {
 	DEFAULT_RASTER_VIDEO_CAPABILITY,
 	parseStudioOutputCapability,
 	projectStudioOutputPolicy,
+	resolveMaxExportScale,
 	resolveStudioArtifactOutputFormats,
 	resolveStudioOutputCapability,
 	type StudioOutputCapability,
@@ -155,6 +156,8 @@ export type TemplateStudioConfig = StudioControllerConfig<'template', number> & 
 		graphicConfigs: readonly GraphicStudioConfig[]
 		exportOption: {
 			canvas: { width: number; height: number }
+			/** 캔버스 좌표계 대비 허용 최대 출력 배율. MP4 인코딩 한도에서 되짚어 구한다. */
+			maxScale: number
 		}
 	}
 }
@@ -299,7 +302,7 @@ export function parseTemplateStudioConfig(input: unknown): TemplateStudioConfig 
 	}
 
 	const exportOption = templateRecord(template.exportOption, 'TemplateStudioConfig exportOption')
-	assertTemplateKeys(exportOption, ['canvas'])
+	assertTemplateKeys(exportOption, ['canvas', 'maxScale'])
 	resolveStudioArtifactOutputFormats(
 		common.artifacts,
 		(root.output as StudioOutputCapability).formats,
@@ -308,6 +311,7 @@ export function parseTemplateStudioConfig(input: unknown): TemplateStudioConfig 
 	assertTemplateKeys(canvas, ['width', 'height'])
 	assertPositiveNumber(canvas.width, 'canvas.width')
 	assertPositiveNumber(canvas.height, 'canvas.height')
+	assertPositiveNumber(exportOption.maxScale, 'exportOption.maxScale')
 
 	const typed = input as TemplateStudioConfig
 	const { text, background } = partitionTemplateSlots(typed.template.slots)
@@ -530,11 +534,15 @@ export function getTemplateRuntimeManifest({
 				: { placeholder: slot.input.placeholder }),
 		}),
 	)
-	// 템플릿은 배율 컨트롤이 없어 자기 캔버스 크기로만 내보낸다 — 그 크기를 MP4 상한으로 선언해야
-	// 세로형 캔버스가 폴백의 가로형 1080p 상한에 막히지 않는다(가져오기 전에는 크기를 모른다).
+	// 세로형 캔버스는 폴백의 가로형 1080p 상한에 막힌다 — 자기 캔버스에 허용 배율을 곱해 선언한다.
+	const maxScale = width && height ? resolveMaxExportScale(width, height) : 1
 	const videoFrame =
 		width && height && width > 0 && height > 0
-			? { ...DEFAULT_RASTER_VIDEO_CAPABILITY, maxWidth: width, maxHeight: height }
+			? {
+					...DEFAULT_RASTER_VIDEO_CAPABILITY,
+					maxWidth: width * maxScale,
+					maxHeight: height * maxScale,
+				}
 			: null
 	return {
 		artifacts: { raster: {}, ...(videoFrame ? { video: videoFrame } : {}) },
@@ -685,6 +693,7 @@ export function deriveTemplateStudioConfig(
 			graphicConfigs,
 			exportOption: {
 				canvas: { width: template.width, height: template.height },
+				maxScale: resolveMaxExportScale(template.width, template.height),
 			},
 		},
 	}

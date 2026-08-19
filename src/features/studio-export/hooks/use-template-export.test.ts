@@ -40,6 +40,7 @@ describe('useTemplateExport', () => {
 					fileName: 'card',
 					width: 600,
 					height: 300,
+					maxScale: 1,
 					controller: { groups: [], values: {} },
 				},
 			}),
@@ -73,6 +74,7 @@ describe('useTemplateExport', () => {
 		fileName: 'card',
 		width: 600,
 		height: 300,
+		maxScale: 1,
 		controller: { groups: [], values: {} },
 	}
 
@@ -100,6 +102,51 @@ describe('useTemplateExport', () => {
 				request: expect.objectContaining({ artifact: 'video', format: 'mp4' }),
 			}),
 		)
+	})
+
+	it('배율을 올리면 Video Artifact를 그 프레임 크기로 만든다', async () => {
+		// 전경 오버레이는 producer가 받은 크기로 한 번 구워진다 — 배율을 안 넘기면 텍스트가 늘어난다.
+		const video = { kind: 'video', source: {} } as unknown as TemplateVideoArtifact
+		const produce = vi.fn(async () => video)
+		const { result } = renderHook(() =>
+			useTemplateExport({
+				artifact: () =>
+					createTemplateRasterArtifact({
+						html: '<div>card</div>',
+						width: 600,
+						height: 300,
+					}),
+				videoArtifact: produce,
+				capability: MP4_CAPABILITY,
+				metadata: { ...MP4_METADATA, maxScale: 2 },
+			}),
+		)
+
+		act(() => result.current.setScale(2))
+		act(() => result.current.run())
+		await waitFor(() => expect(produce).toHaveBeenCalledOnce())
+		expect(produce).toHaveBeenCalledWith({ width: 1200, height: 600 })
+		expect(result.current.outputSize).toEqual({ width: 1200, height: 600 })
+	})
+
+	it('허용 배율을 넘는 값은 무시하고 1배로 둔다', () => {
+		const { result } = renderHook(() =>
+			useTemplateExport({
+				artifact: () =>
+					createTemplateRasterArtifact({
+						html: '<div>card</div>',
+						width: 600,
+						height: 300,
+					}),
+				videoArtifact: null,
+				capability: MP4_CAPABILITY,
+				metadata: MP4_METADATA,
+			}),
+		)
+
+		expect(result.current.scaleOptions).toEqual([1])
+		act(() => result.current.setScale(3))
+		expect(result.current.scale).toBe(1)
 	})
 
 	it('시간축이 없어도 MP4는 Raster Artifact로 반드시 나온다', async () => {

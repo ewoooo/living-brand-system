@@ -21,8 +21,9 @@ describe('elementToPng', () => {
 			element,
 			expect.objectContaining({
 				backgroundColor: '#fff',
-				canvasHeight: 600,
-				canvasWidth: 1200,
+				// 배율은 pixelRatio 한 곳만 갖는다 — canvasWidth에도 곱하면 제곱으로 커진다.
+				canvasHeight: 300,
+				canvasWidth: 600,
 				pixelRatio: 2,
 			}),
 		)

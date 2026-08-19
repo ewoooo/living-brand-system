@@ -21,6 +21,8 @@ export type TemplateExportMetadata = {
 	fileName: string
 	width: number
 	height: number
+	/** 캔버스 좌표계 대비 허용 최대 출력 배율 — 1이면 배율 선택지가 없다. */
+	maxScale: number
 	controller: {
 		groups: readonly ControllerGroupDefinition[]
 		values: Readonly<ControllerValues>
@@ -51,6 +53,10 @@ export function useTemplateExport({
 	const [durationSeconds, setDurationSeconds] = useState(() =>
 		Math.min(5, capability.video?.mp4.maxDurationSeconds ?? 5),
 	)
+	const [scale, setScale] = useState(1)
+	const maxScale = Math.max(1, Math.floor(metadata?.maxScale ?? 1))
+	const scaleOptions = Array.from({ length: maxScale }, (_, index) => index + 1)
+	const effectiveScale = scaleOptions.includes(scale) ? scale : 1
 	const effectivePpi = ppi && capability.print?.ppi.includes(ppi) ? ppi : capability.print?.ppi[0]
 	const effectiveFps =
 		fps && capability.video?.mp4.fps.includes(fps) ? fps : capability.video?.mp4.fps[0]
@@ -68,6 +74,7 @@ export function useTemplateExport({
 					? createRasterExportRequest(candidate, capability, {
 							width: metadata.width,
 							height: metadata.height,
+							scale: effectiveScale,
 							ppi: effectivePpi,
 							fps: effectiveFps,
 							durationSeconds: effectiveDuration,
@@ -78,15 +85,31 @@ export function useTemplateExport({
 				? { artifact: 'video', format: 'mp4', options: request.options }
 				: request
 		},
-		[capability, effectiveDuration, effectiveFps, effectivePpi, metadata, videoArtifact],
+		[
+			capability,
+			effectiveDuration,
+			effectiveFps,
+			effectivePpi,
+			effectiveScale,
+			metadata,
+			videoArtifact,
+		],
 	)
 	const execute = useCallback(
 		async (request: TemplateExportRequest) => {
 			if (!metadata) throw new Error('Template export is unavailable.')
-			const producer = request.artifact === 'video' ? videoArtifact : artifact
-			if (!producer) throw new Error('Template export is unavailable.')
+			// Video Artifact는 전경을 목표 프레임 크기로 구워야 하므로 요청 해상도를 넘긴다.
+			if (request.artifact === 'video') {
+				if (!videoArtifact) throw new Error('Template export is unavailable.')
+				const { width, height } = request.options
+				return executeArtifactExport({
+					artifact: await videoArtifact({ width, height }),
+					fileName: metadata.fileName,
+					request,
+				})
+			}
 			return executeArtifactExport({
-				artifact: await producer(),
+				artifact: await artifact(),
 				fileName: metadata.fileName,
 				request,
 			})
@@ -132,6 +155,15 @@ export function useTemplateExport({
 			const max = capability.video?.mp4.maxDurationSeconds
 			if (max && next > 0 && next <= max) setDurationSeconds(next)
 		},
+		scale: effectiveScale,
+		scaleOptions,
+		setScale: (next: number) => {
+			if (scaleOptions.includes(next)) setScale(next)
+		},
+		/** 배율을 반영한 실제 출력 픽셀 크기 — 사이드바가 Size 행에 그대로 보여 준다. */
+		outputSize: metadata
+			? { width: metadata.width * effectiveScale, height: metadata.height * effectiveScale }
+			: null,
 		canExport: Boolean(request && output.canExport(request)),
 		run: () => {
 			if (request) void output.run(request)

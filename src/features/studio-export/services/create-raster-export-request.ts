@@ -6,6 +6,8 @@ import type { StudioOutputCapability } from '../studio-output'
 export type RasterExportSettings = {
 	width: number
 	height: number
+	/** 캔버스 좌표계 대비 출력 배율. 벡터·텍스트는 이 배율로 다시 래스터화된다. */
+	scale?: number
 	ppi?: PrintPpi
 	fps?: VideoExportSpec['fps']
 	durationSeconds?: number
@@ -18,20 +20,21 @@ export function createRasterExportRequest(
 	settings: RasterExportSettings,
 ): Extract<ExportRequest, { artifact: 'raster' }> | null {
 	if (!capability.formats.includes(format)) return null
+	const scale = settings.scale ?? 1
 	switch (format) {
 		case 'png':
 			return {
 				artifact: 'raster',
 				format,
 				colorProfile: { space: 'rgb', icc: capability.colorProfiles?.rgb?.[0] ?? 'srgb' },
-				options: { scale: 1, transparent: true },
+				options: { scale, transparent: true },
 			}
 		case 'jpeg':
 			return {
 				artifact: 'raster',
 				format,
 				colorProfile: { space: 'rgb', icc: capability.colorProfiles?.rgb?.[0] ?? 'srgb' },
-				options: { quality: 90 },
+				options: { quality: 90, scale },
 			}
 		case 'tiff':
 		case 'pdf': {
@@ -56,8 +59,8 @@ export function createRasterExportRequest(
 					container: 'mp4',
 					codec: video.codec,
 					colorSpace: video.colorSpace,
-					width: toEvenDimension(settings.width),
-					height: toEvenDimension(settings.height),
+					width: toEvenDimension(settings.width * scale),
+					height: toEvenDimension(settings.height * scale),
 					fps,
 					durationSeconds:
 						settings.durationSeconds ?? Math.min(5, video.maxDurationSeconds),

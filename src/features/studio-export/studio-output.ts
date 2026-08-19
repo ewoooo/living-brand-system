@@ -28,6 +28,22 @@ export const DEFAULT_RASTER_VIDEO_CAPABILITY = {
 	maxDurationSeconds: 10,
 }
 
+/**
+ * H.264 Level 5.1이 허용하는 프레임당 매크로블록 수. 세로형 포스터는 1080p 가정보다 훨씬 큰
+ * 프레임을 내므로, 배율 상한은 고정 숫자가 아니라 캔버스 크기에서 이 예산으로 되짚어 구한다.
+ */
+const MAX_VIDEO_MACROBLOCKS = 36864
+const MAX_EXPORT_SCALE = 4
+
+/** 캔버스 한 장을 MP4로 인코딩할 수 있는 가장 큰 정수 배율. 최소 1을 보장한다. */
+export function resolveMaxExportScale(width: number, height: number): number {
+	for (let scale = MAX_EXPORT_SCALE; scale > 1; scale -= 1) {
+		const macroblocks = Math.ceil((width * scale) / 16) * Math.ceil((height * scale) / 16)
+		if (macroblocks <= MAX_VIDEO_MACROBLOCKS) return scale
+	}
+	return 1
+}
+
 export type StudioOutputCapability<Format extends StudioOutputFormat = StudioOutputFormat> = {
 	formats: readonly Format[]
 	original?: boolean
@@ -321,7 +337,12 @@ function validRequestOptions(request: ExportRequest): boolean {
 				case 'png':
 					return Number.isFinite(request.options.scale) && request.options.scale > 0
 				case 'jpeg':
-					return request.options.quality > 0 && request.options.quality <= 100
+					return (
+						request.options.quality > 0 &&
+						request.options.quality <= 100 &&
+						Number.isFinite(request.options.scale) &&
+						request.options.scale > 0
+					)
 				case 'tiff':
 					return (
 						PRINT_PPI_VALUES.includes(request.options.ppi) &&

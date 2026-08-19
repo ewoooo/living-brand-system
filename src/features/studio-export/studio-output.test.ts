@@ -3,6 +3,7 @@ import { STUDIO_OUTPUT_FORMATS } from './export-contract'
 import {
 	parseStudioOutputCapability,
 	projectStudioOutputPolicy,
+	resolveMaxExportScale,
 	resolveStudioArtifactOutputFormats,
 	resolveStudioOutputCapability,
 	resolveStudioOutputFormats,
@@ -156,5 +157,19 @@ describe('StudioOutputCapability', () => {
 				{ allowedFormats: ['mp4'], video: { maxWidth: 1920 } },
 			),
 		).toThrow('Runtime보다 넓습니다')
+	})
+})
+
+describe('resolveMaxExportScale', () => {
+	it('H.264 한도 안에서 가장 큰 정수 배율을 준다', () => {
+		// 630×891 → 4배 2520×3564는 35,234 매크로블록으로 Level 5.1 한도(36,864) 안이다.
+		expect(resolveMaxExportScale(630, 891)).toBe(4)
+		// 1260×1782는 2배가 같은 프레임이므로 2배까지만 간다.
+		expect(resolveMaxExportScale(1260, 1782)).toBe(2)
+		expect(resolveMaxExportScale(1920, 1080)).toBe(2)
+	})
+
+	it('이미 한도에 가까운 캔버스도 최소 1배는 보장한다', () => {
+		expect(resolveMaxExportScale(4096, 4096)).toBe(1)
 	})
 })

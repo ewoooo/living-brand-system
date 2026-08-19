@@ -56,13 +56,21 @@ export function createTemplateRasterArtifact(
 }
 
 export type TemplateVideoArtifact = VideoArtifact<CanvasVideoSource>
-export type TemplateVideoArtifactProducer = StudioArtifactProducer<TemplateVideoArtifact>
+/**
+ * Raster와 달리 목표 프레임 크기를 인자로 받는다 — 전경 오버레이를 그 해상도로 한 번 구워야
+ * 배율을 올려도 텍스트가 확대되지 않고 그 크기로 다시 래스터화된다.
+ */
+export type TemplateVideoArtifactProducer = (size: {
+	width: number
+	height: number
+}) => Promise<TemplateVideoArtifact>
 
 /**
  * 배경 Graphic만 시간에 따라 변하고 템플릿 레이어는 변하지 않는다 — 정지 레이어를 한 번만
  * rasterize하고 프레임마다 배경 shader만 다시 그려 2D canvas에 겹친다. 프레임마다 HTML을
  * 다시 rasterize하면 5초 영상 하나에 DOM 직렬화를 150번 하게 된다.
  * `html`은 캔버스 배경이 transparent로 비워진 합성 HTML이어야 한다 — 아니면 배경을 덮는다.
+ * `width`·`height`는 캔버스 크기가 아니라 **내보낼 프레임 크기**다.
  */
 export async function createTemplateVideoArtifact({
 	background,

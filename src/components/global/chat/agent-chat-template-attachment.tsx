@@ -45,6 +45,8 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 		fileName: attachment.name,
 		width: attachment.width,
 		height: attachment.height,
+		// 채팅 첨부에는 배율 컨트롤이 없다 — 스튜디오에서만 배율을 고른다.
+		maxScale: 1,
 		controller: {
 			groups: attachment.controller.groups,
 			values: {

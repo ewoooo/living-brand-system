@@ -44,6 +44,7 @@ function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
 			fileName: template.name,
 			width: config.template.exportOption.canvas.width,
 			height: config.template.exportOption.canvas.height,
+			maxScale: config.template.exportOption.maxScale,
 			controller: {
 				groups: config.controller.groups,
 				values: execution.controllerValues,

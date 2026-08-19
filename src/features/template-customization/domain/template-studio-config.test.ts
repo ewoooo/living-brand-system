@@ -66,7 +66,9 @@ describe('deriveTemplateStudioConfig', () => {
 		const config = deriveTemplateStudioConfig(poster, [imageConfig], [forwardStraightConfig])
 
 		expect(config.output.formats).toContain('mp4')
-		expect(config.output.video?.mp4).toMatchObject({ maxWidth: 1260, maxHeight: 1782 })
+		// 상한은 캔버스가 아니라 캔버스 × 허용 배율 — 1260×1782는 H.264 한도 안에서 2배까지 간다.
+		expect(config.template.exportOption.maxScale).toBe(2)
+		expect(config.output.video?.mp4).toMatchObject({ maxWidth: 2520, maxHeight: 3564 })
 
 		const request = createRasterExportRequest('mp4', config.output, {
 			width: poster.width,

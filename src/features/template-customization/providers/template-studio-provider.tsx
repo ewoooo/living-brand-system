@@ -552,17 +552,21 @@ export function TemplateStudioProvider({
 			width,
 		})
 	}, [background.state.type, composedHtml, height, width])
-	const videoArtifact = useCallback((): Promise<TemplateVideoArtifact> => {
-		const graphicVideo = graphicVideoRef.current
-		if (!graphicVideo) throw new Error('그래픽 배경 미리보기가 준비되지 않았습니다.')
-		// composedHtml은 배경이 graphic일 때 캔버스 배경을 transparent로 비운다 — 그 위에 겹친다.
-		return createTemplateVideoArtifact({
-			background: graphicVideo,
-			height,
-			html: composedHtml,
-			width,
-		})
-	}, [composedHtml, height, width])
+	const videoArtifact = useCallback(
+		(size: { width: number; height: number }): Promise<TemplateVideoArtifact> => {
+			const graphicVideo = graphicVideoRef.current
+			if (!graphicVideo) throw new Error('그래픽 배경 미리보기가 준비되지 않았습니다.')
+			// composedHtml은 배경이 graphic일 때 캔버스 배경을 transparent로 비운다 — 그 위에 겹친다.
+			// 캔버스 크기가 아니라 요청된 프레임 크기로 굽는다 — 배율을 올려도 전경이 흐려지지 않는다.
+			return createTemplateVideoArtifact({
+				background: graphicVideo,
+				height: size.height,
+				html: composedHtml,
+				width: size.width,
+			})
+		},
+		[composedHtml],
+	)
 
 	const value = useMemo<TemplateStudioValue>(
 		() => ({
