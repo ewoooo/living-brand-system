@@ -128,6 +128,20 @@ export const LINEAR_FLUTED_GLASS_PRESET_IDS = Object.keys(
 
 export type LinearFlutedGlassPresetId = keyof typeof LINEAR_FLUTED_GLASS_PRESETS
 
+/**
+ * 프리셋 select에 쓰는 사람이 읽는 이름.
+ *
+ * Record 타입이 프리셋 목록과 묶어 두므로, 프리셋을 더하거나 지우면 여기서 타입이 깨진다 —
+ * 옵션을 잊어 화면에 안 뜨거나 없는 프리셋을 고를 수 있게 되는 어긋남을 컴파일에서 잡는다.
+ */
+const LINEAR_FLUTED_GLASS_PRESET_LABELS: Record<LinearFlutedGlassPresetId, string> = {
+	basic: '기본',
+	focused: '집중',
+	diffused: '확산',
+	upperAxis: '상단 축',
+	lowerAxis: '하단 축',
+}
+
 type RangeControl = Extract<ControllerControlDefinition, { kind: 'range' }>
 
 function rangeControl(
@@ -171,14 +185,11 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 						id: 'preset',
 						kind: 'select' as const,
 						label: '프리셋',
-						defaultValue: 'basic',
-						options: [
-							{ value: 'basic', label: '기본' },
-							{ value: 'focused', label: '집중' },
-							{ value: 'diffused', label: '확산' },
-							{ value: 'upperAxis', label: '상단 축' },
-							{ value: 'lowerAxis', label: '하단 축' },
-						],
+						defaultValue: 'basic' satisfies LinearFlutedGlassPresetId,
+						options: LINEAR_FLUTED_GLASS_PRESET_IDS.map((id) => ({
+							value: id,
+							label: LINEAR_FLUTED_GLASS_PRESET_LABELS[id],
+						})),
 					},
 				],
 			},
@@ -211,6 +222,12 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 						'광선 색상 5',
 						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor5,
 					),
+					// 배경과 블룸도 색이다 — 광선 5색만 열어 두면 브랜드 색조를 바꿔도 이 둘이 초록으로 남는다.
+					colorControl(
+						'rayBackgroundColor',
+						'배경 색상',
+						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayBackgroundColor,
+					),
 					rangeControl(
 						'paletteDrift',
 						'팔레트 위상 속도',
@@ -224,6 +241,11 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 				id: 'rays',
 				title: 'Rays',
 				controls: [
+					colorControl(
+						'bloomColor',
+						'블룸 색상',
+						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.bloomColor,
+					),
 					rangeControl(
 						'rayBloom',
 						'블룸 강도',

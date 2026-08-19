@@ -4,8 +4,11 @@ import { cn } from '@/lib/utils'
 
 type GuidelineBlockFrameVariant = 'normal' | 'secondary' | 'inverted'
 
+// 🔴 normal은 면을 **칠하지 않는다.** 기본 바탕 위에서는 `bg-background`와 결과가 같지만,
+//    문서(Page)가 옅은 면을 깔면 불투명한 흰 면이 그 위를 덮어 제목만 색이 있고 배치는 흰
+//    상태가 된다(실측). 색을 갖지 않은 블록은 아무 면도 갖지 않는 것이 맞다.
 const variantClassNames: Record<GuidelineBlockFrameVariant, string> = {
-	normal: 'bg-background text-foreground',
+	normal: 'text-foreground',
 	secondary: 'bg-secondary text-secondary-foreground',
 	inverted: 'bg-foreground text-background',
 }

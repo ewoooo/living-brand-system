@@ -70,8 +70,11 @@ import * as migration_20260818_064023_sample_images from './20260818_064023_samp
 import * as migration_20260818_093907_remove_plugins_collection from './20260818_093907_remove_plugins_collection';
 import * as migration_20260818_102721_sample_image_line_art from './20260818_102721_sample_image_line_art';
 import * as migration_20260819_054538_sample_image_group from './20260819_054538_sample_image_group';
+import * as migration_20260819_075057_drop_layout_grid_locks from './20260819_075057_drop_layout_grid_locks';
 import * as migration_20260819_084217_ci_lockup_controller_fields from './20260819_084217_ci_lockup_controller_fields';
 import * as migration_20260819_085700_ci_lockup_axis_defaults from './20260819_085700_ci_lockup_axis_defaults';
+import * as migration_20260819_090753_ci_lockup_snapshot_repair from './20260819_090753_ci_lockup_snapshot_repair';
+import * as migration_20260819_090804_guideline_background_tone from './20260819_090804_guideline_background_tone';
 import * as migration_20260819_090805_ci_lockup_height_axis from './20260819_090805_ci_lockup_height_axis';
 
 export const migrations = [
@@ -436,6 +439,11 @@ export const migrations = [
     name: '20260819_054538_sample_image_group',
   },
   {
+    up: migration_20260819_075057_drop_layout_grid_locks.up,
+    down: migration_20260819_075057_drop_layout_grid_locks.down,
+    name: '20260819_075057_drop_layout_grid_locks',
+  },
+  {
     up: migration_20260819_084217_ci_lockup_controller_fields.up,
     down: migration_20260819_084217_ci_lockup_controller_fields.down,
     name: '20260819_084217_ci_lockup_controller_fields',
@@ -444,6 +452,16 @@ export const migrations = [
     up: migration_20260819_085700_ci_lockup_axis_defaults.up,
     down: migration_20260819_085700_ci_lockup_axis_defaults.down,
     name: '20260819_085700_ci_lockup_axis_defaults',
+  },
+  {
+    up: migration_20260819_090753_ci_lockup_snapshot_repair.up,
+    down: migration_20260819_090753_ci_lockup_snapshot_repair.down,
+    name: '20260819_090753_ci_lockup_snapshot_repair',
+  },
+  {
+    up: migration_20260819_090804_guideline_background_tone.up,
+    down: migration_20260819_090804_guideline_background_tone.down,
+    name: '20260819_090804_guideline_background_tone',
   },
   {
     up: migration_20260819_090805_ci_lockup_height_axis.up,

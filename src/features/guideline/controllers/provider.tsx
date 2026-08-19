@@ -29,11 +29,6 @@ type GuidelineControllerScopeValue = {
 	groups: readonly ControllerGroupDefinition[]
 	/** 지금 값. 조작하면 여기가 바뀐다. */
 	values: ControllerValues
-	/**
-	 * 제한까지 적용된 **초기값**. 조작을 따르지 않기로 한(lock) 소비자가 머무는 자리다 —
-	 * 한 컨트롤이 같은 블록의 일부 그림만 움직이게 하려는 것.
-	 */
-	defaults: ControllerValues
 	set: (controlId: string, value: ControllerControlValue) => void
 }
 
@@ -55,8 +50,7 @@ export function GuidelineControllerScope({
 	)
 	// 🔑 값은 **실효 그룹 전체**에서 만든다. 알약에 안 실리는(readonly) 컨트롤도 값은 있어야
 	//    판형이 admin이 고정한 값으로 그려진다.
-	const defaults = useMemo(() => createControllerValues(groups), [groups])
-	const [values, setValues] = useState<ControllerValues>(defaults)
+	const [values, setValues] = useState<ControllerValues>(() => createControllerValues(groups))
 
 	// set은 값이 바뀌어도 같은 참조여야 한다 — 소비자가 effect 의존에 넣을 수 있게.
 	const set = useCallback(
@@ -66,8 +60,8 @@ export function GuidelineControllerScope({
 	)
 
 	const scope = useMemo<GuidelineControllerScopeValue>(
-		() => ({ groups, values, defaults, set }),
-		[groups, values, defaults, set],
+		() => ({ groups, values, set }),
+		[groups, values, set],
 	)
 
 	return (
@@ -77,7 +71,7 @@ export function GuidelineControllerScope({
 	)
 }
 
-const EMPTY: GuidelineControllerScopeValue = { groups: [], values: {}, defaults: {}, set: () => {} }
+const EMPTY: GuidelineControllerScopeValue = { groups: [], values: {}, set: () => {} }
 
 /** 스코프 밖(컨트롤 없이 그림만 둔 경우)이면 빈 값을 읽기 전용으로 준다. */
 export function useGuidelineController(): GuidelineControllerScopeValue {

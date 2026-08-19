@@ -1,6 +1,6 @@
 import { createBreadcrumbsField, createParentField } from '@payloadcms/plugin-nested-docs'
 import { type CollectionConfig, slugField } from 'payload'
-import { guidelineRulesField } from '@/features/guideline/blocks/shared/fields'
+import { backgroundToneField, guidelineRulesField } from '@/features/guideline/blocks/shared/fields'
 import { guidelineBlocks } from '@/features/guideline/catalog/schema.generated'
 import { validateGuidelineDocumentDepth } from '@/features/guideline/checks/validate-guideline-document-depth'
 import { validateGuidelineDocumentSlug } from '@/features/guideline/checks/validate-guideline-document-slug'
@@ -115,6 +115,18 @@ export const GuidelineDocuments: CollectionConfig = {
 				description: '문서 헤더에 표시할 선택 이미지입니다.',
 			},
 		},
+		// 🔴 문서(Page)의 면은 블록의 면과 다른 것을 덮는다 — 제목·본문까지 한 덩어리로 감싼다
+		//    (Figma 61:3299의 Article). 블록 면은 배치 영역에서 끊기므로 이것을 대신할 수 없다.
+		{
+			name: 'background',
+			type: 'relationship',
+			relationTo: 'brand-colors',
+			admin: {
+				position: 'sidebar',
+				description: '문서 전체(제목·본문·블록)를 덮는 배경색입니다. 비우면 기본.',
+			},
+		},
+		backgroundToneField({ sidebar: true }),
 		{
 			name: 'blocks',
 			type: 'blocks',

@@ -53,27 +53,24 @@ export function ReviewSidebar({ sections }: { sections: CheckSection[] }) {
 				</div>
 			}
 		>
-			<div className="flex h-9 shrink-0 items-center pt-1">
-				{summaryOpen ? (
-					<button
-						type="button"
-						onClick={() => setView('list')}
-						className="-mx-1 flex items-center gap-1 rounded-md px-1 py-0.5 text-left hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:outline-none"
-					>
-						<ChevronLeft aria-hidden />
-						<Typography as="span" size="sm" weight="semibold" className="truncate">
-							{selected.name}
-						</Typography>
-						<span className="sr-only">목록으로 돌아가기</span>
-					</button>
-				) : (
-					<Typography as="h2" size="sm" weight="semibold" tone="muted">
-						List
-					</Typography>
-				)}
-			</div>
+			{/* 목록 화면의 제목은 ReviewFileList가 Controller.Group으로 갖는다 — 되돌아가기 헤더만 여기 남는다. */}
 			{summaryOpen ? (
-				<ReviewSummary sections={sections} />
+				<>
+					<div className="flex h-9 shrink-0 items-center pt-1">
+						<button
+							type="button"
+							onClick={() => setView('list')}
+							className="-mx-1 flex items-center gap-1 rounded-md px-1 py-0.5 text-left hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:outline-none"
+						>
+							<ChevronLeft aria-hidden />
+							<Typography as="span" size="sm" weight="semibold" className="truncate">
+								{selected.name}
+							</Typography>
+							<span className="sr-only">목록으로 돌아가기</span>
+						</button>
+					</div>
+					<ReviewSummary sections={sections} />
+				</>
 			) : (
 				<ReviewFileList onOpen={() => setView('summary')} />
 			)}
