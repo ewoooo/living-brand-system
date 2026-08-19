@@ -119,6 +119,42 @@ function useDiagramFlip() {
 	}
 }
 
+/**
+ * 덩어리 **자체**의 이동을 잇는다.
+ *
+ * 🔑 안쪽 FLIP(`useDiagramFlip`)은 판(grid)을 `offsetParent`로 삼아 재므로 **판 자신이 움직인 것을
+ *    못 본다.** 그 사각지대가 꼴 전환에서 심볼이 딱 튀는 원인이었다 — 실측으로 심볼의 `offsetTop`은
+ *    세 꼴 모두 44로 고정인데 화면 y는 110→102→55로 변했다. 도판 총높이가 188→205→298로 바뀌고
+ *    판이 중앙 정렬하니 **상자째로** 올라간 것이다.
+ * 🔴 기준이 달라 같은 이동을 두 번 세지 않는다 — 안쪽은 「덩어리 **안에서** 얼마나」, 바깥은
+ *    「덩어리가 얼마나」. 둘의 transform이 합성되어 화면에서 보이는 총 이동이 정확히 이어진다.
+ * 🔑 크기는 잇지 않는다(위치만). 사용자 규칙: 「텍스트가 딱 생기는 건 자연스럽고, 이 덩어리 **전체의
+ *    위치**가 연속적이면 된다」(2026-08-19).
+ */
+function useBlockFlip() {
+	const node = useRef<HTMLDivElement | null>(null)
+	const previous = useRef<{ x: number; y: number } | null>(null)
+
+	useLayoutEffect(() => {
+		const element = node.current
+		if (!element) return
+		const now = { x: element.offsetLeft, y: element.offsetTop }
+		const before = previous.current
+		previous.current = now
+		if (!before || reducedMotion()) return
+		const dx = before.x - now.x
+		const dy = before.y - now.y
+		if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return
+		for (const animation of element.getAnimations()) animation.cancel()
+		element.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], {
+			duration: MORPH_MS,
+			easing: MORPH_EASING,
+		})
+	})
+
+	return node
+}
+
 const trackSize = (track: DiagramTrack, h: number) =>
 	track.v === undefined ? 'max-content' : `${track.v * h}px`
 
@@ -456,6 +492,7 @@ export function LockupDiagram({
 	const spec = useMemo(() => diagramSpec(lockup), [lockup])
 	const g = useMemo(() => resolve(spec, h), [spec, h])
 	const register = useDiagramFlip()
+	const blockRef = useBlockFlip()
 	const motion = useMotion()
 	const guide = colors[GUIDE_COLOR_NAME] ?? 'currentColor'
 
@@ -498,12 +535,14 @@ export function LockupDiagram({
 
 	return (
 		<div className="w-full overflow-x-auto">
-			{/* 🔑 **왼쪽 정렬이다.** 가운데 정렬하면 도판 폭이 꼴마다 달라(글자 열이 `max-content`)
-				판 중심이 매번 다른 자리를 가리키고, 심볼이 꼴 전환마다 최대 325px 옆으로 튄다(실측).
-				게이지 열 수가 상수이므로 왼쪽에 붙이면 **심볼이 세 꼴에서 같은 x에 선다** — 기준점이
-				고정되니 나머지가 그 주위로 재배치되는 것으로 읽힌다. 정본 도판 3장도 좌측 정렬이다. */}
+			{/* 🔑 덩어리는 판에 **수직·수평 중앙 정렬**된다(사용자 지정 2026-08-19). 정렬 때문에 생기는
+				덩어리 자신의 이동은 `useBlockFlip`이 잇는다 — 그래서 심볼을 한 자리에 못 박지 않아도
+				튀지 않고, 텍스트가 아무리 길어져도 정렬이 무너지지 않는다.
+				🔴 `w-max mx-auto`여야 한다: 들어가면 가운데, 넘치면 마진이 0으로 접혀 왼쪽부터 보인다.
+				   넘칠 때 가운데 정렬은 왼쪽을 잘라 먹는다. */}
 			<div
-				className="relative grid w-max"
+				ref={blockRef}
+				className="relative mx-auto grid w-max"
 				style={{
 					gridTemplateColumns: g.columns.join(' '),
 					gridTemplateRows: g.rows.join(' '),
