@@ -56,7 +56,7 @@
 `components/widgets/gallery.tsx` | `/guideline/widgets` 미리보기 목록 |
 `controllers/registry.ts` | (컨트롤러를 여는 위젯만) `blockType` → 매니페스트 (§4.1) |
 
-세 곳 중 하나만 빠뜨리면 조용히 실패합니다 — 스키마만 등록하면 admin에서 고를 수 있지만 화면이 비고, 갤러리만 등록하면 미리보기에서만 보입니다(`widgets/ci-lockup/`이 실제로 그 상태이며 `schema.ts`가 없어 CMS로 저작할 수 없습니다).
+세 곳 중 하나만 빠뜨리면 조용히 실패합니다 — 스키마만 등록하면 admin에서 고를 수 있지만 화면이 비고, 갤러리만 등록하면 미리보기에서만 보입니다.
 
 🔴 **`dbName`은 필수입니다.** 중첩 블록의 이름이 길어지면 Postgres 식별자 63자 한계에 닿습니다. 예: `clearspaceViewerWidget` → `dbName: 'cvw'`. enum은 `enumName`으로 전역 이름을 공유합니다.
 
@@ -111,6 +111,19 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 | `GuidelineHelperProvider` | 관측(IntersectionObserver)과 "누가 활성인가" | **값** |
 | `GuidelineHelperRegion` | 블록이 선언하는 **관측 영역** = 조작 대상이 놓인 면(제목·본문 아님) | 컨트롤이 무엇인지 |
 | `GuidelineHelperSlot` | 알약이 앉는 **자리 상자**(`absolute inset-0`인 세로 flex 열). sticky는 바가 갖는다 | 무엇이 들어오는지 |
+
+#### 🔑 한 블록에 판을 여럿 두려면 「뺀 축만 자기 값」
+
+컨트롤러 스코프는 **블록당 하나**이고 제한은 **첫 컨트롤러 자식**에서만 나옵니다. 값도 하나이므로 같은 블록의 두 위젯이 같은 축을 읽으면 값이 공유됩니다. 그래서 규칙 하나로 가릅니다 — **`hiddenControls`로 뺀 축이면 자기 인스턴스 값, 아니면 알약 값**(`ci-lockup/view.tsx`의 `pick`).
+
+- 알약에 남은 축 → 판들이 **함께** 움직입니다(배율·표시 전환처럼 지면 전체에 걸리는 것).
+- 뺀 축 → 판마다 **자기 값**에 머뭅니다(꼴·색상 표현처럼 그 판이 무엇인지 정하는 것).
+
+그래서 정본 지면 구성이 그대로 나옵니다: 가로형·세로형을 수평 병행, 표현 3종을 나란히. `layout-grid`는 같은 문제를 `override ?? 값`과 lock 플래그로 풉니다(`docs/11` 인스턴스 오버라이드 3형태).
+
+🔴 **dispatch가 인스턴스 필드를 props로 넘기지 않으면 두 번째 판의 admin 값이 조용히 버려집니다.** `blocks/block/component.tsx`의 case마다 `child.<필드>`를 넘겨야 합니다 — 에러도 경고도 없이 「저장했는데 안 바뀐다」로 나타납니다.
+
+🔴 **`select` 초기값이 options에 없으면 렌더가 던져 페이지가 죽습니다.** 선택지를 데이터에서 파생하는 위젯은 registry에서 값의 유효성을 확인하고 버려야 합니다(`ci-lockup`의 `usable`).
 
 #### 타입 계약은 새로 만들지 않고 받아씁니다
 
