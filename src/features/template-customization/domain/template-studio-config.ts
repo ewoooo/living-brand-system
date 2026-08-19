@@ -535,6 +535,8 @@ export function getTemplateRuntimeManifest({
 		}),
 	)
 	// 세로형 캔버스는 폴백의 가로형 1080p 상한에 막힌다 — 자기 캔버스에 허용 배율을 곱해 선언한다.
+	// capability는 fps별 상한을 담을 수 없으므로 프레임 크기 예산만 본 바깥 경계다.
+	// 초당 처리량까지 본 정확한 배율은 export 훅이 선택된 fps로 좁힌다.
 	const maxScale = width && height ? resolveMaxExportScale(width, height) : 1
 	const videoFrame =
 		width && height && width > 0 && height > 0

@@ -14,7 +14,7 @@ import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../expo
 import type { PrintPpi } from '../print-policy'
 import { createRasterExportRequest } from '../services/create-raster-export-request'
 import { executeArtifactExport } from '../services/export-artifact.client'
-import type { StudioOutputCapability } from '../studio-output'
+import { resolveMaxExportScale, type StudioOutputCapability } from '../studio-output'
 import { useExport } from './use-export'
 
 export type TemplateExportMetadata = {
@@ -67,9 +67,6 @@ export function useTemplateExport({
 		Math.min(5, capability.video?.mp4.maxDurationSeconds ?? 5),
 	)
 	const [scale, setScale] = useState(1)
-	const maxScale = Math.max(1, Math.floor(metadata?.maxScale ?? 1))
-	const scaleOptions = Array.from({ length: maxScale }, (_, index) => index + 1)
-	const selectedScale = scaleOptions.includes(scale) ? scale : 1
 	const effectivePpi = ppi && capability.print?.ppi.includes(ppi) ? ppi : capability.print?.ppi[0]
 	const effectiveFps =
 		fps && capability.video?.mp4.fps.includes(fps) ? fps : capability.video?.mp4.fps[0]
@@ -82,6 +79,20 @@ export function useTemplateExport({
 		selectedFormat && formats.includes(selectedFormat) ? selectedFormat : (formats[0] ?? null)
 	// TIFF·PDF는 크기를 ppi가 정한다 — 배율을 받아도 쓰지 않으므로 아예 적용하지 않는다.
 	const scaleApplies = format === 'png' || format === 'jpeg' || format === 'mp4'
+	// MP4만 초당 처리량 예산에 걸린다 — fps를 올리면 같은 캔버스라도 갈 수 있는 배율이 줄어든다.
+	const maxScale = metadata
+		? Math.min(
+				Math.max(1, Math.floor(metadata.maxScale)),
+				resolveMaxExportScale(
+					metadata.width,
+					metadata.height,
+					format === 'mp4' ? effectiveFps : undefined,
+				),
+			)
+		: 1
+	const scaleOptions = Array.from({ length: maxScale }, (_, index) => index + 1)
+	// fps를 올려 지금 배율이 예산을 넘으면 1로 떨어뜨리지 않고 갈 수 있는 최대로 붙인다.
+	const selectedScale = Math.min(Math.max(1, Math.floor(scale)), maxScale)
 	const effectiveScale = scaleApplies ? selectedScale : 1
 	const createRequest = useCallback(
 		(candidate: StudioOutputFormat | null): TemplateExportRequest | null => {
