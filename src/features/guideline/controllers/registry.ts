@@ -66,7 +66,8 @@ function ciLockupRestrictions(fields: Record<string, unknown>): ControllerContro
 		const value = fields[control.id]
 		return {
 			controlId: control.id,
-			...(typeof value === 'string' || typeof value === 'boolean'
+			// 🔴 `number`를 빼면 range 축(H)의 초기값이 **조용히 버려진다**. 실제로 그렇게 겪었다.
+			...(typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number'
 				? { defaultValue: value }
 				: {}),
 			...(hidden.includes(control.id) ? { availability: 'readonly' as const } : {}),
