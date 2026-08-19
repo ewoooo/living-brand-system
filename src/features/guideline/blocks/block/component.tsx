@@ -86,9 +86,6 @@ function renderWidget(child: Child): ReactNode {
 					marginPct={child.marginPct}
 					gutterX={child.gutterX}
 					gutterY={child.gutterY}
-					lockMargin={child.lockMargin}
-					lockGutterX={child.lockGutterX}
-					lockGutterY={child.lockGutterY}
 				/>
 			)
 		case 'layoutGridOverlayWidget':

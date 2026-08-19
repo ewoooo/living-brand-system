@@ -836,18 +836,6 @@ export interface LayoutGridWidget {
    * 수직 거터를 이 판형만 고정합니다(0~100). 비우면 패널을 따릅니다.
    */
   gutterY?: number | null;
-  /**
-   * 마진을 패널에서 분리해 초기값에 고정합니다.
-   */
-  lockMargin?: boolean | null;
-  /**
-   * 수평 거터를 패널에서 분리해 초기값에 고정합니다.
-   */
-  lockGutterX?: boolean | null;
-  /**
-   * 수직 거터를 패널에서 분리해 초기값에 고정합니다.
-   */
-  lockGutterY?: boolean | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'layoutGridWidget';
@@ -2457,9 +2445,6 @@ export interface LayoutGridWidgetSelect<T extends boolean = true> {
   marginPct?: T;
   gutterX?: T;
   gutterY?: T;
-  lockMargin?: T;
-  lockGutterX?: T;
-  lockGutterY?: T;
   id?: T;
   blockName?: T;
 }
