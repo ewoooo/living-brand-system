@@ -167,6 +167,7 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 
 - 🔴 **컨테이너 Block의 자식 위젯이 가진 이미지가 AI 검수에 도달하지 못합니다.** `checks/collect-guideline-check-sources.ts`의 이미지 수집 switch에는 `'block'` case가 생겼지만 그 맵은 조회용일 뿐이고, 실제로 어떤 이미지를 참조하는지 지목하는 `blocks/block/projection.ts`의 `projectBlock`이 아직 `referenceAssets: []`를 반환합니다(evidence도 `childCount` 자리표시자입니다). 위젯별 evidence 설계가 끝나야 그 case가 쓰입니다. 그 switch에는 `default: x satisfies never` 가드도 없어, 이미지를 갖는 위젯을 추가할 때 유실이 조용히 일어납니다.
 - 구 flat 블록 18종은 2026-08-10에 삭제됐습니다. 문서에 배치할 수 있는 것은 `block` 컨테이너와 `content-columns`·`callout` 셋뿐이고, 나머지 시각 요소는 전부 컨테이너의 자식 위젯입니다.
+- 🔴 **CI 락업의 치수 도판에서, 셀 안에 가운데 정렬된 글자·심볼이 셀 폭이 바뀔 때 그 절반만큼 순간이동합니다.** 세로형에서 드러납니다. 도판은 요소의 이동을 FLIP으로 잇는데 기준이 **셀 상자**이고, 상자 안의 내용은 상자 폭에서 파생된 자리에 놓이므로 상자만 되돌려서는 내용이 제자리에 오지 않습니다. 고치려면 잉크를 기준으로 재야 하고, 그러려면 셀을 꽉 채우는 래퍼를 없애 상자가 곧 잉크가 되게 해야 합니다(`ci-lockup/diagram.tsx`).
 - 닫힌 토큰 규칙 위반(생 팔레트 클래스)이 일부 위젯에 남아 있습니다. 개수를 여기 적지 않습니다 — 현재 목록은 [09 §4](09-design-system.md)의 grep으로 확인하십시오. 새 위젯에서 반복하지 마십시오([10 §4](10-component-authoring.md)).
 
 ## 8. 위젯 시각 어휘

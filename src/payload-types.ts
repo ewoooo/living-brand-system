@@ -568,6 +568,7 @@ export interface LayoutBlock {
   children?:
     | (
         | ImageLeaf
+        | CiLockupWidget
         | ClearspaceOverlayWidget
         | ClearspaceViewerWidget
         | DoDontWidget
@@ -608,6 +609,15 @@ export interface ImageLeaf {
   id?: string | null;
   blockName?: string | null;
   blockType: 'image';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CiLockupWidget".
+ */
+export interface CiLockupWidget {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'ciLockupWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2342,6 +2352,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
     | T
     | {
         image?: T | ImageLeafSelect<T>;
+        ciLockupWidget?: T | CiLockupWidgetSelect<T>;
         clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
         clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
         doDontWidget?: T | DoDontWidgetSelect<T>;
@@ -2371,6 +2382,14 @@ export interface LayoutBlockSelect<T extends boolean = true> {
  */
 export interface ImageLeafSelect<T extends boolean = true> {
   image?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CiLockupWidget_select".
+ */
+export interface CiLockupWidgetSelect<T extends boolean = true> {
   id?: T;
   blockName?: T;
 }
