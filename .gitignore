@@ -91,3 +91,6 @@ CLAUDE.local.md
 
 # 스토리지에 직접 올리는 검수용 이미지 원본. 코드가 읽지 않는다.
 image_samples/
+
+# admin에 업로드하는 샘플 이미지 원본과 썸네일. 정본은 DB이고 코드가 읽지 않는다.
+sample-images/
