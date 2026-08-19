@@ -4,7 +4,7 @@
 
 **Goal:** 템플릿 어드민에서 창작자 정책의 소유자를 레이어·배경·출력 셋으로 나누고, 같은 값을 두 곳에서 정하던 `Controller 제한`·`Controller 표현` 패널을 없앤다.
 
-**Architecture:** 템플릿의 컨트롤러 매니페스트는 코드에 없고 `getTemplateRuntimeManifest`가 `html`+`overrides`에서 파생한다. 그래서 파생 결과를 다시 좁히는 `controllerRestrictions`는 순환이었다. 정책 입력을 파생 함수의 인자로 끌어올려 `backgroundPolicy`·`textPolicy`가 매니페스트를 만들 때 직접 반영되게 하고, 레이어 정책은 이미 소유자인 `overrides[nodeId]`에 남긴다.
+**Architecture:** 템플릿의 컨트롤러 매니페스트는 코드에 없고 `getTemplateRuntimeManifest`가 `html`+`overrides`에서 파생한다. 그래서 파생 결과를 다시 좁히는 `controllerRestrictions`는 순환이었다. 정책 입력을 파생 함수의 인자로 끌어올려 `backgroundPolicy`가 매니페스트를 만들 때 직접 반영되게 하고, 레이어 정책은 이미 소유자인 `overrides[nodeId]`에 남긴다.
 
 **Tech Stack:** Next.js App Router · Payload CMS · TypeScript · zod 아님(도메인 수제 assert) · vitest · Biome(탭 들여쓰기) · Node 22 · pnpm
 
@@ -15,16 +15,20 @@
 - 테스트·빌드·마이그레이션은 Node 22로 돌린다. `export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm use 22`
 - 브랜치는 `refactor/template-admin-policy-consolidation` 하나를 쓴다. 새 브랜치·worktree를 만들지 않는다.
 - 커밋은 `<type>: <한국어 요약>` Conventional Commits. 커밋 메시지 끝에 `Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>`.
-- 스키마를 바꾸는 커밋은 Task 7의 마이그레이션 하나로 모은다. 중간 Task에서 `pnpm migrate:create`를 돌리지 않는다.
+- 스키마를 바꾸는 커밋은 Task 6의 마이그레이션 하나로 모은다. 중간 Task에서 `pnpm migrate:create`를 돌리지 않는다.
 - 들여쓰기는 탭. 주석은 한국어. `pnpm check`가 포맷 정본이다.
 - 정책 목록이 비어 있음(`undefined`)은 "전부 허용"이다. `exportPolicy`가 이미 쓰는 규칙과 같게 맞춘다.
 - 🔴 `.env`의 `DATABASE_URL`은 공유 Supabase다. 어떤 Task에서도 이 DB에 쓰지 않는다. 마이그레이션 검증은 새 로컬 DB에서만 한다.
 
 ## 스펙에서 바뀐 결정 하나
 
-스펙은 "`types`에 `color`가 없으면 `background.color` 컨트롤을 만들지 않는다"고 적었다. **컨트롤은 항상 만들고 `values`로만 좁힌다**로 바꾼다.
+스펙은 "`types`에 `color`가 없으면 `background.color` 컨트롤을 만들지 않는다"고 적었다. **형식에서 색을 막아도 컨트롤은 남긴다**로 바꾼다.
 
-이유: `TemplateBackgroundSlot.colorControlId`가 필수 필드고 `parseTemplateStudioConfig`가 그 id의 color 컨트롤 존재를 검증한다. 컨트롤을 없애면 필드를 optional로 바꿔야 하고 `background-section.tsx`·`template-studio-provider.tsx`까지 optional 처리가 번진다. 컨트롤을 남겨도 창작자는 `type === 'color'`일 때만 그 자리에 닿으므로 도달 불가한 컨트롤이 될 뿐이다. Task 1에서 스펙 문서도 같이 고친다.
+이유: `TemplateBackgroundSlot.colorControlId`가 필수 필드고 `parseTemplateStudioConfig`가 그 id의 color 컨트롤 존재를 검증한다. 컨트롤을 없애면 필드를 optional로 바꿔야 하고 `background-section.tsx`·`template-studio-provider.tsx`까지 optional 처리가 번진다. 컨트롤을 남겨도 창작자는 `type === 'color'`일 때만 그 자리에 닿으므로 도달 불가한 컨트롤이 될 뿐이다. 스펙 문서는 이미 같은 내용으로 고쳐 두었다.
+
+## 보류: 허용 색 좁힘
+
+`background.color`·`text.color`의 허용 색을 팔레트로 좁히는 기능은 이번 범위에서 빼기로 정했다(2026-08-19). 정본에 자리가 없고, 지금 쓰는 템플릿이 0개고, 나중에 붙이기 싸다. 그래서 이 계획에는 **`textPolicy` 필드도, 다중 선택 스와치 컴포넌트도 없다.** 근거는 스펙의 "보류: 허용 색 좁힘" 절이 갖는다.
 
 ## File Structure
 
@@ -32,39 +36,33 @@
 | --- | --- | --- |
 | `src/features/template-customization/domain/template-studio-config.ts` | 정책 타입, 매니페스트 파생, 슬롯 파생, strict 검증 | 수정 |
 | `src/features/template-customization/domain/template-studio-config.test.ts` | 위의 단위 테스트 | 수정 |
-| `src/lib/color.ts` | 색 유틸. 허용 색 토글 순수 함수를 여기 둔다 | 수정 |
-| `src/lib/color.test.ts` | 위의 단위 테스트 | 수정 |
-| `src/components/admin/templates/brand-color-swatches.tsx` | 브랜드 색 스와치. 단일 선택 옆에 다중 선택 형제를 둔다 | 수정 |
 | `src/collections/fields/template-policy-field.ts` | `배경 설정` 섹션 Payload 필드 정의 | 신설 |
 | `src/components/admin/templates/template-background-policy-field.tsx` | `배경 설정` 섹션 UI (형식·제한 두 카드) | 신설 |
-| `src/components/admin/templates/template-layers-field.tsx` | 레이어 워크스페이스. `공통 설정` 카드를 더한다 | 수정 |
 | `src/components/admin/templates/template-layer-editors.tsx` | 레이어 세부 설정. 이미지에 허용 프로파일·창작자 변형 허용을 더한다 | 수정 |
-| `src/collections/Templates.ts` | 필드 배열. 제한·표현 제거, 정책 둘 신설 | 수정 |
+| `src/collections/Templates.ts` | 필드 배열. 제한·표현 제거, 배경 정책 신설 | 수정 |
 | `src/features/template-core/repositories/published-template.payload.repository.ts` | published 조회 select | 수정 |
 | `src/features/template-customization/services/get-published-template.service.ts` | published 투영 | 수정 |
 | `src/features/agent-chat/repositories/agent-template.payload.repository.ts` | agent 조회 select | 수정 |
 | `src/features/agent-chat/services/agent-template-request.service.ts` | agent 투영 | 수정 |
 | `src/features/template-import/services/prepare-template-save.service.ts` | 저장 전 검증 게이트 | 수정 |
 | `src/collections/fields/studio-controller-field.test.ts` | 어드민 필드 존재 계약 | 수정 |
-| `migrations/<timestamp>_template_policy_fields.ts` + `.json` | 컬럼 교체 | 생성 |
+| `migrations/<timestamp>_template_background_policy.ts` + `.json` | 컬럼 교체 | 생성 |
 
 ---
 
-### Task 1: 배경·텍스트 정책이 매니페스트를 좁힌다
+### Task 1: 배경 정책이 매니페스트를 좁힌다
 
 **Files:**
 - Modify: `src/features/template-customization/domain/template-studio-config.ts`
-- Modify: `docs/superpowers/specs/2026-08-19-template-admin-policy-consolidation-design.md`
 - Test: `src/features/template-customization/domain/template-studio-config.test.ts`
 
 **Interfaces:**
 - Consumes: 없음 (첫 Task)
 - Produces:
   - `export type TemplateBackgroundType = 'color' | 'image' | 'graphic'` (이미 존재)
-  - `export type TemplateBackgroundPolicy = { types?: readonly TemplateBackgroundType[]; colorValues?: readonly string[]; imageConfigIds?: readonly number[]; graphicConfigIds?: readonly string[] }`
-  - `export type TemplateTextPolicy = { colorValues?: readonly string[] }`
-  - `PublishedHtmlTemplate`에 `backgroundPolicy?: TemplateBackgroundPolicy`·`textPolicy?: TemplateTextPolicy` 추가
-  - `getTemplateRuntimeManifest`가 위 둘을 읽는다 (인자 타입이 `Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs'> & Partial<Pick<PublishedHtmlTemplate, 'width' | 'height' | 'backgroundPolicy' | 'textPolicy'>>`)
+  - `export type TemplateBackgroundPolicy = { types?: readonly TemplateBackgroundType[]; imageConfigIds?: readonly number[]; graphicConfigIds?: readonly string[] }`
+  - `PublishedHtmlTemplate`에 `backgroundPolicy?: TemplateBackgroundPolicy` 추가
+  - `getTemplateRuntimeManifest`가 이를 읽는다 (인자 타입이 `Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs'> & Partial<Pick<PublishedHtmlTemplate, 'width' | 'height' | 'backgroundPolicy'>>`)
 
 - [ ] **Step 1: 실패하는 테스트를 쓴다**
 
@@ -118,19 +116,13 @@ it('둘 이상 허용하면 읽기 전용이 아니고 기본값은 첫 허용 �
 	expect(control && 'availability' in control ? control.availability : undefined).toBeUndefined()
 })
 
-it('허용 색은 배경·텍스트 색 컨트롤의 values로 내려간다', () => {
+it('색을 형식에서 막아도 background.color 컨트롤은 남는다', () => {
 	const manifest = getTemplateRuntimeManifest({
 		...template,
-		backgroundPolicy: { colorValues: ['#112233'] },
-		textPolicy: { colorValues: ['#445566', '#778899'] },
+		backgroundPolicy: { types: ['image'] },
 	})
 
-	expect(findManifestControl(manifest, 'background.color')).toMatchObject({
-		values: ['#112233'],
-	})
-	expect(findManifestControl(manifest, 'text.color')).toMatchObject({
-		values: ['#445566', '#778899'],
-	})
+	expect(findManifestControl(manifest, 'background.color')).toMatchObject({ kind: 'color' })
 })
 
 it('배경 형식을 전부 막으면 파생이 거부한다', () => {
@@ -140,7 +132,7 @@ it('배경 형식을 전부 막으면 파생이 거부한다', () => {
 })
 
 it('정책이 없으면 지금까지의 매니페스트와 같다', () => {
-	expect(getTemplateRuntimeManifest({ ...template, backgroundPolicy: {}, textPolicy: {} })).toEqual(
+	expect(getTemplateRuntimeManifest({ ...template, backgroundPolicy: {} })).toEqual(
 		getTemplateRuntimeManifest(template),
 	)
 })
@@ -159,22 +151,15 @@ Expected: FAIL — `backgroundPolicy`가 `PublishedHtmlTemplate`에 없어 타�
 /** Admin이 정하는 배경 정책. 목록이 없으면 전부 허용이다 — exportPolicy와 같은 규칙. */
 export type TemplateBackgroundPolicy = {
 	types?: readonly TemplateBackgroundType[]
-	colorValues?: readonly string[]
 	imageConfigIds?: readonly number[]
 	graphicConfigIds?: readonly string[]
 }
-
-/** 텍스트 일괄 색은 레이어 하나가 아니라 텍스트 전체에 걸리므로 템플릿 단위로 정한다. */
-export type TemplateTextPolicy = {
-	colorValues?: readonly string[]
-}
 ```
 
-`PublishedHtmlTemplate`에서 `controllerRestrictions`·`controllerPresentation` 두 줄은 **그대로 두고**(Task 5가 지운다) 아래 둘을 더한다.
+`PublishedHtmlTemplate`에서 `controllerRestrictions`·`controllerPresentation` 두 줄은 **그대로 두고**(Task 4가 지운다) 아래 한 줄을 더한다.
 
 ```ts
 	backgroundPolicy?: TemplateBackgroundPolicy
-	textPolicy?: TemplateTextPolicy
 ```
 
 `const TEXT_COLOR_CONTROL_ID = 'text.color'` 아래에 옵션 정본을 둔다.
@@ -223,7 +208,6 @@ function buildBackgroundGroup(policy: TemplateBackgroundPolicy | undefined): Con
 				kind: 'color',
 				label: 'Background Color',
 				defaultValue: null,
-				...(policy?.colorValues?.length ? { values: policy.colorValues } : {}),
 			},
 		],
 	}
@@ -239,28 +223,13 @@ export function getTemplateRuntimeManifest({
 	width,
 	height,
 	backgroundPolicy,
-	textPolicy,
 }: Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs'> &
 	Partial<
-		Pick<PublishedHtmlTemplate, 'width' | 'height' | 'backgroundPolicy' | 'textPolicy'>
+		Pick<PublishedHtmlTemplate, 'width' | 'height' | 'backgroundPolicy'>
 	>): StudioRuntimeManifest {
 ```
 
-텍스트 그룹의 색 컨트롤에 `values`를 붙인다.
-
-```ts
-									{
-										id: TEXT_COLOR_CONTROL_ID,
-										kind: 'color' as const,
-										label: 'Color',
-										defaultValue: null,
-										...(textPolicy?.colorValues?.length
-											? { values: textPolicy.colorValues }
-											: {}),
-									},
-```
-
-배경 그룹 리터럴 전체를 빌더 호출로 바꾼다.
+배경 그룹 리터럴 전체를 빌더 호출로 바꾼다. 텍스트 그룹은 손대지 않는다.
 
 ```ts
 				buildBackgroundGroup(backgroundPolicy),
@@ -274,27 +243,12 @@ Expected: PASS (기존 테스트 포함 전부)
 Run: `pnpm typecheck`
 Expected: 오류 없음
 
-- [ ] **Step 5: 스펙 문서의 결정을 고친다**
-
-`docs/superpowers/specs/2026-08-19-template-admin-policy-consolidation-design.md`의 "파생" 절에서 아래 줄을
-
-```
-  - `types`에 `color`가 없으면 `background.color` 컨트롤을 만들지 않는다. 있으면 `values: colorValues`.
-```
-
-이렇게 바꾼다.
-
-```
-  - `background.color` 컨트롤은 형식에서 색을 막아도 남긴다. `colorValues`가 있으면 `values`로 좁힌다. 🔴 `TemplateBackgroundSlot.colorControlId`가 필수고 parse가 존재를 검증하므로 컨트롤을 없애면 슬롯 계약과 소비 컴포넌트까지 optional이 번진다.
-```
-
-- [ ] **Step 6: 커밋**
+- [ ] **Step 5: 커밋**
 
 ```bash
 git add src/features/template-customization/domain/template-studio-config.ts \
-  src/features/template-customization/domain/template-studio-config.test.ts \
-  docs/superpowers/specs/2026-08-19-template-admin-policy-consolidation-design.md
-git commit -m "feat: 배경·텍스트 정책이 템플릿 매니페스트를 좁히게 한다"
+  src/features/template-customization/domain/template-studio-config.test.ts
+git commit -m "feat: 배경 정책이 템플릿 매니페스트를 좁히게 한다"
 ```
 
 ---
@@ -395,138 +349,12 @@ git commit -m "feat: 배경 정책이 허용 프로파일과 그래픽 목록을
 
 ---
 
-### Task 3: 허용 색 다중 선택
-
-**Files:**
-- Modify: `src/lib/color.ts`
-- Modify: `src/lib/color.test.ts`
-- Modify: `src/components/admin/templates/brand-color-swatches.tsx`
-
-**Interfaces:**
-- Consumes: 없음
-- Produces:
-  - `export function toggleHexValue(values: readonly string[], hex: string): string[]` — `src/lib/color.ts`
-  - `export function BrandColorSwatchSet({ legend, colors, values, onChange, disabled }: { legend: string; colors: BrandColor[]; values: readonly string[]; onChange: (next: string[]) => void; disabled?: boolean })` — `brand-color-swatches.tsx`. 기존 `BrandColorSwatches`(단일 선택)는 그대로 둔다.
-
-- [ ] **Step 1: 실패하는 테스트를 쓴다**
-
-`src/lib/color.test.ts`에 더한다. 파일 상단 `import`에 `toggleHexValue`를 넣는다.
-
-```ts
-describe('toggleHexValue', () => {
-	it('없으면 켜고 있으면 끈다', () => {
-		expect(toggleHexValue([], '#112233')).toEqual(['#112233'])
-		expect(toggleHexValue(['#112233'], '#112233')).toEqual([])
-	})
-
-	it('입력 순서를 지킨다 — 스와치 순서로 재배열하지 않는다', () => {
-		expect(toggleHexValue(['#445566'], '#112233')).toEqual(['#445566', '#112233'])
-	})
-})
-```
-
-- [ ] **Step 2: 실패를 확인한다**
-
-Run: `pnpm vitest run src/lib/color.test.ts`
-Expected: FAIL — `toggleHexValue is not a function`
-
-- [ ] **Step 3: 순수 함수를 구현한다**
-
-`src/lib/color.ts`에 더한다.
-
-```ts
-/** 허용 색 목록에서 하나를 켜고 끈다. 순서는 고른 순서를 지킨다. */
-export function toggleHexValue(values: readonly string[], hex: string): string[] {
-	return values.includes(hex) ? values.filter((value) => value !== hex) : [...values, hex]
-}
-```
-
-- [ ] **Step 4: 통과를 확인한다**
-
-Run: `pnpm vitest run src/lib/color.test.ts`
-Expected: PASS
-
-- [ ] **Step 5: 다중 선택 스와치를 구현한다**
-
-`brand-color-swatches.tsx`의 `import`에 `toggleHexValue`를 더하고(`import { isValidHex, toggleHexValue } from '@/lib/color'`), 파일 끝에 형제 컴포넌트를 둔다.
-
-```tsx
-/**
- * 허용 색을 좁히는 다중 선택 스와치.
- * BrandColorSwatches(단일 선택)와 목적이 달라 값 계약을 나눈다 — 이쪽은 정책, 저쪽은 값이다.
- */
-export function BrandColorSwatchSet({
-	legend,
-	colors,
-	values,
-	onChange,
-	disabled,
-}: {
-	legend: string
-	colors: BrandColor[]
-	values: readonly string[]
-	onChange: (next: string[]) => void
-	disabled?: boolean
-}) {
-	return (
-		<FieldSet className="gap-2">
-			<FieldLegend variant="label">{legend}</FieldLegend>
-			<div className="flex flex-wrap gap-2">
-				{colors.map((color) => {
-					if (!isValidHex(color.hex)) return null
-					const hex = color.hex.startsWith('#') ? color.hex : `#${color.hex}`
-					const selected = values.includes(hex)
-					return (
-						<Button
-							key={color.id}
-							type="button"
-							disabled={disabled}
-							aria-pressed={selected}
-							aria-label={`${color.name} ${hex}`}
-							onClick={() => onChange(toggleHexValue(values, hex))}
-							variant={selected ? 'muted' : 'outline'}
-							size="sm"
-						>
-							<span
-								aria-hidden
-								className="size-3.5 rounded-sm"
-								style={{ backgroundColor: hex }}
-							/>
-							{color.name}
-						</Button>
-					)
-				})}
-			</div>
-			<FieldDescription>고르지 않으면 브랜드 색 전체를 허용합니다.</FieldDescription>
-		</FieldSet>
-	)
-}
-```
-
-`FieldDescription`을 `@/components/ui/field` import에 더한다.
-
-- [ ] **Step 6: 통과를 확인한다**
-
-Run: `pnpm typecheck && pnpm check`
-Expected: 오류 없음
-
-- [ ] **Step 7: 커밋**
-
-```bash
-git add src/lib/color.ts src/lib/color.test.ts \
-  src/components/admin/templates/brand-color-swatches.tsx
-git commit -m "feat: 허용 색을 좁히는 다중 선택 스와치를 추가한다"
-```
-
----
-
-### Task 4: 배경 설정 섹션과 공통 설정 카드
+### Task 3: 배경 설정 섹션
 
 **Files:**
 - Create: `src/collections/fields/template-policy-field.ts`
 - Create: `src/components/admin/templates/template-background-policy-field.tsx`
 - Modify: `src/collections/Templates.ts:91-93`
-- Modify: `src/components/admin/templates/template-layers-field.tsx`
 - Modify: `src/features/template-core/repositories/published-template.payload.repository.ts:100-160`
 - Modify: `src/features/template-customization/services/get-published-template.service.ts:55-68`
 - Modify: `src/features/agent-chat/repositories/agent-template.payload.repository.ts:15-50`
@@ -534,11 +362,11 @@ git commit -m "feat: 허용 색을 좁히는 다중 선택 스와치를 추가�
 - Modify: `src/features/template-import/services/prepare-template-save.service.ts:15-100`
 
 **Interfaces:**
-- Consumes: Task 1의 `TemplateBackgroundPolicy`·`TemplateTextPolicy`, Task 3의 `BrandColorSwatchSet`
+- Consumes: Task 1의 `TemplateBackgroundPolicy`
 - Produces:
   - `export function templateBackgroundPolicyField(): Field` — `template-policy-field.ts`
   - `export function TemplateBackgroundPolicyField(props: JSONFieldClientComponent 인자): JSX.Element` — `template-background-policy-field.tsx`
-  - `templates.backgroundPolicy`·`templates.textPolicy` 두 json 필드가 읽기 경로 전체(published·agent·저장 게이트)를 타고 `deriveTemplateStudioConfig`까지 도달한다
+  - `templates.backgroundPolicy` json 필드가 읽기 경로 전체(published·agent·저장 게이트)를 타고 `deriveTemplateStudioConfig`까지 도달한다
 
 - [ ] **Step 1: Payload 필드를 만든다**
 
@@ -564,15 +392,6 @@ export function templateBackgroundPolicyField(): Field {
 		},
 	}
 }
-
-/** 텍스트 일괄 색의 허용 팔레트. UI는 레이어 워크스페이스의 `공통 설정` 카드가 소유한다. */
-export function templateTextPolicyField(): Field {
-	return {
-		name: 'textPolicy',
-		type: 'json',
-		admin: { hidden: true },
-	}
-}
 ```
 
 - [ ] **Step 2: 섹션 UI를 만든다**
@@ -596,7 +415,6 @@ import type {
 	TemplateBackgroundPolicy,
 	TemplateBackgroundType,
 } from '@/features/template-customization/domain/template-studio-config'
-import { BrandColorSwatchSet, usePublishedBrandColors } from './brand-color-swatches'
 
 const TYPE_ROWS: readonly { value: TemplateBackgroundType; label: string }[] = [
 	{ value: 'color', label: '색' },
@@ -622,7 +440,6 @@ function toggleId<T>(current: readonly T[] | undefined, all: readonly T[], id: T
 export function TemplateBackgroundPolicyField({ path, graphicOptions = [] }: Props) {
 	const { disabled, setValue, value } = useField<unknown>({ path })
 	const policy = readPolicy(value)
-	const { colors } = usePublishedBrandColors()
 	const [profiles, setProfiles] = useState<ImageProfileOption[]>([])
 
 	useEffect(() => {
@@ -668,18 +485,6 @@ export function TemplateBackgroundPolicyField({ path, graphicOptions = [] }: Pro
 					path={path}
 				/>
 			</FieldSet>
-
-			{allows('color') ? (
-				<BrandColorSwatchSet
-					legend="허용 색"
-					colors={colors}
-					values={policy.colorValues ?? []}
-					disabled={disabled}
-					onChange={(colorValues) =>
-						patch({ colorValues: colorValues.length ? colorValues : undefined })
-					}
-				/>
-			) : null}
 
 			{allows('image') ? (
 				<FieldSet className="gap-2 rounded-md border p-3">
@@ -753,20 +558,16 @@ export function TemplateBackgroundPolicyField({ path, graphicOptions = [] }: Pro
 
 - [ ] **Step 3: 컬렉션에 필드를 꽂는다**
 
-`src/collections/Templates.ts`에서 `studioExportPolicyField({ source: 'template' }),` **앞**에 두 줄을 넣는다. 제한·표현 필드는 아직 지우지 않는다 — Task 5가 지운다.
+`src/collections/Templates.ts`에서 `studioExportPolicyField({ source: 'template' }),` **앞**에 한 줄을 넣는다. 제한·표현 필드는 아직 지우지 않는다 — Task 4가 지운다.
 
 ```ts
 		templateBackgroundPolicyField(),
-		templateTextPolicyField(),
 ```
 
 import를 더한다.
 
 ```ts
-import {
-	templateBackgroundPolicyField,
-	templateTextPolicyField,
-} from './fields/template-policy-field'
+import { templateBackgroundPolicyField } from './fields/template-policy-field'
 ```
 
 - [ ] **Step 4: 읽기 경로를 배선한다**
@@ -777,74 +578,33 @@ import {
 
 ```ts
 			backgroundPolicy?: unknown
-			textPolicy?: unknown
 ```
 
 ```ts
 			backgroundPolicy: true,
-			textPolicy: true,
 ```
 
 `get-published-template.service.ts`의 반환 리터럴에:
 
 ```ts
 		backgroundPolicy: template.backgroundPolicy as PublishedHtmlTemplate['backgroundPolicy'],
-		textPolicy: template.textPolicy as PublishedHtmlTemplate['textPolicy'],
 ```
 
-`agent-template.payload.repository.ts`의 타입(`:17`)과 `select`(`:45`)에 같은 두 필드를, `agent-template-request.service.ts`(`:104`)의 리터럴에 같은 두 줄을 더한다.
+`agent-template.payload.repository.ts`의 타입(`:17`)과 `select`(`:45`)에 같은 필드를, `agent-template-request.service.ts`(`:104`)의 리터럴에 같은 줄을 더한다.
 
 `prepare-template-save.service.ts`의 `TemplateSaveCandidate`에
 
 ```ts
 	backgroundPolicy?: unknown
-	textPolicy?: unknown
 ```
 
 그리고 `deriveTemplateStudioConfig` 호출 인자에
 
 ```ts
 				backgroundPolicy: candidate.backgroundPolicy as never,
-				textPolicy: candidate.textPolicy as never,
 ```
 
-- [ ] **Step 5: 공통 설정 카드를 더한다**
-
-`template-layers-field.tsx`의 렌더에서 `<Separator className="my-6" />` **앞**에 카드를 넣는다.
-
-```tsx
-			<Separator className="my-6" />
-
-			<BrandColorSwatchSet
-				legend="텍스트 허용 색 — 창작자가 텍스트 색을 고를 수 있는 범위"
-				colors={brandColors}
-				values={textPolicy.colorValues ?? []}
-				onChange={(colorValues) =>
-					dispatchFields({
-						type: 'UPDATE',
-						path: 'textPolicy',
-						value: colorValues.length ? { colorValues } : {},
-					})
-				}
-			/>
-```
-
-같은 컴포넌트 안에 값과 색 목록을 읽는 줄을 더한다(`const height = ...` 아래).
-
-```tsx
-	const textPolicy = (useFormFields(([fields]) => fields.textPolicy?.value) ?? {}) as {
-		colorValues?: string[]
-	}
-	const { colors: brandColors } = usePublishedBrandColors()
-```
-
-import를 더한다.
-
-```tsx
-import { BrandColorSwatchSet, usePublishedBrandColors } from './brand-color-swatches'
-```
-
-- [ ] **Step 6: 검증**
+- [ ] **Step 5: 검증**
 
 Run: `pnpm typecheck && pnpm check`
 Expected: 오류 없음
@@ -855,24 +615,23 @@ Expected: PASS
 Run: `pnpm dev` 후 어드민에서 템플릿 하나를 열어 `배경 설정` 섹션이 뜨고, 형식 토글을 끄면 그 아래 목록이 사라지고, 저장 후 다시 열었을 때 값이 남아 있는지 본다. 🔴 `.env`가 공유 DB를 가리키므로 **저장은 draft 템플릿에만** 하고, 끝나면 값을 원래대로 되돌린다.
 Expected: 섹션 표시·조건부 목록·저장·복원이 모두 동작
 
-- [ ] **Step 7: 커밋**
+- [ ] **Step 6: 커밋**
 
 ```bash
 git add src/collections/fields/template-policy-field.ts \
   src/components/admin/templates/template-background-policy-field.tsx \
-  src/components/admin/templates/template-layers-field.tsx \
   src/collections/Templates.ts \
   src/features/template-core/repositories/published-template.payload.repository.ts \
   src/features/template-customization/services/get-published-template.service.ts \
   src/features/agent-chat/repositories/agent-template.payload.repository.ts \
   src/features/agent-chat/services/agent-template-request.service.ts \
   src/features/template-import/services/prepare-template-save.service.ts
-git commit -m "feat: 배경 설정 섹션과 텍스트 허용 색 카드를 어드민에 올린다"
+git commit -m "feat: 배경 설정 섹션을 어드민에 올린다"
 ```
 
 ---
 
-### Task 5: Controller 제한·표현을 템플릿에서 제거한다
+### Task 4: Controller 제한·표현을 템플릿에서 제거한다
 
 **Files:**
 - Modify: `src/collections/Templates.ts:91-92`
@@ -890,7 +649,7 @@ git commit -m "feat: 배경 설정 섹션과 텍스트 허용 색 카드를 어�
 - Modify: `src/collections/fields/studio-controller-field.test.ts`
 
 **Interfaces:**
-- Consumes: Task 4의 배선 (새 정책이 이미 읽기 경로를 타고 있어야 제거가 안전하다)
+- Consumes: Task 3의 배선 (새 정책이 이미 읽기 경로를 타고 있어야 제거가 안전하다)
 - Produces: `PublishedHtmlTemplate`에서 `controllerRestrictions`·`controllerPresentation`이 사라진다. `TemplateStudioConfig.controllerPresentation`은 남고 항상 기본값(모두 `collapsible: true`, `defaultOpen: true`)이다.
 
 - [ ] **Step 1: 필드 존재 계약 테스트를 먼저 고친다**
@@ -902,7 +661,6 @@ git commit -m "feat: 배경 설정 섹션과 텍스트 허용 색 카드를 어�
 		expect(namedField(Templates.fields, 'controllerRestrictions')).toBeUndefined()
 		expect(namedField(Templates.fields, 'controllerPresentation')).toBeUndefined()
 		expect(namedField(Templates.fields, 'backgroundPolicy')).toBeDefined()
-		expect(namedField(Templates.fields, 'textPolicy')).toBeDefined()
 	})
 
 	it('프로파일 컬렉션에는 그대로 남는다 — 거기엔 파생 순환이 없다', () => {
@@ -948,7 +706,7 @@ import에서도 두 이름을 뺀다. `studioExportPolicyField`는 남는다.
 
 - `projectPayloadControllerRestrictions`·`applyControllerRestrictions` import를 지운다. `resolveControllerPresentation`은 남긴다.
 
-`published-template.payload.repository.ts`·`get-published-template.service.ts`·`agent-template.payload.repository.ts`·`agent-template-request.service.ts`·`prepare-template-save.service.ts`에서 두 필드의 타입 선언·`select`·리터럴 줄을 지운다. Task 4에서 더한 `backgroundPolicy`·`textPolicy`는 그대로 둔다.
+`published-template.payload.repository.ts`·`get-published-template.service.ts`·`agent-template.payload.repository.ts`·`agent-template-request.service.ts`·`prepare-template-save.service.ts`에서 두 필드의 타입 선언·`select`·리터럴 줄을 지운다. Task 3에서 더한 `backgroundPolicy`는 그대로 둔다.
 
 - [ ] **Step 4: 낡은 테스트를 고친다**
 
@@ -998,7 +756,7 @@ git commit -m "refactor: 템플릿에서 Controller 제한·표현 패널을 없
 
 ---
 
-### Task 6: 레이어 세부 설정 — 허용 프로파일과 창작자 변형 허용
+### Task 5: 레이어 세부 설정 — 허용 프로파일과 창작자 변형 허용
 
 **Files:**
 - Modify: `src/types/template.ts:55-60`
@@ -1008,7 +766,7 @@ git commit -m "refactor: 템플릿에서 Controller 제한·표현 패널을 없
 - Test: `src/features/template-customization/domain/template-studio-config.test.ts`
 
 **Interfaces:**
-- Consumes: 없음 (Task 1~5와 독립)
+- Consumes: 없음 (Task 1~4와 독립)
 - Produces:
   - `TemplateNodeConfig.imageInput?: { profileId?: number; allowedProfileIds?: number[]; transform?: { enabled: boolean } }`
   - `TemplateImageSlot`에 `allowedProfileIds?: readonly number[]`·`transformEnabled: boolean` 추가
@@ -1198,16 +956,16 @@ git commit -m "feat: 이미지 레이어에 허용 프로파일과 창작자 변
 
 ---
 
-### Task 7: 마이그레이션과 문서
+### Task 6: 마이그레이션과 문서
 
 **Files:**
-- Create: `migrations/<timestamp>_template_policy_fields.ts`
-- Create: `migrations/<timestamp>_template_policy_fields.json`
+- Create: `migrations/<timestamp>_template_background_policy.ts`
+- Create: `migrations/<timestamp>_template_background_policy.json`
 - Modify: `migrations/index.ts`
 - Modify: `docs/superpowers/specs/2026-08-19-template-admin-policy-consolidation-design.md` (상태 줄)
 
 **Interfaces:**
-- Consumes: Task 4·5의 스키마 변경 전부 (`backgroundPolicy`·`textPolicy` 추가, `controllerRestrictions`·`controllerPresentation` 제거)
+- Consumes: Task 3·4의 스키마 변경 전부 (`backgroundPolicy` 추가, `controllerRestrictions`·`controllerPresentation` 제거)
 - Produces: 커밋된 마이그레이션 하나 + drizzle 스냅샷
 
 - [ ] **Step 1: 마이그레이션을 만든다**
@@ -1216,14 +974,14 @@ git commit -m "feat: 이미지 레이어에 허용 프로파일과 창작자 변
 
 ```bash
 export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm use 22
-pnpm migrate:create template_policy_fields
+pnpm migrate:create template_background_policy
 ```
 
 - [ ] **Step 2: 생성된 SQL을 읽는다**
 
-`migrations/<timestamp>_template_policy_fields.ts`를 열어 확인한다.
+`migrations/<timestamp>_template_background_policy.ts`를 열어 확인한다.
 
-- `templates`·`_templates_v`에 `background_policy`·`text_policy`(jsonb) 추가
+- `templates`·`_templates_v`에 `background_policy`(jsonb) 추가
 - `templates`·`_templates_v`에서 `controller_restrictions`·`controller_presentation`(및 `version_` 접두 대응 컬럼) 삭제
 - 다른 컬렉션의 컬럼은 건드리지 않음
 
@@ -1285,8 +1043,8 @@ Expected: 전부 PASS
 
 - 공유 stage DB는 `migrations/**` push에 `deploy-migrations.yml`이 자동 적용한다. 사람이 `payload migrate`를 돌리지 않는다.
 - 기존 템플릿 4개(id 9·10·12·13)는 두 정책이 비어 있는 상태로 시작한다. 빈 값 = 전부 허용이므로 창작자 화면 동작은 지금과 같다. **데이터를 심을 일이 없다.**
-- 🔴 Figma 정본에 남은 미완성 둘(`배경 설정`이 `출력 설정`의 복제, 세부 설정 `형식` 표시값이 `Color`)은 이 계획 밖이다. Task 4의 섹션 UI는 정본의 두 카드 구조만 따르고 내용은 스펙을 따른다.
+- 🔴 Figma 정본에 남은 미완성 둘(`배경 설정`이 `출력 설정`의 복제, 세부 설정 `형식` 표시값이 `Color`)은 이 계획 밖이다. Task 3의 섹션 UI는 정본의 두 카드 구조만 따르고 내용은 스펙을 따른다.
 
 ## 알려진 충돌 위험
 
-다른 세션이 `src/components/shared/controller/*`와 검수 화면을 `feat/controller-review-extension`에서 손보고 있다. 이 계획은 `src/components/admin/templates/*`·템플릿 도메인·`src/lib/color.ts`에 머물지만, 컨트롤러 킷 프리미티브가 바뀌면 Task 3의 스와치가 그 결과를 따라야 한다. Task 3 착수 전에 `git log origin/stage --oneline -5`로 킷 변경이 먼저 들어왔는지 본다.
+다른 세션이 `src/components/shared/controller/*`와 검수 화면을 `feat/controller-review-extension`에서 손보고 있다. 이 계획은 `src/components/admin/templates/*`와 템플릿 도메인에 머물지만, 컨트롤러 킷 프리미티브가 바뀌면 Task 3의 배경 설정 섹션이 그 결과를 따라야 한다. Task 3 착수 전에 `git log origin/stage --oneline -5`로 킷 변경이 먼저 들어왔는지 본다.
