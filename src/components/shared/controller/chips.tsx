@@ -31,13 +31,16 @@ export function ControllerChips<T extends string>({
 	const row = useRowControl()
 	const resolvedDisabled = disabled ?? row?.disabled
 	return (
-		<div data-slot="controller-chips" className="-mr-1 flex h-9 shrink-0 items-center">
+		// 정본(83:1563) 수치: 칩 높이 32px·간격 2px·radius 8px·min-w 48px, 행 오른끝 2px 인셋.
+		<div data-slot="controller-chips" className="-mr-2.5 flex h-9 shrink-0 items-center py-0.5">
 			<ToggleGroup
 				type="multiple"
 				value={[...value]}
 				onValueChange={(next) => onChange(next as T[])}
 				aria-label={ariaLabel}
 				disabled={resolvedDisabled}
+				spacing={0.5}
+				className="h-full"
 			>
 				{options.map((option) => (
 					<ToggleGroupItem
@@ -45,7 +48,7 @@ export function ControllerChips<T extends string>({
 						value={option.value}
 						size="sm"
 						disabled={disabledValues?.includes(option.value)}
-						className="h-7 rounded-md bg-transparent px-2.5 text-muted-foreground text-sm transition-colors hover:bg-transparent hover:text-foreground data-[state=on]:bg-foreground/10 data-[state=on]:text-foreground data-[state=on]:hover:bg-foreground/10"
+						className="h-full min-w-12 rounded-lg bg-transparent px-2 text-muted-foreground text-sm transition-colors hover:bg-transparent hover:text-foreground data-[state=on]:bg-foreground/10 data-[state=on]:text-foreground data-[state=on]:hover:bg-foreground/10"
 					>
 						{option.label}
 					</ToggleGroupItem>

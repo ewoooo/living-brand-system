@@ -53,13 +53,15 @@
 	--text-lg--line-height: 28px;
 	--text-xl: 20px;
 	--text-xl--line-height: 28px;
-	--text-2xl: 24px;
+	/* 섹션 헤딩 — 정본(83:1551) 26px/32px Medium. */
+	--text-2xl: 26px;
 	--text-2xl--line-height: 32px;
-	/* 표면 토큰: 스튜디오 라이트 값. */
+	/* 표면 토큰: 정본 실측 값(83:1554·83:1575) — 중립색은 알파 기반이다. */
 	--color-background: oklch(1 0 0);
 	--color-foreground: oklch(0.145 0 0);
-	--color-muted: oklch(0.97 0 0);
-	--color-muted-foreground: oklch(0.556 0 0);
+	--color-muted: oklch(0 0 0 / 4%);
+	--color-muted-foreground: oklch(0 0 0 / 60%);
+	--radius-sm: 6px;
 	--color-border: oklch(0.922 0 0);
 	--color-input: oklch(0.922 0 0);
 	--color-ring: oklch(0.708 0 0);
@@ -71,11 +73,21 @@
 [data-theme="dark"] .lbs-kit {
 	--color-background: oklch(0.1822 0 0);
 	--color-foreground: oklch(0.985 0 0);
-	--color-muted: oklch(0.269 0 0);
-	--color-muted-foreground: oklch(0.708 0 0);
+	--color-muted: oklch(1 0 0 / 8%);
+	--color-muted-foreground: oklch(1 0 0 / 60%);
 	--color-border: oklch(1 0 0 / 10%);
 	--color-input: oklch(1 0 0 / 15%);
 	--color-ring: oklch(0.556 0 0);
+}
+
+/* 그룹 서브헤더(사용할 형식·기본 설정 등) — 정본(83:1557) 16px Medium #737373.
+   킷 Group의 스튜디오 스펙(13px semibold)과 다른 어드민 정본 값이라 표면에서만 덮는다.
+   유틸리티 레이어를 이기도록 무레이어. */
+.lbs-kit :where([data-slot="controller-group"]) > :where(header) > :where(span:first-child) {
+	font-size: 16px;
+	line-height: 20px;
+	font-weight: 500;
+	color: #737373;
 }
 
 /* Row가 유틸리티([--controller-row-px:0.75rem])로 심는 셀렉트 트리거 패딩이 Payload root에서

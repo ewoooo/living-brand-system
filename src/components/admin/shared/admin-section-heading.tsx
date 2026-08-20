@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-/** 어드민 본문 섹션 헤딩 — 정본(76:4)의 딥 그린 섹션 타이틀(레이어 설정·배경 설정·출력 설정). */
+/** 어드민 본문 섹션 헤딩 — 정본(83:1551) 26px Medium #003f08(brand-deep, 다크에서 자동 반전). */
 export function AdminSectionHeading({ children }: { children: ReactNode }) {
-	return <h2 className="mb-4 font-semibold text-2xl text-brand-deep">{children}</h2>
+	return <h2 className="mb-4 font-medium text-2xl text-brand-deep">{children}</h2>
 }
