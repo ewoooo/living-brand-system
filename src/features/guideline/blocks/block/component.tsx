@@ -61,7 +61,27 @@ function renderWidget(child: Child): ReactNode {
 				/>
 			)
 		case 'ciLockupWidget':
-			return <CiLockupWidget />
+			// 🔑 축마다의 고정값을 그대로 넘긴다 — **알약에서 뺀 축에만** 적용된다(`view.tsx`의 `pick`).
+			//    그래서 한 블록에 판을 여럿 두고 꼴·표현만 다르게 고정할 수 있다(정본 지면 구성).
+			return (
+				<CiLockupWidget
+					fixed={{
+						h: child.h,
+						subsidiaryOn: child.subsidiaryOn,
+						subsidiary: child.subsidiary,
+						branchOn: child.branchOn,
+						branch: child.branch,
+						form: child.form,
+						language: child.language,
+						colorType: child.colorType,
+						mono: child.mono,
+						clearSpace: child.clearSpace,
+						measured: child.measured,
+						heightControl: child.heightControl,
+						hiddenControls: child.hiddenControls,
+					}}
+				/>
+			)
 		case 'iconGridWidget':
 			return <IconGridWidget />
 		case 'stemClearSpaceWidget':
@@ -224,22 +244,27 @@ function Arrange({
 		)
 	}
 
-	if (arrangement === 'featured') {
-		// 첫 자식 전폭으로 강조 + 나머지는 columns 그리드.
+	if (arrangement === 'featured' || arrangement === 'featuredSide') {
+		// 첫 자식만 크게 두고 나머지는 남은 칸에 흘린다. 두 값의 차이는 **어느 축을 먹느냐**뿐이다.
+		// 🔑 그리드 하나로 그린다 — 바깥 flex + 안쪽 그리드로 나누면 두 층의 간격이 따로 놀아
+		//    맞붙임(gap='none')에서 첫 칸만 선이 아니라 틈으로 떨어진다.
 		const [first, ...rest] = items
+		// 🔴 남은 칸이 몇 줄을 먹는지 세어야 왼쪽 칸이 정확히 그만큼 내려온다. 열이 하나뿐이면
+		//    옆에 흘릴 자리가 없어 위아래 배치와 같아진다.
+		const sideRows = Math.max(1, Math.ceil(rest.length / Math.max(1, cols - 1)))
+		const featuredCell =
+			arrangement === 'featuredSide'
+				? { gridColumn: 1, gridRow: `span ${sideRows}` }
+				: { gridColumn: '1 / -1' }
 		return (
-			<div className="flex flex-col gap-4">
-				{first ? <div>{renderChild(first, aspectClass)}</div> : null}
-				{rest.length > 0 ? (
-					<div
-						className={`grid ${gridGap}`}
-						style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-					>
-						{rest.map((child) => (
-							<div key={child.id}>{renderChild(child, aspectClass)}</div>
-						))}
-					</div>
-				) : null}
+			<div
+				className={`grid ${gridGap}`}
+				style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+			>
+				{first ? <div style={featuredCell}>{renderChild(first, aspectClass)}</div> : null}
+				{rest.map((child) => (
+					<div key={child.id}>{renderChild(child, aspectClass)}</div>
+				))}
 			</div>
 		)
 	}

@@ -17,10 +17,14 @@ import { CapLine, SymbolMark } from './view'
  * 🔴 클리어스페이스(여백)는 여기 없다 — 간격과 아예 다른 규정이고 이번 범위 밖이다.
  */
 
-/** 라벨행 높이(px). 🔴 절대 px이다 — H가 100 고정이라 지금은 안 드러나는 부채고, 이 파일이 소유한다. */
-const LABEL_ROW = 44
-/** 게이지 열 하나의 폭(px). */
-const GAUGE_COL = 64
+/**
+ * 라벨행 높이와 게이지 열 폭. 🔑 **H 배수다** — H가 컨트롤러로 열리면서 절대 px이던 부채를 갚았다.
+ * 값은 H=100에서 예전 절대값(44·64)과 정확히 같게 골랐다: 44/100 = 0.44, 64/100 = 0.64.
+ * 🔴 라벨 글자 크기는 따라 커지지 않는다(`text-xs`) — 도판이 아주 작아지면 라벨이 트랙보다 커진다.
+ *    그래서 H 하한을 매니페스트가 60으로 잡았다.
+ */
+const LABEL_ROW_RATIO = 0.44
+const GAUGE_COL_RATIO = 0.64
 /** 치수선·게이지 색은 브랜드 색을 **이름으로** 찾는다(생 팔레트 금지). */
 const GUIDE_COLOR_NAME = 'HD HERITAGE GREEN'
 /**
@@ -33,6 +37,22 @@ const GUIDE_COLOR_NAME = 'HD HERITAGE GREEN'
  *    `visual-vocabulary.test.ts`가 테마 변형 사용을 막는다).
  */
 const bandOpacity = (tone: 'light' | 'dark') => (tone === 'light' ? 0.12 : 0.32)
+
+/**
+ * 안내선 색과 면 색을 **도판 밖에서도 쓸 수 있게** 연다. 클리어스페이스 프레임이 같은 색을 쓴다
+ * (사용자 지정 2026-08-20) — 「규정을 그린 선」이라는 점이 같아서 색이 갈리면 다른 종류의 정보로 읽힌다.
+ * 🔴 방향은 `view.tsx` → `diagram.tsx` 한쪽뿐이다. 반대로 import하면 모듈 최상위 상수에서 TDZ가
+ *    난다(모프 토큰을 `motion.ts`로 뺀 이유가 그것이다).
+ */
+export const guideColorOf = (colors: Record<string, string>) =>
+	colors[GUIDE_COLOR_NAME] ?? 'currentColor'
+
+/**
+ * 면으로 칠할 때의 안내선 색. 도판의 밴드는 요소 `opacity`로 연하게 하지만, 테두리처럼 **색 하나로**
+ * 줘야 하는 자리는 알파를 색에 넣어야 한다 — 같은 12%/32%를 쓴다.
+ */
+export const guideTint = (guide: string, tone: 'light' | 'dark') =>
+	`color-mix(in srgb, ${guide} ${bandOpacity(tone) * 100}%, transparent)`
 
 /**
  * 첫 렌더에는 전환을 끈다 — 마운트 순간 CSS 전환이 걸려 있으면 초기 상태가 흘러 들어온다.
@@ -57,12 +77,23 @@ function useMotion() {
  *    `max-content` 트랙이 그 값을 다시 읽어 420ms 동안 트랙이 떤다(되먹임).
  * 🔑 첫 렌더에는 이전 위치가 없어 애니메이션이 돌지 않는다(깜빡임 없음).
  */
-function useDiagramFlip() {
+function useDiagramFlip(structure: string) {
 	const nodes = useRef(new Map<string, { node: HTMLElement; size: boolean }>())
 	const previous = useRef(new Map<string, { x: number; y: number; w: number; h: number }>())
+	const lastStructure = useRef(structure)
 
 	useLayoutEffect(() => {
-		const skip = reducedMotion()
+		/*
+		 * 🔑 **구조가 바뀐 렌더에서만 잇는다.** 그 밖의 렌더(H 조절 같은 크기 변화)에서는 자리만
+		 *    다시 기억하고 애니메이션을 돌리지 않는다.
+		 * 🔴 왜 필요한가: 크기를 잇는 노드(면·치수선 = size:true)와 안 잇는 노드(글자·심볼 =
+		 *    size:false)가 섞여 있어, H가 바뀌면 글자는 즉시 새 크기가 되고 밴드만 옛 크기에서
+		 *    자란다 — 420ms 동안 글자가 자기 밴드를 벗어난다. 크기는 이산으로 두는 것이 맞다
+		 *    (사용자 규칙: 위치는 연속, 크기·텍스트는 이산).
+		 */
+		const structural = lastStructure.current !== structure
+		lastStructure.current = structure
+		const skip = reducedMotion() || !structural
 		for (const [key, entry] of nodes.current) {
 			const { node, size } = entry
 			const now = {
@@ -136,6 +167,8 @@ const FLEX = 'minmax(0, 1fr)'
 
 /** 스펙 하나를 grid 좌표로 푼다. 트랙 배열의 인덱스가 곧 grid line이라 좌표 실수가 구조적으로 안 난다. */
 function resolve(spec: DiagramSpec, h: number) {
+	const LABEL_ROW = LABEL_ROW_RATIO * h
+	const GAUGE_COL = GAUGE_COL_RATIO * h
 	const columns: string[] = [FLEX]
 	const colLine: Record<string, number> = {}
 	for (let d = 0; d < spec.gaugeLeft; d++) columns.push(`${GAUGE_COL}px`)
@@ -446,7 +479,8 @@ export function LockupDiagram({
 }) {
 	const spec = useMemo(() => diagramSpec(lockup), [lockup])
 	const g = useMemo(() => resolve(spec, h), [spec, h])
-	const register = useDiagramFlip()
+	// 🔑 정체가 바뀌었는가 = 판의 구조가 바뀌었는가. H·색은 여기 안 들어간다(크기·색은 이산이다).
+	const register = useDiagramFlip(`${lockup.key}|${spec.textCol}`)
 	const motion = useMotion()
 	const guide = colors[GUIDE_COLOR_NAME] ?? 'currentColor'
 

@@ -6,6 +6,7 @@ import { helperLabel } from '@/features/guideline/components/globals/guideline-h
 import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
 import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
+import { CI_LOCKUP_MANIFEST } from '@/features/guideline/widgets/ci-lockup/manifest'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
@@ -66,7 +67,19 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 	const bgGroup = colorGroups.find((g) => g.name === 'Background Color') ?? colorGroups[0] ?? null
 
 	return [
-		{ name: 'ci-lockup', node: <CiLockupWidget /> },
+		{
+			// 🔑 컨트롤은 매니페스트가 만든다 — 갤러리도 스코프 안에서 그려야 실제 화면과 갈리지 않는다.
+			//    스코프 없이 두면 컨트롤 없는 정적 락업이 되어 「이 위젯은 조작이 안 된다」로 읽힌다.
+			name: 'ci-lockup',
+			node: (
+				<GuidelineControllerScope manifest={CI_LOCKUP_MANIFEST}>
+					<ControllerBar placement="scroll" aria-label={helperLabel('CI 락업')}>
+						<GuidelineControllerPill />
+					</ControllerBar>
+					<CiLockupWidget />
+				</GuidelineControllerScope>
+			),
+		},
 		{ name: 'icon-grid', node: <IconGridWidget /> },
 		{ name: 'stem-clear-space', node: <StemClearSpaceWidget /> },
 		{ name: 'hd-color-palette (균일)', node: <HdColorPaletteWidget layout="uniform" /> },
