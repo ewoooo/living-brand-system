@@ -37,9 +37,7 @@ import type {
 	StudioRuntimeManifest,
 } from '@/modules/studio-controller/controller-definition'
 import {
-	applyControllerRestrictions,
 	parseStudioControllerConfig,
-	projectPayloadControllerRestrictions,
 	resolveControllerPresentation,
 } from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfig } from '@/types/template'
@@ -47,6 +45,12 @@ import type { TemplateNodeConfig } from '@/types/template'
 const BACKGROUND_TYPE_CONTROL_ID = 'background.type'
 const BACKGROUND_COLOR_CONTROL_ID = 'background.color'
 const TEXT_COLOR_CONTROL_ID = 'text.color'
+
+const BACKGROUND_TYPE_OPTIONS: readonly { value: TemplateBackgroundType; label: string }[] = [
+	{ value: 'color', label: 'Color' },
+	{ value: 'image', label: 'Image' },
+	{ value: 'graphic', label: 'Graphic' },
+]
 
 type TemplateSlotBindingBase = {
 	/** DOM 합성 주소. Label과 분리되어 Admin에서 이름을 바꿔도 binding은 유지된다. */
@@ -107,6 +111,13 @@ export type TemplateStudioConfigSlot = TemplateEditableLayer | TemplateBackgroun
 
 export type TemplateBackgroundType = 'color' | 'image' | 'graphic'
 
+/** Admin이 정하는 배경 정책. 목록이 없으면 전부 허용이다 — exportPolicy와 같은 규칙. */
+export type TemplateBackgroundPolicy = {
+	types?: readonly TemplateBackgroundType[]
+	imageConfigIds?: readonly number[]
+	graphicConfigIds?: readonly string[]
+}
+
 /** Template Studio SSR에 노출하는 node config 부분집합. */
 export type PublishedTemplateNodeConfig = {
 	input?: Omit<NonNullable<TemplateNodeConfig['input']>, 'aiInstruction'>
@@ -126,15 +137,14 @@ export type PublishedHtmlTemplate = {
 	width: number
 	height: number
 	templateVersion: string
-	controllerRestrictions?: unknown
 	exportPolicy?: unknown
-	controllerPresentation?: unknown
+	backgroundPolicy?: TemplateBackgroundPolicy
 	previewImage?: StudioPreviewImage
 }
 
 /**
  * 클라이언트(Provider·Canvas)로 건너가는 published 템플릿 뷰.
- * Admin 정책(controllerRestrictions·exportPolicy)은 derive 입력일 뿐이므로 타입에서 제외해
+ * Admin 정책(exportPolicy·backgroundPolicy)은 derive 입력일 뿐이므로 타입에서 제외해
  * RSC payload로 직렬화될 수 없게 한다.
  */
 export type PublishedTemplateView = Pick<
@@ -512,14 +522,57 @@ function isImageAspectRatio(value: string | null): value is ImageAspectRatio {
 	return IMAGE_ASPECT_RATIOS.includes(value as ImageAspectRatio)
 }
 
+/**
+ * 배경 그룹을 정책으로 좁혀 만든다.
+ *
+ * 🔴 background.color 컨트롤은 형식에서 색을 막아도 지운다 — TemplateBackgroundSlot.colorControlId가
+ * 필수고 parse가 그 존재를 검증하므로, 없애면 슬롯 계약과 소비 컴포넌트까지 optional이 번진다.
+ * 색이 형식에 없으면 창작자가 그 자리에 닿지 못하므로 남겨 두어도 해가 없다.
+ */
+function buildBackgroundGroup(
+	policy: TemplateBackgroundPolicy | undefined,
+): ControllerGroupDefinition {
+	const allowed = policy?.types
+	const options = allowed
+		? BACKGROUND_TYPE_OPTIONS.filter((option) => allowed.includes(option.value))
+		: BACKGROUND_TYPE_OPTIONS
+	if (options.length === 0) {
+		throw new Error('Template 배경 형식은 최소 하나를 허용해야 합니다.')
+	}
+	return {
+		id: 'background',
+		title: 'Background',
+		controls: [
+			{
+				id: BACKGROUND_TYPE_CONTROL_ID,
+				kind: 'select',
+				label: 'Type',
+				defaultValue: options[0].value,
+				options,
+				// 고를 것이 하나면 열어 둘 이유가 없다.
+				...(options.length === 1 ? { availability: 'readonly' as const } : {}),
+			},
+			{
+				id: BACKGROUND_COLOR_CONTROL_ID,
+				kind: 'color',
+				label: 'Background Color',
+				defaultValue: null,
+			},
+		],
+	}
+}
+
 /** Template 문서 구조에서 Admin 제한 전의 결정적 Runtime Manifest를 파생한다. */
 export function getTemplateRuntimeManifest({
 	html,
 	nodeConfigs,
 	width,
 	height,
+	backgroundPolicy,
 }: Pick<PublishedHtmlTemplate, 'html' | 'nodeConfigs'> &
-	Partial<Pick<PublishedHtmlTemplate, 'width' | 'height'>>): StudioRuntimeManifest {
+	Partial<
+		Pick<PublishedHtmlTemplate, 'width' | 'height' | 'backgroundPolicy'>
+	>): StudioRuntimeManifest {
 	const textControls: TextControlDefinition[] = collectTemplateSlots(html, nodeConfigs).map(
 		(slot) => ({
 			id: `text:${slot.nodeId}`,
@@ -567,29 +620,7 @@ export function getTemplateRuntimeManifest({
 							},
 						]
 					: []),
-				{
-					id: 'background',
-					title: 'Background',
-					controls: [
-						{
-							id: BACKGROUND_TYPE_CONTROL_ID,
-							kind: 'select' as const,
-							label: 'Type',
-							defaultValue: 'color',
-							options: [
-								{ value: 'color', label: 'Color' },
-								{ value: 'image', label: 'Image' },
-								{ value: 'graphic', label: 'Graphic' },
-							],
-						},
-						{
-							id: BACKGROUND_COLOR_CONTROL_ID,
-							kind: 'color' as const,
-							label: 'Background Color',
-							defaultValue: null,
-						},
-					],
-				},
+				buildBackgroundGroup(backgroundPolicy),
 			],
 		},
 	}
@@ -602,6 +633,12 @@ export function deriveTemplateStudioConfig(
 	graphicConfigs: readonly GraphicStudioConfig[] = [],
 ): TemplateStudioConfig {
 	const { html, nodeConfigs } = template
+	const backgroundPolicy = template.backgroundPolicy
+	// ponytail: template.graphicConfigs는 배경 그래픽에서만 소비된다 — 슬롯에 id 목록을 더하지 않고 목록 자체를 좁힌다.
+	const allowedGraphicIds = backgroundPolicy?.graphicConfigIds
+	const scopedGraphicConfigs = allowedGraphicIds
+		? graphicConfigs.filter((config) => allowedGraphicIds.includes(config.id))
+		: graphicConfigs
 	const textSlots = collectTemplateSlots(html, nodeConfigs)
 	const vectorSlots = collectTemplateVectorSlots(html, nodeConfigs)
 	const slots: TemplateStudioConfigSlot[] = [
@@ -631,7 +668,12 @@ export function deriveTemplateStudioConfig(
 				box: { width: slot.boxWidth, height: slot.boxHeight },
 				imageConfig: slot.profileId
 					? { mode: 'pinned', configId: slot.profileId }
-					: { mode: 'selectable' },
+					: {
+							mode: 'selectable',
+							...(slot.allowedProfileIds
+								? { allowedConfigIds: slot.allowedProfileIds }
+								: {}),
+						},
 				...(nodeConfigs[slot.nodeId]?.imageColorize
 					? {
 							featureOverrides: {
@@ -639,7 +681,7 @@ export function deriveTemplateStudioConfig(
 							},
 						}
 					: {}),
-				transform: { enabled: true, limits: IMAGE_EDIT_TRANSFORM_LIMITS },
+				transform: { enabled: slot.transformEnabled, limits: IMAGE_EDIT_TRANSFORM_LIMITS },
 			}),
 		),
 		...vectorSlots.map(
@@ -660,15 +702,17 @@ export function deriveTemplateStudioConfig(
 			kind: 'background',
 			typeControlId: BACKGROUND_TYPE_CONTROL_ID,
 			colorControlId: BACKGROUND_COLOR_CONTROL_ID,
-			imageConfig: { mode: 'selectable' },
+			imageConfig: {
+				mode: 'selectable',
+				...(backgroundPolicy?.imageConfigIds
+					? { allowedConfigIds: backgroundPolicy.imageConfigIds }
+					: {}),
+			},
 		},
 	]
 
 	const runtimeManifest = getTemplateRuntimeManifest(template)
-	const controllerGroups = applyControllerRestrictions(
-		runtimeManifest.controller.groups,
-		projectPayloadControllerRestrictions(template.controllerRestrictions),
-	)
+	const controllerGroups = runtimeManifest.controller.groups
 
 	const config: TemplateStudioConfig = {
 		studio: 'template',
@@ -683,16 +727,14 @@ export function deriveTemplateStudioConfig(
 		controller: {
 			groups: controllerGroups,
 		},
-		controllerPresentation: resolveControllerPresentation(
-			controllerGroups,
-			template.controllerPresentation,
-		),
+		// 어드민 입력을 없앤 뒤에도 창작자 사이드바가 이 값을 읽으므로 기본값을 계산해 싣는다.
+		controllerPresentation: resolveControllerPresentation(controllerGroups, undefined),
 		previewImage: template.previewImage,
 		template: {
 			slots,
 			...(textSlots.length ? { textColorControlId: TEXT_COLOR_CONTROL_ID } : {}),
 			imageConfigs,
-			graphicConfigs,
+			graphicConfigs: scopedGraphicConfigs,
 			exportOption: {
 				canvas: { width: template.width, height: template.height },
 				maxScale: resolveMaxExportScale(template.width, template.height),

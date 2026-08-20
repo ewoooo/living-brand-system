@@ -441,3 +441,22 @@ describe('Controller.CameraControl', () => {
 		expect(screen.getByRole('combobox', { name: 'Y' })).toBeInTheDocument()
 	})
 })
+
+describe('Controller.Action', () => {
+	afterEach(cleanup)
+
+	it('면 위에서 묻히지 않도록 ghost의 muted hover를 겹침으로 바꾼다', () => {
+		render(
+			<Controller.Row readonly label="Key">
+				<Controller.Action aria-label="복사">
+					<span />
+				</Controller.Action>
+			</Controller.Row>,
+		)
+
+		const action = screen.getByRole('button', { name: '복사' })
+		// 🔴 Row가 bg-muted라, ghost 기본 hover(bg-muted)가 남으면 hover가 같은 색으로 사라진다.
+		expect(action).not.toHaveClass('hover:bg-muted')
+		expect(action).toHaveClass('hover:bg-foreground/5', 'dark:hover:bg-foreground/5')
+	})
+})

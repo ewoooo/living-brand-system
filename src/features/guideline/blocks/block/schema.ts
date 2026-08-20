@@ -1,5 +1,6 @@
 import type { Block } from 'payload'
 import { ImageLeaf } from '@/features/guideline/leaves/image/schema'
+import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/schema'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/schema'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/schema'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/schema'
@@ -120,6 +121,7 @@ export const LayoutBlock: Block = {
 			// leaf = Image(정적) | Widget(인터랙티브) 형제 위계. Text/Shape/Link는 추후.
 			blocks: [
 				ImageLeaf,
+				CiLockupWidget,
 				ClearspaceOverlayWidget,
 				ClearspaceViewerWidget,
 				DoDontWidget,

@@ -1,8 +1,11 @@
 import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
+import { ContentFrame } from '@/components/shared/content-frame'
 import { GuidelineSection } from '@/features/guideline/components/pages/guideline-section'
 import { getGuidelineSectionPreview } from '@/features/guideline/services/get-guideline-document-preview.service'
 import { getGuidelineSection } from '@/features/guideline/services/get-guideline-section.service'
+// 🔴 임시(개발용) import — 아래 slug 분기와 함께 지운다.
+import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
 import { isManager, isPayloadUser } from '@/lib/auth'
 import { authenticateRequest } from '@/lib/request-auth'
 
@@ -28,10 +31,20 @@ export default async function GuidelineSectionPage({
 	}
 
 	return (
-		<GuidelineSection
-			section={section}
-			previewDocumentId={previewSection ? previewDocumentId : undefined}
-		/>
+		<>
+			<GuidelineSection
+				section={section}
+				previewDocumentId={previewSection ? previewDocumentId : undefined}
+			/>
+			{/* 🔴 임시(개발용) — CI 락업 위젯을 실제 페이지에서 보려고 slug로 끼워 넣었다.
+			    위젯에 schema.ts가 없어 admin으로 넣을 수 없는 동안만 쓴다.
+			    등록 3곳(`docs/11` §3)을 마치면 이 조각을 통째로 지운다. 커밋에 남기지 말 것. */}
+			{sectionSlug === 'subsidiary-ci' && (
+				<ContentFrame>
+					<CiLockupWidget />
+				</ContentFrame>
+			)}
+		</>
 	)
 }
 

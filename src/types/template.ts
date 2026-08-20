@@ -50,8 +50,16 @@ export interface TemplateNodeConfig {
 	 */
 	imageColorize?: { line: string; background?: string }
 	input?: TemplateSlotSpec
-	/** 존재 자체가 스튜디오 개방 선언 — 유저가 이 프레임의 이미지를 생성해 채울 수 있다. profileId는 사용할 프로파일 고정(없으면 유저가 선택). */
-	imageInput?: { profileId?: number }
+	/**
+	 * 존재 자체가 스튜디오 개방 선언 — 유저가 이 프레임의 이미지를 생성해 채울 수 있다.
+	 * profileId는 사용할 프로파일 고정(없으면 유저가 선택), allowedProfileIds는 그 선택의 범위(없으면 전부),
+	 * transform.enabled는 창작자의 이동·확대·회전 허용(없으면 허용).
+	 */
+	imageInput?: {
+		profileId?: number
+		allowedProfileIds?: number[]
+		transform?: { enabled: boolean }
+	}
 	vectorAsset?: {
 		collection: TemplateVectorAssetCollection
 		id: number

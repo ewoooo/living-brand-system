@@ -269,26 +269,6 @@ function GraphicCaptureProbe() {
 	)
 }
 
-function TemplateControlMutationProbe() {
-	const { text, background } = useTemplateStudio()
-	return (
-		<>
-			<span data-testid="template-text">{text.values['1:1']}</span>
-			<span data-testid="template-text-color">{text.color}</span>
-			<span data-testid="template-background-color">{background.state.color}</span>
-			<button type="button" onClick={() => text.setValue('1:1', '변경 제목')}>
-				change template text
-			</button>
-			<button type="button" onClick={() => text.setColor('#abcdef')}>
-				change template text color
-			</button>
-			<button type="button" onClick={() => background.setColor('#abcdef')}>
-				change template background color
-			</button>
-		</>
-	)
-}
-
 function ImageRaceProbe() {
 	const { images } = useTemplateStudio()
 	const state = images.states['1:1']
@@ -434,54 +414,6 @@ describe('TemplateGenerator', () => {
 
 		const preview = container.querySelector<HTMLElement>('[data-slot="template-preview"]')
 		expect(preview).toHaveStyle({ width: '800px', height: '600px' })
-	})
-
-	it('Template Controller의 readonly 기본값을 세션에 적용하고 Context action에서도 변경을 거부한다', () => {
-		const controlledTemplate: PublishedHtmlTemplate = {
-			...template,
-			html: '<p data-node-id="1:1" data-figma-type="TEXT" data-name="Title">원본 제목</p>',
-			nodeConfigs: { '1:1': { input: { label: '제목', maxLength: 20, maxLines: 1 } } },
-			controllerRestrictions: {
-				controls: [
-					{
-						controlId: 'text:1:1',
-						availability: 'readonly',
-						defaultValue: '고정 제목',
-						maxLength: 20,
-					},
-					{
-						controlId: 'text.color',
-						availability: 'readonly',
-						defaultValue: '#112233',
-					},
-					{
-						controlId: 'background.color',
-						availability: 'readonly',
-						defaultValue: '#ffffff',
-					},
-				],
-			},
-		}
-		const config = deriveTemplateStudioConfig(controlledTemplate)
-		render(
-			<TemplateStudioProvider
-				config={config}
-				template={controlledTemplate}
-				categoryTitle="카드"
-			>
-				<TemplateControlMutationProbe />
-			</TemplateStudioProvider>,
-		)
-
-		expect(screen.getByTestId('template-text')).toHaveTextContent('고정 제목')
-		expect(screen.getByTestId('template-text-color')).toHaveTextContent('#112233')
-		expect(screen.getByTestId('template-background-color')).toHaveTextContent('#ffffff')
-		fireEvent.click(screen.getByRole('button', { name: 'change template text' }))
-		fireEvent.click(screen.getByRole('button', { name: 'change template text color' }))
-		fireEvent.click(screen.getByRole('button', { name: 'change template background color' }))
-		expect(screen.getByTestId('template-text')).toHaveTextContent('고정 제목')
-		expect(screen.getByTestId('template-text-color')).toHaveTextContent('#112233')
-		expect(screen.getByTestId('template-background-color')).toHaveTextContent('#ffffff')
 	})
 
 	it('아이덴티티 카드의 Change로 연 자산 브라우저에서 고른 템플릿 작업대로 이동한다', async () => {

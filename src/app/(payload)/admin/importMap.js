@@ -33,6 +33,7 @@ import { StudioControllerPresentationField as StudioControllerPresentationField_
 import { StudioOutputFormatsField as StudioOutputFormatsField_2b4d6cf4a441099f2efd973bee4050a7 } from '../../../components/admin/studio/studio-output-formats-field'
 import { StudioOutputNumberOptionsField as StudioOutputNumberOptionsField_a332d6920f506f30c6bd7cf1cbbf3441 } from '../../../components/admin/studio/studio-output-number-options-field'
 import { ImageProfileTestPanel as ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640 } from '../../../components/admin/image-profiles/image-profile-test-panel'
+import { TemplateBackgroundPolicyField as TemplateBackgroundPolicyField_db5e24a3a4d2a7d4f0c86814bf290e5c } from '../../../components/admin/templates/template-background-policy-field'
 import { TemplateLayersField as TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6 } from '../../../components/admin/templates/template-layers-field'
 import { SidebarDivider as SidebarDivider_34b02386e3687855f2c939d264827b16 } from '../../../components/admin/templates/sidebar-divider'
 import { FigmaHtmlImportField as FigmaHtmlImportField_be9c443aa962726f6d016f5ca8fc7c1f } from '../../../components/admin/templates/figma-html-import-field'
@@ -89,6 +90,7 @@ export const importMap = {
   "/components/admin/studio/studio-output-formats-field#StudioOutputFormatsField": StudioOutputFormatsField_2b4d6cf4a441099f2efd973bee4050a7,
   "/components/admin/studio/studio-output-number-options-field#StudioOutputNumberOptionsField": StudioOutputNumberOptionsField_a332d6920f506f30c6bd7cf1cbbf3441,
   "/components/admin/image-profiles/image-profile-test-panel#ImageProfileTestPanel": ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640,
+  "/components/admin/templates/template-background-policy-field#TemplateBackgroundPolicyField": TemplateBackgroundPolicyField_db5e24a3a4d2a7d4f0c86814bf290e5c,
   "/components/admin/templates/template-layers-field#TemplateLayersField": TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6,
   "/components/admin/templates/sidebar-divider#SidebarDivider": SidebarDivider_34b02386e3687855f2c939d264827b16,
   "/components/admin/templates/figma-html-import-field#FigmaHtmlImportField": FigmaHtmlImportField_be9c443aa962726f6d016f5ca8fc7c1f,

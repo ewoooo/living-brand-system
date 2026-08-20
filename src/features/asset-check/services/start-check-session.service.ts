@@ -1,5 +1,5 @@
 import { toCheckResult } from '@/features/asset-check/checkers/check-result.adapter'
-import { needsReview, planChecks } from '@/features/asset-check/domain/check-plan'
+import { planChecks } from '@/features/asset-check/domain/check-plan'
 import {
 	type CheckSession,
 	CheckSessionInputMismatchError,
@@ -16,6 +16,7 @@ import {
 	measureObservationSchema,
 	presenceObservationSchema,
 } from '@/features/asset-check/domain/heuristic.evaluator'
+import { needsReview } from '@/features/asset-check/domain/needs-review'
 import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
 	findUnavailableAiReferenceCheckKeys,
