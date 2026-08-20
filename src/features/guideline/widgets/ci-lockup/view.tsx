@@ -373,14 +373,26 @@ function LockupFigure({
 	symbolColors: string[]
 	/** 여백(H 배수). 0이면 그리지 않는다. */
 	clearSpace: number
-	/** 치수 도판. 있으면 판 안의 락업을 이것으로 갈아끼운다(같은 자리·같은 판 크기). */
+	/**
+	 * 치수 도판. **hover하는 동안에만** 판 안의 락업을 이것으로 갈아끼운다(같은 자리·같은 판 크기).
+	 * null이면 이 판은 치수를 갖지 않는다(저작 결정 — `manifest.ts`의 `MEASURED`).
+	 */
 	diagram: React.ReactNode
 }) {
+	// 🔑 기본 상태는 규정을 **얹은** 락업(클리어스페이스)이고, 치수는 들여다볼 때만 나온다
+	//    (사용자 지정 2026-08-20). 여백은 락업 위에 얹히지만 치수는 판을 갈아치우므로, 늘 켜 두면
+	//    이 판이 로고가 아니라 계측기로 읽힌다.
+	// 🔴 CSS로 못 한다 — 보이고 숨는 것이 아니라 **다른 트리로 교체**되기 때문이다.
+	const [peeking, setPeeking] = useState(false)
+	const shown = peeking ? diagram : null
+
 	const stageRef = useRef<HTMLDivElement>(null)
 	/* 🔑 내보내기는 **화면에 있는 것을 옮겨 적는다** — 좌표를 다시 만들지 않는다(`export-svg.ts`).
 	   🔴 치수 도판이 켜져 있으면 락업이 판에서 빠져 있어 내보낼 잉크가 없다.
 	   🔴 판(배경)째로 내보내는 갈래는 지웠다(사용자 지정 2026-08-20) — 아이콘 하나로 합치면서
-	      「가져다 쓸 수 있는 것」인 로고만 남겼다. 되살리려면 `lockupSvg`의 둘째 인자가 그 갈래다. */
+	      「가져다 쓸 수 있는 것」인 로고만 남겼다. 되살리려면 `lockupSvg`의 둘째 인자가 그 갈래다.
+	   🔴 치수를 가진 판에서는 내보내기가 없다 — hover가 도판을 부르는 순간 락업이 판에서 빠지므로
+	      버튼이 뜰 창이 없다. 로고를 받는 자리는 치수 없는 판(색상 변형)이다. */
 	const download = async () => {
 		const root = stageRef.current?.querySelector<HTMLElement>('[data-lockup]')
 		if (!root) return
@@ -390,7 +402,16 @@ function LockupFigure({
 	return (
 		// 🔴 판 자체가 hover 대상이자 버튼의 기준면이다. 버튼을 판 **밖**(이 래퍼)에 두는 이유는
 		//    판이 `overflow-x-auto`라 안에 넣으면 락업과 함께 가로로 스크롤돼 나가기 때문이다.
-		<div className="group/export relative">
+		// 🔴 pointer 이벤트로 잡는다 — 도판 교체는 CSS hover로 표현할 수 없다(보이고 숨는 것이 아니라
+		//    다른 트리로 바뀐다).
+		// 🔴 focus로는 열지 않는다. 도판이 나오면 내보내기 버튼이 판에서 빠지는데, 그 버튼에 포커스가
+		//    닿아 도판이 열리면 **포커스를 쥔 요소 자신이 사라져** 포커스가 body로 튄다. 키보드에서
+		//    치수를 여는 길은 아직 없고, 그 사실은 `docs/11` §7에 결함으로 적어 두었다.
+		<div
+			className="group/export relative"
+			onPointerEnter={() => setPeeking(true)}
+			onPointerLeave={() => setPeeking(false)}
+		>
 			{/* 🔴 판은 밝아야 한다(기본형 Full Color는 밝은 배경 전용). 다크 모드에서도 마찬가지다.
 				overflow-x-auto는 안전망이다 — 좁은 자리에서도 로고를 자르지 않고 흘려보낸다. */}
 			{/* 🔴 안쪽 패딩을 두지 않는다(사용자 지정 2026-08-19) — 판은 캔버스이고, 그 안의 것이
@@ -410,7 +431,7 @@ function LockupFigure({
 					transition: `background-color ${MORPH}, height ${MORPH}`,
 				}}
 			>
-				{diagram ?? (
+				{shown ?? (
 					<ClearSpaceFrame h={h} clearSpace={clearSpace}>
 						<Composed
 							lockup={lockup}
@@ -422,9 +443,9 @@ function LockupFigure({
 					</ClearSpaceFrame>
 				)}
 			</div>
-			{/* 🔴 도판 모드에서는 락업이 판에 없다 — 내보낼 것이 없으므로 아예 그리지 않는다.
+			{/* 🔴 도판이 나와 있는 동안에는 락업이 판에 없다 — 내보낼 것이 없으므로 그리지 않는다.
 				🔴 hover에만 나타나지만 키보드에서도 닿아야 하므로 focus-visible에도 연다. */}
-			{diagram ? null : (
+			{shown ? null : (
 				<Button
 					type="button"
 					variant="outline"

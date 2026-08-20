@@ -137,6 +137,15 @@ export const CLEAR_SPACE = {
 	})),
 } as const satisfies ControllerControlDefinition
 
+/**
+ * 치수 도판을 이 판이 가질 수 있는가.
+ *
+ * 🔴 **알약에 싣지 않는다**(사용자 지정 2026-08-20). 켜고 끄는 일은 hover가 소유한다 — 도판은
+ *    락업 위에 얹히는 것이 아니라 판을 **갈아치우므로**, 알약 토글로 두면 아무도 누르지 않고
+ *    자리만 먹는다. 여기 값은 「hover하면 치수를 낼 판인가」라는 **저작 결정**이다.
+ * 🔑 클리어스페이스는 반대다 — 락업 위에 얹히고 모드가 셋이라(없음/기본/예외) 알약에 남는다.
+ *    여백과 간격은 정본이 별 규정으로 갈라 놓았고 컨트롤로서의 성격도 그래서 반대다.
+ */
 export const MEASURED = {
 	id: 'measured',
 	kind: 'toggle',
@@ -200,6 +209,8 @@ export function ciLockupHiddenAxes(fields: {
 }): Set<string> {
 	const hidden = new Set((fields.hiddenControls ?? []).filter((id): id is string => Boolean(id)))
 	if (fields.heightControl !== true) hidden.add(HEIGHT.id)
+	// 🔴 치수는 hover가 소유하므로 알약에 낼 길이 없다 — H와 달리 여는 스위치도 두지 않는다.
+	hidden.add(MEASURED.id)
 	return hidden
 }
 

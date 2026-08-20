@@ -95,6 +95,14 @@ describe('CI 락업 admin 값 → restriction', () => {
 		expect(ciEffective({ heightControl: true }).get('h')?.availability).toBeUndefined()
 	})
 
+	// 🔴 치수는 hover가 소유한다 — 알약 토글로 두면 아무도 누르지 않고 자리만 먹는다.
+	//    클리어스페이스는 반대로 알약에 남아야 한다(모드가 셋이라 hover로 못 접는다).
+	it('치수는 알약에 나오지 않고 클리어스페이스는 남는다', () => {
+		const controls = ciEffective({ measured: true })
+		expect(controls.get('measured')?.availability).toBe('readonly')
+		expect(controls.get('clearSpace')?.availability).toBeUndefined()
+	})
+
 	it('H를 열어도 hiddenControls가 이기면 readonly로 남는다', () => {
 		const controls = ciEffective({ heightControl: true, hiddenControls: ['h'] })
 		expect(controls.get('h')?.availability).toBe('readonly')
