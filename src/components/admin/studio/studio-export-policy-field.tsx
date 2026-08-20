@@ -165,7 +165,7 @@ export function StudioExportPolicyField({
 		.map((category) => category.value)
 
 	return (
-		<div className="lbs-kit field-type group mb-5">
+		<div className="lbs-kit field-type group mb-20">
 			<AdminSectionHeading>출력 설정</AdminSectionHeading>
 			<div className="flex flex-col gap-2 rounded-3xl border bg-background px-3 pt-6 pb-3">
 				{supportedFormats.length === 0 ? (

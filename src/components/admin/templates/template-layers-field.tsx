@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { FieldDescription } from '@/components/ui/field'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap } from '@/types/template'
 import { AdminSectionHeading } from '../shared/admin-section-heading'
@@ -22,8 +21,8 @@ import {
 	typeLabel,
 } from './template-layers'
 
-// 정본(76:4)의 레이어 설정 프리뷰 비율 — 본문 폭에서 캔버스가 주인공이 되는 높이.
-const DEFAULT_CANVAS_HEIGHT = 720
+// 정본(83:1431) 실측 캔버스 높이.
+const DEFAULT_CANVAS_HEIGHT = 560
 const DEFAULT_LAYER_WIDTH = 260
 const DEFAULT_WORKSPACE_GAP = 16
 
@@ -156,7 +155,7 @@ export function TemplateLayersField() {
 	const width = useFormFields(([fields]) => fields.width?.value) as number | undefined
 	const height = useFormFields(([fields]) => fields.height?.value) as number | undefined
 	const layout = useDialKit('Admin · 템플릿 레이어', {
-		canvasHeight: [DEFAULT_CANVAS_HEIGHT, 400, 960, 20],
+		canvasHeight: [DEFAULT_CANVAS_HEIGHT, 400, 800, 20],
 		layerWidth: [DEFAULT_LAYER_WIDTH, 220, 360, 10],
 		workspaceGap: [DEFAULT_WORKSPACE_GAP, 8, 32, 2],
 	})
@@ -220,7 +219,7 @@ export function TemplateLayersField() {
 		!!selected && canAssignImage(selected) && !!nodeConfigs[selected.id]?.backgroundImage
 
 	return (
-		<div className="lbs-kit mb-[var(--base)]">
+		<div className="lbs-kit mb-20">
 			<AdminSectionHeading>레이어 설정</AdminSectionHeading>
 			<div className="flex items-start" style={{ gap: layout.workspaceGap }}>
 				<TemplateCanvas
@@ -253,17 +252,18 @@ export function TemplateLayersField() {
 				/>
 			</div>
 
-			<Separator className="my-6" />
-
-			{selected ? (
-				<TemplateLayerEditor
-					config={nodeConfigs[selected.id] ?? {}}
-					onCommit={commitNodeConfig}
-					selected={selected}
-				/>
-			) : hasHtml ? (
-				<FieldDescription>레이어를 선택하면 값을 편집할 수 있습니다.</FieldDescription>
-			) : null}
+			{/* 정본(83:1466)에는 구분선이 없다 — 캔버스와 레이어 카드 사이는 24px 여백만. */}
+			<div className="mt-6">
+				{selected ? (
+					<TemplateLayerEditor
+						config={nodeConfigs[selected.id] ?? {}}
+						onCommit={commitNodeConfig}
+						selected={selected}
+					/>
+				) : hasHtml ? (
+					<FieldDescription>레이어를 선택하면 값을 편집할 수 있습니다.</FieldDescription>
+				) : null}
+			</div>
 		</div>
 	)
 }
