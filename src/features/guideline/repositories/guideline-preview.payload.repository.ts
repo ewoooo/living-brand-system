@@ -5,6 +5,8 @@ import type { GuidelineDocument, User } from '@/payload-types'
 import { extractTextFromLexical } from '../utils/lexical-text'
 
 export interface DraftGuidelineDocumentData {
+	background: GuidelineDocument['background']
+	backgroundTone: GuidelineDocument['backgroundTone']
 	blocks: GuidelineDocument['blocks']
 	breadcrumbs: { url: string | null }[]
 	description: GuidelineDocument['description']
@@ -65,6 +67,8 @@ export async function listDraftGuidelineChildren(
 
 function toDraftGuidelineDocument(document: GuidelineDocument): DraftGuidelineDocumentData {
 	return {
+		background: document.background ?? null,
+		backgroundTone: document.backgroundTone ?? null,
 		blocks: document.blocks ?? [],
 		breadcrumbs: (document.breadcrumbs ?? []).map((breadcrumb) => ({
 			url: breadcrumb.url || null,

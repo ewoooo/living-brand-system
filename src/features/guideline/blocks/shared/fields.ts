@@ -21,6 +21,35 @@ export function baseBlockFields(): Field[] {
 	return [guidelineRulesField()]
 }
 
+/**
+ * 색을 데이터로 주입한 면의 **톤**. 블록과 문서가 같은 어휘를 쓰도록 여기서 한 번만 정의한다.
+ *
+ * 🔴 `brand-colors`에 반투명 변종을 만들지 않기 위한 필드다. 팔레트는 정본이고 "그린 10%"는
+ *    표현이다 — 팔레트에 넣으면 스와치·검수·템플릿이 전부 그것을 브랜드 색으로 읽는다.
+ *
+ * 🔴 값을 닫아 둔다(수치 입력이 아니다). Figma(61:3299)의 면은 브랜드 그린 10% 하나뿐이고,
+ *    자유 수치를 열면 페이지마다 다른 톤이 생겨 면이 어휘이길 그만둔다.
+ */
+export function backgroundToneField({ sidebar = false } = {}): Field {
+	return {
+		name: 'backgroundTone',
+		type: 'select',
+		defaultValue: 'solid',
+		// 블록(중첩)과 문서 양쪽에서 쓰므로 전역 enum 이름을 공유한다.
+		enumName: 'enum_background_tone',
+		options: [
+			{ label: '단색', value: 'solid' },
+			{ label: '옅게(10%)', value: 'tint' },
+		],
+		admin: {
+			// 문서는 배경색을 사이드바에 두므로 톤도 같은 칸에 있어야 짝으로 읽힌다.
+			position: sidebar ? 'sidebar' : undefined,
+			description:
+				'배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.',
+		},
+	}
+}
+
 export function imageBackgroundColorField(): Field {
 	return {
 		name: 'imageBackgroundColor',

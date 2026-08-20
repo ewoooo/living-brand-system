@@ -1,6 +1,8 @@
 import {
 	findPublishedChapterBySlug,
 	findPublishedSectionBySlug,
+	type GuidelineBackground,
+	type GuidelineBackgroundTone,
 	type GuidelineBlocks,
 	type GuidelineDescription,
 	type GuidelineHeaderImage,
@@ -18,6 +20,8 @@ export interface GetGuidelineSectionOutput {
 		slug: string
 		description: GuidelineDescription
 		displayOrder: number
+		background: GuidelineBackground
+		backgroundTone: GuidelineBackgroundTone
 		blocks: GuidelineBlocks
 	}[]
 }
@@ -57,6 +61,8 @@ export async function getGuidelineSection(
 			slug: page.slug,
 			description: page.description,
 			displayOrder: page.displayOrder,
+			background: page.background,
+			backgroundTone: page.backgroundTone,
 			blocks: page.blocks,
 		})),
 	}

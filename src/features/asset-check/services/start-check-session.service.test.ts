@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { CheckResult } from '@/features/asset-check/checkers/types'
 import {
 	CheckSession,
 	CheckSessionInputMismatchError,
@@ -51,6 +52,11 @@ const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
 const otherPng = Buffer.concat([png, Buffer.from([0x00])])
 const user = { id: 7 } as User
 const scenario = { key: 'quick', title: '빠른 검수', checkKeys: [] }
+const immediateResult = {
+	rule: { key: 'canvas-format', title: 'Canvas format', executor: 'deterministic' },
+	checker: { key: 'canvas-format', type: 'algorithm' },
+	rawResult: { status: 'pass', fulfillment: 100 },
+} as unknown as CheckResult
 const heuristicCheck: RuntimeCheck = {
 	key: 'heuristic',
 	title: 'Logo present',
@@ -106,7 +112,7 @@ describe('check session service', () => {
 	it('세션 시작 시 실제 바이트의 SHA-256·형식·크기를 저장한다', async () => {
 		await startCheckSession({
 			buffer: png,
-			deferHeuristic: true,
+			deferHeuristic: 'when-showable',
 			scenario,
 			source: 'review-page',
 			user,
@@ -121,6 +127,68 @@ describe('check session service', () => {
 				},
 			}),
 		)
+	})
+
+	it("'when-showable'은 즉시 판정이 0건이면 나누지 않고 같은 요청에서 AI까지 끝낸다", async () => {
+		// 즉시 판정이 없으면 후속 요청으로 미뤄도 화면에 먼저 보여줄 것이 없다 — 대신 원본을
+		// 한 번 더 업로드하게 되므로 나누지 않는다.
+		vi.mocked(runImmediateCheck).mockResolvedValue({
+			results: {},
+			pendingCheckKeys: ['logo-misuse'],
+		})
+		vi.mocked(runHeuristicCheck).mockResolvedValue({
+			results: { 'logo-misuse': immediateResult },
+		})
+
+		const result = await startCheckSession({
+			buffer: png,
+			deferHeuristic: 'when-showable',
+			scenario,
+			source: 'review-page',
+			user,
+		})
+
+		expect(runHeuristicCheck).toHaveBeenCalledTimes(1)
+		// pending이 비어 돌아가므로 클라이언트는 두 번째 요청(원본 재업로드)을 보내지 않는다.
+		expect(result.pendingCheckKeys).toEqual([])
+		expect(Object.keys(result.results)).toEqual(['logo-misuse'])
+	})
+
+	it("'when-showable'은 즉시 판정이 있으면 후속 요청으로 미룬다", async () => {
+		vi.mocked(runImmediateCheck).mockResolvedValue({
+			results: { 'canvas-format': immediateResult },
+			pendingCheckKeys: ['logo-misuse'],
+		})
+
+		const result = await startCheckSession({
+			buffer: png,
+			deferHeuristic: 'when-showable',
+			scenario,
+			source: 'review-page',
+			user,
+		})
+
+		expect(runHeuristicCheck).not.toHaveBeenCalled()
+		expect(result.pendingCheckKeys).toEqual(['logo-misuse'])
+	})
+
+	it("'always'는 즉시 판정이 0건이어도 서버 AI를 부르지 않는다", async () => {
+		// 🔴 MCP 계약 — 관측은 연결된 클라이언트 AI가 하고 서버는 LBS의 AI 키를 쓰지 않는다.
+		vi.mocked(runImmediateCheck).mockResolvedValue({
+			results: {},
+			pendingCheckKeys: ['logo-misuse'],
+		})
+
+		const result = await startCheckSession({
+			buffer: png,
+			deferHeuristic: 'always',
+			scenario,
+			source: 'mcp-call',
+			user,
+		})
+
+		expect(runHeuristicCheck).not.toHaveBeenCalled()
+		expect(result.pendingCheckKeys).toEqual(['logo-misuse'])
 	})
 
 	it('시작 검수의 완료 상태 저장이 실패하면 DB의 running 세션을 failed로 종결한다', async () => {

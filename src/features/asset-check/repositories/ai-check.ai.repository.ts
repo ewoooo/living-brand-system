@@ -1,5 +1,12 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { generateText, type LanguageModelUsage, NoObjectGeneratedError, Output } from 'ai'
+import {
+	extractJsonMiddleware,
+	generateText,
+	type LanguageModelUsage,
+	NoObjectGeneratedError,
+	Output,
+	wrapLanguageModel,
+} from 'ai'
 import { z } from 'zod'
 import { env } from '@/env'
 import type { AiUsage, CheckerContext } from '@/features/asset-check/checkers/types'
@@ -68,11 +75,19 @@ export async function runAiCheck(
 		const observationTask = buildAiObservationTask(runnableChecks, referenceFiles.length > 0)
 		const schema = buildAiCheckSchema(runnableChecks)
 		const { output, usage } = await generateText({
-			model: anthropic(model),
+			// jsonTool의 유일한 실패 모양(results를 JSON 문자열로 한 겹 감싸기)은 스키마 검증 전에
+			// 미들웨어가 벗긴다. 그래서 outputFormat으로 형식을 강제할 필요가 없다.
+			model: wrapLanguageModel({
+				model: anthropic(model),
+				middleware: extractJsonMiddleware({ transform: unwrapStringifiedResults }),
+			}),
 			output: Output.object({ schema }),
-			// jsonTool 모드는 모델이 간헐적으로 results를 JSON 문자열로 감싸 통째로 실패한다.
-			// outputFormat(output_config)은 API가 스키마를 강제해 형식 실패를 차단한다.
-			providerOptions: { anthropic: { structuredOutputMode: 'outputFormat' } },
+			// 🔴 outputFormat은 응답이 같은데도 출력 토큰을 간헐적으로 2배 태운다 — 지연은 출력
+			// 토큰에 비례하므로(약 80 tok/s) 그대로 2배가 된다. 4 check·criterion 10개 실측:
+			// outputFormat 17회 median 24.6초(최대 36.4초), jsonTool 10회 median 14.2초(최대 16.1초).
+			// 'auto'로 두지 않는 이유는 SDK가 아는 모델에서는 auto가 outputFormat으로 갈려서,
+			// 같은 코드가 admin에서 고른 모델에 따라 2배 느려지기 때문이다.
+			providerOptions: { anthropic: { structuredOutputMode: 'jsonTool' } },
 			// 기본값 4096이면 check가 많을 때 관측값 JSON이 잘려 통째로 실패한다.
 			// criterion당 reason(≤300자) 포함 ~300토큰, advisory당 ~800토큰으로 잡는다.
 			maxOutputTokens: Math.min(
@@ -102,6 +117,12 @@ export async function runAiCheck(
 						{
 							type: 'text',
 							text: JSON.stringify({ checks: observationTask.checks }),
+							// 여기까지(system + 지시문 + checks JSON)가 이미지와 무관하게 고정이다.
+							// 한 세션에서 여러 이미지를 검수하면 이 프리픽스가 매번 새 입력으로 청구된다.
+							// 🔴 breakpoint는 대상 이미지 **앞**에만 둘 수 있다 — 이미지는 요청마다 바뀌므로
+							//    그 뒤(레퍼런스 포함)는 캐시되지 않는다. 레퍼런스까지 캐시하려면 순서를
+							//    바꿔야 하는데, 프롬프트 구성이 바뀌면 판정도 바뀔 수 있어 하지 않는다.
+							providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } },
 						},
 						{ type: 'text', text: 'Target image to check:' },
 						{
@@ -154,6 +175,47 @@ export async function runAiCheck(
 			? failed('ai_output_invalid', unavailableReferenceCheckKeys)
 			: failed('ai_request_failed', unavailableReferenceCheckKeys)
 	}
+}
+
+/**
+ * jsonTool 모드의 유일한 실패 모양을 스키마 검증 전에 되돌린다 — 모델이 간헐적으로
+ * `results` 값을 JSON 문자열로 한 겹 더 감싸 보낸다(24회 중 2회 실측):
+ *   {"results":"{\"logo-misuse\":{\"observations\":{...}}}}\n"}
+ * 🔴 안쪽 문자열 끝에는 바깥 객체의 닫는 괄호가 하나 더 섞여 온다 — 그래서 그냥 JSON.parse하면
+ *    "Unexpected non-whitespace character after JSON"으로 실패한다. 뒤를 잘라가며 값을 찾는다.
+ * 알아볼 수 없는 응답은 손대지 않고 그대로 넘겨, 판정은 스키마 검증이 막게 둔다.
+ * 🔴 이 transform은 SDK 기본 transform(마크다운 fence 제거)을 대체한다. jsonTool 응답은
+ *    tool 입력에서 온 text라 fence가 붙지 않으므로 fence 처리는 다시 만들지 않는다.
+ */
+export function unwrapStringifiedResults(text: string): string {
+	let parsed: unknown
+	try {
+		parsed = JSON.parse(text)
+	} catch {
+		return text
+	}
+	if (parsed === null || typeof parsed !== 'object') return text
+	const { results } = parsed as { results?: unknown }
+	if (typeof results !== 'string') return text
+	const inner = parseJsonPrefix(results)
+	return inner === undefined ? text : JSON.stringify({ ...parsed, results: inner })
+}
+
+/**
+ * 뒤에 군더더기가 붙은 JSON에서 앞쪽의 완전한 값만 읽는다.
+ * ponytail: 뒤에서 한 글자씩 줄이는 O(n) 스캔이다 — 실측 사례는 군더더기가 끝에 1~2자라 1~2회에
+ * 끝난다. 앞쪽까지 깨진 응답에서만 전 길이를 훑고, 그때는 어차피 검증이 실패시킨다.
+ */
+function parseJsonPrefix(text: string): unknown {
+	const trimmed = text.trim()
+	for (let end = trimmed.length; end > 1; end--) {
+		try {
+			return JSON.parse(trimmed.slice(0, end))
+		} catch {
+			// 다음 길이로 계속한다.
+		}
+	}
+	return undefined
 }
 
 function buildAiCheckSchema(checks: RuntimeCheck[]) {

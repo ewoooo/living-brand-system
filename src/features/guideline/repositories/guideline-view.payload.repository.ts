@@ -4,6 +4,8 @@ import { FALLBACK_LOCALE, DEFAULT_LOCALE as LOCALE } from '@/lib/locale'
 import type { GuidelineDocument } from '@/payload-types'
 import { extractTextFromLexical } from '../utils/lexical-text'
 
+export type GuidelineBackground = GuidelineDocument['background']
+export type GuidelineBackgroundTone = GuidelineDocument['backgroundTone']
 export type GuidelineBlocks = GuidelineDocument['blocks']
 export type GuidelineDescription = GuidelineDocument['description']
 export type GuidelineHeaderImage = GuidelineDocument['headerImage']
@@ -49,6 +51,8 @@ export interface GuidelineSectionData {
 }
 
 export interface GuidelinePageData {
+	background: GuidelineBackground
+	backgroundTone: GuidelineBackgroundTone
 	blocks: GuidelineBlocks
 	description: GuidelineDescription
 	displayOrder: number
@@ -211,6 +215,7 @@ export async function listPublishedSectionsByChapter(
 
 export async function listPublishedPagesBySection(sectionId: number): Promise<GuidelinePageData[]> {
 	// depth 1: 페이지 blocks의 이미지(application-images)·색상(brand-colors) 관계를 populate해야 렌더된다.
+	// 페이지 자신의 면(background)도 같은 depth로 hex까지 채워진다.
 	const pages = await listPublishedChildren(
 		sectionId,
 		{
@@ -218,12 +223,16 @@ export async function listPublishedPagesBySection(sectionId: number): Promise<Gu
 			slug: true,
 			description: true,
 			displayOrder: true,
+			background: true,
+			backgroundTone: true,
 			blocks: true,
 		},
 		1,
 	)
 
 	return pages.map((page) => ({
+		background: page.background ?? null,
+		backgroundTone: page.backgroundTone ?? null,
 		blocks: page.blocks ?? [],
 		description: page.description || null,
 		displayOrder: typeof page.displayOrder === 'number' ? page.displayOrder : -1,

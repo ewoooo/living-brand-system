@@ -242,6 +242,14 @@ export interface GuidelineDocument {
    * 문서 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
+  /**
+   * 문서 전체(제목·본문·블록)를 덮는 배경색입니다. 비우면 기본.
+   */
+  background?: (number | null) | BrandColor;
+  /**
+   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
+   */
+  backgroundTone?: ('solid' | 'tint') | null;
   blocks?: (ContentColumnsBlock | CalloutBlock | LayoutBlock)[] | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
@@ -296,6 +304,50 @@ export interface ApplicationImage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-colors".
+ */
+export interface BrandColor {
+  id: number;
+  name: string;
+  hex: string;
+  /**
+   * PMS 표기입니다. 예: 705C, Warm Red C
+   */
+  pantone?: string | null;
+  /**
+   * 인쇄 CMYK 표기입니다. 예: C 0 M 100 Y 90 K 0
+   */
+  cmyk?: string | null;
+  /**
+   * 이 배경 위에 CI 기본형(Full Color)을 쓸 수 있는지 여부입니다.
+   */
+  allowsFullColorLogo?: boolean | null;
+  /**
+   * 이 배경 위에 CI WHITE 워드마크를 쓸 수 있는지 여부입니다.
+   */
+  allowsWhiteWordmark?: boolean | null;
+  /**
+   * 이 배경 위에 올리는 CI 단색분리형의 색입니다. 단색형은 모든 배경에서 쓸 수 있고 색만 갈립니다.
+   */
+  monoLogoFill?: ('black' | 'white') | null;
+  /**
+   * 팔레트 색상군입니다. 예: red, yellow, neutral
+   */
+  colorGroup?: string | null;
+  /**
+   * Light(1)~Dark(5) 명도 단계입니다. 톤 스펙트럼이 없는 컬러는 비워둡니다.
+   */
+  tone?: number | null;
+  /**
+   * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
+   */
+  isMain?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ContentColumnsBlock".
  */
 export interface ContentColumnsBlock {
@@ -339,50 +391,6 @@ export interface ContentColumnsBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'contentColumns';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brand-colors".
- */
-export interface BrandColor {
-  id: number;
-  name: string;
-  hex: string;
-  /**
-   * PMS 표기입니다. 예: 705C, Warm Red C
-   */
-  pantone?: string | null;
-  /**
-   * 인쇄 CMYK 표기입니다. 예: C 0 M 100 Y 90 K 0
-   */
-  cmyk?: string | null;
-  /**
-   * 이 배경 위에 CI 기본형(Full Color)을 쓸 수 있는지 여부입니다.
-   */
-  allowsFullColorLogo?: boolean | null;
-  /**
-   * 이 배경 위에 CI WHITE 워드마크를 쓸 수 있는지 여부입니다.
-   */
-  allowsWhiteWordmark?: boolean | null;
-  /**
-   * 이 배경 위에 올리는 CI 단색분리형의 색입니다. 단색형은 모든 배경에서 쓸 수 있고 색만 갈립니다.
-   */
-  monoLogoFill?: ('black' | 'white') | null;
-  /**
-   * 팔레트 색상군입니다. 예: red, yellow, neutral
-   */
-  colorGroup?: string | null;
-  /**
-   * Light(1)~Dark(5) 명도 단계입니다. 톤 스펙트럼이 없는 컬러는 비워둡니다.
-   */
-  tone?: number | null;
-  /**
-   * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
-   */
-  isMain?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * 문서와 블록이 참조해 적용하는 검수 규칙 정의입니다.
@@ -540,6 +548,10 @@ export interface LayoutBlock {
    * 블록 전체(전체 폭) 배경색입니다. 비우면 기본.
    */
   background?: (number | null) | BrandColor;
+  /**
+   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
+   */
+  backgroundTone?: ('solid' | 'tint') | null;
   /**
    * 자식 레이아웃(그리드/캐러셀 등) 영역 배경색입니다. 비우면 없음.
    */
@@ -846,18 +858,6 @@ export interface LayoutGridWidget {
    * 수직 거터를 이 판형만 고정합니다(0~100). 비우면 패널을 따릅니다.
    */
   gutterY?: number | null;
-  /**
-   * 마진을 패널에서 분리해 초기값에 고정합니다.
-   */
-  lockMargin?: boolean | null;
-  /**
-   * 수평 거터를 패널에서 분리해 초기값에 고정합니다.
-   */
-  lockGutterX?: boolean | null;
-  /**
-   * 수직 거터를 패널에서 분리해 초기값에 고정합니다.
-   */
-  lockGutterY?: boolean | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'layoutGridWidget';
@@ -2267,6 +2267,8 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   headerImage?: T;
+  background?: T;
+  backgroundTone?: T;
   blocks?:
     | T
     | {
@@ -2334,6 +2336,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
   description?: T;
   width?: T;
   background?: T;
+  backgroundTone?: T;
   innerBackground?: T;
   arrangement?: T;
   columns?: T;
@@ -2467,9 +2470,6 @@ export interface LayoutGridWidgetSelect<T extends boolean = true> {
   marginPct?: T;
   gutterX?: T;
   gutterY?: T;
-  lockMargin?: T;
-  lockGutterX?: T;
-  lockGutterY?: T;
   id?: T;
   blockName?: T;
 }

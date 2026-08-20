@@ -10,9 +10,16 @@ import {
 	toLinearFlutedGlassInput,
 	toLinearFlutedGlassShaderPoint,
 } from '@/features/graphic-generation/graphic-runtimes/linear-fluted-glass/model'
-import { createControllerValues } from '@/modules/studio-controller/controller-definition'
+import {
+	type ControllerGroupDefinition,
+	createControllerValues,
+} from '@/modules/studio-controller/controller-definition'
 
 describe('linearFlutedGlass', () => {
+	const groups: readonly ControllerGroupDefinition[] =
+		linearFlutedGlassRuntimeManifest.controller.groups
+	const controls = groups.flatMap((group) => group.controls)
+
 	it('Controller 기본값을 shader uniform 입력으로 검증한다', () => {
 		const values = createControllerValues(linearFlutedGlassRuntimeManifest.controller.groups)
 		expect(toLinearFlutedGlassInput(values)).toEqual(LINEAR_FLUTED_GLASS_DEFAULT_INPUT)
@@ -25,6 +32,14 @@ describe('linearFlutedGlass', () => {
 			LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor1,
 		)
 		expect(() => toLinearFlutedGlassInput({ ...values, speed: 2.01 })).toThrow()
+		// 배경·블룸 색은 model이 통과시켜야 한다 — 컨트롤만 두고 여기를 빠뜨리면 조용히 무시된다.
+		expect(
+			toLinearFlutedGlassInput({
+				...values,
+				bloomColor: '#ffffff',
+				rayBackgroundColor: '#101010',
+			}),
+		).toMatchObject({ bloomColor: '#ffffff', rayBackgroundColor: '#101010' })
 	})
 
 	it('컨트롤러에 없는 값은 프리셋이 정하고 컨트롤러 값으로 덮이지 않는다', () => {
@@ -39,7 +54,7 @@ describe('linearFlutedGlass', () => {
 		const values = createControllerValues(linearFlutedGlassRuntimeManifest.controller.groups)
 		const input = toLinearFlutedGlassInput({ ...values, preset: 'upperAxis' })
 		expect(input.source).toEqual(LINEAR_FLUTED_GLASS_PRESETS.upperAxis.source)
-		expect(input.rayBackgroundColor).toBe(LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayBackgroundColor)
+		expect(input.pulseDensity).toBe(LINEAR_FLUTED_GLASS_DEFAULT_INPUT.pulseDensity)
 	})
 
 	it('알 수 없는 프리셋은 기본으로 떨어진다 — 저장된 값이 낡아도 화면은 뜬다', () => {
@@ -56,6 +71,23 @@ describe('linearFlutedGlass', () => {
 			expect(input.rayRotation).toBe(0)
 			expect(input.glassAngle).toBe(0)
 		}
+	})
+
+	it('프리셋은 노출된 컨트롤을 건드리지 않는다 — 겹치면 컨트롤러 기본값이 이겨 조용히 무시된다', () => {
+		const exposed = new Set(controls.map((control) => control.id))
+		for (const preset of LINEAR_FLUTED_GLASS_PRESET_IDS) {
+			const clash = Object.keys(LINEAR_FLUTED_GLASS_PRESETS[preset]).filter((key) =>
+				exposed.has(key),
+			)
+			expect(clash, preset).toEqual([])
+		}
+	})
+
+	it('프리셋 select이 프리셋 목록을 그대로 담는다', () => {
+		const preset = controls.find((control) => control.id === 'preset')
+		expect(
+			preset && 'options' in preset ? preset.options.map(({ value }) => value) : null,
+		).toEqual([...LINEAR_FLUTED_GLASS_PRESET_IDS])
 	})
 
 	it('Controller 화면 좌표의 Y축을 WebGL 좌표로 반전한다', () => {

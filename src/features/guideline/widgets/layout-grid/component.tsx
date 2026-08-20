@@ -55,9 +55,6 @@ export function LayoutGridWidget({
 	marginPct: marginOverride,
 	gutterX: gutterXOverride,
 	gutterY: gutterYOverride,
-	lockMargin,
-	lockGutterX,
-	lockGutterY,
 }: {
 	sample?: LayoutGridSample | null
 	caption?: string | null
@@ -66,23 +63,18 @@ export function LayoutGridWidget({
 	marginPct?: number | null
 	gutterX?: number | null
 	gutterY?: number | null
-	/** 값을 적지 않고 패널 초기값에 붙여 고정한다 — 한 슬라이더가 일부 판형만 움직이게 하려는 것. */
-	lockMargin?: boolean | null
-	lockGutterX?: boolean | null
-	lockGutterY?: boolean | null
 }) {
 	// 컨트롤러 스코프 밖(컨트롤 없이 판형만 둔 블록)이면 값이 비어 매니페스트 기본값으로 떨어진다.
-	const { values, defaults } = useGuidelineController()
+	const { values } = useGuidelineController()
 
-	// 판형에 값이 있으면 그것이 이기고, 없으면 lock은 초기값·아니면 컨트롤 현재값을 따른다.
+	// 판형에 값이 있으면 그것이 이기고, 없으면 컨트롤 현재값을 따른다.
 	const resolve = (
 		override: number | null | undefined,
-		locked: boolean | null | undefined,
 		control: typeof MARGIN | typeof GUTTER_X | typeof GUTTER_Y,
-	) => override ?? controllerNumber(locked ? defaults : values, control.id, control.defaultValue)
-	const marginPct = resolve(marginOverride, lockMargin, MARGIN)
-	const gutterX = resolve(gutterXOverride, lockGutterX, GUTTER_X)
-	const gutterY = resolve(gutterYOverride, lockGutterY, GUTTER_Y)
+	) => override ?? controllerNumber(values, control.id, control.defaultValue)
+	const marginPct = resolve(marginOverride, MARGIN)
+	const gutterX = resolve(gutterXOverride, GUTTER_X)
+	const gutterY = resolve(gutterYOverride, GUTTER_Y)
 
 	// 같은 블록의 판형이 서로 다른 그리드 상태를 가질 수 있어야 한다.
 	const guidesOn =
@@ -212,77 +204,53 @@ function renderElement(element: Element): ReactNode {
 }
 
 /**
- * 그리드 표시 = 영역 채움 그룹 + 분할선 그룹. 둘 다 같은 5×5 트랙 위에 그려 위치 계산이 없다.
+ * 그리드 표시 = 마진 링 + 거터 밴드의 **면**. 5×5 트랙 위에 그려 위치 계산이 없다.
  *
- * 🔴 두 그룹으로 나누는 이유: 영역 안에서는 밴드를 **불투명하게** 그리고 그룹째로 한 번만 투명하게
- *    만든다. 밴드에 직접 알파를 주면 거터 교차부에서 알파가 누적돼 그 네 곳만 진해진다.
- *    선을 같은 그룹에 넣으면 채움과 같은 색·같은 투명도가 되어 보이지 않으므로 별 그룹으로 올린다.
+ * 🔴 밴드를 불투명하게 그리고 그룹째로 한 번만 투명하게 만든다. 밴드에 직접 알파를 주면 거터
+ *    교차부에서 알파가 누적돼 그 네 곳만 진해진다.
+ *
+ * 🔴 셀 경계의 1px 분할선은 그리지 않는다 — Figma(61:3299)의 판형 다섯 아티클 어디에도 없다.
+ *    마진·거터를 면으로만 보여주는 것이 이 도판의 어법이고, 선을 얹으면 면보다 선이 먼저 읽힌다.
  */
 function Guides({ marginPct, gutterHalf }: { marginPct: number; gutterHalf: Offsets }) {
 	return (
-		<>
-			{/* 영역 그룹 — 마진 링 + 거터 밴드. 겹쳐도 같은 불투명 색이라 색이 누적되지 않는다. */}
-			<div
-				className="pointer-events-none absolute inset-0 grid"
-				style={{ ...gridTemplate(marginPct), opacity: GRID_AREA_OPACITY }}
-			>
-				{/* 마진 영역 — 바깥 링 4개 밴드. 트랙이라 좌표를 계산하지 않는다. */}
-				<div style={{ gridColumn: '1 / -1', gridRow: 1, background: GRID_COLOR }} />
-				<div style={{ gridColumn: '1 / -1', gridRow: -2, background: GRID_COLOR }} />
-				<div style={{ gridColumn: 1, gridRow: '2 / -2', background: GRID_COLOR }} />
-				<div style={{ gridColumn: -2, gridRow: '2 / -2', background: GRID_COLOR }} />
+		<div
+			className="pointer-events-none absolute inset-0 grid"
+			style={{ ...gridTemplate(marginPct), opacity: GRID_AREA_OPACITY }}
+		>
+			{/* 마진 영역 — 바깥 링 4개 밴드. 트랙이라 좌표를 계산하지 않는다. */}
+			<div style={{ gridColumn: '1 / -1', gridRow: 1, background: GRID_COLOR }} />
+			<div style={{ gridColumn: '1 / -1', gridRow: -2, background: GRID_COLOR }} />
+			<div style={{ gridColumn: 1, gridRow: '2 / -2', background: GRID_COLOR }} />
+			<div style={{ gridColumn: -2, gridRow: '2 / -2', background: GRID_COLOR }} />
 
-				{/* 거터 — 구분선은 실제 트랙이 아니라 셀 padding이라, 구분선이 왼변(위변)인 셀에 붙여
-				    절반만큼 밀고 거터 폭만큼 채워 선을 가운데 두고 덮는다. */}
-				{INTERIOR_LINES.map((line) => (
-					<div
-						key={`gutter-v-${line}`}
-						style={{
-							gridColumn: line,
-							gridRow: '2 / -2',
-							marginLeft: `-${gutterHalf.x}cqmax`,
-							width: `${gutterHalf.x * 2}cqmax`,
-							background: GRID_COLOR,
-						}}
-					/>
-				))}
-				{INTERIOR_LINES.map((line) => (
-					<div
-						key={`gutter-h-${line}`}
-						style={{
-							gridColumn: '2 / -2',
-							gridRow: line,
-							marginTop: `-${gutterHalf.y}cqmax`,
-							height: `${gutterHalf.y * 2}cqmax`,
-							background: GRID_COLOR,
-						}}
-					/>
-				))}
-			</div>
-
-			{/* 선 그룹 — 채움 위에 100%로 올라간다. 콘텐츠 셀 9개의 테두리로 얻는다. */}
-			<div
-				className="pointer-events-none absolute inset-0 grid"
-				style={gridTemplate(marginPct)}
-			>
-				{TRACKS.flatMap((_, rowIndex) =>
-					TRACKS.map((__, colIndex) => (
-						<div
-							// biome-ignore lint/suspicious/noArrayIndexKey: 고정 3×3 좌표, 재정렬 없음.
-							key={`${colIndex}-${rowIndex}`}
-							style={{
-								gridColumn: colIndex + 2,
-								gridRow: rowIndex + 2,
-								// 🔴 outline-offset -0.5px — 선이 셀 경계를 안·밖 0.5px씩 걸치게 해서 이웃 셀의
-								// 선과 정확히 겹쳐 1px로 보인다(0이면 경계마다 2px로 두꺼워진다).
-								outline: `1px solid ${GRID_COLOR}`,
-								outlineOffset: '-0.5px',
-							}}
-						/>
-					)),
-				)}
-			</div>
-		</>
+			{/* 거터 — 구분선은 실제 트랙이 아니라 셀 padding이라, 구분선이 왼변(위변)인 셀에 붙여
+			    절반만큼 밀고 거터 폭만큼 채워 선을 가운데 두고 덮는다. */}
+			{INTERIOR_LINES.map((line) => (
+				<div
+					key={`gutter-v-${line}`}
+					style={{
+						gridColumn: line,
+						gridRow: '2 / -2',
+						marginLeft: `-${gutterHalf.x}cqmax`,
+						width: `${gutterHalf.x * 2}cqmax`,
+						background: GRID_COLOR,
+					}}
+				/>
+			))}
+			{INTERIOR_LINES.map((line) => (
+				<div
+					key={`gutter-h-${line}`}
+					style={{
+						gridColumn: '2 / -2',
+						gridRow: line,
+						marginTop: `-${gutterHalf.y}cqmax`,
+						height: `${gutterHalf.y * 2}cqmax`,
+						background: GRID_COLOR,
+					}}
+				/>
+			))}
+		</div>
 	)
 }
 

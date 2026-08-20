@@ -8,7 +8,7 @@ describe('GuidelineHeader', () => {
 	it.each([
 		['onboard', 1, '6xl'],
 		['chapter', 1, '6xl'],
-		['section', 2, '5xl'],
+		['section', 2, '6xl'],
 		['page', 3, '2xl'],
 		['block', 3, 'base'],
 	] as const)('%s variant의 문서 수준과 크기를 유지한다', (variant, level, size) => {

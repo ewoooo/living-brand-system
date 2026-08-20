@@ -13,6 +13,8 @@ vi.mock('ai', () => ({
 	Output: {
 		object: vi.fn((value) => value),
 	},
+	extractJsonMiddleware: vi.fn((options) => options),
+	wrapLanguageModel: vi.fn(({ model }) => model),
 }))
 
 vi.mock('@ai-sdk/anthropic', () => ({
@@ -143,8 +145,13 @@ describe('runAiCheck', () => {
 		expect(vi.mocked(generateText).mock.calls[0]?.[0]).not.toHaveProperty('temperature')
 		const request = vi.mocked(generateText).mock.calls[0]?.[0] as {
 			system?: string
+			providerOptions?: Record<string, unknown>
 			messages?: Array<{ content?: Array<{ text?: string; type?: string }> }>
 		}
+		// 🔴 outputFormat으로 돌아가면 응답이 같아도 출력 토큰이 간헐적으로 2배가 되고 지연도 2배다.
+		expect(request.providerOptions).toEqual({
+			anthropic: { structuredOutputMode: 'jsonTool' },
+		})
 		const content = request.messages?.[0]?.content ?? []
 		const jsonText = content.find((part) => part.text?.startsWith('{"checks":'))?.text
 		expect(JSON.parse(jsonText ?? '')).toEqual({
@@ -529,5 +536,61 @@ describe('heuristic observation 스키마', () => {
 			measureObservationSchema.safeParse({ value: 'present', confidence: 80, reason: 'x' })
 				.success,
 		).toBe(false)
+	})
+})
+
+describe('unwrapStringifiedResults', () => {
+	it('results를 JSON 문자열로 감싼 응답에서 그 한 겹을 벗긴다', async () => {
+		const { unwrapStringifiedResults } = await import(
+			'@/features/asset-check/repositories/ai-check.ai.repository'
+		)
+		// 실측으로 잡은 실패 원문 모양(10회 중 1회).
+		const observations = {
+			'6a85397d7ac8af6631148643': {
+				value: 'absent',
+				confidence: 85,
+				reason: '기울어짐 없음',
+			},
+		}
+		const wrapped = JSON.stringify({
+			results: JSON.stringify({ 'logo-misuse': { observations } }),
+		})
+
+		expect(JSON.parse(unwrapStringifiedResults(wrapped))).toEqual({
+			results: { 'logo-misuse': { observations } },
+		})
+	})
+
+	it('안쪽 문자열 끝에 닫는 괄호가 하나 더 붙어 와도 벗긴다', async () => {
+		const { unwrapStringifiedResults } = await import(
+			'@/features/asset-check/repositories/ai-check.ai.repository'
+		)
+		const observations = {
+			'6a85397d7ac8af6631148643': {
+				value: 'absent',
+				confidence: 75,
+				reason: '기울어짐 없음',
+			},
+		}
+		// 실측한 실패 원문은 안쪽 문자열이 `...}}}}}\n`로 끝난다 — 바깥 닫는 괄호가 섞여 온다.
+		const wrapped = JSON.stringify({
+			results: `${JSON.stringify({ 'logo-misuse': { observations } })}}\n`,
+		})
+
+		expect(JSON.parse(unwrapStringifiedResults(wrapped))).toEqual({
+			results: { 'logo-misuse': { observations } },
+		})
+	})
+
+	it('정상 응답과 알아볼 수 없는 응답은 그대로 통과시킨다', async () => {
+		const { unwrapStringifiedResults } = await import(
+			'@/features/asset-check/repositories/ai-check.ai.repository'
+		)
+		const healthy = JSON.stringify({ results: { 'logo-misuse': { observations: {} } } })
+
+		expect(unwrapStringifiedResults(healthy)).toBe(healthy)
+		// results 안이 JSON이 아니면 원문을 그대로 넘겨 검증이 실패를 판정하게 둔다.
+		expect(unwrapStringifiedResults('{"results":"not json"}')).toBe('{"results":"not json"}')
+		expect(unwrapStringifiedResults('완전히 JSON이 아님')).toBe('완전히 JSON이 아님')
 	})
 })

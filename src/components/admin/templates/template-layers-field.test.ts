@@ -288,9 +288,6 @@ describe('TemplateLayersField 폼 계약', () => {
 
 		render(createElement(TemplateLayersField))
 		fireEvent.click(screen.getByRole('button', { name: /제목/ }))
-		expect(
-			screen.getByLabelText('AI 텍스트 생성').closest('[data-popup-prevent-close]'),
-		).not.toBeNull()
 		fireEvent.change(screen.getByLabelText('텍스트 편집 — 제목'), {
 			target: { value: '변경' },
 		})

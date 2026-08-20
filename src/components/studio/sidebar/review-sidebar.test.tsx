@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
 import type { CheckSection } from '@/features/asset-check/domain/runtime-check'
@@ -31,9 +31,11 @@ describe('ReviewSidebar', () => {
 		expect(screen.getByText('빠른 기본 검수')).toBeInTheDocument()
 		expect(screen.getByText('test.png')).toBeInTheDocument()
 		// 판정은 표시 전용이다 — 행 버튼 하나 말고 다른 버튼이 행 안에 생기면 안 된다.
-		const row = container.querySelector('[data-slot="review-file-row"]')
+		const row = container.querySelector('[data-slot="controller-list-row"]')
+		expect(row).not.toBeNull()
+		// 행 자체가 버튼이므로 그 안에 또 다른 버튼이 생기면 안 된다 — 판정은 표시 전용이다.
 		expect(row?.querySelectorAll('button')).toHaveLength(0)
-		expect(screen.getByLabelText('미통과')).toBeInTheDocument()
+		expect(screen.getByText('미통과')).toBeInTheDocument()
 	})
 
 	it('행을 열면 요약으로 내려가고 뒤로 목록에 돌아온다', () => {
@@ -50,19 +52,20 @@ describe('ReviewSidebar', () => {
 	})
 
 	it('요약 카드가 룰 판정과 관측 최저 신뢰도를 보여준다', () => {
-		const image = checkImage({ results: { 'color.palette': aiResult([0.9, 0.75]) } })
+		const image = checkImage({ results: { 'color.palette': aiResult([90, 75]) } })
 		useCheckImages.mockReturnValue(context({ images: [image], selected: image }))
 		render(<ReviewSidebar sections={sections} />)
 
 		fireEvent.click(screen.getByText('test.png'))
-		expect(screen.getByText('color.palette')).toBeInTheDocument()
-		expect(screen.getByText('검토')).toBeInTheDocument()
-		expect(screen.getByText('75%')).toBeInTheDocument()
+		const card = screen.getByRole('button', { name: /color\.palette/ })
+		// 파일 종합 판정과 룰 판정이 같은 낱말을 쓸 수 있어 카드 안으로 범위를 좁힌다.
+		expect(within(card).getByText('검토')).toBeInTheDocument()
+		expect(within(card).getByText('75%')).toBeInTheDocument()
 	})
 
 	it('요약 카드를 누르면 그 룰의 근거를 편다', () => {
 		const selectRule = vi.fn()
-		const image = checkImage({ results: { 'color.palette': aiResult([0.9, 0.75]) } })
+		const image = checkImage({ results: { 'color.palette': aiResult([90, 75]) } })
 		useCheckImages.mockReturnValue(context({ images: [image], selected: image, selectRule }))
 		render(<ReviewSidebar sections={sections} />)
 
@@ -73,7 +76,7 @@ describe('ReviewSidebar', () => {
 
 	it('이미 펼친 카드를 다시 누르면 근거를 닫는다', () => {
 		const selectRule = vi.fn()
-		const image = checkImage({ results: { 'color.palette': aiResult([0.9]) } })
+		const image = checkImage({ results: { 'color.palette': aiResult([90]) } })
 		useCheckImages.mockReturnValue(
 			context({
 				images: [image],
@@ -126,6 +129,45 @@ describe('ReviewSidebar', () => {
 
 		expect(screen.getByRole('button', { name: '검사' })).toBeDisabled()
 		expect(screen.getByRole('button', { name: '전부 검사' })).toBeDisabled()
+	})
+
+	it('요약에서 펼친 룰의 근거 패널이 사이드바 블록 안에 붙는다', () => {
+		// 확장은 캔버스가 아니라 사이드바 쪽이다(디자인 78:2706) — 패널이 이 컴포넌트의 형제로 는다.
+		const image = checkImage({ results: { 'color.palette': aiResult([90, 75]) } })
+		useCheckImages.mockReturnValue(
+			context({ images: [image], selected: image, selectedRuleKey: 'color.palette' }),
+		)
+		const { container } = render(<ReviewSidebar sections={sections} />)
+
+		fireEvent.click(screen.getByText('test.png'))
+
+		const root = container.querySelector('[data-slot="review-sidebar"]')
+		const detail = container.querySelector('[data-slot="review-rule-detail"]')
+		expect(root).toContainElement(detail as HTMLElement)
+		expect(screen.getByText('question 0')).toBeInTheDocument()
+	})
+
+	it('목록 화면에서는 근거 패널을 그리지 않는다', () => {
+		// 목록 옆에 떠 있는 근거는 어느 파일 것인지 읽히지 않는다 — 요약이 열려 있을 때만 편다.
+		const image = checkImage({ results: { 'color.palette': aiResult([90]) } })
+		useCheckImages.mockReturnValue(
+			context({ images: [image], selected: image, selectedRuleKey: 'color.palette' }),
+		)
+		const { container } = render(<ReviewSidebar sections={sections} />)
+
+		expect(container.querySelector('[data-slot="review-rule-detail"]')).toBeNull()
+	})
+
+	it('판정이 사라진 룰은 근거 패널이 스스로 닫힌다', () => {
+		// 재검수·시나리오 변경으로 results가 비면 selectedRuleKey가 남아 있어도 그릴 것이 없다.
+		const image = checkImage({})
+		useCheckImages.mockReturnValue(
+			context({ images: [image], selected: image, selectedRuleKey: 'color.palette' }),
+		)
+		const { container } = render(<ReviewSidebar sections={sections} />)
+
+		fireEvent.click(screen.getByText('test.png'))
+		expect(container.querySelector('[data-slot="review-rule-detail"]')).toBeNull()
 	})
 })
 
@@ -197,6 +239,7 @@ function result(status: CheckResult['rawResult']['status']): CheckResult {
 	}
 }
 
+// 🔴 confidence는 0~1이 아니라 0~100이다(ai-observation-task의 프롬프트 계약).
 function aiResult(confidences: number[]): CheckResult {
 	const observations: AiCheckResult['observations'] = confidences.map((confidence, index) => ({
 		criterionId: `c-${index}`,

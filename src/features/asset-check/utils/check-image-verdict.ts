@@ -63,3 +63,15 @@ export function ruleConfidence(outcome: CheckResult): number | null {
 	if (!observations?.length) return null
 	return Math.min(...observations.map((observation) => observation.confidence))
 }
+
+/**
+ * 신뢰도 표시 문자열.
+ *
+ * 🔴 `confidence`는 **이미 0~100 정수**다 — `ai-observation-task.ts`의 프롬프트가
+ *    "Return confidence as an integer from 0 to 100"으로 요구한다. 0~1로 착각해 100을 곱하면
+ *    `5800%`가 나온다(실제로 요약·근거 두 화면에서 그렇게 나갔다). 곱하는 자리를 이 함수 하나로
+ *    모아 둔 이유다.
+ */
+export function formatConfidence(confidence: number): string {
+	return `${Math.round(confidence)}%`
+}
