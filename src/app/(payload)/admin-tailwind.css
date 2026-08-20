@@ -101,11 +101,6 @@
 	color: #737373;
 }
 
-/* 그룹 서브헤더의 들여쓰기 — 정본(83:1555) 좌우 8px. */
-.lbs-kit :where([data-slot="controller-group"]) > :where(header) {
-	padding-inline: 8px;
-}
-
 /* Row가 유틸리티([--controller-row-px:0.75rem])로 심는 셀렉트 트리거 패딩이 Payload root에서
    9.75px로 줄어든다 — 유틸리티 레이어를 이기도록 무레이어로 12px에 고정한다. */
 .lbs-kit :where([data-slot="controller-row"]) {
