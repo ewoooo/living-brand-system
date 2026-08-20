@@ -53,6 +53,29 @@ describe('measureOverlayLegibility', () => {
 		expect(m.p05ContrastRatio).toBeLessThan(3)
 	})
 
+	// 아래 두 케이스는 **진폭만** 다르다 — 자리·크기·배경이 같아야 진폭이 원인임을 말할 수 있다.
+	// 12x12=144px로 크기 필터(판의 15%=240px)와 경계 하한(24)을 동시에 통과한다.
+	const patch = (x: number, y: number) => x >= 8 && x <= 19 && y >= 8 && y <= 19
+
+	it('🔴 대조군 — 밝기가 드리프트하는 매끄러운 면은 오버레이가 아니다', () => {
+		// 실제 사진의 능선 모형: 이웃 차이는 1이라 「평탄」을 통과하지만 덩어리 전체 진폭이 11이다.
+		// 이 필터가 없으면 물거품·선체 하이라이트가 오버레이로 잡혀 하위 백분위를 독점한다(실측 확인).
+		const ridge = measureOverlayLegibility(
+			grid(20, (x, y) => (patch(x, y) ? 244 + (x - 8) : undefined)),
+		)
+		expect(ridge.state).toBe('not_measurable')
+		if (ridge.state === 'not_measurable') {
+			expect(ridge.reasonCode).toBe('overlay_not_detected')
+		}
+	})
+
+	it('🔑 같은 자리·같은 크기라도 균일하면 오버레이로 잡는다', () => {
+		const flat = measured(
+			measureOverlayLegibility(grid(20, (x, y) => (patch(x, y) ? 255 : undefined))),
+		)
+		expect(flat.p05ContrastRatio).toBeGreaterThan(10)
+	})
+
 	it('대조군 — 사진처럼 흔들리는 밝은 면은 오버레이로 잡지 않는다', () => {
 		// 색은 흰색 허용 범위 안(245~255)이지만 이웃과 항상 4 이상 어긋나 평탄하지 않다.
 		const noisy = measureOverlayLegibility(grid(0, (x, y) => 245 + ((x * 4 + y * 4) % 11)))

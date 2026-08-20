@@ -36,11 +36,33 @@ const MIN_COMPONENT_PIXELS = 8
  * 🔴 룰의 합·부 기준과 다른 값이다 — 이건 「오버레이인가」를 가리는 검출 파라미터다.
  */
 const COMPONENT_STEP_MIN = 3
+/**
+ * 덩어리 전체의 색 진폭 상한. 벡터로 칠한 오버레이는 덩어리 안에서 색이 **정확히** 같아 0에 가깝고,
+ * 사진의 밝은·어두운 능선은 값이 드리프트한다. 실측(2026-08-20): 타이틀 글자 진폭 0, 사진 8~25.
+ * 사람이 판정한 이미지 5장에서 상한을 훑어 통과·불통과가 가장 넓게 갈리는 값이 6이었다
+ * (6에서 간격 0.30 / 8에서 0.18 / 25에서는 순서가 뒤집힌다).
+ * 🔴 이것이 「사진을 오버레이로 잡는」 오검출을 막는 주 장치다. 뚜렷함(STEP_MIN)만으로는 안 걸린다 —
+ *    사진 능선도 어두운 곳과 만나면 대비가 20까지 나온다.
+ */
+const MAX_COMPONENT_AMPLITUDE = 6
 
 export interface OverlayLegibilityParameters {
 	overlayColors?: string[]
 	colorTolerance?: number
 	flatTolerance?: number
+	maxComponentAmplitude?: number
+}
+
+/** 덩어리 안 색의 최대-최소 폭. 채널을 구분하지 않고 하나의 진폭으로 본다. */
+function componentAmplitude(grid: PixelGrid, component: number[]): number {
+	let lo = 255
+	let hi = 0
+	for (const i of component) {
+		const { r, g, b } = grid.pixels[i]
+		lo = Math.min(lo, r, g, b)
+		hi = Math.max(hi, r, g, b)
+	}
+	return hi - lo
 }
 
 /**
@@ -240,12 +262,18 @@ function collectOverlayContrasts(
 	colorIndex: Int8Array,
 	colors: Rgb[],
 	colorTolerance: number,
+	maxAmplitude: number = MAX_COMPONENT_AMPLITUDE,
 ): { contrasts: number[]; accepted: number; rejected: number } {
 	const contrasts: number[] = []
 	let accepted = 0
 	let rejected = 0
 
 	for (const component of components(colorIndex, grid.width, grid.height)) {
+		if (componentAmplitude(grid, component) > maxAmplitude) {
+			rejected++
+			for (const i of component) colorIndex[i] = -1
+			continue
+		}
 		const own = componentBoundaryContrasts(grid, colorIndex, colors, colorTolerance, component)
 		const brightest = own.length > 0 ? Math.max(...own) : 0
 		if (brightest < COMPONENT_STEP_MIN) {
@@ -267,6 +295,61 @@ function collectOverlayContrasts(
  * ponytail: 배경이 오버레이와 같은 색인 구간은 못 잡는다 — 그 구간은 경계가 없어 표본이 생기지 않는다.
  * 그런 면이 판의 15%를 넘으면 덩어리 필터가 걷어내 not_measurable(=담당자 검토)로 떨어진다.
  */
+/**
+ * 진단용 — 덩어리별로 무엇이 채택·탈락했는지와 그 경계 대비 분포를 낸다.
+ * 🔴 판정과 **같은 함수**를 쓴다. 진단이 판정을 베끼면 둘이 어긋나 사람을 속인다(실제로 겪었다).
+ */
+export function describeOverlayComponents(
+	grid: PixelGrid,
+	parameters?: OverlayLegibilityParameters,
+) {
+	const hexes = parameters?.overlayColors ?? DEFAULT_OVERLAY_COLORS
+	const colors = hexes.map(parseHex)
+	const colorTolerance = parameters?.colorTolerance ?? DEFAULT_COLOR_TOLERANCE
+	const flatTolerance = parameters?.flatTolerance ?? DEFAULT_FLAT_TOLERANCE
+	const colorIndex = buildOverlayMask(grid, colors, colorTolerance, flatTolerance)
+
+	return [...components(colorIndex, grid.width, grid.height)].map((component) => {
+		const own = componentBoundaryContrasts(
+			grid,
+			colorIndex,
+			colors,
+			colorTolerance,
+			component,
+		).sort((a, b) => a - b)
+		let lo = 255
+		let hi = 0
+		let x0 = grid.width
+		let y0 = grid.height
+		let x1 = -1
+		let y1 = -1
+		for (const i of component) {
+			const { r, g, b } = grid.pixels[i]
+			lo = Math.min(lo, r, g, b)
+			hi = Math.max(hi, r, g, b)
+			const x = i % grid.width
+			const y = (i - x) / grid.width
+			if (x < x0) x0 = x
+			if (x > x1) x1 = x
+			if (y < y0) y0 = y
+			if (y > y1) y1 = y
+		}
+		const brightest = own.length > 0 ? own[own.length - 1] : 0
+		return {
+			size: component.length,
+			color: hexes[colorIndex[component[0]]] ?? '?',
+			bbox: `${x0},${y0}-${x1},${y1}`,
+			amplitude: hi - lo,
+			boundary: own.length,
+			max: brightest,
+			p50: own.length > 0 ? percentile(own, 0.5) : 0,
+			p05: own.length > 0 ? percentile(own, 0.05) : 0,
+			min: own.length > 0 ? own[0] : 0,
+			accepted: brightest >= COMPONENT_STEP_MIN,
+		}
+	})
+}
+
 export { collectOverlayContrasts }
 
 export function measureOverlayLegibility(
@@ -293,6 +376,7 @@ export function measureOverlayLegibility(
 		colorIndex,
 		colors,
 		colorTolerance,
+		parameters?.maxComponentAmplitude ?? MAX_COMPONENT_AMPLITUDE,
 	)
 	const shape = { ...facts, overlays: accepted, discardedAreas: rejected }
 	if (contrasts.length < MIN_BOUNDARY_PIXELS) {
