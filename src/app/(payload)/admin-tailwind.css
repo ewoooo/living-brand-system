@@ -25,6 +25,14 @@
 		padding: 0;
 		cursor: pointer;
 	}
+	/* v4의 border 유틸리티는 색을 정하지 않는다 — preflight가 없으면 currentColor(글자색)로
+	   그려진다(실측: rgb(47,47,47)). 프론트 preflight처럼 보더 토큰을 기본값으로 깐다. */
+	.lbs-kit,
+	.lbs-kit *,
+	.lbs-kit *::before,
+	.lbs-kit *::after {
+		border-color: var(--color-border);
+	}
 }
 
 /* ── 킷 표면의 스튜디오 지반 복원 (2026-08-20 실측) ──

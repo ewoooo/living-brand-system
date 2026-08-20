@@ -59,7 +59,7 @@ function TemplateCanvas({
 	return (
 		<div
 			ref={canvasRef}
-			className="flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-md border bg-muted"
+			className="flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-3xl border bg-muted"
 			style={{ height: canvasHeight }}
 		>
 			{hasHtml && width && height ? (
@@ -108,7 +108,7 @@ function LayerList({
 }) {
 	return (
 		<section
-			className="shrink-0 rounded-md border p-2"
+			className="shrink-0 rounded-3xl border p-3"
 			style={{ width: layerWidth, height: canvasHeight }}
 		>
 			<h3 className="mb-1 text-base font-medium">레이어</h3>
@@ -219,7 +219,7 @@ export function TemplateLayersField() {
 		!!selected && canAssignImage(selected) && !!nodeConfigs[selected.id]?.backgroundImage
 
 	return (
-		<div className="lbs-kit mb-20">
+		<div className="lbs-kit mt-[calc(80px-var(--base))] mb-20">
 			<AdminSectionHeading>레이어 설정</AdminSectionHeading>
 			<div className="flex items-start" style={{ gap: layout.workspaceGap }}>
 				<TemplateCanvas
