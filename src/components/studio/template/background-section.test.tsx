@@ -44,6 +44,7 @@ function Harness({
 	initialImage,
 	generating = false,
 	typeAvailability,
+	withDimmer = true,
 }: {
 	allowedTypes: readonly TemplateBackgroundType[]
 	onChange?: (patch: HarnessPatch) => void
@@ -54,6 +55,8 @@ function Harness({
 	initialImage?: TemplateBackgroundState['image']
 	generating?: boolean
 	typeAvailability?: 'enabled' | 'readonly' | 'disabled'
+	/** false = 어드민 정책이 디머를 꺼서 매니페스트에 컨트롤이 없는 상태. */
+	withDimmer?: boolean
 }) {
 	const [state, setState] = useState<TemplateBackgroundState>({
 		type: allowedTypes[0] ?? 'color',
@@ -90,21 +93,29 @@ function Harness({
 						label: value[0]?.toUpperCase() + value.slice(1),
 					})),
 				}}
-				dimmerDefinition={{
-					id: 'background.dimmer',
-					kind: 'toggle',
-					label: 'Dimmer',
-					defaultValue: false,
-				}}
-				dimmerOpacityDefinition={{
-					id: 'background.dimmerOpacity',
-					kind: 'range',
-					label: 'Dimmer Opacity',
-					defaultValue: 0.2,
-					min: 0,
-					max: 0.7,
-					step: 0.01,
-				}}
+				dimmerDefinition={
+					withDimmer
+						? {
+								id: 'background.dimmer',
+								kind: 'toggle',
+								label: 'Dimmer',
+								defaultValue: false,
+							}
+						: undefined
+				}
+				dimmerOpacityDefinition={
+					withDimmer
+						? {
+								id: 'background.dimmerOpacity',
+								kind: 'range',
+								label: 'Dimmer Opacity',
+								defaultValue: 0.2,
+								min: 0,
+								max: 0.7,
+								step: 0.01,
+							}
+						: undefined
+				}
 				colorDefinition={{
 					id: 'background.color',
 					kind: 'color',
@@ -183,6 +194,11 @@ async function openGenerateTab(user: ReturnType<typeof userEvent.setup>) {
 
 describe('BackgroundSection', () => {
 	afterEach(cleanup)
+
+	it('정책이 디머를 꺼서 정의가 없으면 Dimmer 행을 그리지 않는다', () => {
+		render(<Harness allowedTypes={['color']} withDimmer={false} />)
+		expect(screen.queryByText('Dimmer')).toBeNull()
+	})
 
 	it('기본 Color 타입은 배경색 행만 보여준다', () => {
 		render(<Harness allowedTypes={['color', 'image', 'graphic']} />)
