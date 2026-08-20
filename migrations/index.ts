@@ -73,6 +73,7 @@ import * as migration_20260819_054538_sample_image_group from './20260819_054538
 import * as migration_20260819_075057_drop_layout_grid_locks from './20260819_075057_drop_layout_grid_locks';
 import * as migration_20260819_090753_ci_lockup_snapshot_repair from './20260819_090753_ci_lockup_snapshot_repair';
 import * as migration_20260819_090804_guideline_background_tone from './20260819_090804_guideline_background_tone';
+import * as migration_20260819_101815_template_background_policy from './20260819_101815_template_background_policy';
 
 export const migrations = [
   {
@@ -448,6 +449,11 @@ export const migrations = [
   {
     up: migration_20260819_090804_guideline_background_tone.up,
     down: migration_20260819_090804_guideline_background_tone.down,
-    name: '20260819_090804_guideline_background_tone'
+    name: '20260819_090804_guideline_background_tone',
+  },
+  {
+    up: migration_20260819_101815_template_background_policy.up,
+    down: migration_20260819_101815_template_background_policy.down,
+    name: '20260819_101815_template_background_policy',
   },
 ];

@@ -11,6 +11,8 @@ import {
 	FieldError,
 	FieldGroup,
 	FieldLabel,
+	FieldLegend,
+	FieldSet,
 	FieldTitle,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -37,7 +39,13 @@ import { IDENTITY_TRANSFORM, isIdentityTransform } from '@/lib/template-image-tr
 import type { TemplateLayerAccess, TemplateNodeConfig, TemplateSlotSpec } from '@/types/template'
 import { BrandColorSwatches, usePublishedBrandColors } from './brand-color-swatches'
 import type { ImageTransform } from './image-transform-gestures'
-import { canAssignImage, IMAGE_CONFIG_KEYS, type LayerRow, typeLabel } from './template-layers'
+import {
+	canAssignImage,
+	IMAGE_CONFIG_KEYS,
+	type LayerRow,
+	toggleAllowedId,
+	typeLabel,
+} from './template-layers'
 import { VectorLayerEditor } from './vector-layer-editor'
 
 function usePublishedImageProfiles() {
@@ -347,6 +355,21 @@ function SlotSpecEditor({
 
 type ImageSlotInput = NonNullable<TemplateNodeConfig['imageInput']>
 
+/**
+ * 프로파일 셀렉트 값을 imageInput에 반영한다 — profileId만 갈아끼우고 allowedProfileIds·transform은 보존한다.
+ * 예전엔 이 셀렉트가 imageInput 전체를 교체해 옆 필드(허용 프로파일·창작자 변형 허용)를 조용히 지웠다.
+ */
+export function applyImageSlotProfileSelection(
+	imageInput: ImageSlotInput,
+	value: string,
+): ImageSlotInput {
+	if (value === 'studio') {
+		const { profileId: _dropped, ...rest } = imageInput
+		return rest
+	}
+	return { ...imageInput, profileId: Number(value) }
+}
+
 function ImageSlotSpecEditor({
 	imageInput,
 	onChange,
@@ -365,7 +388,7 @@ function ImageSlotSpecEditor({
 				<Select
 					value={imageInput.profileId ? String(imageInput.profileId) : 'studio'}
 					onValueChange={(value) =>
-						onChange(value === 'studio' ? {} : { profileId: Number(value) })
+						onChange(applyImageSlotProfileSelection(imageInput, value))
 					}
 				>
 					<SelectTrigger id="image-slot-profile" className="w-full">
@@ -382,6 +405,56 @@ function ImageSlotSpecEditor({
 						</SelectGroup>
 					</SelectContent>
 				</Select>
+			</Field>
+			{imageInput.profileId ? null : (
+				<FieldSet className="gap-2">
+					<FieldLegend variant="label">허용 프로파일 — 고르지 않으면 전부</FieldLegend>
+					<div className="flex flex-wrap gap-2">
+						{profiles?.map((profile) => {
+							const all = profiles.map((candidate) => candidate.id)
+							const on = (imageInput.allowedProfileIds ?? all).includes(profile.id)
+							return (
+								<Button
+									key={profile.id}
+									type="button"
+									size="sm"
+									aria-pressed={on}
+									variant={on ? 'muted' : 'outline'}
+									onClick={() =>
+										onChange({
+											...imageInput,
+											allowedProfileIds: toggleAllowedId(
+												imageInput.allowedProfileIds,
+												all,
+												profile.id,
+											),
+										})
+									}
+								>
+									{profile.name}
+								</Button>
+							)
+						})}
+					</div>
+				</FieldSet>
+			)}
+			<Field>
+				<FieldLabel htmlFor="image-slot-transform">창작자 변형 허용</FieldLabel>
+				<Button
+					id="image-slot-transform"
+					type="button"
+					size="sm"
+					aria-pressed={imageInput.transform?.enabled ?? true}
+					variant={(imageInput.transform?.enabled ?? true) ? 'muted' : 'outline'}
+					onClick={() =>
+						onChange({
+							...imageInput,
+							transform: { enabled: !(imageInput.transform?.enabled ?? true) },
+						})
+					}
+				>
+					{(imageInput.transform?.enabled ?? true) ? 'On' : 'Off'}
+				</Button>
 			</Field>
 		</FieldGroup>
 	)

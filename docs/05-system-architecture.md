@@ -514,7 +514,7 @@ Plugin은 collection으로 두지 않습니다 — 2026-08-18에 삭제했습니
 | `application-images` | ApplicationImage | page와 check basis에서 참조. 향후 asset generation session에도 사용 가능 |
 | `image-profiles` | ImageProfile | 이미지 생성 Runtime Manifest에 적용할 published feature·Controller 제한·Export 정책을 관리 |
 | `graphic-profiles` | GraphicProfile | 등록된 Graphic Runtime Manifest에 적용할 published Controller 제한·Export 정책을 관리 |
-| `templates` | Template | HTML 슬롯 Runtime Manifest에 적용할 Controller 제한·Export 정책을 관리하고 page와 plugin에서 참조 |
+| `templates` | Template | 배경 정책(`backgroundPolicy`)·레이어별 `overrides[nodeId]`·Export 정책을 관리하고 page와 plugin에서 참조 |
 
 ### 런타임 객체
 

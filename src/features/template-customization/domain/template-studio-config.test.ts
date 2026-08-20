@@ -5,6 +5,7 @@ import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import { createRasterExportRequest } from '@/features/studio-export/services/create-raster-export-request'
 import { supportsStudioExportRequest } from '@/features/studio-export/studio-output'
+import type { StudioRuntimeManifest } from '@/modules/studio-controller/controller-definition'
 import {
 	deriveTemplateStudioConfig,
 	findTemplateControl,
@@ -43,6 +44,13 @@ const forwardStraightConfig = {
 	output: resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
 }
 
+// 매니페스트에는 findTemplateControl(Config용)이 닿지 않으므로 그룹을 펼쳐 찾는다.
+function findManifestControl(manifest: StudioRuntimeManifest, id: string) {
+	return manifest.controller.groups
+		.flatMap((group) => group.controls)
+		.find((control) => control.id === id)
+}
+
 describe('deriveTemplateStudioConfig', () => {
 	it('Runtime Manifest는 같은 Template 문서에서 같은 controller와 Artifact를 파생한다', () => {
 		const manifest = getTemplateRuntimeManifest(template)
@@ -58,6 +66,59 @@ describe('deriveTemplateStudioConfig', () => {
 			},
 		})
 		expect(getTemplateRuntimeManifest({ ...template })).toEqual(manifest)
+	})
+
+	it('배경 정책이 형식을 좁히고 하나만 남으면 읽기 전용이 된다', () => {
+		const manifest = getTemplateRuntimeManifest({
+			...template,
+			backgroundPolicy: { types: ['color'] },
+		})
+
+		expect(findManifestControl(manifest, 'background.type')).toMatchObject({
+			availability: 'readonly',
+			defaultValue: 'color',
+			options: [{ value: 'color', label: 'Color' }],
+		})
+	})
+
+	it('둘 이상 허용하면 읽기 전용이 아니고 기본값은 첫 허용 형식이다', () => {
+		const manifest = getTemplateRuntimeManifest({
+			...template,
+			backgroundPolicy: { types: ['image', 'graphic'] },
+		})
+		const control = findManifestControl(manifest, 'background.type')
+
+		expect(control).toMatchObject({
+			defaultValue: 'image',
+			options: [
+				{ value: 'image', label: 'Image' },
+				{ value: 'graphic', label: 'Graphic' },
+			],
+		})
+		expect(
+			control && 'availability' in control ? control.availability : undefined,
+		).toBeUndefined()
+	})
+
+	it('색을 형식에서 막아도 background.color 컨트롤은 남는다', () => {
+		const manifest = getTemplateRuntimeManifest({
+			...template,
+			backgroundPolicy: { types: ['image'] },
+		})
+
+		expect(findManifestControl(manifest, 'background.color')).toMatchObject({ kind: 'color' })
+	})
+
+	it('배경 형식을 전부 막으면 파생이 거부한다', () => {
+		expect(() =>
+			getTemplateRuntimeManifest({ ...template, backgroundPolicy: { types: [] } }),
+		).toThrow('배경 형식')
+	})
+
+	it('정책이 없으면 지금까지의 매니페스트와 같다', () => {
+		expect(getTemplateRuntimeManifest({ ...template, backgroundPolicy: {} })).toEqual(
+			getTemplateRuntimeManifest(template),
+		)
 	})
 
 	it('세로형 캔버스가 폴백의 가로형 1080p 상한에 막히지 않고 자기 크기로 MP4를 낸다', () => {
@@ -200,87 +261,86 @@ describe('deriveTemplateStudioConfig', () => {
 		).toThrow('maxLength')
 	})
 
-	it('Restrictions와 Admin 그룹 표현을 분리해 Effective Config에 적용한다', () => {
-		const config = deriveTemplateStudioConfig({
-			...template,
-			controllerPresentation: {
-				groups: [{ groupId: 'text', defaultOpen: false }],
-			},
-			controllerRestrictions: {
-				controls: [
-					{
-						controlId: 'text:1:1',
-						availability: 'readonly',
-						defaultValue: '고정 제목',
-						maxLength: 10,
-					},
-					{
-						controlId: 'text.color',
-						availability: 'readonly',
-						defaultValue: '#112233',
-					},
-					{
-						controlId: 'background.type',
-						availability: 'readonly',
-						defaultValue: 'color',
-						optionValues: ['color'],
-					},
-					{
-						controlId: 'background.color',
-						availability: 'disabled',
-						defaultValue: '#ffffff',
-					},
-				],
-			},
-		})
+	it('Controller 표현은 어드민 입력 없이 기본값으로 채워진다', () => {
+		const config = deriveTemplateStudioConfig(template)
 
-		expect(config.controller.groups[0]).toMatchObject({
-			title: 'Text',
-		})
-		expect(config.controllerPresentation?.groups[0]).toEqual({
-			groupId: 'text',
-			collapsible: true,
-			defaultOpen: false,
-		})
-		expect(config.controller.groups[0]?.controls[0]).toMatchObject({
-			availability: 'readonly',
-			defaultValue: '고정 제목',
-			maxLength: 10,
-		})
-		expect(config.controller.groups[1]?.controls[0]).toMatchObject({
-			availability: 'readonly',
-			options: [{ value: 'color', label: 'Color' }],
-		})
-		expect(findTemplateControl(config, 'text.color')).toMatchObject({
-			availability: 'readonly',
-			defaultValue: '#112233',
-		})
-		expect(findTemplateControl(config, 'background.color')).toMatchObject({
-			availability: 'disabled',
-			defaultValue: '#ffffff',
-		})
+		expect(config.controllerPresentation?.groups).toEqual([
+			{ groupId: 'text', collapsible: true, defaultOpen: true },
+			{ groupId: 'background', collapsible: true, defaultOpen: true },
+		])
 	})
 
-	it('sparse Restrictions는 쓰지 않은 Definition 필드를 Runtime Manifest에서 상속한다', () => {
-		const config = deriveTemplateStudioConfig({
-			...template,
-			controllerRestrictions: {
-				controls: [
-					{
-						controlId: 'text:1:1',
-						availability: 'readonly',
-						maxLength: 10,
+	it('배경 정책이 허용 이미지 프로파일을 배경 슬롯에 싣는다', () => {
+		const config = deriveTemplateStudioConfig(
+			{ ...template, backgroundPolicy: { imageConfigIds: [3] } },
+			[imageConfig],
+		)
+		const background = config.template.slots.find(isBackgroundSlot)
+		if (!background) throw new Error('배경 슬롯이 파생되지 않았다')
+
+		expect(background.imageConfig).toEqual({ mode: 'selectable', allowedConfigIds: [3] })
+		expect(listCompatibleTemplateImageConfigs(background, [imageConfig])).toHaveLength(1)
+	})
+
+	it('배경 정책이 그래픽 런타임 목록을 좁힌다', () => {
+		const allowed = deriveTemplateStudioConfig(
+			{ ...template, backgroundPolicy: { graphicConfigIds: [forwardStraightConfig.id] } },
+			[],
+			[forwardStraightConfig],
+		)
+		const blocked = deriveTemplateStudioConfig(
+			{ ...template, backgroundPolicy: { graphicConfigIds: [] } },
+			[],
+			[forwardStraightConfig],
+		)
+
+		expect(allowed.template.graphicConfigs).toHaveLength(1)
+		expect(blocked.template.graphicConfigs).toHaveLength(0)
+	})
+
+	it('이미지 레이어 정책이 허용 프로파일과 창작자 변형 허용을 슬롯에 싣는다', () => {
+		const config = deriveTemplateStudioConfig(
+			{
+				...template,
+				nodeConfigs: {
+					...template.nodeConfigs,
+					'2:1': {
+						imageInput: { allowedProfileIds: [3], transform: { enabled: false } },
+						imageColorize: { line: '#112233' },
 					},
-				],
+				},
+			},
+			[imageConfig],
+		)
+		const slot = config.template.slots.find(isImageSlot)
+
+		expect(slot?.imageConfig).toEqual({ mode: 'selectable', allowedConfigIds: [3] })
+		expect(slot?.transform.enabled).toBe(false)
+	})
+
+	it('변형 허용을 적지 않으면 지금까지처럼 허용이다', () => {
+		const config = deriveTemplateStudioConfig(template, [imageConfig])
+
+		expect(config.template.slots.find(isImageSlot)?.transform.enabled).toBe(true)
+	})
+
+	it('레이어 정책이 readonly면 텍스트 컨트롤도 readonly다', () => {
+		const readonly = deriveTemplateStudioConfig({
+			...template,
+			nodeConfigs: {
+				...template.nodeConfigs,
+				'1:1': {
+					input: { label: '제목', maxLength: 20, maxLines: 1 },
+					creator: { access: 'readonly' },
+				},
 			},
 		})
-
-		expect(findTemplateControl(config, 'text:1:1')).toMatchObject({
-			label: '제목',
-			defaultValue: '기본 제목',
+		expect(findTemplateControl(readonly, 'text:1:1')).toMatchObject({
 			availability: 'readonly',
-			maxLength: 10,
 		})
+
+		const editable = deriveTemplateStudioConfig(template)
+		expect(findTemplateControl(editable, 'text:1:1')).not.toHaveProperty('availability')
 	})
 })
 
