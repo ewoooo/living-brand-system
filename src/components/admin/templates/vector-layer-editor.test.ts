@@ -26,16 +26,18 @@ describe('VectorLayerEditor', () => {
 		HTMLElement.prototype.scrollIntoView = vi.fn()
 		const onChange = vi.fn()
 
-		render(createElement(VectorLayerEditor, { name: 'Vector', config: {}, onChange }))
+		render(createElement(VectorLayerEditor, { config: {}, onChange }))
 
-		const assetSelect = screen.getByRole('combobox', { name: '브랜드 내부 자산' })
+		const assetSelect = screen.getByRole('combobox', { name: '사용할 그래픽' })
 		fireEvent.click(assetSelect)
-		await waitFor(() => expect(screen.getByRole('option', { name: 'Wordmark' })).toBeTruthy())
-		fireEvent.click(screen.getByRole('option', { name: 'Wordmark' }))
+		await waitFor(() =>
+			expect(screen.getByRole('option', { name: '로고 — Wordmark' })).toBeTruthy(),
+		)
+		fireEvent.click(screen.getByRole('option', { name: '로고 — Wordmark' }))
 		fireEvent.click(screen.getByRole('radio', { name: 'Contain' }))
-		fireEvent.click(screen.getByRole('button', { name: 'Primary #112233' }))
+		fireEvent.click(screen.getByRole('radio', { name: '#112233' }))
 
-		expect(screen.queryByRole('button', { name: /Unsafe/ })).toBeNull()
+		expect(screen.queryByRole('radio', { name: /url\(/ })).toBeNull()
 		expect(fetchMock).toHaveBeenCalledTimes(3)
 		expect(onChange).toHaveBeenNthCalledWith(1, {
 			vectorAsset: { collection: 'brand-logos', id: 7, src: '/logo.svg' },

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { createElement, type ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TemplateLayerEditor } from './template-layer-editors'
@@ -197,9 +197,10 @@ describe('TemplateLayersField 폼 계약', () => {
 			}),
 		)
 
-		await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
-		expect(screen.getByRole('button', { name: 'Default' })).toHaveAttribute(
-			'aria-pressed',
+		const toggle = await screen.findByRole('radiogroup', { name: 'Default 허용' })
+		expect(fetchMock).toHaveBeenCalledTimes(1)
+		expect(within(toggle).getByRole('radio', { name: 'On' })).toHaveAttribute(
+			'aria-checked',
 			'true',
 		)
 	})

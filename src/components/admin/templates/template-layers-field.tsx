@@ -14,6 +14,7 @@ import { ImageTransformOverlay } from './image-transform-overlay'
 import { TemplateLayerEditor } from './template-layer-editors'
 import {
 	canAssignImage,
+	hasLayerEditor,
 	type LayerRow,
 	parseLayers,
 	pruneCarrierChildImageKeys,
@@ -127,6 +128,8 @@ function LayerList({
 								size="sm"
 								className="h-7 w-full justify-start px-1 font-normal"
 								style={{ paddingLeft: layer.depth * 14 + 4 }}
+								// 편집 UI 없는 레이어는 선택 불가 — 빈 패널 대신 목록에서 잠근다(안내 문구 제거 결정).
+								disabled={!hasLayerEditor(layer)}
 								onClick={() => onSelect(layer.id)}
 							>
 								<span className="w-11 shrink-0 text-xs text-muted-foreground">

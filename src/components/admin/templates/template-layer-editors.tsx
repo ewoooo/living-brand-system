@@ -2,40 +2,19 @@
 
 import { toast } from '@payloadcms/ui'
 import { type ReactNode, useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-	Field,
-	FieldDescription,
-	FieldGroup,
-	FieldLabel,
-	FieldLegend,
-	FieldSet,
-	FieldTitle,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+import { Controller } from '@/components/shared/controller'
 import {
 	type ImageProfileOption,
 	requestPublishedImageProfiles,
 } from '@/features/image-generation/services/generate-image.client'
 import type { TemplateLayerAccess, TemplateNodeConfig, TemplateSlotSpec } from '@/types/template'
-import {
-	canAssignImage,
-	IMAGE_CONFIG_KEYS,
-	type LayerRow,
-	toggleAllowedId,
-	typeLabel,
-} from './template-layers'
+import { canAssignImage, type LayerRow, toggleAllowedId } from './template-layers'
 import { VectorLayerEditor } from './vector-layer-editor'
+
+const ON_OFF = [
+	{ value: 'on', label: 'On' },
+	{ value: 'off', label: 'Off' },
+] as const
 
 function usePublishedImageProfiles() {
 	const [profiles, setProfiles] = useState<ImageProfileOption[] | null>(null)
@@ -50,23 +29,23 @@ function usePublishedImageProfiles() {
 	return profiles
 }
 
-function SpecField({
-	id,
-	label,
-	span,
-	children,
-}: {
-	id: string
-	label: string
-	span?: boolean
-	children: ReactNode
-}) {
+/**
+ * 레이어 카드 — 디자인 정본 81:2 "Layer Card Variant"의 컨테이너.
+ * 안은 스튜디오 컨트롤러 킷(Group·Row·Segmented·Field)의 행 언어를 그대로 쓴다 —
+ * 카드 껍데기만 어드민 로컬이고, 스튜디오에서도 쓰이게 되면 킷으로 승격한다.
+ */
+function LayerCard({ heading, children }: { heading: ReactNode; children: ReactNode }) {
 	return (
-		<Field className={span ? 'md:col-span-3' : undefined}>
-			<FieldLabel htmlFor={id}>{label}</FieldLabel>
+		<section className="flex max-w-3xl flex-col rounded-xl border p-4">
+			<h3 className="pb-2 font-semibold text-lg">{heading}</h3>
 			{children}
-		</Field>
+		</section>
 	)
+}
+
+/** 세부 설정 그룹 머리의 우측 타입 태그(디자인의 텍스트·이미지·벡터). */
+function layerTypeTag(label: string) {
+	return <span className="text-muted-foreground text-xs">{label}</span>
 }
 
 function CreatorLayerPolicyEditor({
@@ -79,76 +58,49 @@ function CreatorLayerPolicyEditor({
 	onChange: (patch: TemplateNodeConfig) => void
 }) {
 	const visibility = config.creator?.visibility
+	const patchVisibility = (part: { defaultVisible?: boolean; allowToggle?: boolean }) =>
+		onChange({ creator: { access, visibility: { ...visibility, ...part } } })
 	return (
-		<FieldGroup className="mt-3 max-w-xl gap-3 rounded-md border p-3">
-			<Field>
-				<FieldLabel htmlFor="template-layer-access">Creator 사용 상태</FieldLabel>
-				<Select
+		<Controller.Group title="기본 설정" collapsible={false}>
+			<Controller.Row label="사용 상태">
+				<Controller.Segmented
+					aria-label="사용 상태"
+					options={[
+						{ value: 'editable', label: '편집 가능' },
+						{ value: 'readonly', label: '읽기 전용' },
+						{ value: 'hidden', label: '숨김' },
+					]}
 					value={access}
-					onValueChange={(next) =>
+					onChange={(next) =>
 						onChange({
 							creator: {
-								access: next as TemplateLayerAccess,
+								access: next,
 								...(next === 'editable' && visibility ? { visibility } : {}),
 							},
 						})
 					}
-				>
-					<SelectTrigger id="template-layer-access" className="w-full max-w-sm">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectGroup>
-							<SelectItem value="hidden">숨김 — 패널에 표시 안 함</SelectItem>
-							<SelectItem value="readonly">읽기 전용</SelectItem>
-							<SelectItem value="editable">편집 가능</SelectItem>
-						</SelectGroup>
-					</SelectContent>
-				</Select>
-			</Field>
-			{access === 'editable' && (
-				<>
-					<Field orientation="horizontal" className="w-fit">
-						<Checkbox
-							id="template-layer-default-visible"
-							checked={visibility?.defaultVisible ?? true}
-							onCheckedChange={(checked) =>
-								onChange({
-									creator: {
-										access,
-										visibility: {
-											...visibility,
-											defaultVisible: checked === true,
-										},
-									},
-								})
-							}
-						/>
-						<FieldLabel htmlFor="template-layer-default-visible">기본 표시</FieldLabel>
-					</Field>
-					<Field orientation="horizontal" className="w-fit">
-						<Checkbox
-							id="template-layer-visibility-toggle"
-							checked={visibility?.allowToggle ?? false}
-							onCheckedChange={(checked) =>
-								onChange({
-									creator: {
-										access,
-										visibility: {
-											...visibility,
-											allowToggle: checked === true,
-										},
-									},
-								})
-							}
-						/>
-						<FieldLabel htmlFor="template-layer-visibility-toggle">
-							Creator가 표시/숨김 변경 가능
-						</FieldLabel>
-					</Field>
-				</>
-			)}
-		</FieldGroup>
+				/>
+			</Controller.Row>
+			{/* 표시 정책은 편집 가능일 때만 의미가 있다 — 정본대로 행은 항상 그리고 잠근다. */}
+			<div className="grid grid-cols-1 gap-1 md:grid-cols-2">
+				<Controller.Row label="기본 표시" disabled={access !== 'editable'}>
+					<Controller.Segmented
+						aria-label="기본 표시"
+						options={ON_OFF}
+						value={(visibility?.defaultVisible ?? true) ? 'on' : 'off'}
+						onChange={(next) => patchVisibility({ defaultVisible: next === 'on' })}
+					/>
+				</Controller.Row>
+				<Controller.Row label="숨김 가능" disabled={access !== 'editable'}>
+					<Controller.Segmented
+						aria-label="숨김 가능"
+						options={ON_OFF}
+						value={(visibility?.allowToggle ?? false) ? 'on' : 'off'}
+						onChange={(next) => patchVisibility({ allowToggle: next === 'on' })}
+					/>
+				</Controller.Row>
+			</div>
+		</Controller.Group>
 	)
 }
 
@@ -166,73 +118,62 @@ function SlotSpecEditor({
 	}
 
 	return (
-		<FieldGroup className="grid max-w-xl grid-cols-1 gap-3 rounded-md border p-3 md:grid-cols-3">
-			<SpecField id="slot-spec-label" label="라벨">
-				<Input
-					id="slot-spec-label"
+		<Controller.Group title="세부 설정" collapsible={false} trailing={layerTypeTag('텍스트')}>
+			<Controller.Row label="라벨">
+				<Controller.Input
 					value={input.label ?? ''}
 					onChange={(event) => patch({ label: event.target.value || undefined })}
 					placeholder="예: 영문 이름"
 				/>
-			</SpecField>
-			<SpecField id="slot-spec-placeholder" label="플레이스홀더">
-				<Input
-					id="slot-spec-placeholder"
+			</Controller.Row>
+			<Controller.Row label="플레이스홀더">
+				<Controller.Input
 					value={input.placeholder ?? ''}
 					onChange={(event) => patch({ placeholder: event.target.value || undefined })}
 					placeholder="입력 전 안내 문구"
 				/>
-			</SpecField>
-			<SpecField id="slot-spec-format" label="형식">
-				<Select
+			</Controller.Row>
+			<Controller.Row label="형식">
+				<Controller.Select
+					options={[
+						{ value: 'free', label: '자유 텍스트' },
+						{ value: 'number', label: '숫자' },
+						{ value: 'email', label: '이메일' },
+						{ value: 'date', label: '날짜' },
+					]}
 					value={input.inputFormat ?? 'free'}
-					onValueChange={(value) =>
+					onChange={(value) =>
 						patch({ inputFormat: value as TemplateSlotSpec['inputFormat'] })
 					}
-				>
-					<SelectTrigger id="slot-spec-format" className="w-full">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectGroup>
-							<SelectItem value="free">자유 텍스트</SelectItem>
-							<SelectItem value="number">숫자</SelectItem>
-							<SelectItem value="email">이메일</SelectItem>
-							<SelectItem value="date">날짜</SelectItem>
-						</SelectGroup>
-					</SelectContent>
-				</Select>
-			</SpecField>
-			<SpecField id="slot-spec-max-length" label="최대 글자">
-				<Input
+				/>
+			</Controller.Row>
+			<Controller.Row label="최대 글자">
+				<Controller.Input
 					type="number"
 					min={1}
-					id="slot-spec-max-length"
 					value={input.maxLength ?? ''}
 					onChange={(event) => patch({ maxLength: positiveInt(event.target.value) })}
 					placeholder="없음"
 				/>
-			</SpecField>
-			<SpecField id="slot-spec-max-lines" label="최대 줄">
-				<Input
+			</Controller.Row>
+			<Controller.Row label="최대 줄">
+				<Controller.Input
 					type="number"
 					min={1}
-					id="slot-spec-max-lines"
 					value={input.maxLines ?? ''}
 					onChange={(event) => patch({ maxLines: positiveInt(event.target.value) })}
 					placeholder="없음"
 				/>
-			</SpecField>
-			<SpecField id="slot-spec-ai" label="AI 지시 — 이 슬롯의 생성 규칙" span>
-				<Textarea
-					id="slot-spec-ai"
+			</Controller.Row>
+			<Controller.Field label="AI 지시 — 이 슬롯의 생성 규칙" className="mt-1">
+				<Controller.Textarea
 					value={input.aiInstruction ?? ''}
 					onChange={(event) => patch({ aiInstruction: event.target.value || undefined })}
 					rows={2}
 					placeholder="예: 영문 이름만, 성-이름 순"
 				/>
-			</SpecField>
-		</FieldGroup>
+			</Controller.Field>
+		</Controller.Group>
 	)
 }
 
@@ -258,21 +199,39 @@ function ImageSlotSpecEditor({
 }) {
 	const allowed = imageSlotAllowedProfileIds(imageInput)
 	return (
-		<FieldGroup className="max-w-sm rounded-md border p-3">
-			<FieldSet className="gap-2">
-				<FieldLegend variant="label">허용 프로파일 — 고르지 않으면 전부</FieldLegend>
-				<div className="flex flex-wrap gap-2">
-					{profiles?.map((profile) => {
-						const all = profiles.map((candidate) => candidate.id)
-						const on = (allowed ?? all).includes(profile.id)
-						return (
-							<Button
-								key={profile.id}
-								type="button"
-								size="sm"
-								aria-pressed={on}
-								variant={on ? 'muted' : 'outline'}
-								onClick={() => {
+		<>
+			<Controller.Group
+				title="세부 설정"
+				collapsible={false}
+				trailing={layerTypeTag('이미지')}
+			>
+				<Controller.Row label="변형 허용">
+					<Controller.Segmented
+						aria-label="변형 허용"
+						options={ON_OFF}
+						value={(imageInput.transform?.enabled ?? true) ? 'on' : 'off'}
+						onChange={(next) =>
+							onChange({ ...imageInput, transform: { enabled: next === 'on' } })
+						}
+					/>
+				</Controller.Row>
+			</Controller.Group>
+			<Controller.Group title="허용할 이미지 프로파일" collapsible={false}>
+				{profiles && profiles.length === 0 && (
+					<p className="text-muted-foreground text-sm">
+						발행된 이미지 프로파일이 없습니다.
+					</p>
+				)}
+				{profiles?.map((profile) => {
+					const all = profiles.map((candidate) => candidate.id)
+					const on = (allowed ?? all).includes(profile.id)
+					return (
+						<Controller.Row key={profile.id} label={profile.name}>
+							<Controller.Segmented
+								aria-label={`${profile.name} 허용`}
+								options={ON_OFF}
+								value={on ? 'on' : 'off'}
+								onChange={() => {
 									const { profileId: _legacy, ...rest } = imageInput
 									onChange({
 										...rest,
@@ -283,32 +242,12 @@ function ImageSlotSpecEditor({
 										),
 									})
 								}}
-							>
-								{profile.name}
-							</Button>
-						)
-					})}
-				</div>
-			</FieldSet>
-			<Field>
-				<FieldLabel htmlFor="image-slot-transform">창작자 변형 허용</FieldLabel>
-				<Button
-					id="image-slot-transform"
-					type="button"
-					size="sm"
-					aria-pressed={imageInput.transform?.enabled ?? true}
-					variant={(imageInput.transform?.enabled ?? true) ? 'muted' : 'outline'}
-					onClick={() =>
-						onChange({
-							...imageInput,
-							transform: { enabled: !(imageInput.transform?.enabled ?? true) },
-						})
-					}
-				>
-					{(imageInput.transform?.enabled ?? true) ? 'On' : 'Off'}
-				</Button>
-			</Field>
-		</FieldGroup>
+							/>
+						</Controller.Row>
+					)
+				})}
+			</Controller.Group>
+		</>
 	)
 }
 
@@ -316,26 +255,19 @@ function ImageLayerEditor({
 	access,
 	config,
 	onCommit,
-	selected,
 }: {
 	access: TemplateLayerAccess
 	config: TemplateNodeConfig
 	onCommit: (patch: TemplateNodeConfig) => void
-	selected: LayerRow
 }) {
 	const profiles = usePublishedImageProfiles()
-
+	if (access === 'hidden') return null
 	return (
-		<div>
-			<FieldTitle>배경 설정 — {selected.name}</FieldTitle>
-			{access !== 'hidden' && (
-				<ImageSlotSpecEditor
-					imageInput={config.imageInput ?? {}}
-					profiles={profiles}
-					onChange={(imageInput) => onCommit({ imageInput })}
-				/>
-			)}
-		</div>
+		<ImageSlotSpecEditor
+			imageInput={config.imageInput ?? {}}
+			profiles={profiles}
+			onChange={(imageInput) => onCommit({ imageInput })}
+		/>
 	)
 }
 
@@ -380,69 +312,43 @@ export function TemplateLayerEditor({
 
 	if (selected.isText) {
 		return (
-			<div>
+			<LayerCard heading={selected.name}>
 				{policy}
-				<FieldGroup className="gap-2">
-					<Field>
-						<FieldLabel htmlFor="template-layer-text">
-							텍스트 편집 — {selected.name}
-						</FieldLabel>
-						<Textarea
-							id="template-layer-text"
-							value={selected.text}
-							onChange={(event) => onCommit({ text: event.target.value })}
-							rows={2}
-						/>
-					</Field>
-				</FieldGroup>
+				<Controller.Field label={`텍스트 편집 — ${selected.name}`} className="mb-3">
+					<Controller.Textarea
+						value={selected.text}
+						onChange={(event) => onCommit({ text: event.target.value })}
+						rows={2}
+					/>
+				</Controller.Field>
 				{access !== 'hidden' && (
 					<SlotSpecEditor
 						input={config.input ?? {}}
 						onChange={(input) => onCommit({ input })}
 					/>
 				)}
-			</div>
+			</LayerCard>
 		)
 	}
 
 	if (canAssignImage(selected)) {
 		return (
-			<>
+			<LayerCard heading={selected.name}>
 				{policy}
-				<ImageLayerEditor
-					access={access}
-					config={config}
-					onCommit={onCommit}
-					selected={selected}
-				/>
-			</>
+				<ImageLayerEditor access={access} config={config} onCommit={onCommit} />
+			</LayerCard>
 		)
 	}
 
 	if (selected.isVector) {
 		return (
-			<>
+			<LayerCard heading={selected.name}>
 				{policy}
-				<VectorLayerEditor name={selected.name} config={config} onChange={onCommit} />
-			</>
+				<VectorLayerEditor config={config} onChange={onCommit} />
+			</LayerCard>
 		)
 	}
 
-	if (selected.imageAddress === 'parent') {
-		return (
-			<FieldDescription>
-				이미지 배정은 부모 프레임에서 합니다 — 프레임 레이어를 선택하세요.
-				{IMAGE_CONFIG_KEYS.some((key) => key in config) &&
-					' 이 레이어에 남은 이전 배정이 있습니다 — 부모 프레임에서 다시 배정하면 정리됩니다.'}
-			</FieldDescription>
-		)
-	}
-
-	return (
-		<FieldDescription>
-			{selected.tag === 'img'
-				? '이미지로 고정된 레이어입니다 — Figma에서 해당 속성을 정리하면 편집 가능하게 가져올 수 있습니다.'
-				: `${typeLabel(selected.figmaType)} 레이어는 아직 편집할 값이 없습니다.`}
-		</FieldDescription>
-	)
+	// 편집 UI 없는 레이어(부모 소관·img 고정 등)는 목록에서 비활성 — 안내 문구는 정본에서 제거됐다.
+	return null
 }
