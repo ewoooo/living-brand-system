@@ -81,6 +81,7 @@ import * as migration_20260819_101815_template_background_policy from './2026081
 import * as migration_20260820_013946_ci_lockup_height_control from './20260820_013946_ci_lockup_height_control';
 import * as migration_20260820_022413_block_featured_side from './20260820_022413_block_featured_side';
 import * as migration_20260820_050919_ci_sections_stage_snapshot_merge from './20260820_050919_ci_sections_stage_snapshot_merge';
+import * as migration_20260820_062347_add_vertical_sweep_fluted_glass_runtimes from './20260820_062347_add_vertical_sweep_fluted_glass_runtimes';
 
 export const migrations = [
   {
@@ -496,6 +497,11 @@ export const migrations = [
   {
     up: migration_20260820_050919_ci_sections_stage_snapshot_merge.up,
     down: migration_20260820_050919_ci_sections_stage_snapshot_merge.down,
-    name: '20260820_050919_ci_sections_stage_snapshot_merge'
+    name: '20260820_050919_ci_sections_stage_snapshot_merge',
+  },
+  {
+    up: migration_20260820_062347_add_vertical_sweep_fluted_glass_runtimes.up,
+    down: migration_20260820_062347_add_vertical_sweep_fluted_glass_runtimes.down,
+    name: '20260820_062347_add_vertical_sweep_fluted_glass_runtimes'
   },
 ];
