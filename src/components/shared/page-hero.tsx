@@ -1,10 +1,14 @@
 'use client'
 
 import { type ReactNode, useEffect, useRef } from 'react'
-import type { GraphicRuntimeId } from '@/features/graphic-generation/graphic-runtimes/catalog/manifest.generated'
+import {
+	type GraphicRuntimeId,
+	graphicRuntimeManifests,
+} from '@/features/graphic-generation/graphic-runtimes/catalog/manifest.generated'
 import { graphicRuntimeCatalog } from '@/features/graphic-generation/graphic-runtimes/catalog/runtime.generated.client'
 import type { GraphicRuntime } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { cn } from '@/lib/utils'
+import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 
 type PageHeroProps = {
 	/** 배경을 그릴 그래픽 런타임. 카탈로그의 어떤 런타임이든 기본값으로 재생한다. */
@@ -43,8 +47,18 @@ export function PageHero({ runtimeId, fallbackSrc, className, children }: PageHe
 			runtime?.resize(Math.round(width), Math.round(height))
 		})
 
+		// 런타임마다 필수 컨트롤 값이 다르므로 manifest 기본값을 통째로 넘긴다. 빈 객체는 검증에서 거부된다.
+		const manifest = graphicRuntimeManifests.find(({ id }) => id === runtimeId)
+		if (!manifest) return
+
 		graphicRuntimeCatalog[runtimeId]()
-			.then((adapter) => adapter.mount({ container, values: {}, onChange: () => false }))
+			.then((adapter) =>
+				adapter.mount({
+					container,
+					values: createControllerValues(manifest.controller.groups),
+					onChange: () => false,
+				}),
+			)
 			.then((mounted) => {
 				if (disposed) {
 					mounted.destroy()
