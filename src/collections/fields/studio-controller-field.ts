@@ -87,14 +87,15 @@ export function studioExportPolicyField({
 			{
 				name: 'print',
 				type: 'group',
-				label: '인쇄 제한',
+				label: '인쇄',
 				fields: [
 					{
 						name: 'allowedPpi',
 						type: 'json',
-						label: '허용 PPI',
+						label: '최대 인쇄 해상도',
 						admin: {
-							description: '비우면 72, 150, 300ppi를 모두 허용합니다.',
+							description:
+								'고른 값 이하의 표준 해상도만 허용합니다. 최고값이면 제한을 저장하지 않습니다.',
 							components: {
 								Field: {
 									path: '/components/admin/studio/studio-output-number-options-field#StudioOutputNumberOptionsField',
@@ -113,12 +114,12 @@ export function studioExportPolicyField({
 			{
 				name: 'video',
 				type: 'group',
-				label: '영상 제한',
+				label: '영상',
 				fields: [
 					{
 						name: 'allowedFps',
 						type: 'json',
-						label: '허용 FPS',
+						label: '최대 영상 프레임',
 						admin: {
 							components: {
 								Field: {

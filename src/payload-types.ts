@@ -1251,7 +1251,7 @@ export interface ImageProfile {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       * 고른 값 이하의 표준 해상도만 허용합니다. 최고값이면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {
@@ -1363,7 +1363,7 @@ export interface GraphicProfile {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       * 고른 값 이하의 표준 해상도만 허용합니다. 최고값이면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {
@@ -1497,7 +1497,7 @@ export interface Template {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       * 고른 값 이하의 표준 해상도만 허용합니다. 최고값이면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {

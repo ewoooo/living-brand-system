@@ -6,6 +6,8 @@ import type { ComponentProps } from 'react'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { FieldLegend, FieldSet } from '@/components/ui/field'
+import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import { fetchGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.client'
 import {
 	type ImageProfileOption,
 	requestPublishedImageProfiles,
@@ -22,9 +24,7 @@ const TYPE_ROWS: readonly { value: TemplateBackgroundType; label: string }[] = [
 	{ value: 'graphic', label: '그래픽' },
 ]
 
-type Props = ComponentProps<JSONFieldClientComponent> & {
-	graphicOptions?: readonly { value: string; label: string }[]
-}
+type Props = ComponentProps<JSONFieldClientComponent>
 
 function readPolicy(value: unknown): TemplateBackgroundPolicy {
 	const policy = value && typeof value === 'object' ? (value as TemplateBackgroundPolicy) : {}
@@ -32,16 +32,24 @@ function readPolicy(value: unknown): TemplateBackgroundPolicy {
 	return Array.isArray(policy.types) ? policy : { ...policy, types: undefined }
 }
 
-export function TemplateBackgroundPolicyField({ path, graphicOptions = [] }: Props) {
+export function TemplateBackgroundPolicyField({ path }: Props) {
 	const { disabled, setValue, value } = useField<unknown>({ path })
 	const policy = readPolicy(value)
 	const [profiles, setProfiles] = useState<ImageProfileOption[]>([])
 	const [profilesLoadError, setProfilesLoadError] = useState(false)
+	// 정본(76:4)은 그래픽도 프로파일 이름으로 토글한다 — 목록은 published GraphicProfile에서
+	// 파생된 config(name=프로파일명, id=런타임 id)를 재사용하고, 저장값은 런타임 id로 유지해
+	// 소비 계약(graphicConfigIds → config.id 필터)을 바꾸지 않는다.
+	const [graphicConfigs, setGraphicConfigs] = useState<GraphicStudioConfig[]>([])
+	const [graphicLoadError, setGraphicLoadError] = useState(false)
 
 	useEffect(() => {
 		void requestPublishedImageProfiles()
 			.then(setProfiles)
 			.catch(() => setProfilesLoadError(true))
+		void fetchGraphicStudioConfigs()
+			.then(setGraphicConfigs)
+			.catch(() => setGraphicLoadError(true))
 	}, [])
 
 	const types = policy.types ?? TYPE_ROWS.map((row) => row.value)
@@ -56,7 +64,7 @@ export function TemplateBackgroundPolicyField({ path, graphicOptions = [] }: Pro
 			<FieldLabel label="배경 설정" path={path} />
 
 			<FieldSet className="gap-2 rounded-md border p-3">
-				<FieldLegend variant="label">형식</FieldLegend>
+				<FieldLegend variant="label">사용할 형식</FieldLegend>
 				<div className="flex flex-wrap gap-2">
 					{TYPE_ROWS.map((row) => (
 						<Button
@@ -88,7 +96,7 @@ export function TemplateBackgroundPolicyField({ path, graphicOptions = [] }: Pro
 
 			{allows('image') ? (
 				<FieldSet className="gap-2 rounded-md border p-3">
-					<FieldLegend variant="label">허용 이미지 프로파일</FieldLegend>
+					<FieldLegend variant="label">사용할 이미지 프로파일</FieldLegend>
 					{profilesLoadError ? (
 						<p className="text-sm text-muted-foreground">
 							이미지 프로파일을 불러오지 못했습니다.
@@ -131,19 +139,24 @@ export function TemplateBackgroundPolicyField({ path, graphicOptions = [] }: Pro
 
 			{allows('graphic') ? (
 				<FieldSet className="gap-2 rounded-md border p-3">
-					<FieldLegend variant="label">허용 그래픽</FieldLegend>
-					{graphicOptions.length === 0 ? (
+					<FieldLegend variant="label">사용할 그래픽 프로파일</FieldLegend>
+					{graphicLoadError ? (
 						<p className="text-sm text-muted-foreground">
-							허용 가능한 그래픽이 없습니다.
+							그래픽 프로파일을 불러오지 못했습니다.
+						</p>
+					) : graphicConfigs.length === 0 ? (
+						<p className="text-sm text-muted-foreground">
+							발행된 그래픽 프로파일이 없습니다.
 						</p>
 					) : (
 						<div className="flex flex-wrap gap-2">
-							{graphicOptions.map((option) => {
-								const all = graphicOptions.map((candidate) => candidate.value)
-								const on = (policy.graphicConfigIds ?? all).includes(option.value)
+							{graphicConfigs.map((config) => {
+								// ponytail: 프로파일↔런타임 1:1 가정 — 같은 런타임의 프로파일이 둘이면 함께 토글된다.
+								const all = graphicConfigs.map((candidate) => candidate.id)
+								const on = (policy.graphicConfigIds ?? all).includes(config.id)
 								return (
 									<Button
-										key={option.value}
+										key={config.id}
 										type="button"
 										size="sm"
 										disabled={disabled}
@@ -154,12 +167,12 @@ export function TemplateBackgroundPolicyField({ path, graphicOptions = [] }: Pro
 												graphicConfigIds: toggleAllowedId(
 													policy.graphicConfigIds,
 													all,
-													option.value,
+													config.id,
 												),
 											})
 										}
 									>
-										{option.label}
+										{config.name}
 									</Button>
 								)
 							})}

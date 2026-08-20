@@ -26,29 +26,43 @@ afterEach(() => {
 	field.value = [150]
 })
 
+function renderField() {
+	render(
+		<StudioOutputNumberOptionsField
+			baseConfigs={[
+				{
+					id: 'sample',
+					artifacts: { raster: {} },
+					controller: { groups: [] },
+				},
+			]}
+			kind="print"
+			label="최대 인쇄 해상도"
+			options={[
+				{ label: '72ppi', value: '72' },
+				{ label: '150ppi', value: '150' },
+			]}
+			path="exportPolicy.print.allowedPpi"
+			source="graphic"
+		/>,
+	)
+}
+
 describe('StudioOutputNumberOptionsField', () => {
-	it('숫자 option을 JSON number[] 제한으로 저장한다', () => {
-		render(
-			<StudioOutputNumberOptionsField
-				baseConfigs={[
-					{
-						id: 'sample',
-						artifacts: { raster: {} },
-						controller: { groups: [] },
-					},
-				]}
-				kind="print"
-				label="허용 PPI"
-				options={[
-					{ label: '72ppi', value: '72' },
-					{ label: '150ppi', value: '150' },
-				]}
-				path="exportPolicy.print.allowedPpi"
-				source="graphic"
-			/>,
+	it('저장된 허용 목록의 최고값을 최대로 읽고, 낮은 최대를 고르면 그 이하만 담는다', () => {
+		renderField()
+		expect(screen.getByRole('radio', { name: '150ppi' })).toHaveAttribute(
+			'aria-checked',
+			'true',
 		)
-		expect(screen.getByRole('checkbox', { name: '150ppi' })).toBeChecked()
-		fireEvent.click(screen.getByRole('checkbox', { name: '72ppi' }))
+		fireEvent.click(screen.getByRole('radio', { name: '72ppi' }))
+		expect(field.setValue).toHaveBeenCalledWith([72])
+	})
+
+	it('최고값을 고르면 제한을 저장하지 않는다(undefined)', () => {
+		field.value = [72]
+		renderField()
+		fireEvent.click(screen.getByRole('radio', { name: '150ppi' }))
 		expect(field.setValue).toHaveBeenCalledWith(undefined)
 	})
 })
