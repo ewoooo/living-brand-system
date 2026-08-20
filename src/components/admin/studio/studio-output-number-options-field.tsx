@@ -10,9 +10,8 @@ import {
 } from './use-studio-runtime-manifest'
 
 /**
- * 공통 output 숫자 제한(PPI/FPS)의 Admin 필드 — 정본(76:4)대로 '최대'를 하나 고른다.
- * 저장은 기존 계약(JSON number[] 허용 목록) 그대로: 고른 최대 이하의 옵션 전부를 담고,
- * 최고값이면 undefined(제한 없음)로 접는다. 기존 저장값은 목록의 최고값을 최대로 읽는다.
+ * 공통 output 숫자 제한(PPI/FPS)의 Admin 필드 — 정본(76:4)의 '사용할 ○○' 다중 토글.
+ * JSON number[] 허용 목록으로 저장하고, 전부 켜면 undefined(제한 없음)로 접는다.
  */
 export function StudioOutputNumberOptionsField({
 	description,
@@ -40,10 +39,7 @@ export function StudioOutputNumberOptionsField({
 		kind === 'print' ? output?.print?.ppi : output?.video?.mp4.fps
 	const visibleOptions = options.filter(({ value }) => supported?.includes(Number(value)))
 	const numbers = visibleOptions.map(({ value }) => Number(value))
-	const stored = Array.isArray(value)
-		? value.filter((candidate) => numbers.includes(candidate))
-		: numbers
-	const max = stored.length ? Math.max(...stored) : Math.max(...numbers)
+	const selected = Array.isArray(value) ? value.filter((v) => numbers.includes(v)) : numbers
 
 	return (
 		<fieldset className="field-type json mb-5">
@@ -51,16 +47,16 @@ export function StudioOutputNumberOptionsField({
 			<FieldError message={errorMessage} path={path} showError={showError} />
 			{numbers.length > 0 && (
 				<ToggleGroup
-					type="single"
+					type="multiple"
 					variant="outline"
 					size="sm"
 					aria-label={label}
 					disabled={disabled}
-					value={String(max)}
+					value={selected.map(String)}
 					onValueChange={(next) => {
-						if (!next) return
-						const cap = Number(next)
-						const allowed = numbers.filter((candidate) => candidate <= cap)
+						const allowed = numbers.filter((candidate) =>
+							next.includes(String(candidate)),
+						)
 						setValue(allowed.length === numbers.length ? undefined : allowed)
 					}}
 				>

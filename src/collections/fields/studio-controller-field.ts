@@ -92,10 +92,9 @@ export function studioExportPolicyField({
 					{
 						name: 'allowedPpi',
 						type: 'json',
-						label: '최대 인쇄 해상도',
+						label: '사용할 인쇄 해상도',
 						admin: {
-							description:
-								'고른 값 이하의 표준 해상도만 허용합니다. 최고값이면 제한을 저장하지 않습니다.',
+							description: '전부 켜면 제한을 저장하지 않습니다.',
 							components: {
 								Field: {
 									path: '/components/admin/studio/studio-output-number-options-field#StudioOutputNumberOptionsField',
@@ -119,7 +118,7 @@ export function studioExportPolicyField({
 					{
 						name: 'allowedFps',
 						type: 'json',
-						label: '최대 영상 프레임',
+						label: '사용할 영상 프레임',
 						admin: {
 							components: {
 								Field: {
@@ -134,14 +133,15 @@ export function studioExportPolicyField({
 							},
 						},
 					},
-					{ name: 'maxWidth', type: 'number', min: 1, label: '최대 너비' },
-					{ name: 'maxHeight', type: 'number', min: 1, label: '최대 높이' },
+					// 정본(76:4) 순서: 프레임 → 길이 → 너비·높이.
 					{
 						name: 'maxDurationSeconds',
 						type: 'number',
 						min: 0.1,
-						label: '최대 길이(초)',
+						label: '최대 영상 길이(초)',
 					},
+					{ name: 'maxWidth', type: 'number', min: 1, label: '최대 너비' },
+					{ name: 'maxHeight', type: 'number', min: 1, label: '최대 높이' },
 				],
 			},
 			...(includeOriginal

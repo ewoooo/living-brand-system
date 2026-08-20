@@ -37,7 +37,7 @@ function renderField() {
 				},
 			]}
 			kind="print"
-			label="최대 인쇄 해상도"
+			label="사용할 인쇄 해상도"
 			options={[
 				{ label: '72ppi', value: '72' },
 				{ label: '150ppi', value: '150' },
@@ -49,20 +49,20 @@ function renderField() {
 }
 
 describe('StudioOutputNumberOptionsField', () => {
-	it('저장된 허용 목록의 최고값을 최대로 읽고, 낮은 최대를 고르면 그 이하만 담는다', () => {
+	it('허용 목록을 다중 토글로 저장하고, 전부 켜면 undefined로 접는다', () => {
 		renderField()
-		expect(screen.getByRole('radio', { name: '150ppi' })).toHaveAttribute(
-			'aria-checked',
+		expect(screen.getByRole('button', { name: '150ppi' })).toHaveAttribute(
+			'aria-pressed',
 			'true',
 		)
-		fireEvent.click(screen.getByRole('radio', { name: '72ppi' }))
-		expect(field.setValue).toHaveBeenCalledWith([72])
+		fireEvent.click(screen.getByRole('button', { name: '72ppi' }))
+		expect(field.setValue).toHaveBeenCalledWith(undefined)
 	})
 
-	it('최고값을 고르면 제한을 저장하지 않는다(undefined)', () => {
-		field.value = [72]
+	it('하나를 끄면 남은 옵션만 담는다', () => {
+		field.value = undefined
 		renderField()
-		fireEvent.click(screen.getByRole('radio', { name: '150ppi' }))
-		expect(field.setValue).toHaveBeenCalledWith(undefined)
+		fireEvent.click(screen.getByRole('button', { name: '150ppi' }))
+		expect(field.setValue).toHaveBeenCalledWith([72])
 	})
 })

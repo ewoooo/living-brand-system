@@ -1251,7 +1251,7 @@ export interface ImageProfile {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 고른 값 이하의 표준 해상도만 허용합니다. 최고값이면 제한을 저장하지 않습니다.
+       * 전부 켜면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {
@@ -1273,9 +1273,9 @@ export interface ImageProfile {
         | number
         | boolean
         | null;
+      maxDurationSeconds?: number | null;
       maxWidth?: number | null;
       maxHeight?: number | null;
-      maxDurationSeconds?: number | null;
     };
     original?: boolean | null;
   };
@@ -1363,7 +1363,7 @@ export interface GraphicProfile {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 고른 값 이하의 표준 해상도만 허용합니다. 최고값이면 제한을 저장하지 않습니다.
+       * 전부 켜면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {
@@ -1385,9 +1385,9 @@ export interface GraphicProfile {
         | number
         | boolean
         | null;
+      maxDurationSeconds?: number | null;
       maxWidth?: number | null;
       maxHeight?: number | null;
-      maxDurationSeconds?: number | null;
     };
   };
   updatedAt: string;
@@ -1497,7 +1497,7 @@ export interface Template {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 고른 값 이하의 표준 해상도만 허용합니다. 최고값이면 제한을 저장하지 않습니다.
+       * 전부 켜면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {
@@ -1519,9 +1519,9 @@ export interface Template {
         | number
         | boolean
         | null;
+      maxDurationSeconds?: number | null;
       maxWidth?: number | null;
       maxHeight?: number | null;
-      maxDurationSeconds?: number | null;
     };
   };
   sourceUrl?: string | null;
@@ -2817,9 +2817,9 @@ export interface ImageProfilesSelect<T extends boolean = true> {
           | T
           | {
               allowedFps?: T;
+              maxDurationSeconds?: T;
               maxWidth?: T;
               maxHeight?: T;
-              maxDurationSeconds?: T;
             };
         original?: T;
       };
@@ -2870,9 +2870,9 @@ export interface GraphicProfilesSelect<T extends boolean = true> {
           | T
           | {
               allowedFps?: T;
+              maxDurationSeconds?: T;
               maxWidth?: T;
               maxHeight?: T;
-              maxDurationSeconds?: T;
             };
       };
   updatedAt?: T;
@@ -2929,9 +2929,9 @@ export interface TemplatesSelect<T extends boolean = true> {
           | T
           | {
               allowedFps?: T;
+              maxDurationSeconds?: T;
               maxWidth?: T;
               maxHeight?: T;
-              maxDurationSeconds?: T;
             };
       };
   sourceUrl?: T;
