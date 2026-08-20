@@ -6,6 +6,8 @@
 
 @source "../../components/admin";
 @source "../../components/ui";
+/* 어드민이 스튜디오 컨트롤러 킷을 조립한다(정본 76:4·81:2) — 킷 전용 클래스가 여기 없으면 생성되지 않는다. */
+@source "../../components/shared";
 @source not inline("table");
 
 /* 대시보드 표면의 브랜드 녹색. Payload 테마에 대응 색이 없어 여기서 연다(정본: Figma HD_LBS_UI 67:2468).

@@ -3,7 +3,6 @@
 import { FieldLabel, useField } from '@payloadcms/ui'
 import { useEffect } from 'react'
 import { Controller } from '@/components/shared/controller'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
 import {
 	resolveStudioArtifactOutputFormats,
@@ -55,24 +54,19 @@ function NumberOptionChips({
 	if (numbers.length === 0) return null
 	return (
 		<Controller.Row label={label}>
-			<ToggleGroup
-				type="multiple"
-				variant="outline"
-				size="sm"
+			<Controller.Chips
 				aria-label={label}
 				disabled={disabled}
+				options={numbers.map((number) => ({
+					value: String(number),
+					label: `${number}${unit}`,
+				}))}
 				value={selected.map(String)}
-				onValueChange={(next) => {
+				onChange={(next) => {
 					const allowed = numbers.filter((candidate) => next.includes(String(candidate)))
 					onChange(allowed.length === numbers.length ? undefined : allowed)
 				}}
-			>
-				{numbers.map((number) => (
-					<ToggleGroupItem key={number} value={String(number)}>
-						{`${number}${unit}`}
-					</ToggleGroupItem>
-				))}
-			</ToggleGroup>
+			/>
 		</Controller.Row>
 	)
 }
@@ -175,14 +169,15 @@ export function StudioExportPolicyField({
 					<>
 						<Controller.Group title="허용" collapsible={false}>
 							<Controller.Row label="형식">
-								<ToggleGroup
-									type="multiple"
-									variant="outline"
-									size="sm"
+								<Controller.Chips
 									aria-label="허용 형식"
 									disabled={formatsField.disabled}
+									options={categories.map(({ value, label }) => ({
+										value,
+										label,
+									}))}
 									value={onCategories}
-									onValueChange={(next) => {
+									onChange={(next) => {
 										const allowed = supportedFormats.filter((format) =>
 											categories.some(
 												(category) =>
@@ -196,16 +191,7 @@ export function StudioExportPolicyField({
 												: allowed,
 										)
 									}}
-								>
-									{categories.map((category) => (
-										<ToggleGroupItem
-											key={category.value}
-											value={category.value}
-										>
-											{category.label}
-										</ToggleGroupItem>
-									))}
-								</ToggleGroup>
+								/>
 							</Controller.Row>
 						</Controller.Group>
 

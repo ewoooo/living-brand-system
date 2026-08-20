@@ -5,7 +5,6 @@ import type { JSONFieldClientComponent } from 'payload'
 import type { ComponentProps } from 'react'
 import { useEffect, useState } from 'react'
 import { Controller } from '@/components/shared/controller'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { fetchGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.client'
 import {
@@ -110,33 +109,22 @@ export function TemplateBackgroundPolicyField({ path }: Props) {
 					}
 				>
 					<Controller.Row label="형식">
-						<ToggleGroup
-							type="multiple"
-							variant="outline"
-							size="sm"
+						<Controller.Chips
 							aria-label="사용할 형식"
+							options={TYPE_ROWS}
 							disabled={disabled}
-							value={[...types]}
-							onValueChange={(next) => {
+							// 형식이 하나만 켜져 있으면 그 칩은 끌 수 없다 — getTemplateRuntimeManifest가
+							// 배경 형식이 전부 비면 던지고, 그 함수는 어드민 폼 렌더 중에도 불린다.
+							disabledValues={types.length === 1 ? types : undefined}
+							value={types}
+							onChange={(next) => {
 								const ordered = TYPE_ROWS.map((row) => row.value).filter((type) =>
 									next.includes(type),
 								)
 								if (ordered.length === 0) return
 								patch({ types: ordered })
 							}}
-						>
-							{TYPE_ROWS.map((row) => (
-								<ToggleGroupItem
-									key={row.value}
-									value={row.value}
-									// 형식이 하나만 켜져 있으면 그 칩은 끌 수 없다 — getTemplateRuntimeManifest가
-									// 배경 형식이 전부 비면 던지고, 그 함수는 어드민 폼 렌더 중에도 불린다.
-									disabled={allows(row.value) && types.length === 1}
-								>
-									{row.label}
-								</ToggleGroupItem>
-							))}
-						</ToggleGroup>
+						/>
 					</Controller.Row>
 				</Controller.Group>
 
