@@ -79,10 +79,14 @@ export const LayoutBlock: Block = {
 			options: [
 				{ label: '그리드', value: 'grid' },
 				{ label: '캐러셀', value: 'carousel' },
-				{ label: '피처드', value: 'featured' },
+				{ label: '피처드 — 첫 칸이 윗줄 전체', value: 'featured' },
+				{ label: '피처드 — 첫 칸이 왼쪽 열 전체', value: 'featuredSide' },
 				{ label: '메이슨리', value: 'masonry' },
 			],
-			admin: { description: '위젯 배치 방식입니다. grid/carousel/masonry/featured 구현.' },
+			admin: {
+				description:
+					'위젯 배치 방식입니다. 피처드 둘은 첫 자식만 크게 두고 나머지를 남은 칸에 흘립니다 — 윗줄이냐 왼쪽 열이냐만 다릅니다.',
+			},
 		},
 		{
 			name: 'columns',

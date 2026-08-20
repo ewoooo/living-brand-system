@@ -3,7 +3,6 @@
 import { type PointerEvent as ReactPointerEvent, useRef, useState } from 'react'
 import type { BrandBackground as Band } from '../brand-background'
 import type { LogoSources } from '../logo-set'
-import { WIDGET_CAPTION } from '../readout'
 
 const BAND_HEIGHT = 76
 
@@ -117,10 +116,6 @@ export function LogoOnBackgroundView({
 					</div>
 				</div>
 			</div>
-
-			<p className={`px-1 ${WIDGET_CAPTION}`}>
-				로고를 위아래로 끌어 보세요. 배경에 따라 쓸 수 있는 로고가 바뀝니다.
-			</p>
 		</div>
 	)
 }

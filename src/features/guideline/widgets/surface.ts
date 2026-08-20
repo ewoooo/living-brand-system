@@ -31,3 +31,18 @@ export const BRAND_PANEL_DARK = 'bg-neutral-900'
  */
 export const CI_STAGE_LIGHT = '#f2f2f2'
 export const CI_STAGE_DARK = '#000000'
+
+/**
+ * 브랜드 판 **위에 얹히는 컨트롤**(CI 락업의 SVG 내보내기 버튼).
+ *
+ * 🔴 판이 테마를 따르지 않으므로 그 위의 컨트롤도 따르면 안 된다. `outline` 버튼의 기본값은
+ *    `border-foreground`·`text-foreground`라, 다크 모드에서 **흰 판 위에 흰 아이콘**이 놓여
+ *    사라진다(사용자 지적 2026-08-20). 판의 tone이 정해야 하는 값이다.
+ * 🔑 판 색이 둘뿐이라(`CI_STAGE_LIGHT`·`CI_STAGE_DARK`) 짝도 둘이면 된다 — 판을 뒤집은 면에
+ *    그 면의 전경을 얹는다. 알파를 조금 남기는 것은 버튼이 아트워크가 아니라 UI로 읽히게 하려는 것이고,
+ *    hover에서 불투명해진다.
+ */
+export const CI_STAGE_CONTROL_LIGHT =
+	'border-neutral-900 bg-neutral-900/85 text-neutral-50 hover:bg-neutral-900 hover:text-neutral-50'
+export const CI_STAGE_CONTROL_DARK =
+	'border-neutral-100 bg-neutral-100/85 text-neutral-900 hover:bg-neutral-100 hover:text-neutral-900'

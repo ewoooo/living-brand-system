@@ -557,9 +557,9 @@ export interface LayoutBlock {
    */
   innerBackground?: (number | null) | BrandColor;
   /**
-   * 위젯 배치 방식입니다. grid/carousel/masonry/featured 구현.
+   * 위젯 배치 방식입니다. 피처드 둘은 첫 자식만 크게 두고 나머지를 남은 칸에 흘립니다 — 윗줄이냐 왼쪽 열이냐만 다릅니다.
    */
-  arrangement?: ('grid' | 'carousel' | 'featured' | 'masonry') | null;
+  arrangement?: ('grid' | 'carousel' | 'featured' | 'featuredSide' | 'masonry') | null;
   /**
    * grid 열 수입니다(행은 자식 개수로 자동).
    */
@@ -627,6 +627,114 @@ export interface ImageLeaf {
  * via the `definition` "CiLockupWidget".
  */
 export interface CiLockupWidget {
+  /**
+   * 초기값 — H (60~240).
+   */
+  h?: number | null;
+  /**
+   * 초기값 — 자회사.
+   */
+  subsidiaryOn?: boolean | null;
+  /**
+   * 초기값 — 자회사명.
+   */
+  subsidiary?:
+    | (
+        | '현대중공업'
+        | '현대삼호'
+        | '현대마린솔루션'
+        | '현대마린엔진'
+        | '현대이엔티'
+        | '현대오일뱅크'
+        | '현대케미칼'
+        | '현대쉘베이스오일'
+        | '현대오씨아이'
+        | '현대이앤에프'
+        | '현대일렉트릭'
+        | '현대에너지솔루션'
+        | '현대사이트솔루션'
+        | '현대로보틱스'
+        | '현대스포츠'
+        | '하이드로젠'
+        | '건설기계'
+        | '한국조선해양'
+      )
+    | null;
+  /**
+   * 초기값 — 해외지사.
+   */
+  branchOn?: boolean | null;
+  /**
+   * 초기값 — 지사명.
+   */
+  branch?:
+    | (
+        | 'EUROPE R&D CENTER'
+        | 'LONDON'
+        | 'GERMANY'
+        | 'ATHENS'
+        | 'OSLO'
+        | 'SINGAPORE'
+        | 'TOKYO'
+        | 'CHINA'
+        | 'VIETNAM'
+        | 'INDIA'
+        | 'PHILIPPINES'
+        | 'DUBAI'
+        | 'SAUDI ARABIA'
+        | 'HOUSTON'
+        | 'ATLANTA'
+        | 'PANAMA'
+        | 'BRAZIL'
+        | 'SOUTH AFRICA'
+      )
+    | null;
+  /**
+   * 초기값 — 꼴.
+   */
+  form?: ('horizontal' | 'horizontalA' | 'horizontalB' | 'vertical') | null;
+  /**
+   * 초기값 — 언어.
+   */
+  language?: ('ko' | 'en' | 'hd') | null;
+  /**
+   * 초기값 — 색상 표현.
+   */
+  colorType?: ('fullColor' | 'whiteWordmark' | 'mono') | null;
+  /**
+   * 초기값 — 단색 색상.
+   */
+  mono?: ('BLACK' | 'WHITE') | null;
+  /**
+   * 초기값 — 클리어스페이스.
+   */
+  clearSpace?: ('off' | 'normal' | 'exception') | null;
+  /**
+   * 초기값 — 치수.
+   */
+  measured?: boolean | null;
+  /**
+   * H를 알약에 노출합니다. 기본은 꺼짐 — H는 독자가 고를 값이 아니라 나란히 놓인 락업들의 비율을 맞추려고 저작자가 정하는 값입니다.
+   */
+  heightControl?: boolean | null;
+  /**
+   * 알약에서 뺄 축. 뺀 축은 위 초기값에 고정됩니다(예: 자회사 섹션에서 해외지사·지사명).
+   */
+  hiddenControls?:
+    | (
+        | 'h'
+        | 'subsidiaryOn'
+        | 'subsidiary'
+        | 'branchOn'
+        | 'branch'
+        | 'form'
+        | 'language'
+        | 'colorType'
+        | 'mono'
+        | 'clearSpace'
+        | 'measured'
+      )[]
+    | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'ciLockupWidget';
@@ -2384,6 +2492,19 @@ export interface ImageLeafSelect<T extends boolean = true> {
  * via the `definition` "CiLockupWidget_select".
  */
 export interface CiLockupWidgetSelect<T extends boolean = true> {
+  h?: T;
+  subsidiaryOn?: T;
+  subsidiary?: T;
+  branchOn?: T;
+  branch?: T;
+  form?: T;
+  language?: T;
+  colorType?: T;
+  mono?: T;
+  clearSpace?: T;
+  measured?: T;
+  heightControl?: T;
+  hiddenControls?: T;
   id?: T;
   blockName?: T;
 }

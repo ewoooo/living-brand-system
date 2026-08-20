@@ -50,12 +50,28 @@ export function GuidelineControllerScope({
 	)
 	// 🔑 값은 **실효 그룹 전체**에서 만든다. 알약에 안 실리는(readonly) 컨트롤도 값은 있어야
 	//    판형이 admin이 고정한 값으로 그려진다.
-	const [values, setValues] = useState<ControllerValues>(() => createControllerValues(groups))
+	//
+	// 🔴 **제한이 바뀌면 값을 다시 만든다.** admin에서 초기값을 고치고 저장하면 라이브 프리뷰는
+	//    `router.refresh()`(soft refresh)로 갱신되는데, 그건 마운트된 client state를 **유지**한다.
+	//    그래서 이 state를 되맞추지 않으면 알약에 남은 축은 옛 값에 머물고 「저장했는데 안 바뀐다」가
+	//    된다(뺀 축은 props로 내려와 반영되므로 비대칭까지 생긴다).
+	// 🔴 `restrictions`는 렌더마다 새 객체다(`toRestrictions`가 그때 만든다) — 참조로 비교하면 매
+	//    렌더 초기화가 되어 컨트롤을 조작할 수 없다. 그래서 **직렬화한 서명**으로 비교한다.
+	const signature = JSON.stringify(restrictions ?? null)
+	const [state, setState] = useState(() => ({
+		signature,
+		values: createControllerValues(groups),
+	}))
+	if (state.signature !== signature) {
+		// props가 바뀔 때 state를 조정하는 React 공식 패턴 — effect보다 한 프레임 빠르고 깜빡임이 없다.
+		setState({ signature, values: createControllerValues(groups) })
+	}
+	const values = state.values
 
 	// set은 값이 바뀌어도 같은 참조여야 한다 — 소비자가 effect 의존에 넣을 수 있게.
 	const set = useCallback(
 		(controlId: string, value: ControllerControlValue) =>
-			setValues((prev) => ({ ...prev, [controlId]: value })),
+			setState((prev) => ({ ...prev, values: { ...prev.values, [controlId]: value } })),
 		[],
 	)
 
@@ -88,6 +104,20 @@ export function useGuidelineController(): GuidelineControllerScopeValue {
 export function controllerNumber(values: ControllerValues, id: string, fallback: number): number {
 	const value = values[id]
 	return typeof value === 'number' ? value : fallback
+}
+
+/** 🔑 `select` 값을 읽는다. 허용 목록을 함께 받아, admin이 선택지를 좁혔거나 스코프 밖일 때
+ *  위젯이 알 수 없는 문자열로 그려지지 않게 한다. */
+export function controllerString<T extends string>(
+	values: ControllerValues,
+	id: string,
+	allowed: readonly T[],
+	fallback: T,
+): T {
+	const value = values[id]
+	return typeof value === 'string' && (allowed as readonly string[]).includes(value)
+		? (value as T)
+		: fallback
 }
 
 export function controllerBoolean(

@@ -46,6 +46,19 @@ export function easeMorph(x: number) {
 /** CSS `transition`·`animate`에 함께 쓰는 값. */
 export const MORPH = `${MORPH_MS}ms ${MORPH_EASING}`
 
+/**
+ * 겹쳐 놓은 두 층을 갈아탈 때, **나가는 층이 기다리는 시간**(ms).
+ *
+ * 🔴 알파는 더해지지 않고 **곱해진다.** 아래 층 `o₁` 위에 위 층 `o₂`를 얹으면 보이는 총량은
+ *    `o₂ + o₁(1−o₂)`이고, 같은 곡선으로 `o₁=1−e`·`o₂=e`를 주면 `1 − e + e²`가 되어 중간에서
+ *    **0.75까지 꺼진다**. 곡선을 선형으로 바꿔도 같다 — 원인은 이징이 아니라 합성이다.
+ *    두 층 다 로고를 그리므로 그 구간에서 로고가 반투명해 보인다(사용자 지적 2026-08-20).
+ * 🔑 그래서 **들어오는 층만 먼저 켠다.** 나가는 층이 이만큼 제 값에 머물러 있는 동안 총량이 1로
+ *    유지되고, 그 뒤로는 들어오는 층이 이미 충분히 올라와 있어 남는 딥이 얕다(이 곡선에서 실측 계산
+ *    최저 ≈0.96). 값은 `MORPH_MS`의 1/3 — 더 늘리면 두 층이 겹쳐 보이는 구간이 길어진다.
+ */
+export const MORPH_HOLD_MS = Math.round(MORPH_MS / 3)
+
 /** 움직임 줄이기를 켠 사용자에겐 전환하지 않는다. */
 export function reducedMotion() {
 	return window.matchMedia('(prefers-reduced-motion: reduce)').matches

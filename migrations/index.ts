@@ -71,9 +71,16 @@ import * as migration_20260818_093907_remove_plugins_collection from './20260818
 import * as migration_20260818_102721_sample_image_line_art from './20260818_102721_sample_image_line_art';
 import * as migration_20260819_054538_sample_image_group from './20260819_054538_sample_image_group';
 import * as migration_20260819_075057_drop_layout_grid_locks from './20260819_075057_drop_layout_grid_locks';
+import * as migration_20260819_084217_ci_lockup_controller_fields from './20260819_084217_ci_lockup_controller_fields';
+import * as migration_20260819_085700_ci_lockup_axis_defaults from './20260819_085700_ci_lockup_axis_defaults';
 import * as migration_20260819_090753_ci_lockup_snapshot_repair from './20260819_090753_ci_lockup_snapshot_repair';
 import * as migration_20260819_090804_guideline_background_tone from './20260819_090804_guideline_background_tone';
+import * as migration_20260819_090805_ci_lockup_height_axis from './20260819_090805_ci_lockup_height_axis';
+import * as migration_20260819_094517_ci_sections_snapshot_merge from './20260819_094517_ci_sections_snapshot_merge';
 import * as migration_20260819_101815_template_background_policy from './20260819_101815_template_background_policy';
+import * as migration_20260820_013946_ci_lockup_height_control from './20260820_013946_ci_lockup_height_control';
+import * as migration_20260820_022413_block_featured_side from './20260820_022413_block_featured_side';
+import * as migration_20260820_050919_ci_sections_stage_snapshot_merge from './20260820_050919_ci_sections_stage_snapshot_merge';
 
 export const migrations = [
   {
@@ -442,6 +449,16 @@ export const migrations = [
     name: '20260819_075057_drop_layout_grid_locks',
   },
   {
+    up: migration_20260819_084217_ci_lockup_controller_fields.up,
+    down: migration_20260819_084217_ci_lockup_controller_fields.down,
+    name: '20260819_084217_ci_lockup_controller_fields',
+  },
+  {
+    up: migration_20260819_085700_ci_lockup_axis_defaults.up,
+    down: migration_20260819_085700_ci_lockup_axis_defaults.down,
+    name: '20260819_085700_ci_lockup_axis_defaults',
+  },
+  {
     up: migration_20260819_090753_ci_lockup_snapshot_repair.up,
     down: migration_20260819_090753_ci_lockup_snapshot_repair.down,
     name: '20260819_090753_ci_lockup_snapshot_repair',
@@ -452,8 +469,33 @@ export const migrations = [
     name: '20260819_090804_guideline_background_tone',
   },
   {
+    up: migration_20260819_090805_ci_lockup_height_axis.up,
+    down: migration_20260819_090805_ci_lockup_height_axis.down,
+    name: '20260819_090805_ci_lockup_height_axis',
+  },
+  {
+    up: migration_20260819_094517_ci_sections_snapshot_merge.up,
+    down: migration_20260819_094517_ci_sections_snapshot_merge.down,
+    name: '20260819_094517_ci_sections_snapshot_merge',
+  },
+  {
     up: migration_20260819_101815_template_background_policy.up,
     down: migration_20260819_101815_template_background_policy.down,
     name: '20260819_101815_template_background_policy',
+  },
+  {
+    up: migration_20260820_013946_ci_lockup_height_control.up,
+    down: migration_20260820_013946_ci_lockup_height_control.down,
+    name: '20260820_013946_ci_lockup_height_control',
+  },
+  {
+    up: migration_20260820_022413_block_featured_side.up,
+    down: migration_20260820_022413_block_featured_side.down,
+    name: '20260820_022413_block_featured_side',
+  },
+  {
+    up: migration_20260820_050919_ci_sections_stage_snapshot_merge.up,
+    down: migration_20260820_050919_ci_sections_stage_snapshot_merge.down,
+    name: '20260820_050919_ci_sections_stage_snapshot_merge'
   },
 ];

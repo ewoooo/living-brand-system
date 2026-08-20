@@ -65,6 +65,27 @@ const RAW_COLOR = new RegExp(
  */
 const DARK_VARIANT = /\bdark:/
 
+/**
+ * 판 밖 캡션.
+ *
+ * 🔴 위젯이 그리는 것은 판(canvas) 하나뿐이다(`docs/11` §8 「위젯은 판만 그립니다」). 사용법 안내·
+ *    이름·규격 나열·경고를 위젯이 판 밖에 붙이지 않는다 — 사용자 지정 2026-08-20: 「위젯은 이미지와
+ *    같아서 해당 판 = canvas만 보이면 끝이야.」 설명이 필요하면 블록 콘텐츠가 쓰고, 조작을 글로
+ *    설명해야 이해되는 위젯이면 고칠 것은 캡션이 아니라 어포던스다.
+ * 🔴 판 **안**의 글자는 이 규칙이 아니다(표본 셀 머리글·도판 치수 라벨은 그림의 일부다). 그래서
+ *    `SPEC_READOUT`이 아니라 캡션 어휘만 본다.
+ */
+const WIDGET_CAPTION_USE = /\bWIDGET_CAPTION\b/
+
+/**
+ * 아직 걷어내지 못한 캡션. **둘 다 값 결정이 남아 있어서**지 규칙의 예외라서가 아니다.
+ * 🔴 이 목록은 늘리지 않는다 — 새 위젯이 여기 들어오려 하면 캡션을 지우는 것이 답이다.
+ */
+const CAPTION_DEBT = ['layout-grid/component.tsx', 'stem-clear-space/view.tsx']
+
+/** 어휘를 **정의**하는 자리. 검사 대상이 아니다(`surface.ts`가 팔레트에 대해 그런 것과 같다). */
+const CAPTION_VOCAB_HOME = 'readout.ts'
+
 function sourceFiles(dir: string): string[] {
 	return readdirSync(dir).flatMap((entry) => {
 		const full = path.join(dir, entry)
@@ -129,5 +150,26 @@ describe('위젯 시각 어휘', () => {
 		files.map((file) => [path.relative(WIDGETS, file), file]),
 	)('%s 가 dark: 변형으로 분기하지 않는다', (_label, file) => {
 		expect(offendingLines(file, DARK_VARIANT)).toEqual([])
+	})
+
+	// 🔴 빚 목록이 낡으면(해당 위젯의 캡션을 지웠는데 이름이 남으면) 그 자리가 조용히 열린다.
+	it('캡션 빚 목록에 실제로 캡션이 남아 있다', () => {
+		for (const debt of CAPTION_DEBT) {
+			expect(
+				offendingLines(path.join(WIDGETS, debt), WIDGET_CAPTION_USE).length,
+				`${debt} 의 캡션이 사라졌다 — CAPTION_DEBT에서 지울 것`,
+			).toBeGreaterThan(0)
+		}
+	})
+
+	it.each(
+		files
+			.filter((file) => {
+				const relative = path.relative(WIDGETS, file)
+				return relative !== CAPTION_VOCAB_HOME && !CAPTION_DEBT.includes(relative)
+			})
+			.map((file) => [path.relative(WIDGETS, file), file]),
+	)('%s 가 판 밖 캡션을 그리지 않는다', (_label, file) => {
+		expect(offendingLines(file, WIDGET_CAPTION_USE)).toEqual([])
 	})
 })
