@@ -4,6 +4,7 @@ import { FieldDescription, FieldError, FieldLabel, useField } from '@payloadcms/
 import type { SelectFieldClientComponent } from 'payload'
 import type { ComponentProps } from 'react'
 import { useEffect } from 'react'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
 	STUDIO_OUTPUT_FORMAT_OPTIONS,
 	type StudioOutputFormat,
@@ -55,26 +56,24 @@ export function StudioOutputFormatsField({
 			{formats.length === 0 ? (
 				<p className="text-sm text-muted-foreground">Runtime을 먼저 선택해 주세요.</p>
 			) : (
-				<div className="flex flex-wrap gap-3">
+				<ToggleGroup
+					type="multiple"
+					variant="outline"
+					size="sm"
+					aria-label="허용 형식"
+					disabled={disabled}
+					value={formats.filter((format) => selected.has(format))}
+					onValueChange={(next) => {
+						const allowed = formats.filter((format) => next.includes(format))
+						setValue(allowed.length === formats.length ? undefined : allowed)
+					}}
+				>
 					{formats.map((format) => (
-						<label key={format} className="flex items-center gap-1.5 text-sm">
-							<input
-								type="checkbox"
-								checked={selected.has(format)}
-								disabled={disabled}
-								onChange={() => {
-									const next = formats.filter((candidate) =>
-										candidate === format
-											? !selected.has(candidate)
-											: selected.has(candidate),
-									)
-									setValue(next.length === formats.length ? undefined : next)
-								}}
-							/>
+						<ToggleGroupItem key={format} value={format}>
 							{OUTPUT_FORMAT_LABELS.get(format)}
-						</label>
+						</ToggleGroupItem>
 					))}
-				</div>
+				</ToggleGroup>
 			)}
 			<FieldDescription
 				description="선택한 Runtime Artifact와 Exporter가 지원하는 형식만 표시합니다. 모두 선택하면 별도 제한을 저장하지 않습니다."

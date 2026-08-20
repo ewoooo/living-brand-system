@@ -47,9 +47,9 @@ describe('StudioOutputFormatsField', () => {
 			} as never),
 		)
 
-		expect(screen.getByRole('checkbox', { name: 'PNG' })).toBeInTheDocument()
-		expect(screen.queryByRole('checkbox', { name: 'SVG' })).not.toBeInTheDocument()
-		expect(screen.getByRole('checkbox', { name: 'MP4' })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: 'PNG' })).toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: 'SVG' })).not.toBeInTheDocument()
+		expect(screen.getByRole('button', { name: 'MP4' })).toBeInTheDocument()
 		await waitFor(() => expect(payloadForm.setValue).not.toHaveBeenCalled())
 	})
 
@@ -61,9 +61,9 @@ describe('StudioOutputFormatsField', () => {
 			} as never),
 		)
 
-		expect(screen.getByRole('checkbox', { name: 'PNG' })).toBeInTheDocument()
-		expect(screen.getByRole('checkbox', { name: 'JPEG' })).toBeInTheDocument()
-		expect(screen.getByRole('checkbox', { name: 'TIFF' })).toBeInTheDocument()
-		expect(screen.getByRole('checkbox', { name: 'PDF' })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: 'PNG' })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: 'JPEG' })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: 'TIFF' })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: 'PDF' })).toBeInTheDocument()
 	})
 })

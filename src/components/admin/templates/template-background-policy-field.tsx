@@ -1,11 +1,11 @@
 'use client'
 
-import { FieldDescription, FieldLabel, useField } from '@payloadcms/ui'
+import { FieldLabel, useField } from '@payloadcms/ui'
 import type { JSONFieldClientComponent } from 'payload'
 import type { ComponentProps } from 'react'
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { FieldLegend, FieldSet } from '@/components/ui/field'
+import { Controller } from '@/components/shared/controller'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { fetchGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.client'
 import {
@@ -24,12 +24,49 @@ const TYPE_ROWS: readonly { value: TemplateBackgroundType; label: string }[] = [
 	{ value: 'graphic', label: '그래픽' },
 ]
 
+const ON_OFF = [
+	{ value: 'on', label: 'On' },
+	{ value: 'off', label: 'Off' },
+] as const
+
 type Props = ComponentProps<JSONFieldClientComponent>
 
 function readPolicy(value: unknown): TemplateBackgroundPolicy {
 	const policy = value && typeof value === 'object' ? (value as TemplateBackgroundPolicy) : {}
 	// REST/local API로만 도달 가능한 malformed shape(예: types가 배열이 아님) 방어.
 	return Array.isArray(policy.types) ? policy : { ...policy, types: undefined }
+}
+
+/** 프로파일당 한 행 + On/Off 세그먼트 — 정본(76:4)의 허용 목록 행. 레이어 카드와 같은 언어다. */
+function AllowedProfileRows<T extends string | number>({
+	disabled,
+	items,
+	selectedIds,
+	onToggle,
+}: {
+	disabled?: boolean
+	items: readonly { id: T; name: string }[]
+	selectedIds: readonly T[] | undefined
+	onToggle: (all: T[], id: T) => void
+}) {
+	const all = items.map((item) => item.id)
+	return (
+		<>
+			{items.map((item) => {
+				const on = (selectedIds ?? all).includes(item.id)
+				return (
+					<Controller.Row key={item.id} label={item.name} disabled={disabled}>
+						<Controller.Segmented
+							aria-label={`${item.name} 허용`}
+							options={ON_OFF}
+							value={on ? 'on' : 'off'}
+							onChange={() => onToggle(all, item.id)}
+						/>
+					</Controller.Row>
+				)
+			})}
+		</>
+	)
 }
 
 export function TemplateBackgroundPolicyField({ path }: Props) {
@@ -60,126 +97,108 @@ export function TemplateBackgroundPolicyField({ path }: Props) {
 	}
 
 	return (
-		<div className="field-type json mb-5 flex flex-col gap-4">
+		<div className="field-type json mb-5">
 			<FieldLabel label="배경 설정" path={path} />
-
-			<FieldSet className="gap-2 rounded-md border p-3">
-				<FieldLegend variant="label">사용할 형식</FieldLegend>
-				<div className="flex flex-wrap gap-2">
-					{TYPE_ROWS.map((row) => (
-						<Button
-							key={row.value}
-							type="button"
+			<div className="mt-2 flex max-w-3xl flex-col rounded-xl border p-4">
+				<Controller.Group
+					title="사용할 형식"
+					collapsible={false}
+					trailing={
+						<span className="text-muted-foreground text-xs">
+							반드시 하나는 사용합니다
+						</span>
+					}
+				>
+					<Controller.Row label="형식">
+						<ToggleGroup
+							type="multiple"
+							variant="outline"
 							size="sm"
-							// 형식이 하나만 켜져 있으면 그 버튼은 끌 수 없다 — getTemplateRuntimeManifest가
-							// 배경 형식이 전부 비면 던지고, 그 함수는 어드민 폼 렌더 중에도 불린다.
-							disabled={disabled || (allows(row.value) && types.length === 1)}
-							aria-pressed={allows(row.value)}
-							variant={allows(row.value) ? 'muted' : 'outline'}
-							onClick={() =>
-								patch({
-									types: types.includes(row.value)
-										? types.filter((type) => type !== row.value)
-										: [...types, row.value],
-								})
-							}
+							aria-label="사용할 형식"
+							disabled={disabled}
+							value={[...types]}
+							onValueChange={(next) => {
+								const ordered = TYPE_ROWS.map((row) => row.value).filter((type) =>
+									next.includes(type),
+								)
+								if (ordered.length === 0) return
+								patch({ types: ordered })
+							}}
 						>
-							{row.label}
-						</Button>
-					))}
-				</div>
-				<FieldDescription
-					description="최소 하나는 켜야 합니다 — 마지막 형식은 끌 수 없습니다."
-					path={path}
-				/>
-			</FieldSet>
+							{TYPE_ROWS.map((row) => (
+								<ToggleGroupItem
+									key={row.value}
+									value={row.value}
+									// 형식이 하나만 켜져 있으면 그 칩은 끌 수 없다 — getTemplateRuntimeManifest가
+									// 배경 형식이 전부 비면 던지고, 그 함수는 어드민 폼 렌더 중에도 불린다.
+									disabled={allows(row.value) && types.length === 1}
+								>
+									{row.label}
+								</ToggleGroupItem>
+							))}
+						</ToggleGroup>
+					</Controller.Row>
+				</Controller.Group>
 
-			{allows('image') ? (
-				<FieldSet className="gap-2 rounded-md border p-3">
-					<FieldLegend variant="label">사용할 이미지 프로파일</FieldLegend>
-					{profilesLoadError ? (
-						<p className="text-sm text-muted-foreground">
-							이미지 프로파일을 불러오지 못했습니다.
-						</p>
-					) : profiles.length === 0 ? (
-						<p className="text-sm text-muted-foreground">
-							발행된 이미지 프로파일이 없습니다.
-						</p>
-					) : (
-						<div className="flex flex-wrap gap-2">
-							{profiles.map((profile) => {
-								const all = profiles.map((candidate) => candidate.id)
-								const on = (policy.imageConfigIds ?? all).includes(profile.id)
-								return (
-									<Button
-										key={profile.id}
-										type="button"
-										size="sm"
-										disabled={disabled}
-										aria-pressed={on}
-										variant={on ? 'muted' : 'outline'}
-										onClick={() =>
-											patch({
-												imageConfigIds: toggleAllowedId(
-													policy.imageConfigIds,
-													all,
-													profile.id,
-												),
-											})
-										}
-									>
-										{profile.name}
-									</Button>
-								)
-							})}
-						</div>
-					)}
-				</FieldSet>
-			) : null}
+				{allows('image') ? (
+					<Controller.Group title="사용할 이미지 프로파일" collapsible={false}>
+						{profilesLoadError ? (
+							<p className="text-muted-foreground text-sm">
+								이미지 프로파일을 불러오지 못했습니다.
+							</p>
+						) : profiles.length === 0 ? (
+							<p className="text-muted-foreground text-sm">
+								발행된 이미지 프로파일이 없습니다.
+							</p>
+						) : (
+							<AllowedProfileRows
+								disabled={disabled}
+								items={profiles}
+								selectedIds={policy.imageConfigIds}
+								onToggle={(all, id) =>
+									patch({
+										imageConfigIds: toggleAllowedId(
+											policy.imageConfigIds,
+											all,
+											id,
+										),
+									})
+								}
+							/>
+						)}
+					</Controller.Group>
+				) : null}
 
-			{allows('graphic') ? (
-				<FieldSet className="gap-2 rounded-md border p-3">
-					<FieldLegend variant="label">사용할 그래픽 프로파일</FieldLegend>
-					{graphicLoadError ? (
-						<p className="text-sm text-muted-foreground">
-							그래픽 프로파일을 불러오지 못했습니다.
-						</p>
-					) : graphicConfigs.length === 0 ? (
-						<p className="text-sm text-muted-foreground">
-							발행된 그래픽 프로파일이 없습니다.
-						</p>
-					) : (
-						<div className="flex flex-wrap gap-2">
-							{graphicConfigs.map((config) => {
+				{allows('graphic') ? (
+					<Controller.Group title="사용할 그래픽 프로파일" collapsible={false}>
+						{graphicLoadError ? (
+							<p className="text-muted-foreground text-sm">
+								그래픽 프로파일을 불러오지 못했습니다.
+							</p>
+						) : graphicConfigs.length === 0 ? (
+							<p className="text-muted-foreground text-sm">
+								발행된 그래픽 프로파일이 없습니다.
+							</p>
+						) : (
+							<AllowedProfileRows
+								disabled={disabled}
 								// ponytail: 프로파일↔런타임 1:1 가정 — 같은 런타임의 프로파일이 둘이면 함께 토글된다.
-								const all = graphicConfigs.map((candidate) => candidate.id)
-								const on = (policy.graphicConfigIds ?? all).includes(config.id)
-								return (
-									<Button
-										key={config.id}
-										type="button"
-										size="sm"
-										disabled={disabled}
-										aria-pressed={on}
-										variant={on ? 'muted' : 'outline'}
-										onClick={() =>
-											patch({
-												graphicConfigIds: toggleAllowedId(
-													policy.graphicConfigIds,
-													all,
-													config.id,
-												),
-											})
-										}
-									>
-										{config.name}
-									</Button>
-								)
-							})}
-						</div>
-					)}
-				</FieldSet>
-			) : null}
+								items={graphicConfigs}
+								selectedIds={policy.graphicConfigIds}
+								onToggle={(all, id) =>
+									patch({
+										graphicConfigIds: toggleAllowedId(
+											policy.graphicConfigIds,
+											all,
+											id,
+										),
+									})
+								}
+							/>
+						)}
+					</Controller.Group>
+				) : null}
+			</div>
 		</div>
 	)
 }
