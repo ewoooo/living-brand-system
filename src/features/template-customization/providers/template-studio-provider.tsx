@@ -742,7 +742,8 @@ function applyImageRequestResult(
 	return { ...current, [slotId]: { ...previous, ...patch } }
 }
 
-function updateTemplateBackground(
+/** patch의 모든 키를 반영해야 한다 — 키를 빠뜨리면 컨트롤이 눌려도 상태가 안 바뀐다(2026-08-20 디머 실사고). export는 그 회귀 테스트용. */
+export function updateTemplateBackground(
 	current: TemplateBackgroundState,
 	patch: TemplateBackgroundPatch,
 	contracts: readonly ResolvedTemplateImageConfig[],
@@ -758,6 +759,8 @@ function updateTemplateBackground(
 		...current,
 		...(patch.imageMode === undefined ? {} : { imageMode: patch.imageMode }),
 		...(prompt === undefined ? {} : { prompt }),
+		...(patch.dimmer === undefined ? {} : { dimmer: patch.dimmer }),
+		...(patch.dimmerOpacity === undefined ? {} : { dimmerOpacity: patch.dimmerOpacity }),
 	}
 }
 
