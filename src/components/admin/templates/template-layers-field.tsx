@@ -220,7 +220,7 @@ export function TemplateLayersField() {
 		!!selected && canAssignImage(selected) && !!nodeConfigs[selected.id]?.backgroundImage
 
 	return (
-		<div className="mb-[var(--base)]">
+		<div className="lbs-kit mb-[var(--base)]">
 			<AdminSectionHeading>레이어 설정</AdminSectionHeading>
 			<div className="flex items-start" style={{ gap: layout.workspaceGap }}>
 				<TemplateCanvas

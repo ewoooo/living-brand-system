@@ -8,6 +8,24 @@
 @source "../../components/ui";
 /* 어드민이 스튜디오 컨트롤러 킷을 조립한다(정본 76:4·81:2) — 킷 전용 클래스가 여기 없으면 생성되지 않는다. */
 @source "../../components/shared";
+
+/* 킷 파츠는 프론트 globals의 preflight(UA 버튼 리셋)를 전제한다 — 이 번들은 base를 import하지
+   않아 버튼이 브라우저 기본(테두리·배경·시스템 서체)으로 노출된다(2026-08-20 실측: 칩·On/Off가
+   테두리 박스로 렌더). Payload 자체 UI를 건드리지 않도록 킷을 조립하는 표면(.lbs-kit) 하위로만
+   리셋하고, 유틸리티가 항상 이기도록 base 레이어에 둔다. */
+@layer base {
+	.lbs-kit :where(button, input, select, textarea) {
+		font: inherit;
+		color: inherit;
+	}
+	.lbs-kit :where(button) {
+		appearance: none;
+		background-color: transparent;
+		border: 0;
+		padding: 0;
+		cursor: pointer;
+	}
+}
 @source not inline("table");
 
 /* 대시보드 표면의 브랜드 녹색. Payload 테마에 대응 색이 없어 여기서 연다(정본: Figma HD_LBS_UI 67:2468).
