@@ -33,9 +33,13 @@ describe('measureOverlayLegibility', () => {
 		expect(m.p05ContrastRatio).toBeGreaterThan(10)
 	})
 
-	it('밝은 배경 위 흰 오버레이는 대비가 낮다 — 심어둔 위반을 잡는다', () => {
-		const m = measured(measureOverlayLegibility(grid(200, bar)))
-		expect(m.p05ContrastRatio).toBeLessThan(3)
+	it('🔑 배경 전체가 오버레이와 비슷하면 오버레이로 인정하지 않는다', () => {
+		// 픽셀만으로는 「묻힌 오버레이」와 「오버레이 없음」이 구별되지 않는다 → 담당자 검토로 보낸다.
+		const buried = measureOverlayLegibility(grid(200, bar))
+		expect(buried.state).toBe('not_measurable')
+		if (buried.state === 'not_measurable') {
+			expect(buried.reasonCode).toBe('overlay_not_detected')
+		}
 	})
 
 	it('🔑 일부 구간만 묻히면 중앙값은 통과하고 하위 5%가 떨어진다', () => {
@@ -83,10 +87,12 @@ describe('overlay-legibility 등록', () => {
 		criteria: [{ measurement: 'p05ContrastRatio', operator: 'gte', expected: 3 }],
 	}
 
-	it('기준이 유효하면 등록되고, 밝은 배경에서 fail로 판정된다', () => {
+	it('기준이 유효하면 등록되고, 일부가 묻힌 배경에서 fail로 판정된다', () => {
 		const checker = getChecker('overlay-legibility', options)
 		expect(checker?.executor).toBe('deterministic')
-		const ctx = { pixels: [], palette: [], detailGrid: grid(200, bar) } as CheckerContext
+		// 어두운 배경에 밝은 띠 — 실제 실패 형태(심볼은 보이는데 글자가 묻힘)와 같은 모형.
+		const partly = grid(26, (x, y) => (bar(x, y) ? 255 : y >= 32 ? 200 : undefined))
+		const ctx = { pixels: [], palette: [], detailGrid: partly } as CheckerContext
 		const result = checker?.executor === 'deterministic' ? checker.run(ctx, options) : null
 		expect(result?.status).toBe('fail')
 	})
