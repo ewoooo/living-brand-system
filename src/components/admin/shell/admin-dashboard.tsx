@@ -2,8 +2,9 @@ import { Add } from '@carbon/icons-react'
 import { getTranslation } from '@payloadcms/translations'
 import Link from 'next/link'
 import type { AdminViewServerProps } from 'payload'
+import { PageHero } from '@/components/shared/page-hero'
+import { PanelCard, PanelChip } from '@/components/shared/panel-card'
 import { cn } from '@/lib/utils'
-import { AdminHero } from './admin-hero'
 import {
 	DASHBOARD_CARD_BLOCKS,
 	DASHBOARD_PLAIN_BLOCKS,
@@ -69,7 +70,15 @@ export async function AdminDashboard({ initPageResult }: AdminViewServerProps) {
 
 	return (
 		<div className="flex flex-col gap-[12px] px-[60px] py-[12px]">
-			<AdminHero />
+			{/* shader 값은 런타임 기본값을 그대로 쓴다. 어드민에서 튜닝하려면 graphic-profiles로 잇는 별도 작업이 필요하다. */}
+			<PageHero
+				className="aspect-[1412/381] w-full"
+				fallbackSrc="/images/hero_admin.png"
+				runtimeId="radial-fluted-glass"
+			>
+				{/* biome-ignore lint/performance/noImgElement: Payload admin은 next/image의 최적화 경로를 타지 않는다. */}
+				<img alt="HD" className="w-[11%] min-w-[96px]" src="/logos/logo_wht.svg" />
+			</PageHero>
 
 			<div className="grid grid-cols-1 gap-[12px] md:grid-cols-2">
 				{cardBlocks.map((block) => (
@@ -95,15 +104,18 @@ export async function AdminDashboard({ initPageResult }: AdminViewServerProps) {
 
 function CardBlock({ block }: { block: ResolvedBlock }) {
 	return (
-		<section className={cardClassName(block.wide)} data-slot="admin-dashboard-card">
-			<h2 className="font-medium text-[26px] text-brand-deep leading-[32px]">
-				{block.title}
-			</h2>
+		<PanelCard
+			className={cn(
+				'min-h-[381px] bg-brand-tint/10 text-brand-deep ring-brand/20',
+				block.wide && 'md:col-span-2',
+			)}
+			title={block.title}
+		>
 			<ul className="m-0 flex list-none flex-col items-start gap-[6px] p-0">
 				{block.entries.map((entry) => (
 					<li key={entry.href}>
-						<span
-							className="flex h-[44px] items-center gap-[16px] rounded-[24px] border border-brand-tint/10 bg-background/60 py-[16px] pr-[10px] pl-[16px] data-[bare=true]:pr-[16px]"
+						<PanelChip
+							className="gap-[16px] border-brand-tint/10 bg-background/60 py-[16px] pr-[10px] pl-[16px] data-[bare=true]:pr-[16px]"
 							data-bare={!entry.createHref}
 						>
 							<Link
@@ -113,18 +125,11 @@ function CardBlock({ block }: { block: ResolvedBlock }) {
 								{entry.label}
 							</Link>
 							{entry.createHref ? <CreateLink entry={entry} tone="brand" /> : null}
-						</span>
+						</PanelChip>
 					</li>
 				))}
 			</ul>
-		</section>
-	)
-}
-
-function cardClassName(wide?: boolean) {
-	return cn(
-		'flex min-h-[381px] flex-col justify-between gap-[16px] overflow-hidden rounded-[24px] bg-brand-tint/10 p-[16px] ring-1 ring-brand/20',
-		wide && 'md:col-span-2',
+		</PanelCard>
 	)
 }
 
