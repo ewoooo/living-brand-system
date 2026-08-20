@@ -44,23 +44,8 @@ export function ReviewSummary({ sections }: { sections: CheckSection[] }) {
 					trailing={<CheckVerdictStatus image={selected} />}
 				/>
 			)}
-			<Controller.Group
-				collapsible={false}
-				title="Summary"
-				data-slot="review-summary"
-				/*
-				 * 🔴 바로 위 파일 행이 같은 판정을 이미 이름과 함께 싣고 있다 — 여기서 또 읽히면
-				 *    스크린리더에 "미통과 미통과"가 된다. 디자인이 두 번 그린 것은 시각적 반복이므로
-				 *    이쪽은 장식으로 둔다.
-				 */
-				trailing={
-					selected ? (
-						<span aria-hidden>
-							<CheckVerdictStatus image={selected} />
-						</span>
-					) : undefined
-				}
-			>
+			{/* 종합 판정은 바로 위 파일 행이 이름과 함께 이미 싣는다 — 제목에 또 붙이면 같은 배지가 두 줄로 겹친다. */}
+			<Controller.Group collapsible={false} title="Summary" data-slot="review-summary">
 				{judged.length === 0 ? (
 					<Empty className="gap-2 py-8">
 						<EmptyTitle>아직 검수 결과가 없습니다</EmptyTitle>
