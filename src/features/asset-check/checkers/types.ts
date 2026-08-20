@@ -189,6 +189,11 @@ export interface CheckerContext {
 	}
 	/** 기하가 필요한 checker(로고 등)만 사용. color checker는 무시. */
 	grid?: PixelGrid
+	/**
+	 * 획 두께가 필요한 checker만 사용하는 고해상도 그리드.
+	 * 🔴 grid는 128px라 글자 획이 남지 않는다 — 오버레이 가독성처럼 획 경계를 봐야 하는 측정은 이것을 쓴다.
+	 */
+	detailGrid?: PixelGrid
 }
 
 /** checker 파일이 export하는 순수 판정 함수. checkKey/message는 registry/service가 붙인다. */

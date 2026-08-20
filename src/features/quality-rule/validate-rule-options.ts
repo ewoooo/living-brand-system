@@ -1,5 +1,6 @@
 import type { JSONFieldValidation } from 'payload'
 import { contrastOptionsSchema } from './contrast-options'
+import { overlayLegibilityOptionsSchema } from './overlay-legibility-options'
 import { relationshipId } from './relationship-id'
 import { getRuleCheckerSummary } from './repositories/rule-checker.payload.repository'
 
@@ -21,9 +22,17 @@ export const validateRuleOptions: JSONFieldValidation = async (value, { req, sib
 		checkerKey = checker.checkerKey
 	}
 
-	return (
-		checkerKey !== 'contrast' ||
-		contrastOptionsSchema.safeParse(value).success ||
-		'최소 대비율은 1 이상 21 이하의 숫자로 입력하세요.'
-	)
+	if (checkerKey === 'contrast') {
+		return (
+			contrastOptionsSchema.safeParse(value).success ||
+			'최소 대비율은 1 이상 21 이하의 숫자로 입력하세요.'
+		)
+	}
+	if (checkerKey === 'overlay-legibility') {
+		return (
+			overlayLegibilityOptionsSchema.safeParse(value).success ||
+			'측정은 minContrastRatio·p05ContrastRatio·p50ContrastRatio 중 하나, 기준은 1~21 사이 숫자여야 합니다.'
+		)
+	}
+	return true
 }

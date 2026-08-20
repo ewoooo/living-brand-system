@@ -17,5 +17,13 @@ export function formatCheckDetail(outcome: CheckResult): string | null {
 		}
 	}
 
+	// deterministic 룰은 summary가 없고 comparisons를 남긴다 — 요약 줄을 비워 두지 않는다.
+	if (rawResult.comparisons?.length) {
+		const failed = rawResult.comparisons.filter((comparison) => !comparison.satisfied).length
+		return failed > 0
+			? `측정 ${failed}개가 기준에 못 미쳤어요.`
+			: `측정 ${rawResult.comparisons.length}개가 모두 기준을 넘었어요.`
+	}
+
 	return outcome.message ?? rawResult.detail ?? null
 }

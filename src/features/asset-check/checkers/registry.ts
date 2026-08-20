@@ -6,6 +6,7 @@
 
 import { z } from 'zod'
 import { contrastOptionsSchema } from '@/features/quality-rule/contrast-options'
+import { overlayLegibilityOptionsSchema } from '@/features/quality-rule/overlay-legibility-options'
 import { backgroundToneChecker } from './background-tone.checker'
 import { makeCanvasFormatChecker } from './canvas-format.checker'
 import { clearSpaceChecker } from './clear-space.checker'
@@ -13,6 +14,7 @@ import { colorCombinationChecker } from './color-combination.checker'
 import { extractDominantColorPair } from './color-pair.extractor'
 import { contrastChecker } from './contrast.checker'
 import { evaluateExtraction, evaluateMeasurement } from './deterministic.evaluator'
+import { measureOverlayLegibility } from './overlay-legibility.checker'
 import { paletteComplianceChecker } from './palette-compliance.checker'
 import { relativeSizeChecker } from './relative-size.checker'
 import { spotColorChecker } from './spot-color.checker'
@@ -44,6 +46,28 @@ const algorithm = (run: AlgorithmChecker) => (): RegisteredChecker => ({
 	run,
 })
 
+/** 오버레이 가독성 — 고해상도 그리드가 필요하다. grid(128px)로는 글자 획이 남지 않는다. */
+function runOverlayLegibility(
+	ctx: CheckerContext,
+	options: unknown,
+): DeterministicEvaluationResult {
+	const parsed = overlayLegibilityOptionsSchema.safeParse(options)
+	if (!parsed.success) {
+		return evaluateMeasurement({ state: 'not_measurable', reasonCode: 'invalid_criteria' }, [])
+	}
+	const grid = ctx.detailGrid
+	if (!grid) {
+		return evaluateMeasurement(
+			{ state: 'not_measurable', reasonCode: 'raster_not_available' },
+			parsed.data.criteria,
+		)
+	}
+	return evaluateMeasurement(
+		measureOverlayLegibility(grid, parsed.data.parameters),
+		parsed.data.criteria,
+	)
+}
+
 function runContrast(ctx: CheckerContext, options: unknown): DeterministicEvaluationResult {
 	const parsed = contrastOptionsSchema.safeParse(options)
 	if (!parsed.success) {
@@ -68,6 +92,10 @@ function runContrast(ctx: CheckerContext, options: unknown): DeterministicEvalua
  */
 const checkers: Record<string, (options?: unknown) => RegisteredChecker | null> = {
 	'palette-compliance': algorithm(paletteComplianceChecker),
+	'overlay-legibility': (options) =>
+		overlayLegibilityOptionsSchema.safeParse(options).success
+			? { executor: 'deterministic', run: runOverlayLegibility }
+			: null,
 	'color-combination': algorithm(colorCombinationChecker),
 	'spot-color': algorithm(spotColorChecker),
 	'background-tone': algorithm(backgroundToneChecker),
