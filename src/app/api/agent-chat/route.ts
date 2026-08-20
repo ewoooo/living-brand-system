@@ -85,7 +85,9 @@ export async function POST(req: Request) {
 							agentChatMessageId: chatSession.assistantMessageId,
 						}
 					: undefined,
-			onError: () => {
+			onError: (error) => {
+				// 스트림 오류의 실제 원인은 여기서만 잡을 수 있다 — 사용자에게는 일반화된 문구만 나간다.
+				payload.logger.error({ err: error, requestId }, 'agent-chat.stream.failed')
 				void endSession(chatSession.fail('Agent response failed.'))
 				return 'Agent response failed.'
 			},
