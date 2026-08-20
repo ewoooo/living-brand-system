@@ -175,10 +175,11 @@ export function TemplateLayersField() {
 		return () => observer.disconnect()
 	}, [])
 
-	const layers = useMemo(
-		() => (typeof html === 'string' && html.trim() ? parseLayers(html) : []),
-		[html],
-	)
+	// DOMParser는 서버에 없다 — 서버 렌더는 빈 목록으로 그리고 마운트 후 파싱한다(previewOrigin과 같은 패턴).
+	const [layers, setLayers] = useState<LayerRow[]>([])
+	useEffect(() => {
+		setLayers(typeof html === 'string' && html.trim() ? parseLayers(html) : [])
+	}, [html])
 	const selected = layers.find((layer) => layer.id === selectedId) ?? null
 	const hasHtml = typeof html === 'string' && html.trim().length > 0
 	const previewDocument = useMemo(
