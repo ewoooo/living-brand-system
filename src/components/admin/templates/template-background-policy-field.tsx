@@ -99,7 +99,7 @@ export function TemplateBackgroundPolicyField({ path }: Props) {
 	return (
 		<div className="lbs-kit field-type json mb-5">
 			<AdminSectionHeading>배경 설정</AdminSectionHeading>
-			<div className="flex flex-col rounded-xl border p-6">
+			<div className="flex flex-col gap-2 rounded-3xl border bg-background px-3 pt-6 pb-3">
 				<Controller.Group
 					title="사용할 형식"
 					collapsible={false}

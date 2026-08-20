@@ -62,7 +62,10 @@
 	--color-muted: oklch(0 0 0 / 4%);
 	--color-muted-foreground: oklch(0 0 0 / 60%);
 	--radius-sm: 6px;
-	--color-border: oklch(0.922 0 0);
+	/* 카드 모서리 — 정본(83:1553) 24px. tailwind 기본 3xl은 rem이라 Payload root에서 줄어든다. */
+	--radius-3xl: 24px;
+	/* 보더 — 정본(83:1553) black 10% 알파. */
+	--color-border: oklch(0 0 0 / 10%);
 	--color-input: oklch(0.922 0 0);
 	--color-ring: oklch(0.708 0 0);
 	font-family: "Pretendard", system-ui, sans-serif;
@@ -88,6 +91,11 @@
 	line-height: 20px;
 	font-weight: 500;
 	color: #737373;
+}
+
+/* 그룹 서브헤더의 들여쓰기 — 정본(83:1555) 좌우 8px. */
+.lbs-kit :where([data-slot="controller-group"]) > :where(header) {
+	padding-inline: 8px;
 }
 
 /* Row가 유틸리티([--controller-row-px:0.75rem])로 심는 셀렉트 트리거 패딩이 Payload root에서
