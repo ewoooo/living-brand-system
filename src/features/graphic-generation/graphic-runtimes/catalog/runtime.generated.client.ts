@@ -12,4 +12,8 @@ export const graphicRuntimeCatalog = {
 		import('../linear-fluted-glass/runtime.client').then((module) => module.default),
 	'radial-fluted-glass': () =>
 		import('../radial-fluted-glass/runtime.client').then((module) => module.default),
+	'sweep-fluted-glass': () =>
+		import('../sweep-fluted-glass/runtime.client').then((module) => module.default),
+	'vertical-fluted-glass': () =>
+		import('../vertical-fluted-glass/runtime.client').then((module) => module.default),
 } satisfies Record<GraphicRuntimeId, GraphicRuntimeLoader>

@@ -7,9 +7,15 @@ import linearFlutedGlassManifest from '../linear-fluted-glass/definition'
 import linearFlutedGlassModel from '../linear-fluted-glass/model'
 import radialFlutedGlassManifest from '../radial-fluted-glass/definition'
 import radialFlutedGlassModel from '../radial-fluted-glass/model'
+import sweepFlutedGlassManifest from '../sweep-fluted-glass/definition'
+import sweepFlutedGlassModel from '../sweep-fluted-glass/model'
+import verticalFlutedGlassManifest from '../vertical-fluted-glass/definition'
+import verticalFlutedGlassModel from '../vertical-fluted-glass/model'
 
 export const graphicStudioPlugins = [
 	{ manifest: forwardStraightManifest, ...forwardStraightModel },
 	{ manifest: linearFlutedGlassManifest, ...linearFlutedGlassModel },
 	{ manifest: radialFlutedGlassManifest, ...radialFlutedGlassModel },
+	{ manifest: sweepFlutedGlassManifest, ...sweepFlutedGlassModel },
+	{ manifest: verticalFlutedGlassManifest, ...verticalFlutedGlassModel },
 ] as const satisfies readonly GraphicStudioPlugin[]
