@@ -130,6 +130,45 @@ describe('ReviewSidebar', () => {
 		expect(screen.getByRole('button', { name: '검사' })).toBeDisabled()
 		expect(screen.getByRole('button', { name: '전부 검사' })).toBeDisabled()
 	})
+
+	it('요약에서 펼친 룰의 근거 패널이 사이드바 블록 안에 붙는다', () => {
+		// 확장은 캔버스가 아니라 사이드바 쪽이다(디자인 78:2706) — 패널이 이 컴포넌트의 형제로 는다.
+		const image = checkImage({ results: { 'color.palette': aiResult([90, 75]) } })
+		useCheckImages.mockReturnValue(
+			context({ images: [image], selected: image, selectedRuleKey: 'color.palette' }),
+		)
+		const { container } = render(<ReviewSidebar sections={sections} />)
+
+		fireEvent.click(screen.getByText('test.png'))
+
+		const root = container.querySelector('[data-slot="review-sidebar"]')
+		const detail = container.querySelector('[data-slot="review-rule-detail"]')
+		expect(root).toContainElement(detail as HTMLElement)
+		expect(screen.getByText('question 0')).toBeInTheDocument()
+	})
+
+	it('목록 화면에서는 근거 패널을 그리지 않는다', () => {
+		// 목록 옆에 떠 있는 근거는 어느 파일 것인지 읽히지 않는다 — 요약이 열려 있을 때만 편다.
+		const image = checkImage({ results: { 'color.palette': aiResult([90]) } })
+		useCheckImages.mockReturnValue(
+			context({ images: [image], selected: image, selectedRuleKey: 'color.palette' }),
+		)
+		const { container } = render(<ReviewSidebar sections={sections} />)
+
+		expect(container.querySelector('[data-slot="review-rule-detail"]')).toBeNull()
+	})
+
+	it('판정이 사라진 룰은 근거 패널이 스스로 닫힌다', () => {
+		// 재검수·시나리오 변경으로 results가 비면 selectedRuleKey가 남아 있어도 그릴 것이 없다.
+		const image = checkImage({})
+		useCheckImages.mockReturnValue(
+			context({ images: [image], selected: image, selectedRuleKey: 'color.palette' }),
+		)
+		const { container } = render(<ReviewSidebar sections={sections} />)
+
+		fireEvent.click(screen.getByText('test.png'))
+		expect(container.querySelector('[data-slot="review-rule-detail"]')).toBeNull()
+	})
 })
 
 const scenarios = [{ key: 'quick', title: '빠른 기본 검수', checkKeys: ['color.palette'] }]
