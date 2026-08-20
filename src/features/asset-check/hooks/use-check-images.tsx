@@ -124,13 +124,17 @@ export function CheckImageProvider({
 		setSelectedId(added[0].id)
 	}
 
-	function setScenarioKey(key: string) {
+	/**
+	 * 시나리오는 이미지마다 다를 수 있다 — 목록의 행이 자기 imageId를 준다.
+	 * 생략하면 선택 이미지에 적용한다. 새로 올리는 파일의 기본값도 마지막 선택을 따른다.
+	 */
+	function setScenarioKey(key: string, imageId = selectedId) {
 		if (scenarios.length === 0) return
 		const scenario = getCheckScenario(scenarios, key)
 		setScenarioKeyValue(scenario.key)
-		if (!selectedId) return
+		if (!imageId) return
 		// 시나리오가 바뀌면 진행 중 검수는 무효이므로 idle로 되돌리고 재검수를 기다린다
-		patchImage(selectedId, () => ({
+		patchImage(imageId, () => ({
 			checkSessionId: undefined,
 			scenarioKey: scenario.key,
 			results: undefined,
