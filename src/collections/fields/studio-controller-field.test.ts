@@ -64,18 +64,19 @@ describe('studioControllerRestrictionsField', () => {
 		] as const) {
 			const exportPolicy = namedField(collection.fields, 'exportPolicy')
 			if (exportPolicy.type !== 'group') throw new Error('exportPolicy must be a group')
+			// 렌더는 그룹 컴포넌트가 통째로 소유한다(정본 76:4 카드) — 하위 필드는 스키마만 갖는다.
+			expect(exportPolicy.admin).toMatchObject({
+				components: {
+					Field: {
+						path: '/components/admin/studio/studio-export-policy-field#StudioExportPolicyField',
+						clientProps: { source },
+					},
+				},
+			})
 			expect(namedField(exportPolicy.fields, 'allowedFormats')).toMatchObject({
 				type: 'select',
 				hasMany: true,
 				options: STUDIO_OUTPUT_FORMAT_OPTIONS,
-				admin: {
-					components: {
-						Field: {
-							path: '/components/admin/studio/studio-output-formats-field#StudioOutputFormatsField',
-							clientProps: { source },
-						},
-					},
-				},
 			})
 			const print = namedField(exportPolicy.fields, 'print')
 			const video = namedField(exportPolicy.fields, 'video')
