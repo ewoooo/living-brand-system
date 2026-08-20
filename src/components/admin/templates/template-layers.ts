@@ -69,6 +69,10 @@ export function toggleAllowedId<T>(
 export const canAssignImage = (layer: LayerRow) =>
 	!layer.isText && !layer.isVector && layer.imageAddress === 'self'
 
+/** 편집 UI가 있는 레이어 — 없는 레이어(부모 소관·img 고정 등)는 목록에서 비활성으로 그린다(정본 81:2, 안내 문구 제거). */
+export const hasLayerEditor = (layer: LayerRow) =>
+	layer.isText || layer.isVector || canAssignImage(layer)
+
 function stylePx(element: Element, property: 'width' | 'height'): number | undefined {
 	if (!(element instanceof HTMLElement)) return undefined
 	const value = element.style[property]

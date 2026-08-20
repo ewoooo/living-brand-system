@@ -19,10 +19,13 @@ vi.mock('@payloadcms/ui', () => ({
 	}),
 }))
 
-// requestPublishedImageProfiles는 fetch를 쓴다 — 이 테스트는 형식 토글의 disabled 가드만
-// 검증하므로 실제 네트워크를 태우지 않고 빈 목록으로 고정한다.
+// requestPublishedImageProfiles·fetchGraphicStudioConfigs는 fetch를 쓴다 — 이 테스트는 형식
+// 토글의 disabled 가드만 검증하므로 실제 네트워크를 태우지 않고 빈 목록으로 고정한다.
 vi.mock('@/features/image-generation/services/generate-image.client', () => ({
 	requestPublishedImageProfiles: () => Promise.resolve([]),
+}))
+vi.mock('@/features/graphic-generation/services/list-graphic-studio-configs.client', () => ({
+	fetchGraphicStudioConfigs: () => Promise.resolve([]),
 }))
 
 afterEach(() => {

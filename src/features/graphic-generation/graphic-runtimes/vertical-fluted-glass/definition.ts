@@ -1,8 +1,15 @@
 import { defineGraphicRuntime } from '@/features/graphic-generation/graphic-runtimes/define-graphic-runtime'
 import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
 
-export const LINEAR_FLUTED_GLASS_DEFAULT_INPUT = {
-	source: { x: -0.62, y: 0.04 },
+/**
+ * Linear Fluted Glass의 세로 변형. 셰이더·모델 지반은 linear가 소유하고,
+ * 이 런타임은 축을 세로로 굽는 기본값과 프리셋만 소유한다.
+ *
+ * 🔴 rayRotation -90(광선이 위→아래로 흐른다)·glassAngle 90(리브가 세로로 선다)은
+ * 이 런타임의 정체성이라 프리셋이 건드리지 않는다.
+ */
+export const VERTICAL_FLUTED_GLASS_DEFAULT_INPUT = {
+	source: { x: 0, y: -0.62 },
 	sourceOffsetX: 0,
 	sourceOffsetY: 0,
 	bloomColor: '#2ad97a',
@@ -21,7 +28,7 @@ export const LINEAR_FLUTED_GLASS_DEFAULT_INPUT = {
 	speed: 1.2,
 	frameOffsetMs: 0,
 	rayScale: 1,
-	rayRotation: 0,
+	rayRotation: -90,
 	axisFalloff: 1.7,
 	flowSpeed: 0.06,
 	paletteShift: 1.2,
@@ -32,11 +39,11 @@ export const LINEAR_FLUTED_GLASS_DEFAULT_INPUT = {
 	pulseWidth: 0.22,
 	glassSize: 0.92,
 	ribCurve: 1.7,
-	glassAngle: 0,
+	glassAngle: 90,
 	glassOriginOffset: { x: 0, y: 0 },
 	glassOffset: 0,
 	glassSpeed: -0.02,
-	glassDrift: { x: 0, y: 0.03 },
+	glassDrift: { x: 0.03, y: 0 },
 	glassDriftSpeedX: 0.19,
 	glassDriftSpeedY: 0.27,
 	glassDistortion: 0.62,
@@ -51,13 +58,13 @@ export const LINEAR_FLUTED_GLASS_DEFAULT_INPUT = {
 /**
  * 컨트롤러에 노출하지 않는 값의 묶음. 프리셋이 배경의 성격을 정하고, 노출된 컨트롤이 그 위를 조정한다.
  *
- * 🔴 rayRotation과 glassAngle은 모든 프리셋에서 0이다 — 수평은 의도된 것이라 프리셋이 기울이지 않는다.
- * 그래서 프리셋을 가르는 축은 질감(광선 밀도·축 감쇠·유리)과 구도(광원 축 위치) 둘뿐이다.
+ * linear의 프리셋에서 축 위치만 세로 좌표계로 옮겼다 — 광원은 상단(y=-0.62)에 고정되고,
+ * 프리셋을 가르는 축 위치는 source.x가 맡는다(음수가 왼쪽).
  */
-export const LINEAR_FLUTED_GLASS_PRESETS = {
+export const VERTICAL_FLUTED_GLASS_PRESETS = {
 	basic: {},
 	focused: {
-		source: { x: -0.62, y: 0 },
+		source: { x: 0, y: -0.62 },
 		axisFalloff: 2.6,
 		rayDensity: 0.45,
 		rayMidIntensity: 0.22,
@@ -70,10 +77,10 @@ export const LINEAR_FLUTED_GLASS_PRESETS = {
 		pulseIntensity: 0.1,
 		pulseWidth: 0.14,
 		flowSpeed: 0.04,
-		glassDrift: { x: 0, y: 0.01 },
+		glassDrift: { x: 0.01, y: 0 },
 	},
 	diffused: {
-		source: { x: -0.62, y: 0.1 },
+		source: { x: 0.1, y: -0.62 },
 		axisFalloff: 0.7,
 		rayDensity: 0.08,
 		rayMidIntensity: 0.55,
@@ -89,9 +96,8 @@ export const LINEAR_FLUTED_GLASS_PRESETS = {
 		pulseSpeed: 0.16,
 		flowSpeed: 0.12,
 	},
-	// 광원 축을 크게 올려 밝은 대역을 위로 몰고 아래를 비운다. uSource.y = -source.y라 음수가 위다.
-	upperAxis: {
-		source: { x: -0.62, y: -0.7 },
+	leftAxis: {
+		source: { x: -0.7, y: -0.62 },
 		axisFalloff: 1.1,
 		rayDensity: 0.3,
 		rayMidIntensity: 0.4,
@@ -105,8 +111,8 @@ export const LINEAR_FLUTED_GLASS_PRESETS = {
 		pulseIntensity: 0.3,
 		flowSpeed: 0.08,
 	},
-	lowerAxis: {
-		source: { x: -0.62, y: 0.7 },
+	rightAxis: {
+		source: { x: 0.7, y: -0.62 },
 		axisFalloff: 1.1,
 		rayDensity: 0.3,
 		rayMidIntensity: 0.4,
@@ -122,11 +128,11 @@ export const LINEAR_FLUTED_GLASS_PRESETS = {
 	},
 } as const
 
-export const LINEAR_FLUTED_GLASS_PRESET_IDS = Object.keys(
-	LINEAR_FLUTED_GLASS_PRESETS,
-) as readonly LinearFlutedGlassPresetId[]
+export const VERTICAL_FLUTED_GLASS_PRESET_IDS = Object.keys(
+	VERTICAL_FLUTED_GLASS_PRESETS,
+) as readonly VerticalFlutedGlassPresetId[]
 
-export type LinearFlutedGlassPresetId = keyof typeof LINEAR_FLUTED_GLASS_PRESETS
+export type VerticalFlutedGlassPresetId = keyof typeof VERTICAL_FLUTED_GLASS_PRESETS
 
 /**
  * 프리셋 select에 쓰는 사람이 읽는 이름.
@@ -134,12 +140,12 @@ export type LinearFlutedGlassPresetId = keyof typeof LINEAR_FLUTED_GLASS_PRESETS
  * Record 타입이 프리셋 목록과 묶어 두므로, 프리셋을 더하거나 지우면 여기서 타입이 깨진다 —
  * 옵션을 잊어 화면에 안 뜨거나 없는 프리셋을 고를 수 있게 되는 어긋남을 컴파일에서 잡는다.
  */
-const LINEAR_FLUTED_GLASS_PRESET_LABELS: Record<LinearFlutedGlassPresetId, string> = {
+const VERTICAL_FLUTED_GLASS_PRESET_LABELS: Record<VerticalFlutedGlassPresetId, string> = {
 	basic: '기본',
 	focused: '집중',
 	diffused: '확산',
-	upperAxis: '상단 축',
-	lowerAxis: '하단 축',
+	leftAxis: '좌측 축',
+	rightAxis: '우측 축',
 }
 
 type RangeControl = Extract<ControllerControlDefinition, { kind: 'range' }>
@@ -160,11 +166,11 @@ function colorControl(id: string, label: string, defaultValue: string) {
 	return { id, kind: 'color' as const, label, defaultValue }
 }
 
-const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
+const verticalFlutedGlassRuntimeManifest = defineGraphicRuntime({
 	studio: 'graphic',
-	id: 'linear-fluted-glass',
+	id: 'vertical-fluted-glass',
 	version: 1,
-	name: 'Linear Fluted Glass',
+	name: 'Vertical Fluted Glass',
 	type: 'shader',
 	artifacts: {
 		raster: {},
@@ -185,10 +191,10 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 						id: 'preset',
 						kind: 'select' as const,
 						label: '프리셋',
-						defaultValue: 'basic' satisfies LinearFlutedGlassPresetId,
-						options: LINEAR_FLUTED_GLASS_PRESET_IDS.map((id) => ({
+						defaultValue: 'basic' satisfies VerticalFlutedGlassPresetId,
+						options: VERTICAL_FLUTED_GLASS_PRESET_IDS.map((id) => ({
 							value: id,
-							label: LINEAR_FLUTED_GLASS_PRESET_LABELS[id],
+							label: VERTICAL_FLUTED_GLASS_PRESET_LABELS[id],
 						})),
 					},
 				],
@@ -200,38 +206,38 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 					colorControl(
 						'rayColor1',
 						'광선 색상 1',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor1,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.rayColor1,
 					),
 					colorControl(
 						'rayColor2',
 						'광선 색상 2',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor2,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.rayColor2,
 					),
 					colorControl(
 						'rayColor3',
 						'광선 색상 3',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor3,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.rayColor3,
 					),
 					colorControl(
 						'rayColor4',
 						'광선 색상 4',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor4,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.rayColor4,
 					),
 					colorControl(
 						'rayColor5',
 						'광선 색상 5',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayColor5,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.rayColor5,
 					),
 					// 배경과 블룸도 색이다 — 광선 5색만 열어 두면 브랜드 색조를 바꿔도 이 둘이 초록으로 남는다.
 					colorControl(
 						'rayBackgroundColor',
 						'배경 색상',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayBackgroundColor,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.rayBackgroundColor,
 					),
 					rangeControl(
 						'paletteDrift',
 						'팔레트 위상 속도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.paletteDrift,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.paletteDrift,
 						-1,
 						1,
 					),
@@ -244,33 +250,33 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 					colorControl(
 						'bloomColor',
 						'블룸 색상',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.bloomColor,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.bloomColor,
 					),
 					rangeControl(
 						'rayBloom',
 						'블룸 강도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayBloom,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.rayBloom,
 						0,
 						1,
 					),
 					rangeControl(
 						'rayIntensity',
 						'광선 강도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayIntensity,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.rayIntensity,
 						0,
 						1,
 					),
 					rangeControl(
 						'raySpotty',
 						'광선 연속성',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.raySpotty,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.raySpotty,
 						0,
 						1,
 					),
 					rangeControl(
 						'rayMidSize',
 						'중앙광 두께',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayMidSize,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.rayMidSize,
 						0,
 						1,
 					),
@@ -278,14 +284,14 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 					rangeControl(
 						'speed',
 						'속도',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.speed,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.speed,
 						0.1,
 						1.4,
 					),
 					rangeControl(
 						'rayScale',
 						'광선 스케일',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.rayScale,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.rayScale,
 						0.5,
 						1.5,
 					),
@@ -298,14 +304,14 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 					rangeControl(
 						'glassSize',
 						'플루트 크기',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.glassSize,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.glassSize,
 						0.1,
 						1,
 					),
 					rangeControl(
 						'ribCurve',
 						'플루트 폭 커브',
-						LINEAR_FLUTED_GLASS_DEFAULT_INPUT.ribCurve,
+						VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.ribCurve,
 						0.2,
 						3,
 					),
@@ -313,7 +319,7 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 						id: 'distortionShape',
 						kind: 'select' as const,
 						label: '왜곡 형태',
-						defaultValue: LINEAR_FLUTED_GLASS_DEFAULT_INPUT.distortionShape,
+						defaultValue: VERTICAL_FLUTED_GLASS_DEFAULT_INPUT.distortionShape,
 						options: [
 							{ value: 'cascade', label: 'Cascade' },
 							{ value: 'flat', label: 'Flat' },
@@ -327,4 +333,4 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 	},
 } as const)
 
-export default linearFlutedGlassRuntimeManifest
+export default verticalFlutedGlassRuntimeManifest
