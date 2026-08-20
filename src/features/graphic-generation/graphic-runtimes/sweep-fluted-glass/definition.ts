@@ -3,9 +3,9 @@ import type { ControllerControlDefinition } from '@/modules/studio-controller/co
 
 // 광원을 코너 끝이 아니라 프레임 안쪽에 둔다 — 스윕 회전은 광원 주변 부채꼴이 보여야 읽힌다.
 export const SWEEP_FLUTED_GLASS_DEFAULT_INPUT = {
-	source: { x: -0.4, y: -0.4 },
+	source: { x: 0, y: 0 },
 	sourceOffsetX: 0,
-	sourceOffsetY: 0,
+	sourceOffsetY: -0.3,
 	bloomColor: '#3dff8a',
 	rayColor1: '#000e06',
 	rayColor2: '#004218',
