@@ -6,7 +6,7 @@
 // 🔴 react·이미지 import 금지(schema가 참조할 수 있다).
 
 /** 브랜드 서체 스택. HD체가 못 뜨는 동안만 본문 서체가 받아 준다. */
-export const BRAND_FONT_STACK = '"HD", var(--font-body)'
+export const BRAND_FONT_STACK = '"HD OTF", var(--font-body)'
 
 /** 굵기 3종. 원본 Artboard 43이 BOLD / MEDIUM / LIGHT 3열로 보여 준다. */
 export const WEIGHTS = [

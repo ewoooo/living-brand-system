@@ -293,7 +293,7 @@ function Photo({ src }: { src: StaticImageData }) {
 }
 
 /** 위젯 텍스트는 전부 HD체 Bold. 서브셋에 소문자가 없어 대문자로 조판한다. */
-const HD_BOLD: CSSProperties = { fontFamily: 'HD, sans-serif', fontWeight: 700 }
+const HD_BOLD: CSSProperties = { fontFamily: '"HD OTF", sans-serif', fontWeight: 700 }
 
 /** 본문. 문자열의 개행을 그대로 지킨다(pre-line). */
 function Caption({ children }: { children: ReactNode }) {
@@ -333,7 +333,7 @@ function FillTitle({ children }: { children: string }) {
 		document.fonts.ready.then(() => {
 			const ctx = document.createElement('canvas').getContext('2d')
 			if (!ctx || !alive) return
-			ctx.font = '700 1000px HD, sans-serif'
+			ctx.font = '700 1000px "HD OTF", sans-serif'
 			const m = ctx.measureText(children)
 			// 기준점은 (0, 베이스라인). left는 기준점 왼쪽 방향이 양수라 부호를 뒤집는다.
 			setInk({
@@ -361,7 +361,7 @@ function FillTitle({ children }: { children: string }) {
 			<text
 				x={0}
 				y={0}
-				fontFamily="HD, sans-serif"
+				fontFamily={'"HD OTF", sans-serif'}
 				fontWeight={700}
 				fontSize={1000}
 				fill="currentColor"
