@@ -73,9 +73,15 @@ export type TemplateBackgroundState = {
 	graphicValues: ControllerValues
 	/** 깔린 배경 이미지 — type=image일 때만 합성된다. */
 	image?: TemplateAssignedImage
+	/** 배경 위 디머 — 밝은 배경에서 글자가 묻히는 것을 창작자가 직접 누른다. 형식과 무관하다. */
+	dimmer: boolean
+	/** 껐다 켜도 맞춰 둔 강도가 남도록 on/off와 따로 든다. */
+	dimmerOpacity: number
 }
 
-export type TemplateBackgroundPatch = Partial<Pick<TemplateBackgroundState, 'imageMode' | 'prompt'>>
+export type TemplateBackgroundPatch = Partial<
+	Pick<TemplateBackgroundState, 'imageMode' | 'prompt' | 'dimmer' | 'dimmerOpacity'>
+>
 
 export type TemplateStudioValue = {
 	navigation: {

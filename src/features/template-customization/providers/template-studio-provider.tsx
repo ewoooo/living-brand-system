@@ -881,6 +881,8 @@ function templateControllerValues(
 	if (backgroundSlot) {
 		values[backgroundSlot.typeControlId] = background.type
 		values[backgroundSlot.colorControlId] = background.color
+		values[backgroundSlot.dimmerControlId] = background.dimmer
+		values[backgroundSlot.dimmerOpacityControlId] = background.dimmerOpacity
 	}
 	return values
 }
@@ -919,6 +921,10 @@ function initialBackgroundState(
 ): TemplateBackgroundState {
 	const typeControl = slot ? findTemplateControl(config, slot.typeControlId) : undefined
 	const colorControl = slot ? findTemplateControl(config, slot.colorControlId) : undefined
+	const dimmerControl = slot ? findTemplateControl(config, slot.dimmerControlId) : undefined
+	const dimmerOpacityControl = slot
+		? findTemplateControl(config, slot.dimmerOpacityControlId)
+		: undefined
 	const type =
 		typeControl?.kind === 'select' && isBackgroundType(typeControl.defaultValue)
 			? typeControl.defaultValue
@@ -936,6 +942,9 @@ function initialBackgroundState(
 			? createControllerValues(config.template.graphicConfigs[0].controller.groups)
 			: {},
 		error: contracts.length > 0 ? null : SELECTABLE_CONFIG_ERROR_MESSAGE,
+		dimmer: dimmerControl?.kind === 'toggle' ? dimmerControl.defaultValue : false,
+		dimmerOpacity:
+			dimmerOpacityControl?.kind === 'range' ? dimmerOpacityControl.defaultValue : 0,
 	}
 }
 

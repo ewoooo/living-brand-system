@@ -59,6 +59,12 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 	const backgroundColorControl = backgroundSlot
 		? findTemplateControl(config, backgroundSlot.colorControlId)
 		: undefined
+	const backgroundDimmerControl = backgroundSlot
+		? findTemplateControl(config, backgroundSlot.dimmerControlId)
+		: undefined
+	const backgroundDimmerOpacityControl = backgroundSlot
+		? findTemplateControl(config, backgroundSlot.dimmerOpacityControlId)
+		: undefined
 	const backgroundGroup = backgroundSlot
 		? findTemplateControlGroup(config, backgroundSlot.typeControlId)
 		: undefined
@@ -289,7 +295,9 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 				{backgroundSlot &&
 					backgroundGroup &&
 					backgroundTypeControl?.kind === 'select' &&
-					backgroundColorControl?.kind === 'color' && (
+					backgroundColorControl?.kind === 'color' &&
+					backgroundDimmerControl?.kind === 'toggle' &&
+					backgroundDimmerOpacityControl?.kind === 'range' && (
 						<BackgroundSection
 							groupDefinition={backgroundGroup}
 							groupPresentation={config.controllerPresentation?.groups.find(
@@ -297,6 +305,8 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 							)}
 							typeDefinition={backgroundTypeControl}
 							colorDefinition={backgroundColorControl}
+							dimmerDefinition={backgroundDimmerControl}
+							dimmerOpacityDefinition={backgroundDimmerOpacityControl}
 							canvasAspectRatio={
 								canvas.width && canvas.height
 									? canvas.width / canvas.height

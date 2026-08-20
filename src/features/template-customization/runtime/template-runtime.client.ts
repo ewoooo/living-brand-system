@@ -152,6 +152,9 @@ export function composeTemplateStudioHtml({
 		type: TemplateBackgroundType
 		color: string | null
 		image?: { url: string }
+		/** 배경 위 디머 — 배경 형식과 무관하게 적용한다(색 배경도 창작자가 더 누를 수 있다). */
+		dimmer: boolean
+		dimmerOpacity: number
 	}
 	width: number
 	height: number
@@ -222,6 +225,10 @@ export function composeTemplateStudioHtml({
 		...(background.type === 'color' && background.color ? { color: background.color } : {}),
 		...(background.type === 'image' && background.image
 			? { imageUrl: background.image.url }
+			: {}),
+		// 꺼져 있으면 키를 빼서 조기 반환을 살린다 — 합성은 매번 불변 base HTML에서 다시 시작한다.
+		...(background.dimmer && background.dimmerOpacity > 0
+			? { dimmer: background.dimmerOpacity }
 			: {}),
 	}
 	return composeTemplateHtml(
