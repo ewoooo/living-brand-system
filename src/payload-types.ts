@@ -1222,9 +1222,6 @@ export interface ImageProfile {
         id?: string | null;
       }[]
     | null;
-  /**
-   * 비우면 기능을 열지 않습니다. 값과 사용 상태는 Controller 제한이 소유합니다.
-   */
   features?: (ImageProfileColorAdjustmentFeature | ImageProfileCameraControlFeature)[] | null;
   controllerRestrictions?:
     | {

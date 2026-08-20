@@ -27,7 +27,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { BetterEditorPublishButton as BetterEditorPublishButton_e4a80c849de3e1722a2102dbd878fdcd } from '../../../components/admin/guideline-documents/better-editor-publish-button'
 import { GuidelineDocumentTreeList as GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2 } from '../../../components/admin/guideline-documents/guideline-document-tree-list'
 import { ColorSwatchCell as ColorSwatchCell_88fca198b056ae91f3276aaa342114bd } from '../../../components/admin/brand-colors/color-swatch-cell'
-import { ImageCameraSectorsField as ImageCameraSectorsField_71353510c9d197004db59c287e5c0cea } from '../../../components/admin/studio/image-camera-sectors-field'
+import { ImageProfileFeaturesField as ImageProfileFeaturesField_7bfadbf4609425feb60c9cc16350f523 } from '../../../components/admin/studio/image-profile-features-field'
 import { StudioControllerRestrictionsField as StudioControllerRestrictionsField_715c81ea8a3b886458ef2633d308523c } from '../../../components/admin/studio/studio-controller-restrictions-field'
 import { StudioControllerPresentationField as StudioControllerPresentationField_715c81ea8a3b886458ef2633d308523c } from '../../../components/admin/studio/studio-controller-restrictions-field'
 import { StudioExportPolicyField as StudioExportPolicyField_100bfeb2a58aa702365ab77b55c4baee } from '../../../components/admin/studio/studio-export-policy-field'
@@ -83,7 +83,7 @@ export const importMap = {
   "/components/admin/guideline-documents/better-editor-publish-button#BetterEditorPublishButton": BetterEditorPublishButton_e4a80c849de3e1722a2102dbd878fdcd,
   "/components/admin/guideline-documents/guideline-document-tree-list#GuidelineDocumentTreeList": GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2,
   "/components/admin/brand-colors/color-swatch-cell#ColorSwatchCell": ColorSwatchCell_88fca198b056ae91f3276aaa342114bd,
-  "/components/admin/studio/image-camera-sectors-field#ImageCameraSectorsField": ImageCameraSectorsField_71353510c9d197004db59c287e5c0cea,
+  "/components/admin/studio/image-profile-features-field#ImageProfileFeaturesField": ImageProfileFeaturesField_7bfadbf4609425feb60c9cc16350f523,
   "/components/admin/studio/studio-controller-restrictions-field#StudioControllerRestrictionsField": StudioControllerRestrictionsField_715c81ea8a3b886458ef2633d308523c,
   "/components/admin/studio/studio-controller-restrictions-field#StudioControllerPresentationField": StudioControllerPresentationField_715c81ea8a3b886458ef2633d308523c,
   "/components/admin/studio/studio-export-policy-field#StudioExportPolicyField": StudioExportPolicyField_100bfeb2a58aa702365ab77b55c4baee,
