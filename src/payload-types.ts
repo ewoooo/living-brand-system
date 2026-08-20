@@ -714,6 +714,10 @@ export interface CiLockupWidget {
    */
   measured?: boolean | null;
   /**
+   * H를 알약에 노출합니다. 기본은 꺼짐 — H는 독자가 고를 값이 아니라 나란히 놓인 락업들의 비율을 맞추려고 저작자가 정하는 값입니다.
+   */
+  heightControl?: boolean | null;
+  /**
    * 알약에서 뺄 축. 뺀 축은 위 초기값에 고정됩니다(예: 자회사 섹션에서 해외지사·지사명).
    */
   hiddenControls?:
@@ -2508,6 +2512,7 @@ export interface CiLockupWidgetSelect<T extends boolean = true> {
   mono?: T;
   clearSpace?: T;
   measured?: T;
+  heightControl?: T;
   hiddenControls?: T;
   id?: T;
   blockName?: T;

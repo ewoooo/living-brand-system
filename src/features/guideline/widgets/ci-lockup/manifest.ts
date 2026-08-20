@@ -29,7 +29,11 @@ import {
  *    도판 라벨은 고정 크기 글자라 H를 따라오지 않아 좁은 트랙에서 겹치고(가장 넓은 해외지사
  *    가로형A는 11.6H라 H≥76에서 이미 판을 넘어 가로 스크롤에 든다), 넘치면 캔버스가 스크롤된다.
  *    그 한계는 `docs/11` §7에 결함으로 적어 두었다.
- * 🔴 규정 최소 크기(디지털 16px)는 **사용 하한**이고 설명 판의 하한이 아니다 — 판 밑 readout이 글로 말한다.
+ * 🔴 규정 최소 크기(디지털 16px)는 **사용 하한**이고 설명 판의 하한이 아니다.
+ *
+ * 🔴 **알약에 기본으로 싣지 않는다**(사용자 지정 2026-08-20). H는 독자가 고를 것이 아니라 저작자가
+ *    admin에서 정하는 값이고, 쓰임은 「나란히 놓인 락업들의 비율 정리」다. 축 자체는 남겨 두므로
+ *    필요한 자리에서는 `heightControl`로 열 수 있다(`schema.ts`).
  */
 export const HEIGHT = {
 	id: 'h',
@@ -182,6 +186,22 @@ export const CI_LOCKUP_CONTROLS = [
 	CLEAR_SPACE,
 	MEASURED,
 ] as const
+
+/**
+ * 알약에서 뺄 축 — admin이 고른 목록에 **기본 비노출 축**을 더한다.
+ *
+ * 🔑 제한 변환(`controllers/registry.ts`)과 Canvas(`view.tsx`의 `pick`)가 **같은 답**을 봐야 한다.
+ *    갈라지면 알약에 없는 축을 Canvas가 알약 값으로 읽어 admin 값이 조용히 버려진다 — 이 위젯이
+ *    이미 한 번 그 모양으로 깨졌다(dispatch가 props를 안 넘기던 것).
+ */
+export function ciLockupHiddenAxes(fields: {
+	hiddenControls?: readonly (string | null)[] | null
+	heightControl?: boolean | null
+}): Set<string> {
+	const hidden = new Set((fields.hiddenControls ?? []).filter((id): id is string => Boolean(id)))
+	if (fields.heightControl !== true) hidden.add(HEIGHT.id)
+	return hidden
+}
 
 /** admin이 알약에서 뺄 수 있는 컨트롤 목록. */
 export const CI_LOCKUP_CONTROL_IDS = CI_LOCKUP_CONTROLS.map((control) => ({

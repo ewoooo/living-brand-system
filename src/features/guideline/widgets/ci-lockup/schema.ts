@@ -54,6 +54,15 @@ export const CiLockupWidget: Block = {
 	fields: [
 		...CI_LOCKUP_CONTROLS.map(initialValueField),
 		{
+			name: 'heightControl',
+			type: 'checkbox',
+			defaultValue: false,
+			admin: {
+				description:
+					'H를 알약에 노출합니다. 기본은 꺼짐 — H는 독자가 고를 값이 아니라 나란히 놓인 락업들의 비율을 맞추려고 저작자가 정하는 값입니다.',
+			},
+		},
+		{
 			name: 'hiddenControls',
 			type: 'select',
 			hasMany: true,

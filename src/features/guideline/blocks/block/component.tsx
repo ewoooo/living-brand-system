@@ -77,6 +77,7 @@ function renderWidget(child: Child): ReactNode {
 						mono: child.mono,
 						clearSpace: child.clearSpace,
 						measured: child.measured,
+						heightControl: child.heightControl,
 						hiddenControls: child.hiddenControls,
 					}}
 				/>

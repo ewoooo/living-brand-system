@@ -2,7 +2,11 @@ import type {
 	ControllerControlRestriction,
 	StudioControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
-import { CI_LOCKUP_CONTROLS, CI_LOCKUP_MANIFEST } from '../widgets/ci-lockup/manifest'
+import {
+	CI_LOCKUP_CONTROLS,
+	CI_LOCKUP_MANIFEST,
+	ciLockupHiddenAxes,
+} from '../widgets/ci-lockup/manifest'
 import { lockupOptions, tierFor } from '../widgets/ci-lockup/rules'
 import { CLEARSPACE_VIEWER_MANIFEST } from '../widgets/clearspace-viewer/manifest'
 import { LAYOUT_GRID_MANIFEST } from '../widgets/layout-grid/manifest'
@@ -62,7 +66,11 @@ function foldRestriction(
  * 🔴 좁히기만 한다. 목록은 매니페스트가 소유하므로 축이 늘면 이 변환도 저절로 따라온다.
  */
 function ciLockupRestrictions(fields: Record<string, unknown>): ControllerControlRestriction[] {
-	const hidden = Array.isArray(fields.hiddenControls) ? fields.hiddenControls : []
+	// 🔑 admin이 고른 목록 + 기본 비노출 축(H). 목록은 매니페스트가 소유한다.
+	const hidden = ciLockupHiddenAxes({
+		hiddenControls: Array.isArray(fields.hiddenControls) ? fields.hiddenControls : null,
+		heightControl: fields.heightControl === true,
+	})
 	// 🔑 계층이 정하는 선택지로 **좁힌다.** 매니페스트는 정적이라 꼴·언어의 합집합을 싣는데, 본사에는
 	//    가로형A·B가 없고 자회사에는 HD형이 없다. 좁히지 않으면 알약에 없는 조합이 떠서 고르면
 	//    렌더가 조용히 첫 항목으로 떨어진다 — 사용자에게는 「눌렀는데 아무 일도 안 일어난다」다.
@@ -82,7 +90,7 @@ function ciLockupRestrictions(fields: Record<string, unknown>): ControllerContro
 				? { optionValues: options, defaultValue: withinOptions(control, value, options) }
 				: {}),
 			...(!options && usable(control, value) ? { defaultValue: value } : {}),
-			...(hidden.includes(control.id) ? { availability: 'readonly' as const } : {}),
+			...(hidden.has(control.id) ? { availability: 'readonly' as const } : {}),
 		}
 	})
 }

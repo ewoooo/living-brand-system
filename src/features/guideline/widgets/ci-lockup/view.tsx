@@ -12,7 +12,14 @@ import {
 import { CI_STAGE_DARK, CI_STAGE_LIGHT } from '../surface'
 import { LockupDiagram } from './diagram'
 import { downloadSvg, lockupSvg } from './export-svg'
-import { BRANCH_VALUES, FORM_VALUES, HEIGHT, LANGUAGE_VALUES, SUBSIDIARY_VALUES } from './manifest'
+import {
+	BRANCH_VALUES,
+	ciLockupHiddenAxes,
+	FORM_VALUES,
+	HEIGHT,
+	LANGUAGE_VALUES,
+	SUBSIDIARY_VALUES,
+} from './manifest'
 import { easeMorph, MORPH, type MORPH_EASING, MORPH_MS, morph, reducedMotion } from './motion'
 import {
 	bearingOf,
@@ -90,6 +97,8 @@ export type CiLockupFixed = {
 	mono?: string | null
 	clearSpace?: string | null
 	measured?: boolean | null
+	/** H를 알약에 낼지. 🔴 기본은 꺼짐 — H는 저작자가 판끼리의 비율을 맞추는 값이다. */
+	heightControl?: boolean | null
 	/** 알약에서 뺀 축 목록. 이것이 「어느 값을 자기 것으로 쓸지」를 정한다. */
 	hiddenControls?: (string | null)[] | null
 }
@@ -105,7 +114,9 @@ export function CiLockupView({
 	//    스코프 밖(위젯 갤러리처럼 블록 없이 렌더)에서도 락업이 그려져야 한다.
 	const { values } = useGuidelineController()
 	// 🔑 뺀 축이면 자기 값, 아니면 알약 값. 스코프 밖이면 알약 값이 매니페스트 기본값으로 떨어진다.
-	const off = new Set((fixed.hiddenControls ?? []).filter((id): id is string => Boolean(id)))
+	// 🔴 제한 변환과 **같은 함수**로 판정한다. 둘이 갈라지면 알약에 없는 축을 여기서 알약 값으로
+	//    읽어 admin 값이 조용히 버려진다.
+	const off = ciLockupHiddenAxes(fixed)
 	const pick = <T,>(id: string, own: T | null | undefined, live: T): T =>
 		off.has(id) && own !== null && own !== undefined ? own : live
 

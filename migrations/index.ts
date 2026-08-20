@@ -77,6 +77,7 @@ import * as migration_20260819_090753_ci_lockup_snapshot_repair from './20260819
 import * as migration_20260819_090804_guideline_background_tone from './20260819_090804_guideline_background_tone';
 import * as migration_20260819_090805_ci_lockup_height_axis from './20260819_090805_ci_lockup_height_axis';
 import * as migration_20260819_094517_ci_sections_snapshot_merge from './20260819_094517_ci_sections_snapshot_merge';
+import * as migration_20260820_013946_ci_lockup_height_control from './20260820_013946_ci_lockup_height_control';
 
 export const migrations = [
   {
@@ -472,6 +473,11 @@ export const migrations = [
   {
     up: migration_20260819_094517_ci_sections_snapshot_merge.up,
     down: migration_20260819_094517_ci_sections_snapshot_merge.down,
-    name: '20260819_094517_ci_sections_snapshot_merge'
+    name: '20260819_094517_ci_sections_snapshot_merge',
+  },
+  {
+    up: migration_20260820_013946_ci_lockup_height_control.up,
+    down: migration_20260820_013946_ci_lockup_height_control.down,
+    name: '20260820_013946_ci_lockup_height_control'
   },
 ];

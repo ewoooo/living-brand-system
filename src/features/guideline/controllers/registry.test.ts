@@ -80,12 +80,24 @@ describe('CI 락업 admin 값 → restriction', () => {
 	})
 
 	it('hiddenControls에 담은 축만 readonly가 된다', () => {
-		const controls = ciEffective({ hiddenControls: ['form', 'language'] })
+		const controls = ciEffective({ heightControl: true, hiddenControls: ['form', 'language'] })
 
 		expect(controls.get('form')?.availability).toBe('readonly')
 		expect(controls.get('language')?.availability).toBe('readonly')
 		expect(controls.get('h')?.availability).toBeUndefined()
 		expect(controls.get('clearSpace')?.availability).toBeUndefined()
+	})
+
+	// 🔴 H는 독자가 고를 값이 아니라 저작자가 판끼리의 비율을 맞추는 값이다(사용자 지정 2026-08-20).
+	//    admin이 아무것도 안 고른 상태가 「알약에 H 없음」이어야 한다.
+	it('H는 admin이 열지 않는 한 알약에 나오지 않는다', () => {
+		expect(ciEffective({}).get('h')?.availability).toBe('readonly')
+		expect(ciEffective({ heightControl: true }).get('h')?.availability).toBeUndefined()
+	})
+
+	it('H를 열어도 hiddenControls가 이기면 readonly로 남는다', () => {
+		const controls = ciEffective({ heightControl: true, hiddenControls: ['h'] })
+		expect(controls.get('h')?.availability).toBe('readonly')
 	})
 
 	it('🔴 options에 없는 select 값은 버린다 — 렌더 중 throw로 페이지가 죽지 않게', () => {
