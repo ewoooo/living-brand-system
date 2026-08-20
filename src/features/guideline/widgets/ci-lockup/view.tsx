@@ -1,5 +1,6 @@
 'use client'
 
+import { Download } from '@carbon/icons-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,7 +9,6 @@ import {
 	controllerString,
 	useGuidelineController,
 } from '../../controllers/provider'
-import { SPEC_READOUT } from '../readout'
 import { CI_STAGE_DARK, CI_STAGE_LIGHT } from '../surface'
 import { LockupDiagram } from './diagram'
 import { downloadSvg, lockupSvg } from './export-svg'
@@ -17,7 +17,6 @@ import { easeMorph, MORPH, type MORPH_EASING, MORPH_MS, morph, reducedMotion } f
 import {
 	bearingOf,
 	branchLabel,
-	CLEAR_SPACE,
 	CLEAR_SPACE_MODES,
 	type ClearSpaceMode,
 	COLOR_TYPES,
@@ -25,13 +24,11 @@ import {
 	type Column,
 	clearSpaceFor,
 	deriveLockups,
-	FIDELITY_CAVEAT,
 	FONT,
 	fontSizeFor,
 	type Language,
 	type Lockup,
 	lockupOptions,
-	MIN_SIZE,
 	MONO_COLORS,
 	type MonoColor,
 	OVERSEAS_BRANCHES,
@@ -187,58 +184,30 @@ export function CiLockupView({
 	const clearSpace = clearSpaceFor(lockup.orientation, clearSpaceMode)
 
 	return (
-		<div className="flex w-full flex-col gap-8">
-			<LockupFigure
-				lockup={lockup}
-				h={H}
-				color={hex(textColorName(colorType, mono))}
-				stage={stage}
-				symbolT={symbolT}
-				symbolColors={symbolColors}
-				clearSpace={clearSpace}
-				diagram={
-					measured ? (
-						<LockupDiagram
-							lockup={lockup}
-							siblings={all}
-							h={H}
-							tone={tone}
-							color={hex(textColorName(colorType, mono))}
-							colors={colors}
-							stage={stage}
-							symbolT={symbolT}
-							symbolColors={symbolColors}
-						/>
-					) : null
-				}
-			/>
-
-			<dl className={`flex flex-wrap gap-x-6 gap-y-1 text-xs ${SPEC_READOUT}`}>
-				{/* 🔑 지금 무엇을 보고 있나. 컨트롤이 라벨로 상태를 중복 서술하지 않아도 되게 하고,
-					선택지가 하나뿐이라 그리지 않은 축(해외지사의 언어)이 여기서 읽힌다. */}
-				<div>
-					<dt className="inline">락업</dt> <dd className="inline">{lockup.label}</dd>
-				</div>
-				<div>
-					<dt className="inline">H</dt> <dd className="inline">{H}px</dd>
-				</div>
-				<div>
-					<dt className="inline">최소 크기</dt>{' '}
-					<dd className="inline">
-						디지털 {MIN_SIZE.digitalPx}px · 인쇄 {MIN_SIZE.printMm}mm
-					</dd>
-				</div>
-				<div>
-					<dt className="inline">클리어스페이스</dt>{' '}
-					<dd className="inline">
-						가로 {CLEAR_SPACE.horizontal.normal}H · 세로 {CLEAR_SPACE.vertical.normal}H
-					</dd>
-				</div>
-			</dl>
-
-			{/* 🔴 정본 서체가 아니라는 사실을 화면에서 뗄 수 없게 붙여 둔다. */}
-			<p className="font-body text-destructive text-xs">{FIDELITY_CAVEAT}</p>
-		</div>
+		<LockupFigure
+			lockup={lockup}
+			h={H}
+			color={hex(textColorName(colorType, mono))}
+			stage={stage}
+			symbolT={symbolT}
+			symbolColors={symbolColors}
+			clearSpace={clearSpace}
+			diagram={
+				measured ? (
+					<LockupDiagram
+						lockup={lockup}
+						siblings={all}
+						h={H}
+						tone={tone}
+						color={hex(textColorName(colorType, mono))}
+						colors={colors}
+						stage={stage}
+						symbolT={symbolT}
+						symbolColors={symbolColors}
+					/>
+				) : null
+			}
+		/>
 	)
 }
 
@@ -396,23 +365,21 @@ function LockupFigure({
 	/** 치수 도판. 있으면 판 안의 락업을 이것으로 갈아끼운다(같은 자리·같은 판 크기). */
 	diagram: React.ReactNode
 }) {
-	const assumed =
-		lockup.columns.some((column) => column.rows.some((row) => row.assumed)) ||
-		Boolean(lockup.note)
-
 	const stageRef = useRef<HTMLDivElement>(null)
 	/* 🔑 내보내기는 **화면에 있는 것을 옮겨 적는다** — 좌표를 다시 만들지 않는다(`export-svg.ts`).
-	   🔴 치수 도판이 켜져 있으면 락업이 판에서 빠져 있어 내보낼 잉크가 없다. */
-	const download = async (withBackground: boolean) => {
-		const stage = stageRef.current
-		const root = withBackground ? stage : stage?.querySelector<HTMLElement>('[data-lockup]')
+	   🔴 치수 도판이 켜져 있으면 락업이 판에서 빠져 있어 내보낼 잉크가 없다.
+	   🔴 판(배경)째로 내보내는 갈래는 지웠다(사용자 지정 2026-08-20) — 아이콘 하나로 합치면서
+	      「가져다 쓸 수 있는 것」인 로고만 남겼다. 되살리려면 `lockupSvg`의 둘째 인자가 그 갈래다. */
+	const download = async () => {
+		const root = stageRef.current?.querySelector<HTMLElement>('[data-lockup]')
 		if (!root) return
-		const what = withBackground ? '판' : '로고'
-		downloadSvg(`${lockup.label} ${what}.svg`, await lockupSvg(root, withBackground))
+		downloadSvg(`${lockup.label} 로고.svg`, await lockupSvg(root, false))
 	}
 
 	return (
-		<figure className="flex flex-col gap-3">
+		// 🔴 판 자체가 hover 대상이자 버튼의 기준면이다. 버튼을 판 **밖**(이 래퍼)에 두는 이유는
+		//    판이 `overflow-x-auto`라 안에 넣으면 락업과 함께 가로로 스크롤돼 나가기 때문이다.
+		<div className="group/export relative">
 			{/* 🔴 판은 밝아야 한다(기본형 Full Color는 밝은 배경 전용). 다크 모드에서도 마찬가지다.
 				overflow-x-auto는 안전망이다 — 좁은 자리에서도 로고를 자르지 않고 흘려보낸다. */}
 			{/* 🔴 안쪽 패딩을 두지 않는다(사용자 지정 2026-08-19) — 판은 캔버스이고, 그 안의 것이
@@ -444,45 +411,22 @@ function LockupFigure({
 					</ClearSpaceFrame>
 				)}
 			</div>
-			{/* 🔴 도판 모드에서는 락업이 판에 없다 — 내보낼 것이 없으므로 잠근다. */}
-			<div className="flex flex-wrap gap-2">
+			{/* 🔴 도판 모드에서는 락업이 판에 없다 — 내보낼 것이 없으므로 아예 그리지 않는다.
+				🔴 hover에만 나타나지만 키보드에서도 닿아야 하므로 focus-visible에도 연다. */}
+			{diagram ? null : (
 				<Button
 					type="button"
 					variant="outline"
-					size="sm"
+					size="icon-sm"
 					shape="sharp"
-					disabled={Boolean(diagram)}
-					onClick={() => void download(false)}
+					aria-label={`${lockup.label} SVG 내려받기`}
+					className="absolute top-2 right-2 opacity-0 transition-opacity group-hover/export:opacity-100 focus-visible:opacity-100"
+					onClick={() => void download()}
 				>
-					SVG — 로고만
+					<Download />
 				</Button>
-				<Button
-					type="button"
-					variant="outline"
-					size="sm"
-					shape="sharp"
-					disabled={Boolean(diagram)}
-					onClick={() => void download(true)}
-				>
-					SVG — 배경·판 크기 포함
-				</Button>
-			</div>
-
-			<figcaption className="flex flex-col gap-1">
-				<span className="font-body text-foreground text-sm">
-					{lockup.label}
-					{assumed ? (
-						<span className="ml-2 font-body text-destructive text-xs">
-							브랜드팀 확인 필요
-						</span>
-					) : null}
-				</span>
-				<span className={`${SPEC_READOUT} text-xs`}>{lockup.source}</span>
-				{lockup.note ? (
-					<span className="font-body text-destructive text-xs">{lockup.note}</span>
-				) : null}
-			</figcaption>
-		</figure>
+			)}
+		</div>
 	)
 }
 
