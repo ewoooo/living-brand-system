@@ -74,12 +74,15 @@ function NumberOptionChips({
 
 function NumberInputRow({
 	label,
+	unit,
 	min,
 	value,
 	disabled,
 	onChange,
 }: {
 	label: string
+	/** 값 오른쪽의 단위 표기(정본 76:4): s·px. */
+	unit: string
 	min: number
 	value: number | null | undefined
 	disabled?: boolean
@@ -87,17 +90,22 @@ function NumberInputRow({
 }) {
 	return (
 		<Controller.Row label={label} disabled={disabled}>
-			<Controller.Input
-				type="number"
-				min={min}
-				value={value ?? ''}
-				placeholder="제한 없음"
-				onChange={(event) => {
-					if (event.target.value === '') return onChange(undefined)
-					const parsed = Number(event.target.value)
-					if (Number.isFinite(parsed)) onChange(parsed)
-				}}
-			/>
+			{/* 정본은 값이 행 오른끝 정렬 — 입력을 우측 정렬하고 단위를 붙인다. */}
+			<span className="flex min-w-0 flex-1 items-center justify-end gap-1">
+				<Controller.Input
+					type="number"
+					min={min}
+					value={value ?? ''}
+					placeholder="제한 없음"
+					className="text-right"
+					onChange={(event) => {
+						if (event.target.value === '') return onChange(undefined)
+						const parsed = Number(event.target.value)
+						if (Number.isFinite(parsed)) onChange(parsed)
+					}}
+				/>
+				<span className="shrink-0 text-muted-foreground text-sm">{unit}</span>
+			</span>
 		</Controller.Row>
 	)
 }
@@ -159,7 +167,7 @@ export function StudioExportPolicyField({
 	return (
 		<div className="lbs-kit field-type group mb-5">
 			<AdminSectionHeading>출력 설정</AdminSectionHeading>
-			<div className="flex flex-col rounded-xl border p-4">
+			<div className="flex flex-col rounded-xl border p-6">
 				{supportedFormats.length === 0 ? (
 					<p className="text-muted-foreground text-sm">
 						{source === 'template'
@@ -220,7 +228,8 @@ export function StudioExportPolicyField({
 									onChange={(next) => fpsField.setValue(next)}
 								/>
 								<NumberInputRow
-									label="최대 영상 길이(초)"
+									label="최대 영상 길이"
+									unit="s"
 									min={0.1}
 									value={durationField.value}
 									disabled={durationField.disabled}
@@ -229,6 +238,7 @@ export function StudioExportPolicyField({
 								<div className="grid grid-cols-1 gap-1 md:grid-cols-2">
 									<NumberInputRow
 										label="최대 너비"
+										unit="px"
 										min={1}
 										value={widthField.value}
 										disabled={widthField.disabled}
@@ -236,6 +246,7 @@ export function StudioExportPolicyField({
 									/>
 									<NumberInputRow
 										label="최대 높이"
+										unit="px"
 										min={1}
 										value={heightField.value}
 										disabled={heightField.disabled}

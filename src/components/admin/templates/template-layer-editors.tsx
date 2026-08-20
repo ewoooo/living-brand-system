@@ -36,8 +36,8 @@ function usePublishedImageProfiles() {
  */
 function LayerCard({ heading, children }: { heading: ReactNode; children: ReactNode }) {
 	return (
-		<section className="flex flex-col rounded-xl border p-4">
-			<h3 className="pb-2 font-semibold text-lg">{heading}</h3>
+		<section className="flex flex-col rounded-xl border p-6">
+			<h3 className="pb-3 font-semibold text-xl">{heading}</h3>
 			{children}
 		</section>
 	)

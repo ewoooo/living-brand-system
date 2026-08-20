@@ -16,9 +16,9 @@ type ControllerChipsProps<T extends string> = {
 }
 
 /**
- * 다중 선택 칩 — `Segmented`와 같은 자리(행 오른끝 2px 인셋)·타이포를 쓰되, 하나가 아니라
- * 여러 개가 켜지므로 미끄러지는 pill 대신 켜진 칩마다 같은 채움(foreground/10)을 준다.
- * 정본 76:4의 배경 형식·출력 형식·해상도·프레임 칩이 이 파츠다.
+ * 다중 선택 칩 — Segmented의 미끄러지는 pill과 달리 여러 개가 켜지므로, 정본(76:4)대로
+ * **간격 있는 개별 pill**로 그린다: 켜짐 = foreground/10 채움, 꺼짐 = 흐린 텍스트.
+ * 배경 형식·출력 형식·해상도·프레임 칩이 이 파츠다.
  */
 export function ControllerChips<T extends string>({
 	options,
@@ -31,15 +31,13 @@ export function ControllerChips<T extends string>({
 	const row = useRowControl()
 	const resolvedDisabled = disabled ?? row?.disabled
 	return (
-		<div data-slot="controller-chips" className="-mr-2.5 flex h-9 shrink-0 items-center py-0.5">
+		<div data-slot="controller-chips" className="-mr-1 flex h-9 shrink-0 items-center">
 			<ToggleGroup
 				type="multiple"
 				value={[...value]}
 				onValueChange={(next) => onChange(next as T[])}
 				aria-label={ariaLabel}
 				disabled={resolvedDisabled}
-				spacing={0}
-				className="h-full"
 			>
 				{options.map((option) => (
 					<ToggleGroupItem
@@ -47,7 +45,7 @@ export function ControllerChips<T extends string>({
 						value={option.value}
 						size="sm"
 						disabled={disabledValues?.includes(option.value)}
-						className="h-full rounded-sm bg-transparent px-2 text-muted-foreground text-sm transition-colors hover:bg-transparent hover:text-foreground data-[state=on]:bg-foreground/10 data-[state=on]:text-foreground data-[state=on]:hover:bg-foreground/10"
+						className="h-7 rounded-md bg-transparent px-2.5 text-muted-foreground text-sm transition-colors hover:bg-transparent hover:text-foreground data-[state=on]:bg-foreground/10 data-[state=on]:text-foreground data-[state=on]:hover:bg-foreground/10"
 					>
 						{option.label}
 					</ToggleGroupItem>
