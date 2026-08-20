@@ -39,6 +39,8 @@ export interface FigmaTextStyle {
 	fontFamily?: string
 	fontSize?: number
 	fontWeight?: number
+	/** PostScript 이름(예: HDOTF-Bd). 웨이트를 이름으로만 나르는 폰트에서 웨이트 복원의 폴백. */
+	fontPostScriptName?: string
 	lineHeightPx?: number
 	letterSpacing?: number
 	textAlignHorizontal?: string

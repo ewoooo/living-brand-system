@@ -146,6 +146,38 @@ describe('convertFigmaNodeToHtml — 텍스트', () => {
 		expect(convertFigmaNodeToHtml(GRID_FRAME).html).not.toContain('font-family:"Inter"')
 	})
 
+	it('스타일 이름이 웨이트 숫자를 이긴다 — 이름으로만 웨이트를 나르는 폰트(HD OTF)', () => {
+		// 실제 사고(2026-08-20): HD OTF는 Bold/Medium/Light 모두 usWeightClass가 400이라
+		// Figma가 fontWeight:400을 내려 모든 텍스트가 Medium으로 그려졌다.
+		const text = (style: Record<string, unknown>) => ({
+			id: '1:1',
+			name: 't',
+			type: 'TEXT',
+			characters: 'FUTURE BUILDERS',
+			absoluteBoundingBox: { x: 0, y: 0, width: 600, height: 100 },
+			style: { fontFamily: 'HD OTF', fontSize: 96, ...style },
+		})
+		// 스타일 이름이 정본: fontWeight 400이어도 Bold면 700.
+		expect(
+			rootStyle(convertFigmaNodeToHtml(text({ fontStyle: 'Bold', fontWeight: 400 })).html),
+		).toContain('font-weight:700')
+		// fontStyle이 없으면 PostScript 이름 접미사로 복원한다.
+		expect(
+			rootStyle(
+				convertFigmaNodeToHtml(text({ fontPostScriptName: 'HDOTF-Lt', fontWeight: 400 }))
+					.html,
+			),
+		).toContain('font-weight:300')
+		// 이름에서 웨이트를 못 읽으면(Regular) 숫자를 그대로 쓴다.
+		expect(
+			rootStyle(convertFigmaNodeToHtml(text({ fontStyle: 'Regular', fontWeight: 400 })).html),
+		).toContain('font-weight:400')
+		// 합성 이름은 더 구체적인 쪽이 이긴다: SemiBold는 Bold(700)가 아니라 600.
+		expect(
+			rootStyle(convertFigmaNodeToHtml(text({ fontStyle: 'SemiBold Italic' })).html),
+		).toContain('font-weight:600')
+	})
+
 	it('JUSTIFIED를 유효한 CSS 값 justify로 옮긴다(justified는 무효)', () => {
 		const { html } = convertFigmaNodeToHtml({
 			id: '1:1',
