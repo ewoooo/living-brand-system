@@ -407,8 +407,10 @@ function LockupFigure({
 		// 🔴 focus로는 열지 않는다. 도판이 나오면 내보내기 버튼이 판에서 빠지는데, 그 버튼에 포커스가
 		//    닿아 도판이 열리면 **포커스를 쥔 요소 자신이 사라져** 포커스가 body로 튄다. 키보드에서
 		//    치수를 여는 길은 아직 없고, 그 사실은 `docs/11` §7에 결함으로 적어 두었다.
+		// 🔴 `h-full`은 판을 **셀에 맞추기 위한 것**이다. 배치가 첫 칸을 두 줄 높이로 늘리면
+		//    (`featuredSide`) 고정 높이 판이 위쪽에만 붙고 아래가 통째로 빈다 — 실측 656 대 320.
 		<div
-			className="group/export relative"
+			className="group/export relative h-full"
 			onPointerEnter={() => setPeeking(true)}
 			onPointerLeave={() => setPeeking(false)}
 		>
@@ -417,18 +419,20 @@ function LockupFigure({
 			{/* 🔴 안쪽 패딩을 두지 않는다(사용자 지정 2026-08-19) — 판은 캔버스이고, 그 안의 것이
 				판 끝까지 닿을 수 있어야 한다. 여백이 필요한 것은 판이 아니라 락업이고 그것은
 				클리어스페이스가 규정으로 갖는다. */}
-			{/* 🔴 판 크기는 **고정**이다(`STAGE_HEIGHT`). 선택에 따라 판이 커졌다 작아지면 위젯이
-				위아래로 튀어 락업이 아니라 화면이 움직이는 것처럼 보인다. 안의 락업만 변한다.
+			{/* 🔴 판 크기는 **선택에 따라 변하지 않는다**(`STAGE_HEIGHT`). 표현을 바꿀 때마다 판이
+				커졌다 작아지면 락업이 아니라 화면이 움직이는 것처럼 보인다. 안의 락업만 변한다.
+				🔑 그래서 `height`가 아니라 `minHeight`다 — 바뀌지 않아야 하는 것은 **선택에 대한**
+				불변이고, 배치가 준 셀이 더 크면 판은 그것을 채워야 한다(빈 칸이 남는 것이 아니라).
 				판 색은 표현이 정하고 테마를 따르지 않으므로 전환도 여기서 이어 준다. */}
 			<div
 				ref={stageRef}
-				className="flex items-center justify-center overflow-x-auto border border-border"
+				className="flex h-full items-center justify-center overflow-x-auto border border-border"
 				style={{
 					background: stage,
-					height: h * STAGE_HEIGHT,
+					minHeight: h * STAGE_HEIGHT,
 					// 🔴 높이에도 전환이 필요하다 — H가 컨트롤러 축이 된 뒤로 한 칸 올릴 때마다 판이
 					//    32px씩 즉시 커져 그 아래 문서 전체가 튄다(판을 고정 비율로 둔 이유가 무효화된다).
-					transition: `background-color ${MORPH}, height ${MORPH}`,
+					transition: `background-color ${MORPH}, min-height ${MORPH}`,
 				}}
 			>
 				{shown ?? (

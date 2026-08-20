@@ -557,9 +557,9 @@ export interface LayoutBlock {
    */
   innerBackground?: (number | null) | BrandColor;
   /**
-   * 위젯 배치 방식입니다. grid/carousel/masonry/featured 구현.
+   * 위젯 배치 방식입니다. 피처드 둘은 첫 자식만 크게 두고 나머지를 남은 칸에 흘립니다 — 윗줄이냐 왼쪽 열이냐만 다릅니다.
    */
-  arrangement?: ('grid' | 'carousel' | 'featured' | 'masonry') | null;
+  arrangement?: ('grid' | 'carousel' | 'featured' | 'featuredSide' | 'masonry') | null;
   /**
    * grid 열 수입니다(행은 자식 개수로 자동).
    */
