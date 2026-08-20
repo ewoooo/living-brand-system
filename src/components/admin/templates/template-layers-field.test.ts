@@ -180,40 +180,7 @@ describe('toggleAllowedId', () => {
 })
 
 describe('TemplateLayersField 폼 계약', () => {
-	it('이미지 컬러 치환의 두 스와치가 브랜드 컬러 요청을 공유한다', async () => {
-		const fetchMock = vi.fn((input: string) =>
-			Promise.resolve({
-				ok: true,
-				json: () =>
-					Promise.resolve({
-						docs: input.includes('brand-colors')
-							? [{ id: 3, name: 'Primary', hex: '#112233' }]
-							: [],
-					}),
-			}),
-		)
-		vi.stubGlobal('fetch', fetchMock)
-
-		render(
-			createElement(TemplateLayerEditor, {
-				selected: imageLayer,
-				config: {
-					backgroundImage: '/image.png',
-					imageColorize: { line: '#112233', background: '#ffffff' },
-				},
-				onCommit: vi.fn(),
-			}),
-		)
-
-		await waitFor(() =>
-			expect(screen.getAllByRole('button', { name: 'Primary #112233' })).toHaveLength(2),
-		)
-		expect(
-			fetchMock.mock.calls.filter(([url]) => url.includes('/api/brand-colors')),
-		).toHaveLength(1)
-	})
-
-	it('AI 생성과 이미지 슬롯이 이미지 프로파일 요청을 공유한다', async () => {
+	it('이미지 슬롯은 발행 프로파일을 한 번 요청해 허용 토글로 그린다', async () => {
 		const fetchMock = vi.fn(() =>
 			Promise.resolve({
 				ok: true,
@@ -231,42 +198,10 @@ describe('TemplateLayersField 폼 계약', () => {
 		)
 
 		await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
-		expect(
-			screen
-				.getByRole('combobox', { name: '이미지 프로파일' })
-				.closest('[data-popup-prevent-close]'),
-		).not.toBeNull()
-	})
-
-	it('이미지 슬라이더는 포인터와 키보드 조작을 각각 한 번만 커밋한다', () => {
-		vi.stubGlobal(
-			'fetch',
-			vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({ docs: [] }) })),
+		expect(screen.getByRole('button', { name: 'Default' })).toHaveAttribute(
+			'aria-pressed',
+			'true',
 		)
-		const onCommit = vi.fn()
-
-		render(
-			createElement(TemplateLayerEditor, {
-				selected: imageLayer,
-				config: { backgroundImage: '/image.png' },
-				onCommit,
-			}),
-		)
-		const slider = screen.getByRole('slider', { name: '이동 X (px)' })
-
-		fireEvent.change(slider, { target: { value: '120' } })
-		fireEvent.pointerUp(slider)
-		fireEvent.blur(slider)
-		expect(onCommit).toHaveBeenCalledTimes(1)
-
-		fireEvent.change(slider, { target: { value: '121' } })
-		fireEvent.keyUp(slider, { key: 'Shift' })
-		expect(onCommit).toHaveBeenCalledTimes(1)
-		fireEvent.keyUp(slider, { key: 'ArrowRight' })
-		expect(onCommit).toHaveBeenCalledTimes(2)
-		expect(onCommit).toHaveBeenLastCalledWith({
-			imageTransform: { x: 121, y: 0, scale: 1, rotate: 0 },
-		})
 	})
 
 	it('선택 레이어 편집을 overrides와 합성 html에 커밋하고 폼을 modified로 표시한다', () => {

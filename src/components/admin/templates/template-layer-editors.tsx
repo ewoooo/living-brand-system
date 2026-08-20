@@ -1,14 +1,12 @@
 'use client'
 
-import { MagicWand } from '@carbon/icons-react'
-import { Popup, toast } from '@payloadcms/ui'
-import { type ComponentProps, type ReactNode, useEffect, useState } from 'react'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { toast } from '@payloadcms/ui'
+import { type ReactNode, useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
 	Field,
 	FieldDescription,
-	FieldError,
 	FieldGroup,
 	FieldLabel,
 	FieldLegend,
@@ -24,21 +22,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import {
-	type ImageAspectRatio,
-	nearestImageAspectRatio,
-} from '@/features/image-generation/image-size'
-import {
 	type ImageProfileOption,
-	requestAdminImageGeneration,
 	requestPublishedImageProfiles,
 } from '@/features/image-generation/services/generate-image.client'
-import { IDENTITY_TRANSFORM, isIdentityTransform } from '@/lib/template-image-transform'
 import type { TemplateLayerAccess, TemplateNodeConfig, TemplateSlotSpec } from '@/types/template'
-import { BrandColorSwatches, usePublishedBrandColors } from './brand-color-swatches'
-import type { ImageTransform } from './image-transform-gestures'
 import {
 	canAssignImage,
 	IMAGE_CONFIG_KEYS,
@@ -59,112 +48,6 @@ function usePublishedImageProfiles() {
 			})
 	}, [])
 	return profiles
-}
-
-function AiPopupTrigger({ render }: { render: ComponentProps<typeof Popup>['render'] }) {
-	return (
-		<Popup
-			buttonType="custom"
-			buttonClassName={buttonVariants({ variant: 'outline', size: 'sm' })}
-			verticalAlign="top"
-			horizontalAlign="left"
-			size="fit-content"
-			button={
-				<>
-					<MagicWand data-icon="inline-start" aria-hidden /> AI 생성
-				</>
-			}
-			render={render}
-		/>
-	)
-}
-
-function AiImageForm({
-	aspectRatio,
-	onApply,
-	profiles,
-}: {
-	aspectRatio?: ImageAspectRatio
-	onApply: (image: { id: number; src: string }) => void
-	profiles: ImageProfileOption[] | null
-}) {
-	const [prompt, setPrompt] = useState('')
-	const [loading, setLoading] = useState(false)
-	const [pickedProfileId, setPickedProfileId] = useState<number>()
-	const profileId = pickedProfileId ?? profiles?.[0]?.id
-
-	async function run() {
-		const trimmed = prompt.trim()
-		if (!trimmed || !profileId || loading) return
-		setLoading(true)
-		try {
-			const result = await requestAdminImageGeneration({
-				prompt: trimmed,
-				count: 1,
-				profileId,
-				aspectRatio,
-			})
-			const generated = result.generatedImages?.[0]
-			if (generated) onApply({ id: generated.id, src: generated.url })
-			else toast.error('이미지 생성 실패 — 잠시 후 다시 시도하세요.')
-		} catch {
-			toast.error('이미지 생성 실패 — 잠시 후 다시 시도하세요.')
-		} finally {
-			setLoading(false)
-		}
-	}
-
-	return (
-		<FieldGroup data-popup-prevent-close className="w-64 gap-2 p-2">
-			<Field>
-				<FieldLabel htmlFor="template-ai-image-profile">이미지 프로파일</FieldLabel>
-				<Select
-					value={profileId ? String(profileId) : undefined}
-					onValueChange={(value) => setPickedProfileId(Number(value))}
-				>
-					<SelectTrigger
-						id="template-ai-image-profile"
-						className="w-full"
-						disabled={!profiles?.length}
-					>
-						<SelectValue
-							placeholder={profiles ? '발행된 프로파일 없음' : '프로파일 불러오는 중'}
-						/>
-					</SelectTrigger>
-					<SelectContent>
-						<SelectGroup>
-							{profiles?.map((profile) => (
-								<SelectItem key={profile.id} value={String(profile.id)}>
-									{profile.name}
-								</SelectItem>
-							))}
-						</SelectGroup>
-					</SelectContent>
-				</Select>
-				{aspectRatio && <FieldDescription>슬롯 비율 {aspectRatio}로 생성</FieldDescription>}
-			</Field>
-			<Field>
-				<FieldLabel htmlFor="template-ai-image-prompt">생성 프롬프트</FieldLabel>
-				<Textarea
-					id="template-ai-image-prompt"
-					value={prompt}
-					onChange={(event) => setPrompt(event.target.value)}
-					rows={3}
-					placeholder="예: 미니멀한 파스텔 그라디언트 배경"
-				/>
-			</Field>
-			<Button
-				type="button"
-				variant="tint"
-				size="sm"
-				disabled={loading || !profileId || !prompt.trim()}
-				onClick={run}
-			>
-				{loading && <Spinner data-icon="inline-start" />}
-				{loading ? '생성 중...' : '생성'}
-			</Button>
-		</FieldGroup>
-	)
 }
 
 function SpecField({
@@ -356,18 +239,12 @@ function SlotSpecEditor({
 type ImageSlotInput = NonNullable<TemplateNodeConfig['imageInput']>
 
 /**
- * 프로파일 셀렉트 값을 imageInput에 반영한다 — profileId만 갈아끼우고 allowedProfileIds·transform은 보존한다.
- * 예전엔 이 셀렉트가 imageInput 전체를 교체해 옆 필드(허용 프로파일·창작자 변형 허용)를 조용히 지웠다.
+ * 예전 고정(profileId) 저장값을 허용 목록 한 개로 읽는다 — 고정 저작 UI는 간소화로 제거했고,
+ * 허용 목록에 하나만 켠 것이 고정과 같다. 도메인 읽기 경로(pinned 투영)는 남아 있으므로,
+ * 편집기가 커밋할 때 profileId를 지워 허용 목록으로 수렴시킨다.
  */
-export function applyImageSlotProfileSelection(
-	imageInput: ImageSlotInput,
-	value: string,
-): ImageSlotInput {
-	if (value === 'studio') {
-		const { profileId: _dropped, ...rest } = imageInput
-		return rest
-	}
-	return { ...imageInput, profileId: Number(value) }
+export function imageSlotAllowedProfileIds(imageInput: ImageSlotInput): number[] | undefined {
+	return imageInput.profileId ? [imageInput.profileId] : imageInput.allowedProfileIds
 }
 
 function ImageSlotSpecEditor({
@@ -379,65 +256,40 @@ function ImageSlotSpecEditor({
 	onChange: (imageInput: ImageSlotInput) => void
 	profiles: ImageProfileOption[] | null
 }) {
+	const allowed = imageSlotAllowedProfileIds(imageInput)
 	return (
 		<FieldGroup className="max-w-sm rounded-md border p-3">
-			<Field>
-				<FieldLabel htmlFor="image-slot-profile">
-					프로파일 고정 — 없으면 유저가 선택
-				</FieldLabel>
-				<Select
-					value={imageInput.profileId ? String(imageInput.profileId) : 'studio'}
-					onValueChange={(value) =>
-						onChange(applyImageSlotProfileSelection(imageInput, value))
-					}
-				>
-					<SelectTrigger id="image-slot-profile" className="w-full">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectGroup>
-							<SelectItem value="studio">스튜디오에서 선택</SelectItem>
-							{profiles?.map((profile) => (
-								<SelectItem key={profile.id} value={String(profile.id)}>
-									{profile.name}
-								</SelectItem>
-							))}
-						</SelectGroup>
-					</SelectContent>
-				</Select>
-			</Field>
-			{imageInput.profileId ? null : (
-				<FieldSet className="gap-2">
-					<FieldLegend variant="label">허용 프로파일 — 고르지 않으면 전부</FieldLegend>
-					<div className="flex flex-wrap gap-2">
-						{profiles?.map((profile) => {
-							const all = profiles.map((candidate) => candidate.id)
-							const on = (imageInput.allowedProfileIds ?? all).includes(profile.id)
-							return (
-								<Button
-									key={profile.id}
-									type="button"
-									size="sm"
-									aria-pressed={on}
-									variant={on ? 'muted' : 'outline'}
-									onClick={() =>
-										onChange({
-											...imageInput,
-											allowedProfileIds: toggleAllowedId(
-												imageInput.allowedProfileIds,
-												all,
-												profile.id,
-											),
-										})
-									}
-								>
-									{profile.name}
-								</Button>
-							)
-						})}
-					</div>
-				</FieldSet>
-			)}
+			<FieldSet className="gap-2">
+				<FieldLegend variant="label">허용 프로파일 — 고르지 않으면 전부</FieldLegend>
+				<div className="flex flex-wrap gap-2">
+					{profiles?.map((profile) => {
+						const all = profiles.map((candidate) => candidate.id)
+						const on = (allowed ?? all).includes(profile.id)
+						return (
+							<Button
+								key={profile.id}
+								type="button"
+								size="sm"
+								aria-pressed={on}
+								variant={on ? 'muted' : 'outline'}
+								onClick={() => {
+									const { profileId: _legacy, ...rest } = imageInput
+									onChange({
+										...rest,
+										allowedProfileIds: toggleAllowedId(
+											allowed,
+											all,
+											profile.id,
+										),
+									})
+								}}
+							>
+								{profile.name}
+							</Button>
+						)
+					})}
+				</div>
+			</FieldSet>
 			<Field>
 				<FieldLabel htmlFor="image-slot-transform">창작자 변형 허용</FieldLabel>
 				<Button
@@ -460,177 +312,6 @@ function ImageSlotSpecEditor({
 	)
 }
 
-function ImageTransformEditor({
-	value,
-	onChange,
-}: {
-	value?: ImageTransform
-	onChange: (next?: ImageTransform) => void
-}) {
-	const [draft, setDraft] = useState<ImageTransform>(value ?? IDENTITY_TRANSFORM)
-	const commit = (next: ImageTransform) => onChange(isIdentityTransform(next) ? undefined : next)
-
-	useEffect(() => setDraft(value ?? IDENTITY_TRANSFORM), [value])
-
-	const fields = [
-		{ key: 'x', label: '이동 X (px)', min: -1000, max: 1000, step: 1 },
-		{ key: 'y', label: '이동 Y (px)', min: -1000, max: 1000, step: 1 },
-		{ key: 'scale', label: '확대', min: 0.2, max: 5, step: 0.05 },
-		{ key: 'rotate', label: '회전 (deg)', min: -180, max: 180, step: 1 },
-	] as const
-
-	return (
-		<FieldGroup className="grid max-w-xl grid-cols-1 gap-3 rounded-md border p-3 md:grid-cols-2">
-			{fields.map(({ key, label, min, max, step }) => (
-				<SpecField key={key} id={`image-transform-${key}`} label={label}>
-					<div className="flex items-center gap-2">
-						<input
-							type="range"
-							min={min}
-							max={max}
-							step={step}
-							value={draft[key]}
-							aria-label={label}
-							className="min-w-0 flex-1"
-							onChange={(event) =>
-								setDraft({ ...draft, [key]: Number(event.target.value) })
-							}
-							onPointerUp={() => commit(draft)}
-							onKeyUp={(event) => {
-								if (
-									[
-										'ArrowDown',
-										'ArrowLeft',
-										'ArrowRight',
-										'ArrowUp',
-										'End',
-										'Home',
-										'PageDown',
-										'PageUp',
-									].includes(event.key)
-								) {
-									commit(draft)
-								}
-							}}
-						/>
-						<Input
-							type="number"
-							id={`image-transform-${key}`}
-							min={min}
-							max={max}
-							step={step}
-							value={draft[key]}
-							className="w-20 shrink-0"
-							onChange={(event) => {
-								const parsed = Number(event.target.value)
-								if (!Number.isFinite(parsed)) return
-								const next = { ...draft, [key]: parsed }
-								setDraft(next)
-								commit(next)
-							}}
-						/>
-					</div>
-				</SpecField>
-			))}
-			<div className="md:col-span-2">
-				<Button
-					type="button"
-					variant="outline"
-					size="sm"
-					onClick={() => {
-						setDraft(IDENTITY_TRANSFORM)
-						onChange(undefined)
-					}}
-				>
-					초기화
-				</Button>
-			</div>
-		</FieldGroup>
-	)
-}
-
-type ImageColorize = NonNullable<TemplateNodeConfig['imageColorize']>
-
-function ImageColorizeEditor({
-	value,
-	onChange,
-}: {
-	value?: ImageColorize
-	onChange: (next?: ImageColorize) => void
-}) {
-	const [showBackground, setShowBackground] = useState(Boolean(value?.background))
-	const { colors, loadError } = usePublishedBrandColors()
-	const current: Partial<ImageColorize> = value ?? {}
-
-	useEffect(() => setShowBackground(Boolean(value?.background)), [value?.background])
-
-	const pick = (field: 'line' | 'background', hex: string) => {
-		const next = { ...current, [field]: hex }
-		if (next.line) {
-			onChange(
-				next.background
-					? { line: next.line, background: next.background }
-					: { line: next.line },
-			)
-		}
-	}
-
-	return (
-		<div className="flex flex-col gap-3">
-			{(showBackground
-				? ([
-						['line', '선 색'],
-						['background', '배경 색'],
-					] as const)
-				: ([['line', '선 색']] as const)
-			).map(([field, label]) => {
-				const needsLine = field === 'background' && !current.line
-				return (
-					<BrandColorSwatches
-						key={field}
-						legend={needsLine ? `${label} — 선 색을 먼저 고르세요` : label}
-						colors={colors}
-						value={current[field]}
-						onPick={(hex) => pick(field, hex)}
-						disabled={needsLine}
-					/>
-				)
-			})}
-			{!showBackground && (
-				<FieldDescription>
-					배경 없이 선만 칠합니다(캔버스가 그대로 비칩니다)
-				</FieldDescription>
-			)}
-			<Field orientation="horizontal" className="w-fit">
-				<Checkbox
-					id="image-colorize-background"
-					checked={showBackground}
-					onCheckedChange={(checked) => {
-						const enabled = checked === true
-						setShowBackground(enabled)
-						if (!enabled && current.line) onChange({ line: current.line })
-					}}
-				/>
-				<FieldLabel htmlFor="image-colorize-background">배경 직접 지정</FieldLabel>
-			</Field>
-			<div>
-				<Button
-					type="button"
-					variant="outline"
-					size="sm"
-					onClick={() => {
-						setShowBackground(false)
-						onChange(undefined)
-					}}
-				>
-					해제
-				</Button>
-			</div>
-			{loadError && <FieldError>브랜드 컬러를 불러오지 못했습니다.</FieldError>}
-		</div>
-	)
-}
-
 function ImageLayerEditor({
 	access,
 	config,
@@ -647,48 +328,12 @@ function ImageLayerEditor({
 	return (
 		<div>
 			<FieldTitle>배경 설정 — {selected.name}</FieldTitle>
-			<div className="mt-2 flex flex-wrap gap-2">
-				<AiPopupTrigger
-					render={({ close }) => (
-						<AiImageForm
-							aspectRatio={nearestImageAspectRatio(
-								selected.boxWidth ?? Number.NaN,
-								selected.boxHeight ?? Number.NaN,
-							)}
-							profiles={profiles}
-							onApply={(image) => {
-								onCommit({
-									backgroundImage: image.src,
-									generatedImageId: image.id,
-								})
-								close()
-							}}
-						/>
-					)}
-				/>
-			</div>
 			{access !== 'hidden' && (
 				<ImageSlotSpecEditor
 					imageInput={config.imageInput ?? {}}
 					profiles={profiles}
 					onChange={(imageInput) => onCommit({ imageInput })}
 				/>
-			)}
-			{config.backgroundImage && (
-				<div className="mt-4 flex flex-col gap-3">
-					<FieldTitle>이미지 편집 — 이동·확대·회전</FieldTitle>
-					<ImageTransformEditor
-						key={selected.id}
-						value={config.imageTransform}
-						onChange={(imageTransform) => onCommit({ imageTransform })}
-					/>
-					<FieldTitle>컬러 치환 — 선·배경 브랜드 컬러</FieldTitle>
-					<ImageColorizeEditor
-						key={`colorize-${selected.id}`}
-						value={config.imageColorize}
-						onChange={(imageColorize) => onCommit({ imageColorize })}
-					/>
-				</div>
 			)}
 		</div>
 	)
