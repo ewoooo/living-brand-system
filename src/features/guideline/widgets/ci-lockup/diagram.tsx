@@ -39,6 +39,22 @@ const GUIDE_COLOR_NAME = 'HD HERITAGE GREEN'
 const bandOpacity = (tone: 'light' | 'dark') => (tone === 'light' ? 0.12 : 0.32)
 
 /**
+ * 안내선 색과 면 색을 **도판 밖에서도 쓸 수 있게** 연다. 클리어스페이스 프레임이 같은 색을 쓴다
+ * (사용자 지정 2026-08-20) — 「규정을 그린 선」이라는 점이 같아서 색이 갈리면 다른 종류의 정보로 읽힌다.
+ * 🔴 방향은 `view.tsx` → `diagram.tsx` 한쪽뿐이다. 반대로 import하면 모듈 최상위 상수에서 TDZ가
+ *    난다(모프 토큰을 `motion.ts`로 뺀 이유가 그것이다).
+ */
+export const guideColorOf = (colors: Record<string, string>) =>
+	colors[GUIDE_COLOR_NAME] ?? 'currentColor'
+
+/**
+ * 면으로 칠할 때의 안내선 색. 도판의 밴드는 요소 `opacity`로 연하게 하지만, 테두리처럼 **색 하나로**
+ * 줘야 하는 자리는 알파를 색에 넣어야 한다 — 같은 12%/32%를 쓴다.
+ */
+export const guideTint = (guide: string, tone: 'light' | 'dark') =>
+	`color-mix(in srgb, ${guide} ${bandOpacity(tone) * 100}%, transparent)`
+
+/**
  * 첫 렌더에는 전환을 끈다 — 마운트 순간 CSS 전환이 걸려 있으면 초기 상태가 흘러 들어온다.
  * 🔑 이 상태 전환이 만드는 리렌더는 기하가 같아 FLIP이 아무것도 하지 않는다.
  */

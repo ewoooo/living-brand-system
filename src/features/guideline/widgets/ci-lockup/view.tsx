@@ -9,8 +9,13 @@ import {
 	controllerString,
 	useGuidelineController,
 } from '../../controllers/provider'
-import { CI_STAGE_DARK, CI_STAGE_LIGHT } from '../surface'
-import { LockupDiagram } from './diagram'
+import {
+	CI_STAGE_CONTROL_DARK,
+	CI_STAGE_CONTROL_LIGHT,
+	CI_STAGE_DARK,
+	CI_STAGE_LIGHT,
+} from '../surface'
+import { guideColorOf, guideTint, LockupDiagram } from './diagram'
 import { downloadSvg, lockupSvg } from './export-svg'
 import {
 	BRANCH_VALUES,
@@ -20,7 +25,15 @@ import {
 	LANGUAGE_VALUES,
 	SUBSIDIARY_VALUES,
 } from './manifest'
-import { easeMorph, MORPH, type MORPH_EASING, MORPH_MS, morph, reducedMotion } from './motion'
+import {
+	easeMorph,
+	MORPH,
+	type MORPH_EASING,
+	MORPH_HOLD_MS,
+	MORPH_MS,
+	morph,
+	reducedMotion,
+} from './motion'
 import {
 	bearingOf,
 	branchLabel,
@@ -200,6 +213,8 @@ export function CiLockupView({
 			h={H}
 			color={hex(textColorName(colorType, mono))}
 			stage={stage}
+			tone={tone}
+			guide={guideColorOf(colors)}
 			symbolT={symbolT}
 			symbolColors={symbolColors}
 			clearSpace={clearSpace}
@@ -360,6 +375,8 @@ function LockupFigure({
 	h,
 	color,
 	stage,
+	tone,
+	guide,
 	symbolT,
 	symbolColors,
 	clearSpace,
@@ -369,6 +386,10 @@ function LockupFigure({
 	h: number
 	color: string
 	stage: string
+	/** 판이 밝은가 어두운가. 🔴 판 위에 얹히는 컨트롤의 색을 이것이 정한다 — 테마가 아니다. */
+	tone: 'light' | 'dark'
+	/** 치수 도판과 공유하는 안내선 초록. 클리어스페이스의 선·면이 같은 색이어야 한다. */
+	guide: string
 	symbolT: number
 	symbolColors: string[]
 	/** 여백(H 배수). 0이면 그리지 않는다. */
@@ -426,7 +447,7 @@ function LockupFigure({
 				판 색은 표현이 정하고 테마를 따르지 않으므로 전환도 여기서 이어 준다. */}
 			<div
 				ref={stageRef}
-				className="flex h-full items-center justify-center overflow-x-auto border border-border"
+				className="relative flex h-full items-center justify-center overflow-x-auto border border-border"
 				style={{
 					background: stage,
 					minHeight: h * STAGE_HEIGHT,
@@ -435,8 +456,19 @@ function LockupFigure({
 					transition: `background-color ${MORPH}, min-height ${MORPH}`,
 				}}
 			>
-				{shown ?? (
-					<ClearSpaceFrame h={h} clearSpace={clearSpace}>
+				{/* 🔑 갈아치우지 않고 **겹쳐 두고 투명도만** 바꾼다 — 둘은 같은 규정의 두 얼굴이라
+					툭 바뀌면 다른 것으로 갈아탄 것처럼 읽힌다. 겹쳐 두는 덕에 도판이 마운트를
+					반복하지 않아 그 안의 FLIP도 흔들리지 않는다. */}
+				<div
+					style={{
+						opacity: shown ? 0 : 1,
+						transition: `opacity ${MORPH}`,
+						// 🔴 **나가는 쪽만** 기다린다(`MORPH_HOLD_MS` 주석). 양쪽에 걸면 들어오는 층도
+						//    늦어져 딥이 그대로 남는다.
+						transitionDelay: shown ? `${MORPH_HOLD_MS}ms` : '0ms',
+					}}
+				>
+					<ClearSpaceFrame h={h} clearSpace={clearSpace} guide={guide} tone={tone}>
 						<Composed
 							lockup={lockup}
 							h={h}
@@ -445,7 +477,19 @@ function LockupFigure({
 							symbolColors={symbolColors}
 						/>
 					</ClearSpaceFrame>
-				)}
+				</div>
+				{diagram ? (
+					<div
+						className="pointer-events-none absolute inset-0 flex items-center justify-center"
+						style={{
+							opacity: shown ? 1 : 0,
+							transition: `opacity ${MORPH}`,
+							transitionDelay: shown ? '0ms' : `${MORPH_HOLD_MS}ms`,
+						}}
+					>
+						{diagram}
+					</div>
+				) : null}
 			</div>
 			{/* 🔴 도판이 나와 있는 동안에는 락업이 판에 없다 — 내보낼 것이 없으므로 그리지 않는다.
 				🔴 hover에만 나타나지만 키보드에서도 닿아야 하므로 focus-visible에도 연다. */}
@@ -456,7 +500,9 @@ function LockupFigure({
 					size="icon-sm"
 					shape="sharp"
 					aria-label={`${lockup.label} SVG 내려받기`}
-					className="absolute top-2 right-2 opacity-0 transition-opacity group-hover/export:opacity-100 focus-visible:opacity-100"
+					className={`absolute top-2 right-2 opacity-0 transition-opacity group-hover/export:opacity-100 focus-visible:opacity-100 ${
+						tone === 'dark' ? CI_STAGE_CONTROL_DARK : CI_STAGE_CONTROL_LIGHT
+					}`}
 					onClick={() => void download()}
 				>
 					<Download />
@@ -468,19 +514,30 @@ function LockupFigure({
 
 /**
  * 클리어스페이스 프레임. 🔑 여백은 **로고 바운딩박스 사방 균일**이고(rules.ts `clearSpaceFor`),
- * 우리는 잉크로 트림해 두었으므로 안의 락업 박스가 곧 그 bbox다 — `padding`이 그대로 규정이 된다.
+ * 우리는 잉크로 트림해 두었으므로 안의 락업 박스가 곧 그 bbox다 — 여백이 그대로 규정이 된다.
  *
  * 두 겹으로 보인다: 바깥 실선이 여백의 끝(누구도 넘어올 수 없는 선)이고, 안쪽 점선이 로고 bbox다.
+ * 🔑 선과 면은 **치수 도판과 같은 초록**이다(사용자 지정 2026-08-20). 여백과 간격은 다른 규정이지만
+ *    「규정을 그린 선」이라는 점은 같아서, 색이 갈리면 둘이 다른 종류의 정보로 읽힌다.
+ * 🔴 여백 면을 `padding`이 아니라 **border**로 그린다 — padding에 배경을 깔면 로고 자리까지 함께
+ *    칠해진다. border는 그 띠만 칠하고, 자리 차지는 padding과 정확히 같다(둘 다 auto 크기라
+ *    box-sizing에 걸리지 않는다). 안쪽 점선은 padding box(=로고 bbox)에 `inset: 0`으로 붙는다.
  * 🔴 `clearSpace`가 0이면 테두리를 그리지 않지만 **자리는 그대로 차지한다** — 켜고 끌 때 락업이
  *    움직이면 여백이 아니라 로고가 변한 것처럼 보인다.
  */
 function ClearSpaceFrame({
 	h,
 	clearSpace,
+	guide,
+	tone,
 	children,
 }: {
 	h: number
 	clearSpace: number
+	/** 치수 도판이 쓰는 안내선 초록. 선도 면도 이 색이다. */
+	guide: string
+	/** 판이 밝은가 어두운가 — 같은 초록이라도 어두운 판에서는 알파를 벌려야 보인다. */
+	tone: 'light' | 'dark'
 	children: React.ReactNode
 }) {
 	const on = clearSpace > 0
@@ -492,25 +549,25 @@ function ClearSpaceFrame({
 	return (
 		<div
 			ref={slideRef}
-			className="relative"
+			className="relative border-solid"
 			style={{
-				padding: h * clearSpace,
-				// 🔴 `padding`에 전환을 걸지 않는다 — `useSlide`가 잉크 기준으로 이동을 이미 잇는데,
-				//    padding까지 흐르면 같은 이동을 두 번 세서 락업이 옛 자리를 지나쳐 되돌아온다.
-				transition: `outline-color ${MORPH}`,
+				// 🔴 두께에 전환을 걸지 않는다 — `useSlide`가 잉크 기준으로 이동을 이미 잇는데,
+				//    여백까지 흐르면 같은 이동을 두 번 세서 락업이 옛 자리를 지나쳐 되돌아온다.
+				borderWidth: h * clearSpace,
+				borderColor: on ? guideTint(guide, tone) : 'transparent',
+				transition: `outline-color ${MORPH}, border-color ${MORPH}`,
 				outline: '1px solid',
-				outlineColor: on ? 'currentColor' : 'transparent',
+				outlineColor: on ? guide : 'transparent',
 				outlineOffset: -1,
 			}}
 		>
-			{/* 안쪽 점선 = 로고 bbox. 여백이 무엇의 바깥인지 보이게 한다. */}
+			{/* 안쪽 점선 = 로고 bbox. 여백이 무엇의 바깥인지 보이게 한다.
+				🔑 `inset: 0`이 곧 로고 bbox다 — 여백을 border로 그리므로 padding box가 그 자리다. */}
 			<div
-				className="pointer-events-none absolute border border-dashed"
+				className="pointer-events-none absolute inset-0 border border-dashed"
 				style={{
-					inset: h * clearSpace,
-					borderColor: on ? 'currentColor' : 'transparent',
-					opacity: 0.45,
-					transition: `inset ${MORPH}, border-color ${MORPH}`,
+					borderColor: on ? guide : 'transparent',
+					transition: `border-color ${MORPH}`,
 				}}
 			/>
 			{children}
