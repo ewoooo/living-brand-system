@@ -77,8 +77,10 @@ import * as migration_20260819_090753_ci_lockup_snapshot_repair from './20260819
 import * as migration_20260819_090804_guideline_background_tone from './20260819_090804_guideline_background_tone';
 import * as migration_20260819_090805_ci_lockup_height_axis from './20260819_090805_ci_lockup_height_axis';
 import * as migration_20260819_094517_ci_sections_snapshot_merge from './20260819_094517_ci_sections_snapshot_merge';
+import * as migration_20260819_101815_template_background_policy from './20260819_101815_template_background_policy';
 import * as migration_20260820_013946_ci_lockup_height_control from './20260820_013946_ci_lockup_height_control';
 import * as migration_20260820_022413_block_featured_side from './20260820_022413_block_featured_side';
+import * as migration_20260820_050919_ci_sections_stage_snapshot_merge from './20260820_050919_ci_sections_stage_snapshot_merge';
 
 export const migrations = [
   {
@@ -477,6 +479,11 @@ export const migrations = [
     name: '20260819_094517_ci_sections_snapshot_merge',
   },
   {
+    up: migration_20260819_101815_template_background_policy.up,
+    down: migration_20260819_101815_template_background_policy.down,
+    name: '20260819_101815_template_background_policy',
+  },
+  {
     up: migration_20260820_013946_ci_lockup_height_control.up,
     down: migration_20260820_013946_ci_lockup_height_control.down,
     name: '20260820_013946_ci_lockup_height_control',
@@ -484,6 +491,11 @@ export const migrations = [
   {
     up: migration_20260820_022413_block_featured_side.up,
     down: migration_20260820_022413_block_featured_side.down,
-    name: '20260820_022413_block_featured_side'
+    name: '20260820_022413_block_featured_side',
+  },
+  {
+    up: migration_20260820_050919_ci_sections_stage_snapshot_merge.up,
+    down: migration_20260820_050919_ci_sections_stage_snapshot_merge.down,
+    name: '20260820_050919_ci_sections_stage_snapshot_merge'
   },
 ];

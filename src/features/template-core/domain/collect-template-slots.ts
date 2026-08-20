@@ -45,6 +45,10 @@ export interface TemplateImageSlot {
 	name: string
 	/** 제작자가 고정한 이미지 프로파일 — 없으면 유저가 스튜디오에서 선택한다. */
 	profileId?: number
+	/** 창작자가 고를 수 있는 프로파일 범위 — 없으면 접근 가능한 전부다. */
+	allowedProfileIds?: readonly number[]
+	/** 창작자의 이동·확대·회전 허용. */
+	transformEnabled: boolean
 	/** 슬롯 요소 자신의 inline width/height(px) — clipsContent 프레임의 가시 박스인 자신을 쓴다. */
 	boxWidth?: number
 	boxHeight?: number
@@ -147,6 +151,10 @@ export function collectTemplateImageSlots(
 					nodeId,
 					name: attributes['data-name'] || nodeId,
 					profileId: config.imageInput.profileId,
+					...(config.imageInput.allowedProfileIds
+						? { allowedProfileIds: config.imageInput.allowedProfileIds }
+						: {}),
+					transformEnabled: config.imageInput.transform?.enabled ?? true,
 					boxWidth: readPxDimension(style, 'width'),
 					boxHeight: readPxDimension(style, 'height'),
 					policy,

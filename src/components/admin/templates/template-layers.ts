@@ -48,6 +48,24 @@ export const IMAGE_CONFIG_KEYS = [
 
 export const typeLabel = (type: string) => TYPE_LABEL[type] ?? type
 
+/**
+ * 목록을 켜고 끈다. 보이는 옵션을 전부 켠 상태가 되면 목록 자체를 지워 "전부 허용"으로
+ * 되돌린다. 저장값에 현재 보이지 않는 id(미발행 등)가 섞여 있을 수 있으므로, 그 값들은
+ * 건드리지 않고 그대로 next에 남기되 collapse 판단(`all`과 길이 비교)에서는 `all`에 없는
+ * id를 세지 않는다 — 안 그러면 보이지 않는 id가 "이미 켜진 것"으로 잘못 세어져 하나만
+ * 꺼도 "전부 허용"으로 조용히 넓어진다.
+ */
+export function toggleAllowedId<T>(
+	current: readonly T[] | undefined,
+	all: readonly T[],
+	id: T,
+): T[] | undefined {
+	const base = current ?? all
+	const next = base.includes(id) ? base.filter((value) => value !== id) : [...base, id]
+	const visibleCount = next.filter((value) => all.includes(value)).length
+	return visibleCount === all.length ? undefined : next
+}
+
 export const canAssignImage = (layer: LayerRow) =>
 	!layer.isText && !layer.isVector && layer.imageAddress === 'self'
 

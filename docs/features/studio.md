@@ -63,7 +63,7 @@ Manifest는 파일 형식을 정의하지 않습니다. 같은 입력에서 항�
 
 ### Admin restrictions
 
-Admin은 Manifest를 읽고 다음 두 공통 정책을 저장합니다.
+Admin은 Manifest를 읽고 다음 두 공통 정책을 저장합니다(Template은 첫 정책 대신 배경(`backgroundPolicy`)과 레이어별 `overrides[nodeId]`를 저장합니다).
 
 - `controllerRestrictions`: availability, 기본값, 선택지, 길이와 범위를 좁힙니다.
 - `exportPolicy`: 파일 형식, 원본 허용 여부, PPI, FPS, 크기와 길이 상한을 좁힙니다.

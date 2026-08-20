@@ -1589,16 +1589,7 @@ export interface Template {
   generateSlug?: boolean | null;
   slug: string;
   description?: string | null;
-  controllerRestrictions?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  controllerPresentation?:
+  backgroundPolicy?:
     | {
         [k: string]: unknown;
       }
@@ -3045,8 +3036,7 @@ export interface TemplatesSelect<T extends boolean = true> {
   generateSlug?: T;
   slug?: T;
   description?: T;
-  controllerRestrictions?: T;
-  controllerPresentation?: T;
+  backgroundPolicy?: T;
   exportPolicy?:
     | T
     | {

@@ -13,9 +13,6 @@ const published: PublishedHtmlTemplate = {
 	width: 800,
 	height: 600,
 	templateVersion: '2026-08-01T00:00:00.000Z',
-	controllerRestrictions: {
-		controls: [{ controlId: 'background.type', availability: 'readonly' }],
-	},
 	exportPolicy: { allowedFormats: ['png'] },
 }
 

@@ -7,6 +7,7 @@ import {
 	type LayerRow,
 	parseLayers,
 	pruneCarrierChildImageKeys,
+	toggleAllowedId,
 } from './template-layers'
 import { TemplateLayersField } from './template-layers-field'
 
@@ -163,6 +164,18 @@ describe('pruneCarrierChildImageKeys', () => {
 		expect(pruneCarrierChildImageKeys(map, 'child', { text: '새 텍스트' })).toBe(map)
 		// childId 없음(프레임 주소가 아님) — 그대로.
 		expect(pruneCarrierChildImageKeys(map, undefined, { backgroundImage: '/x.png' })).toBe(map)
+	})
+})
+
+describe('toggleAllowedId', () => {
+	it('보이는 목록에 없는 저장값은 세지 않는다 — 미발행 프로파일이 섞여도 끄면 undefined로 넓어지지 않는다', () => {
+		// 화면 목록은 [3]인데 저장값은 [3, 4](4는 이후 미발행)다. 3을 끄면 4만 남아야
+		// 하고, "보이는 것 전부를 켰다"로 오인해 undefined(전체 허용)가 되면 안 된다.
+		expect(toggleAllowedId([3, 4], [3], 3)).toEqual([4])
+	})
+
+	it('보이는 목록을 전부 켜면 undefined로 접힌다', () => {
+		expect(toggleAllowedId([4], [3, 4], 3)).toBeUndefined()
 	})
 })
 

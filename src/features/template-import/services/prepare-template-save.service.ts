@@ -20,8 +20,7 @@ import {
 interface TemplateSaveCandidate {
 	_status?: unknown
 	baseHtml?: unknown
-	controllerRestrictions?: unknown
-	controllerPresentation?: unknown
+	backgroundPolicy?: unknown
 	height?: unknown
 	html?: unknown
 	id?: unknown
@@ -90,9 +89,8 @@ export async function prepareTemplateSave({
 				width: candidate.width,
 				height: candidate.height,
 				templateVersion: 'draft',
-				controllerRestrictions: candidate.controllerRestrictions,
-				controllerPresentation: candidate.controllerPresentation,
 				exportPolicy: candidate.exportPolicy as never,
+				backgroundPolicy: candidate.backgroundPolicy as never,
 			})
 		} catch (error) {
 			return error instanceof Error ? error.message : '템플릿 Controller 계약을 확인하세요.'
