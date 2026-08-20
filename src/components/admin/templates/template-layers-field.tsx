@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap } from '@/types/template'
+import { AdminSectionHeading } from '../shared/admin-section-heading'
 import { ImageTransformOverlay } from './image-transform-overlay'
 import { TemplateLayerEditor } from './template-layer-editors'
 import {
@@ -21,7 +22,8 @@ import {
 	typeLabel,
 } from './template-layers'
 
-const DEFAULT_CANVAS_HEIGHT = 560
+// 정본(76:4)의 레이어 설정 프리뷰 비율 — 본문 폭에서 캔버스가 주인공이 되는 높이.
+const DEFAULT_CANVAS_HEIGHT = 720
 const DEFAULT_LAYER_WIDTH = 260
 const DEFAULT_WORKSPACE_GAP = 16
 
@@ -154,7 +156,7 @@ export function TemplateLayersField() {
 	const width = useFormFields(([fields]) => fields.width?.value) as number | undefined
 	const height = useFormFields(([fields]) => fields.height?.value) as number | undefined
 	const layout = useDialKit('Admin · 템플릿 레이어', {
-		canvasHeight: [DEFAULT_CANVAS_HEIGHT, 400, 800, 20],
+		canvasHeight: [DEFAULT_CANVAS_HEIGHT, 400, 960, 20],
 		layerWidth: [DEFAULT_LAYER_WIDTH, 220, 360, 10],
 		workspaceGap: [DEFAULT_WORKSPACE_GAP, 8, 32, 2],
 	})
@@ -219,6 +221,7 @@ export function TemplateLayersField() {
 
 	return (
 		<div className="mb-[var(--base)]">
+			<AdminSectionHeading>레이어 설정</AdminSectionHeading>
 			<div className="flex items-start" style={{ gap: layout.workspaceGap }}>
 				<TemplateCanvas
 					canvasHeight={layout.canvasHeight}

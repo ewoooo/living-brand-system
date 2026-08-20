@@ -36,7 +36,7 @@ function usePublishedImageProfiles() {
  */
 function LayerCard({ heading, children }: { heading: ReactNode; children: ReactNode }) {
 	return (
-		<section className="flex max-w-3xl flex-col rounded-xl border p-4">
+		<section className="flex flex-col rounded-xl border p-4">
 			<h3 className="pb-2 font-semibold text-lg">{heading}</h3>
 			{children}
 		</section>
@@ -119,52 +119,57 @@ function SlotSpecEditor({
 
 	return (
 		<Controller.Group title="세부 설정" collapsible={false} trailing={layerTypeTag('텍스트')}>
-			<Controller.Row label="라벨">
-				<Controller.Input
-					value={input.label ?? ''}
-					onChange={(event) => patch({ label: event.target.value || undefined })}
-					placeholder="예: 영문 이름"
-				/>
-			</Controller.Row>
-			<Controller.Row label="플레이스홀더">
-				<Controller.Input
-					value={input.placeholder ?? ''}
-					onChange={(event) => patch({ placeholder: event.target.value || undefined })}
-					placeholder="입력 전 안내 문구"
-				/>
-			</Controller.Row>
-			<Controller.Row label="형식">
-				<Controller.Select
-					options={[
-						{ value: 'free', label: '자유 텍스트' },
-						{ value: 'number', label: '숫자' },
-						{ value: 'email', label: '이메일' },
-						{ value: 'date', label: '날짜' },
-					]}
-					value={input.inputFormat ?? 'free'}
-					onChange={(value) =>
-						patch({ inputFormat: value as TemplateSlotSpec['inputFormat'] })
-					}
-				/>
-			</Controller.Row>
-			<Controller.Row label="최대 글자">
-				<Controller.Input
-					type="number"
-					min={1}
-					value={input.maxLength ?? ''}
-					onChange={(event) => patch({ maxLength: positiveInt(event.target.value) })}
-					placeholder="없음"
-				/>
-			</Controller.Row>
-			<Controller.Row label="최대 줄">
-				<Controller.Input
-					type="number"
-					min={1}
-					value={input.maxLines ?? ''}
-					onChange={(event) => patch({ maxLines: positiveInt(event.target.value) })}
-					placeholder="없음"
-				/>
-			</Controller.Row>
+			{/* 정본(81:2)의 세부 설정은 한 행 3열 — 좁은 화면에서만 세로로 푼다. */}
+			<div className="grid grid-cols-1 gap-1 md:grid-cols-3">
+				<Controller.Row label="라벨">
+					<Controller.Input
+						value={input.label ?? ''}
+						onChange={(event) => patch({ label: event.target.value || undefined })}
+						placeholder="예: 영문 이름"
+					/>
+				</Controller.Row>
+				<Controller.Row label="플레이스홀더">
+					<Controller.Input
+						value={input.placeholder ?? ''}
+						onChange={(event) =>
+							patch({ placeholder: event.target.value || undefined })
+						}
+						placeholder="입력 전 안내 문구"
+					/>
+				</Controller.Row>
+				<Controller.Row label="형식">
+					<Controller.Select
+						options={[
+							{ value: 'free', label: '자유 텍스트' },
+							{ value: 'number', label: '숫자' },
+							{ value: 'email', label: '이메일' },
+							{ value: 'date', label: '날짜' },
+						]}
+						value={input.inputFormat ?? 'free'}
+						onChange={(value) =>
+							patch({ inputFormat: value as TemplateSlotSpec['inputFormat'] })
+						}
+					/>
+				</Controller.Row>
+				<Controller.Row label="최대 글자">
+					<Controller.Input
+						type="number"
+						min={1}
+						value={input.maxLength ?? ''}
+						onChange={(event) => patch({ maxLength: positiveInt(event.target.value) })}
+						placeholder="없음"
+					/>
+				</Controller.Row>
+				<Controller.Row label="최대 줄">
+					<Controller.Input
+						type="number"
+						min={1}
+						value={input.maxLines ?? ''}
+						onChange={(event) => patch({ maxLines: positiveInt(event.target.value) })}
+						placeholder="없음"
+					/>
+				</Controller.Row>
+			</div>
 			<Controller.Field label="AI 지시 — 이 슬롯의 생성 규칙" className="mt-1">
 				<Controller.Textarea
 					value={input.aiInstruction ?? ''}

@@ -1,9 +1,10 @@
 'use client'
 
-import { FieldLabel, useField } from '@payloadcms/ui'
+import { useField } from '@payloadcms/ui'
 import type { JSONFieldClientComponent } from 'payload'
 import type { ComponentProps } from 'react'
 import { useEffect, useState } from 'react'
+import { AdminSectionHeading } from '@/components/admin/shared/admin-section-heading'
 import { Controller } from '@/components/shared/controller'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { fetchGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.client'
@@ -97,8 +98,8 @@ export function TemplateBackgroundPolicyField({ path }: Props) {
 
 	return (
 		<div className="field-type json mb-5">
-			<FieldLabel label="배경 설정" path={path} />
-			<div className="mt-2 flex max-w-3xl flex-col rounded-xl border p-4">
+			<AdminSectionHeading>배경 설정</AdminSectionHeading>
+			<div className="flex flex-col rounded-xl border p-4">
 				<Controller.Group
 					title="사용할 형식"
 					collapsible={false}

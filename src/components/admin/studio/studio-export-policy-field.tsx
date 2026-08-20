@@ -1,7 +1,8 @@
 'use client'
 
-import { FieldLabel, useField } from '@payloadcms/ui'
+import { useField } from '@payloadcms/ui'
 import { useEffect } from 'react'
+import { AdminSectionHeading } from '@/components/admin/shared/admin-section-heading'
 import { Controller } from '@/components/shared/controller'
 import type { StudioOutputFormat } from '@/features/studio-export/export-contract'
 import {
@@ -157,8 +158,8 @@ export function StudioExportPolicyField({
 
 	return (
 		<div className="field-type group mb-5">
-			<FieldLabel label="출력 설정" path={path} />
-			<div className="mt-2 flex max-w-3xl flex-col rounded-xl border p-4">
+			<AdminSectionHeading>출력 설정</AdminSectionHeading>
+			<div className="flex flex-col rounded-xl border p-4">
 				{supportedFormats.length === 0 ? (
 					<p className="text-muted-foreground text-sm">
 						{source === 'template'
