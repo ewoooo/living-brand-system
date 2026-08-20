@@ -1330,9 +1330,6 @@ export interface ImageProfile {
         id?: string | null;
       }[]
     | null;
-  /**
-   * 비우면 기능을 열지 않습니다. 값과 사용 상태는 Controller 제한이 소유합니다.
-   */
   features?: (ImageProfileColorAdjustmentFeature | ImageProfileCameraControlFeature)[] | null;
   controllerRestrictions?:
     | {
@@ -1359,7 +1356,7 @@ export interface ImageProfile {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       * 전부 켜면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {
@@ -1381,9 +1378,9 @@ export interface ImageProfile {
         | number
         | boolean
         | null;
+      maxDurationSeconds?: number | null;
       maxWidth?: number | null;
       maxHeight?: number | null;
-      maxDurationSeconds?: number | null;
     };
     original?: boolean | null;
   };
@@ -1440,7 +1437,12 @@ export interface GraphicProfile {
   /**
    * 실행 구현은 코드 registry가 소유합니다. 프로파일은 해당 runtime의 편집 범위만 좁힙니다.
    */
-  runtime: 'forward-straight' | 'linear-fluted-glass' | 'radial-fluted-glass';
+  runtime:
+    | 'forward-straight'
+    | 'linear-fluted-glass'
+    | 'radial-fluted-glass'
+    | 'sweep-fluted-glass'
+    | 'vertical-fluted-glass';
   /**
    * 스튜디오에서 이 항목을 고를 때 카드에 표시할 이미지입니다.
    */
@@ -1471,7 +1473,7 @@ export interface GraphicProfile {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       * 전부 켜면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {
@@ -1493,9 +1495,9 @@ export interface GraphicProfile {
         | number
         | boolean
         | null;
+      maxDurationSeconds?: number | null;
       maxWidth?: number | null;
       maxHeight?: number | null;
-      maxDurationSeconds?: number | null;
     };
   };
   updatedAt: string;
@@ -1605,7 +1607,7 @@ export interface Template {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       * 전부 켜면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {
@@ -1627,9 +1629,9 @@ export interface Template {
         | number
         | boolean
         | null;
+      maxDurationSeconds?: number | null;
       maxWidth?: number | null;
       maxHeight?: number | null;
-      maxDurationSeconds?: number | null;
     };
   };
   sourceUrl?: string | null;
@@ -2938,9 +2940,9 @@ export interface ImageProfilesSelect<T extends boolean = true> {
           | T
           | {
               allowedFps?: T;
+              maxDurationSeconds?: T;
               maxWidth?: T;
               maxHeight?: T;
-              maxDurationSeconds?: T;
             };
         original?: T;
       };
@@ -2991,9 +2993,9 @@ export interface GraphicProfilesSelect<T extends boolean = true> {
           | T
           | {
               allowedFps?: T;
+              maxDurationSeconds?: T;
               maxWidth?: T;
               maxHeight?: T;
-              maxDurationSeconds?: T;
             };
       };
   updatedAt?: T;
@@ -3050,9 +3052,9 @@ export interface TemplatesSelect<T extends boolean = true> {
           | T
           | {
               allowedFps?: T;
+              maxDurationSeconds?: T;
               maxWidth?: T;
               maxHeight?: T;
-              maxDurationSeconds?: T;
             };
       };
   sourceUrl?: T;

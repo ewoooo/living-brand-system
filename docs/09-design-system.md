@@ -140,7 +140,7 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 | 겹 | 컴포넌트 | 소유 책임 |
 | --- | --- | --- |
 | 표면색 껍질 | `GuidelineBlockFrame`(`<section>`) | 전체 폭 배경/전경(`normal`/`secondary`/`inverted`) |
-| 폭 프레임 | `ContentFrame` | 최대 폭과 가로 여백(`max-w-[1250px] px-4 md:px-8`) |
+| 폭 프레임 | `ContentFrame` | 최대 폭과 가로 여백(`max-w-[1540px] px-4 md:px-8`) |
 
 `GuidelineBlockFrame`(`guideline-block-frame.tsx:24-46`)은 표면색만 정하고 즉시 `ContentFrame`을 감쌉니다. 폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx:22`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
 
@@ -230,6 +230,8 @@ look은 언젠가 전부 바뀝니다. 그러므로 **겉모습이 어설픈 것
 | 슬라이더 | `components/ui/slider.tsx` |
 | 선택 컨트롤(토글·세그먼트) | `components/ui/toggle.tsx` (`toggle-group`이 공유) |
 | on/off 스위치 | `components/ui/switch.tsx` |
+| 패널 카드·알약 칩(어드민 대시보드·가이드라인 메인) | `components/shared/panel-card.tsx` — 두 표면(Payload 13px root ↔ frontend 16px root)에서 동일하게 그려져야 해서 수치를 px로 고정한 예외 |
+| 페이지 히어로 배너(shader 배경 + 락업) | `components/shared/page-hero.tsx` |
 | 표본 면(테마 면·브랜드 면) | `features/guideline/widgets/surface.ts` |
 | 수치·캡션 줄 | `features/guideline/widgets/readout.ts` |
 | hairline 격자 | `features/guideline/widgets/hairline.ts` |

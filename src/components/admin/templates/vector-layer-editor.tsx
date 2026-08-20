@@ -1,39 +1,22 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import {
-	Field,
-	FieldError,
-	FieldGroup,
-	FieldLabel,
-	FieldLegend,
-	FieldSet,
-	FieldTitle,
-} from '@/components/ui/field'
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectLabel,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Controller } from '@/components/shared/controller'
 import {
 	requestPublishedTemplateVectorAssets,
 	type TemplateVectorAsset,
 } from '@/features/template-core/services/template-editor-options.client'
+import { isValidHex } from '@/lib/color'
 import type { TemplateNodeConfig } from '@/types/template'
-import { BrandColorSwatches, usePublishedBrandColors } from './brand-color-swatches'
+import { usePublishedBrandColors } from './brand-color-swatches'
+
+/** '원본' 선택값 — 자산 값(`collection:id`)과 겹치지 않는 sentinel. */
+const ORIGINAL = 'original'
 
 export function VectorLayerEditor({
-	name,
 	config,
 	onChange,
 }: {
-	name: string
 	config: TemplateNodeConfig
 	onChange: (patch: TemplateNodeConfig) => void
 }) {
@@ -54,18 +37,41 @@ export function VectorLayerEditor({
 
 	const assetValue = config.vectorAsset
 		? `${config.vectorAsset.collection}:${config.vectorAsset.id}`
-		: ''
-	const fit = config.vectorFit ?? 'fill'
+		: ORIGINAL
+	const assetOptions = [
+		{ value: ORIGINAL, label: '원본' },
+		...assets.flatMap((asset) =>
+			asset.url
+				? [
+						{
+							value: `${asset.collection}:${asset.id}`,
+							label: `${asset.collection === 'brand-logos' ? '로고' : '이미지'} — ${asset.name}`,
+						},
+					]
+				: [],
+		),
+	]
+	const colorValues = colors
+		.filter((color) => isValidHex(color.hex))
+		.map((color) => (color.hex.startsWith('#') ? color.hex : `#${color.hex}`))
 
 	return (
-		<FieldGroup className="vector-layer-editor gap-3">
-			<FieldTitle>벡터 편집 — {name}</FieldTitle>
-
-			<Field>
-				<FieldLabel htmlFor="template-vector-asset">브랜드 내부 자산</FieldLabel>
-				<Select
-					value={assetValue || undefined}
-					onValueChange={(value) => {
+		<Controller.Group
+			title="세부 설정"
+			collapsible={false}
+			// template-layer-editors의 layerTypeTag와 같은 태그 — 그 파일은 @payloadcms/ui를 물고
+			// 있어 vitest에서 import할 수 없으므로(전이 css) 여기선 span을 직접 그린다.
+			trailing={<span className="text-muted-foreground text-xs">벡터</span>}
+		>
+			<Controller.Row label="사용할 그래픽">
+				<Controller.Select
+					options={assetOptions}
+					value={assetValue}
+					onChange={(value) => {
+						if (value === ORIGINAL) {
+							onChange({ vectorAsset: undefined })
+							return
+						}
 						const asset = assets.find(
 							(item) => `${item.collection}:${item.id}` === value,
 						)
@@ -79,78 +85,33 @@ export function VectorLayerEditor({
 							})
 						}
 					}}
-				>
-					<SelectTrigger id="template-vector-asset" className="w-full max-w-sm">
-						<SelectValue placeholder="자산 선택" />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectGroup>
-							<SelectLabel>Brand Logos</SelectLabel>
-							{assets.map((asset) =>
-								asset.collection === 'brand-logos' && asset.url ? (
-									<SelectItem
-										key={`logo-${asset.id}`}
-										value={`brand-logos:${asset.id}`}
-									>
-										{asset.name}
-									</SelectItem>
-								) : null,
-							)}
-						</SelectGroup>
-						<SelectGroup>
-							<SelectLabel>Application Images</SelectLabel>
-							{assets.map((asset) =>
-								asset.collection === 'application-images' && asset.url ? (
-									<SelectItem
-										key={`image-${asset.id}`}
-										value={`application-images:${asset.id}`}
-									>
-										{asset.name}
-									</SelectItem>
-								) : null,
-							)}
-						</SelectGroup>
-					</SelectContent>
-				</Select>
-			</Field>
-			<FieldSet className="gap-2">
-				<FieldLegend variant="label">맞춤 방식</FieldLegend>
-				<ToggleGroup
-					type="single"
-					value={fit}
-					variant="outline"
-					size="sm"
-					onValueChange={(value) => {
-						if (value === 'fill' || value === 'contain') onChange({ vectorFit: value })
-					}}
-				>
-					{(['fill', 'contain'] as const).map((value) => (
-						<ToggleGroupItem key={value} value={value}>
-							{value === 'fill' ? 'Fill' : 'Contain'}
-						</ToggleGroupItem>
-					))}
-				</ToggleGroup>
-			</FieldSet>
-
-			<BrandColorSwatches
-				legend="브랜드 컬러"
-				colors={colors}
-				value={config.vectorColor}
-				onPick={(hex) => onChange({ vectorColor: hex })}
-			>
-				<Button
-					type="button"
-					aria-pressed={!config.vectorColor}
-					onClick={() => onChange({ vectorColor: undefined })}
-					variant={!config.vectorColor ? 'muted' : 'outline'}
-					size="sm"
-				>
-					원본
-				</Button>
-			</BrandColorSwatches>
-
-			{loadError && <FieldError>브랜드 자산을 불러오지 못했습니다.</FieldError>}
-			{colorLoadError && <FieldError>브랜드 컬러를 불러오지 못했습니다.</FieldError>}
-		</FieldGroup>
+				/>
+			</Controller.Row>
+			<Controller.Row label="맞춤 방식">
+				<Controller.Segmented
+					aria-label="맞춤 방식"
+					options={[
+						{ value: 'fill', label: 'Fill' },
+						{ value: 'contain', label: 'Contain' },
+					]}
+					value={config.vectorFit ?? 'fill'}
+					onChange={(value) => onChange({ vectorFit: value })}
+				/>
+			</Controller.Row>
+			<Controller.ColorRow
+				label="사용할 브랜드 컬러"
+				value={config.vectorColor ?? ''}
+				isEmpty={!config.vectorColor}
+				onReset={() => onChange({ vectorColor: undefined })}
+				values={colorValues}
+				onChange={(hex) => onChange({ vectorColor: hex })}
+			/>
+			{loadError && (
+				<p className="text-destructive text-sm">브랜드 자산을 불러오지 못했습니다.</p>
+			)}
+			{colorLoadError && (
+				<p className="text-destructive text-sm">브랜드 컬러를 불러오지 못했습니다.</p>
+			)}
+		</Controller.Group>
 	)
 }

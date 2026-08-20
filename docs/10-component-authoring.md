@@ -342,7 +342,7 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 
 ### 폭·표면색·세로 리듬은 프레임이 소유
 
-- 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1250px]`). 예외는 프리미티브의 **내재 콘텐츠 폭**뿐입니다 — `dialog`의 `max-w-sm`, `tooltip`의 `max-w-xs`, `bubble`의 `max-w-[80%]`처럼 오버레이·말풍선이 자기 판형을 갖는 것은 페이지 폭 소유가 아닙니다. 금지 대상은 화면·블록 컴포넌트가 페이지 폭을 스스로 좁히는 것(`<Card className="max-w-2xl">` 등)입니다.
+- 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1540px]`). 예외는 프리미티브의 **내재 콘텐츠 폭**뿐입니다 — `dialog`의 `max-w-sm`, `tooltip`의 `max-w-xs`, `bubble`의 `max-w-[80%]`처럼 오버레이·말풍선이 자기 판형을 갖는 것은 페이지 폭 소유가 아닙니다. 금지 대상은 화면·블록 컴포넌트가 페이지 폭을 스스로 좁히는 것(`<Card className="max-w-2xl">` 등)입니다.
 - 표면 배경색은 컴포넌트 안에 칠하지 않고 `GuidelineBlockFrame`의 `variant`(`normal`/`secondary`/`inverted`)로 받습니다.
 - 블록 간 세로 리듬도 프레임이 소유합니다(`content-frame.tsx:21`의 `py-8`). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
 

@@ -98,7 +98,7 @@ export function requestAdminImageGeneration(
 /** Payload REST에서 현재 사용자가 선택할 수 있는 published 이미지 프로파일을 조회한다. */
 export async function requestPublishedImageProfiles(): Promise<ImageProfileOption[]> {
 	const response = await fetch(
-		'/api/image-profiles?depth=0&limit=100&sort=displayOrder&select[id]=true&select[name]=true',
+		'/api/image-profiles?depth=0&limit=100&sort=displayOrder&select[id]=true&select[name]=true&where[_status][equals]=published',
 	)
 	if (!response.ok) throw new Error('이미지 프로파일을 불러오지 못했습니다.')
 	const body = (await response.json()) as { docs?: ImageProfileOption[] }

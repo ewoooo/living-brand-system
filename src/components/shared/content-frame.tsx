@@ -15,7 +15,7 @@ export function ContentFrame({ variant = 'padded', className, ...props }: Conten
 			data-variant={variant}
 			className={cn(
 				'w-full py-8',
-				variant === 'padded' && 'mx-auto max-w-[1250px] px-4 md:px-8',
+				variant === 'padded' && 'mx-auto max-w-[1540px] px-4 md:px-8',
 				className,
 			)}
 			{...props}

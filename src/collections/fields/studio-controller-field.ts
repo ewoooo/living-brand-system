@@ -1,7 +1,5 @@
 import type { Field } from 'payload'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
-import { PRINT_PPI_OPTIONS } from '@/features/studio-export/print-policy'
-import { STUDIO_VIDEO_FPS_OPTIONS } from '@/modules/studio-artifact/studio-artifact'
 import type {
 	StudioKind,
 	StudioRuntimeManifest,
@@ -66,8 +64,18 @@ export function studioExportPolicyField({
 	return {
 		name: 'exportPolicy',
 		type: 'group',
-		label: '출력',
-		admin: { description: '비우면 Exporter가 지원하는 형식을 모두 허용합니다.' },
+		label: '출력 설정',
+		admin: {
+			description: '비우면 Exporter가 지원하는 형식을 모두 허용합니다.',
+			// 그룹 전체를 정본(76:4) 카드로 그린다 — 하위 필드는 스키마·저장 계약만 소유하고
+			// 렌더는 이 컴포넌트가 useField(하위 path)로 직접 잇는다.
+			components: {
+				Field: {
+					path: '/components/admin/studio/studio-export-policy-field#StudioExportPolicyField',
+					clientProps: { source, baseConfigs, includeOriginal },
+				},
+			},
+		},
 		fields: [
 			{
 				name: 'allowedFormats',
@@ -75,72 +83,35 @@ export function studioExportPolicyField({
 				hasMany: true,
 				options: [...STUDIO_OUTPUT_FORMAT_OPTIONS],
 				label: '허용 형식',
-				admin: {
-					components: {
-						Field: {
-							path: '/components/admin/studio/studio-output-formats-field#StudioOutputFormatsField',
-							clientProps: { source, baseConfigs },
-						},
-					},
-				},
 			},
 			{
 				name: 'print',
 				type: 'group',
-				label: '인쇄 제한',
+				label: '인쇄',
 				fields: [
 					{
 						name: 'allowedPpi',
 						type: 'json',
-						label: '허용 PPI',
-						admin: {
-							description: '비우면 72, 150, 300ppi를 모두 허용합니다.',
-							components: {
-								Field: {
-									path: '/components/admin/studio/studio-output-number-options-field#StudioOutputNumberOptionsField',
-									clientProps: {
-										baseConfigs,
-										kind: 'print',
-										options: [...PRINT_PPI_OPTIONS],
-										source,
-									},
-								},
-							},
-						},
+						label: '사용할 인쇄 해상도',
+						admin: { description: '전부 켜면 제한을 저장하지 않습니다.' },
 					},
 				],
 			},
 			{
 				name: 'video',
 				type: 'group',
-				label: '영상 제한',
+				label: '영상',
 				fields: [
-					{
-						name: 'allowedFps',
-						type: 'json',
-						label: '허용 FPS',
-						admin: {
-							components: {
-								Field: {
-									path: '/components/admin/studio/studio-output-number-options-field#StudioOutputNumberOptionsField',
-									clientProps: {
-										baseConfigs,
-										kind: 'video',
-										options: [...STUDIO_VIDEO_FPS_OPTIONS],
-										source,
-									},
-								},
-							},
-						},
-					},
-					{ name: 'maxWidth', type: 'number', min: 1, label: '최대 너비' },
-					{ name: 'maxHeight', type: 'number', min: 1, label: '최대 높이' },
+					{ name: 'allowedFps', type: 'json', label: '사용할 영상 프레임' },
+					// 정본(76:4) 순서: 프레임 → 길이 → 너비·높이.
 					{
 						name: 'maxDurationSeconds',
 						type: 'number',
 						min: 0.1,
-						label: '최대 길이(초)',
+						label: '최대 영상 길이(초)',
 					},
+					{ name: 'maxWidth', type: 'number', min: 1, label: '최대 너비' },
+					{ name: 'maxHeight', type: 'number', min: 1, label: '최대 높이' },
 				],
 			},
 			...(includeOriginal

@@ -286,7 +286,7 @@ describe('GraphicGenerator', () => {
 		})
 		await waitFor(() =>
 			expect(mocks.shaderPreview.update).toHaveBeenLastCalledWith(
-				expect.objectContaining({ rayIntensity: 0.83 }),
+				expect.objectContaining({ rayIntensity: 0.96 }),
 			),
 		)
 

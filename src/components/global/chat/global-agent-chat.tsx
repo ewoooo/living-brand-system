@@ -7,6 +7,7 @@ import { AgentChatUserInput } from '@/components/global/chat/agent-chat-user-inp
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
 import { Typography } from '@/components/ui/typography'
 import { useAgentChat } from '@/features/agent-chat/hooks/use-agent-chat'
+import { prepareAgentChatFiles } from '@/features/agent-chat/utils/compress-image-attachments'
 import { cn } from '@/lib/utils'
 
 export function GlobalAgentChat() {
@@ -18,18 +19,22 @@ export function GlobalAgentChat() {
 	const isBusy = status === 'submitted' || status === 'streaming'
 	const canDropFiles = (event: DragEvent) => event.dataTransfer.types.includes('Files')
 
-	function handleSubmit() {
+	async function handleSubmit() {
 		if (isBusy) return
 		const text = input.trim()
-		if (text) {
-			sendMessage({ text, files }, { body: { pagePath } })
-		} else if (files?.length) {
-			sendMessage({ files }, { body: { pagePath } })
-		} else {
-			return
-		}
+		if (!text && !files?.length) return
+		const pendingFiles = files
 		setInput('')
 		setFiles(undefined)
+		// 모델 한도(이미지당 5MB)를 넘는 첨부는 전송 전에 다운스케일한다.
+		const prepared = await prepareAgentChatFiles(pendingFiles)
+		if (!prepared) {
+			sendMessage({ text }, { body: { pagePath } })
+		} else if (text) {
+			sendMessage({ text, files: prepared }, { body: { pagePath } })
+		} else {
+			sendMessage({ files: prepared }, { body: { pagePath } })
+		}
 	}
 
 	return (

@@ -27,14 +27,13 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { BetterEditorPublishButton as BetterEditorPublishButton_e4a80c849de3e1722a2102dbd878fdcd } from '../../../components/admin/guideline-documents/better-editor-publish-button'
 import { GuidelineDocumentTreeList as GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2 } from '../../../components/admin/guideline-documents/guideline-document-tree-list'
 import { ColorSwatchCell as ColorSwatchCell_88fca198b056ae91f3276aaa342114bd } from '../../../components/admin/brand-colors/color-swatch-cell'
-import { ImageCameraSectorsField as ImageCameraSectorsField_71353510c9d197004db59c287e5c0cea } from '../../../components/admin/studio/image-camera-sectors-field'
+import { ImageProfileFeaturesField as ImageProfileFeaturesField_7bfadbf4609425feb60c9cc16350f523 } from '../../../components/admin/studio/image-profile-features-field'
 import { StudioControllerRestrictionsField as StudioControllerRestrictionsField_715c81ea8a3b886458ef2633d308523c } from '../../../components/admin/studio/studio-controller-restrictions-field'
 import { StudioControllerPresentationField as StudioControllerPresentationField_715c81ea8a3b886458ef2633d308523c } from '../../../components/admin/studio/studio-controller-restrictions-field'
-import { StudioOutputFormatsField as StudioOutputFormatsField_2b4d6cf4a441099f2efd973bee4050a7 } from '../../../components/admin/studio/studio-output-formats-field'
-import { StudioOutputNumberOptionsField as StudioOutputNumberOptionsField_a332d6920f506f30c6bd7cf1cbbf3441 } from '../../../components/admin/studio/studio-output-number-options-field'
+import { StudioExportPolicyField as StudioExportPolicyField_100bfeb2a58aa702365ab77b55c4baee } from '../../../components/admin/studio/studio-export-policy-field'
 import { ImageProfileTestPanel as ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640 } from '../../../components/admin/image-profiles/image-profile-test-panel'
-import { TemplateBackgroundPolicyField as TemplateBackgroundPolicyField_db5e24a3a4d2a7d4f0c86814bf290e5c } from '../../../components/admin/templates/template-background-policy-field'
 import { TemplateLayersField as TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6 } from '../../../components/admin/templates/template-layers-field'
+import { TemplateBackgroundPolicyField as TemplateBackgroundPolicyField_db5e24a3a4d2a7d4f0c86814bf290e5c } from '../../../components/admin/templates/template-background-policy-field'
 import { SidebarDivider as SidebarDivider_34b02386e3687855f2c939d264827b16 } from '../../../components/admin/templates/sidebar-divider'
 import { FigmaHtmlImportField as FigmaHtmlImportField_be9c443aa962726f6d016f5ca8fc7c1f } from '../../../components/admin/templates/figma-html-import-field'
 import { CheckScenarioChecksField as CheckScenarioChecksField_e627639efdf8e16289f7f26d48157b23 } from '../../../components/admin/check-scenarios/check-scenario-checks-field'
@@ -84,14 +83,13 @@ export const importMap = {
   "/components/admin/guideline-documents/better-editor-publish-button#BetterEditorPublishButton": BetterEditorPublishButton_e4a80c849de3e1722a2102dbd878fdcd,
   "/components/admin/guideline-documents/guideline-document-tree-list#GuidelineDocumentTreeList": GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2,
   "/components/admin/brand-colors/color-swatch-cell#ColorSwatchCell": ColorSwatchCell_88fca198b056ae91f3276aaa342114bd,
-  "/components/admin/studio/image-camera-sectors-field#ImageCameraSectorsField": ImageCameraSectorsField_71353510c9d197004db59c287e5c0cea,
+  "/components/admin/studio/image-profile-features-field#ImageProfileFeaturesField": ImageProfileFeaturesField_7bfadbf4609425feb60c9cc16350f523,
   "/components/admin/studio/studio-controller-restrictions-field#StudioControllerRestrictionsField": StudioControllerRestrictionsField_715c81ea8a3b886458ef2633d308523c,
   "/components/admin/studio/studio-controller-restrictions-field#StudioControllerPresentationField": StudioControllerPresentationField_715c81ea8a3b886458ef2633d308523c,
-  "/components/admin/studio/studio-output-formats-field#StudioOutputFormatsField": StudioOutputFormatsField_2b4d6cf4a441099f2efd973bee4050a7,
-  "/components/admin/studio/studio-output-number-options-field#StudioOutputNumberOptionsField": StudioOutputNumberOptionsField_a332d6920f506f30c6bd7cf1cbbf3441,
+  "/components/admin/studio/studio-export-policy-field#StudioExportPolicyField": StudioExportPolicyField_100bfeb2a58aa702365ab77b55c4baee,
   "/components/admin/image-profiles/image-profile-test-panel#ImageProfileTestPanel": ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640,
-  "/components/admin/templates/template-background-policy-field#TemplateBackgroundPolicyField": TemplateBackgroundPolicyField_db5e24a3a4d2a7d4f0c86814bf290e5c,
   "/components/admin/templates/template-layers-field#TemplateLayersField": TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6,
+  "/components/admin/templates/template-background-policy-field#TemplateBackgroundPolicyField": TemplateBackgroundPolicyField_db5e24a3a4d2a7d4f0c86814bf290e5c,
   "/components/admin/templates/sidebar-divider#SidebarDivider": SidebarDivider_34b02386e3687855f2c939d264827b16,
   "/components/admin/templates/figma-html-import-field#FigmaHtmlImportField": FigmaHtmlImportField_be9c443aa962726f6d016f5ca8fc7c1f,
   "/components/admin/check-scenarios/check-scenario-checks-field#CheckScenarioChecksField": CheckScenarioChecksField_e627639efdf8e16289f7f26d48157b23,
