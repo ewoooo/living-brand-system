@@ -85,8 +85,6 @@ export const Templates: CollectionConfig = {
 			type: 'textarea',
 			localized: true,
 		},
-		templateBackgroundPolicyField(),
-		studioExportPolicyField({ source: 'template' }),
 		{
 			// 워크스페이스: 캔버스 + 레이어 목록 + 값 편집을 한 컴포넌트가 렌더한다.
 			name: 'templateLayers',
@@ -97,6 +95,8 @@ export const Templates: CollectionConfig = {
 				},
 			},
 		},
+		templateBackgroundPolicyField(),
+		studioExportPolicyField({ source: 'template' }),
 		// 출처 URL. 입력창은 사이드바의 Figma 가져오기 필드와 통합했으므로 폼에서 숨긴다(컬럼·값 유지).
 		{
 			name: 'sourceUrl',
