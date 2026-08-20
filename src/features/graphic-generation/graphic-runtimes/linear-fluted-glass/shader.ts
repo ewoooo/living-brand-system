@@ -385,7 +385,9 @@ vec3 flutedGlass(vec2 p, vec2 rayOrigin, float time) {
     float profile = distortionProfile(local, cellID) * edgeFade;
     float distortion = clamp(uGlassDistortion, 0.0, 1.0);
 
-    float arch = (0.5 + 0.5 * cos(local * PI)) * edgeFade;
+    // max() guards pow(arch, ...) below: fast-math cos can dip past -1, and a
+    // negative pow base is undefined in GLSL — NaN paints a 1px black scanline.
+    float arch = max(0.0, 0.5 + 0.5 * cos(local * PI)) * edgeFade;
 
     // Displacement across the ribs is what bends the shafts into the fluted look.
     float refractionAmount = mix(0.002, 0.034, distortion);
