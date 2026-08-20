@@ -1,7 +1,4 @@
-import type {
-	AiCheckResult,
-	CriterionComparison,
-} from '@/features/asset-check/checkers/types'
+import type { AiCheckResult, CriterionComparison } from '@/features/asset-check/checkers/types'
 
 type ObservationEntry = NonNullable<AiCheckResult['observations']>[number]
 
