@@ -911,7 +911,7 @@ describe('TemplateGenerator', () => {
 		})
 		await waitFor(() =>
 			expect(mocks.updateGraphicPreview).toHaveBeenLastCalledWith(
-				expect.objectContaining({ rayIntensity: 0.83 }),
+				expect.objectContaining({ rayIntensity: 0.96 }),
 			),
 		)
 		expect(canvasOf().style.background).toBe('transparent')
