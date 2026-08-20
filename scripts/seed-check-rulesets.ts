@@ -35,10 +35,15 @@ type Criterion =
 type CheckerSeed = {
 	key: string
 	name: string
-	executor: 'heuristic' | 'manual'
-	model: 'claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5'
-	prompt: string
-}
+} & (
+	| {
+			executor: 'heuristic' | 'manual'
+			model: 'claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5'
+			prompt: string
+	  }
+	/** 픽셀을 직접 재는 checker — registry의 checkerKey를 가리키고 모델을 쓰지 않는다. */
+	| { executor: 'deterministic'; checkerKey: string }
+)
 
 type RuleSeed = {
 	key: string
@@ -48,8 +53,13 @@ type RuleSeed = {
 	checker: string
 	/** 이 Rule을 참조할 published 가이드라인 문서의 slug. 여기서 문서 설명이 evidence로 실린다. */
 	documentSlug: string
-	criteria: Criterion[]
-	heuristicPrompt: string
+	/** heuristic 룰만 가진다. deterministic 룰은 options가 기준을 소유한다. */
+	criteria?: Criterion[]
+	heuristicPrompt?: string
+	/** deterministic 룰의 측정·기준. checker registry의 options 스키마를 따른다. */
+	options?: Record<string, unknown>
+	/** heuristic이 아닌 룰의 상태별 표시 문구. 없으면 화면에 판정만 뜨고 근거가 비어 보인다. */
+	messages?: { pass?: string; needsReview?: string; fail?: string }
 }
 
 type ScenarioSeed = {
@@ -67,6 +77,12 @@ const CHECKERS: CheckerSeed[] = [
 		executor: 'heuristic',
 		model: 'claude-sonnet-5',
 		prompt: '브랜드 가이드라인 관찰자. 제공된 래스터 이미지에서 보이는 것만 기술한다. 합·부는 판정하지 않는다.',
+	},
+	{
+		key: 'raster-overlay-legibility',
+		name: '오버레이 대비 측정 (픽셀)',
+		executor: 'deterministic',
+		checkerKey: 'overlay-legibility',
 	},
 ]
 
@@ -107,29 +123,35 @@ const LOGO_RULES: RuleSeed[] = [
 			'해상도가 낮아 변형 여부를 확정할 수 없으면 uncertain으로 답한다 — 추정으로 present/absent를 고르지 않는다.',
 	},
 	{
+		// 🔴 AI가 대비비를 눈대중하던 잠정 구현을 픽셀 측정으로 교체했다. 임계값을 정하려면 참값이 필요하고,
+		//    AI 추정으로는 「임계값이 틀렸나 추정이 틀렸나」를 가릴 수 없다. key는 유지한다(시나리오·이력 연속).
 		key: 'logo-background-color',
-		title: 'Logo Background Color',
-		titleKo: '로고 배경 컬러',
+		title: 'CI and Text Legibility',
+		titleKo: 'CI·텍스트 가독성',
 		tier: 'required',
-		checker: 'ai-observer',
+		checker: 'raster-overlay-legibility',
 		documentSlug: 'color-background',
-		criteria: [
-			{
-				question:
-					'로고가 단색 브랜드 컬러 배경(그린 계열 또는 블루 계열) 위에 놓여 있는가?',
-				kind: 'presence',
-				expected: 'present',
-			},
-			{
-				question: '로고가 사진이나 패턴 위에 겹쳐져 형태 식별이 어려운가?',
-				kind: 'presence',
-				expected: 'absent',
-			},
-		],
-		heuristicPrompt:
-			'HD현대 로고는 브랜드 프라이머리(HD HERITAGE GREEN #00AF41, HD PROSPERITY GREEN #007332, HD DISCOVERY BLUE #003087, HD ECO GREEN #73D75A) 또는 세컨더리 컬러 배경 위 사용을 권장한다. 흰색·검정 배경도 규정 안이다.\n' +
-			'배경이 브랜드 컬러 계열이 아닌 임의 색이면 첫 기준은 absent다.\n' +
-			'이미지에 로고가 없으면 not_applicable로 답한다.',
+		options: {
+			// 🔴 데모(2026-08-20)에 맞춘 상태다. 일반 이미지에서 사람 판정을 재현하지 못한다.
+			//    검출에 남은 오검출(사진의 밝은 줄무늬·하이라이트를 오버레이로 잡음)이 하위
+			//    백분위를 지배하므로, 그것이 고쳐지기 전까지는 꼬리(min·p05)를 기준으로 쓸 수 없다.
+			//    p50은 그 버그에 견고한 통계여서 고른 것이고, 대신 「타이틀만 묻힘」을 못 잡는다.
+			//    🔴 오검출을 고친 뒤에는 p05로 되돌리고 임계값을 사람 판정 레이블로 다시 잡을 것.
+			//    임계값 4.1은 표준이 아니라 데모 레이블 두 장의 중간값이다(2026-08-20 실측):
+			//      Sample/pass_1.png  p50 4.64  → 통과여야 함
+			//      Sample/fail_1.png  p50 3.56  → 탈락이어야 함
+			//    두 이미지는 같은 템플릿이고 fail_1은 밝은 줄무늬가 타이틀을 관통해 대비가 낮다.
+			//    🔴 p05는 순서가 뒤집혀 못 쓴다(pass 1.17 < fail 1.22) — 오검출이 꼬리를 지배하기 때문.
+			//    참고로 WCAG 1.4.11의 비텍스트 대비는 3:1이지만 로고를 면제하고, HD 정본에는 대비 수치가 없다.
+			criteria: [{ measurement: 'p50ContrastRatio', operator: 'gte', expected: 4.1 }],
+			parameters: { overlayColors: ['#FFFFFF', '#000000'] },
+		},
+		messages: {
+			pass: '로고와 글자가 배경과 충분히 분리됩니다.',
+			fail: '로고나 글자가 배경에 묻히는 구간이 있습니다. 그 구간의 배경을 어둡게 하거나 글자 아래에 면을 깔아 주세요.',
+			needsReview:
+				'로고와 글자를 찾지 못해 대비를 재지 못했습니다. 배경과 같은 색의 넓은 면이 있는지 확인해 주세요.',
+		},
 	},
 	{
 		key: 'mono-logo-usage',
@@ -140,19 +162,15 @@ const LOGO_RULES: RuleSeed[] = [
 		documentSlug: 'color-mono',
 		criteria: [
 			{
-				question: '모노(무채색) 배경 위 로고가 배경과 명확히 분리되어 보이는가?',
-				kind: 'presence',
-				expected: 'present',
-			},
-			{
 				question: '단색 로고에 그라디언트나 두 가지 이상의 색이 적용되어 있는가?',
 				kind: 'presence',
 				expected: 'absent',
 			},
 		],
 		heuristicPrompt:
-			'모노 컬러 팔레트(WHITE·LIGHT GREY·MIDDLE GREY·DARK GREY·BLACK, 명도 10~90%)를 배경으로 쓸 때 로고 가시성을 해치지 않아야 한다. 밝은 배경에는 검정 단색형, 어두운 배경에는 흰색 단색형을 쓴다.\n' +
-			'배경이 무채색이 아니면 두 기준 모두 not_applicable로 답한다.',
+			'단색형(모노) 로고는 흰색 하나 또는 검정 하나로만 채운다. 그라디언트·다색 채움은 불가하다.\n' +
+			'가시성은 이 룰이 보지 않는다 — 로고 가시성 룰이 소유한다.\n' +
+			'이미지의 로고가 단색형이 아니거나 로고가 없으면 not_applicable로 답한다.',
 	},
 	{
 		key: 'color-misuse',
@@ -162,22 +180,21 @@ const LOGO_RULES: RuleSeed[] = [
 		checker: 'ai-observer',
 		documentSlug: 'color-incorrect-usage',
 		criteria: [
+			// 🔴 「제외」가 아니라 「대상 지정」이다. 부정 제외("사진은 제외")를 쓰면 관찰자가 무엇이 제외인지를
+			//    판단해야 해서 uncertain으로 떨어진다. 사진은 단색 색면이 아니므로 목록에서 자동으로 빠진다.
+			//    🔴 그라디언트 기준은 삭제했다 — 「임의로 적용했나」는 저작 이력에 대한 질문이고 검수 입력은
+			//    래스터뿐이라(target_type: uploaded-image) 원리적으로 답할 수 없다. 로고에 적용된 경우는
+			//    mono-logo-usage가 이미 본다. 되살리려면 합성 HTML/CSS를 보는 검사기여야 한다.
 			{
-				question:
-					'브랜드 팔레트에 없는 임의의 원색(형광색·고채도 색)이 넓은 면적에 쓰였는가?',
-				kind: 'presence',
-				expected: 'absent',
-			},
-			{
-				question: '브랜드 컬러에 그라디언트나 투명도가 임의로 적용되었는가?',
+				question: '로고·타이포·단색 색면에 브랜드 팔레트에 없는 색이 쓰였는가?',
 				kind: 'presence',
 				expected: 'absent',
 			},
 		],
 		heuristicPrompt:
 			'HD현대 브랜드 컬러는 그린 계열 4종(#73D75A #00AF41 #007332 #00280A), 블루 계열 3종(#003087 #000A32 #DCF0F5), 라이트 그린 #DCF5D2, 그리고 무채색(흰·검·그레이 단계)이다.\n' +
-			'사진 안의 자연스러운 색은 판단 대상이 아니다. 그래픽 요소·배경·타이포에 쓰인 색만 본다.\n' +
-			'색 판별이 어려우면 uncertain으로 답한다.',
+			'사진·일러스트 등 회화적 이미지는 이 질문의 대상이 아니다. 로고, 글자, 균일하게 칠한 색면만 본다.\n' +
+			'그 세 대상이 이미지에 없으면 not_applicable로 답한다.',
 	},
 ]
 
@@ -336,17 +353,24 @@ async function main() {
 		const checkerId = checkerIds.get(rule.checker)
 		if (!checkerId) throw new Error(`RuleChecker를 찾지 못했습니다: ${rule.checker}`)
 
+		const checkerSeed = CHECKERS.find((entry) => entry.key === rule.checker)
+		if (!checkerSeed) throw new Error(`CheckerSeed를 찾지 못했습니다: ${rule.checker}`)
+
 		const existing = await findOne('rules', rule.key)
 		const data = {
 			key: rule.key,
 			title: rule.title,
 			titleKo: rule.titleKo,
 			tier: rule.tier,
-			// executor는 checker에서 hook이 다시 채운다. 타입상 required라 여기서도 채워 둔다.
-			executor: 'heuristic' as const,
+			// hook이 checker에서 다시 채우지만, options 검증이 이 값을 읽으므로 맞는 값을 넣는다.
+			executor: checkerSeed.executor,
 			checker: checkerId,
-			criteria: rule.criteria,
-			heuristicPrompt: rule.heuristicPrompt,
+			// 실행 방식이 안 쓰는 필드는 비운다 — 남겨 두면 뭐가 기준인지 두 곳에 보인다.
+			criteria: rule.criteria ?? [],
+			heuristicPrompt: rule.heuristicPrompt ?? null,
+			options: rule.options ?? null,
+			// messages는 null을 받지 않는다 — 없으면 키 자체를 빼야 한다.
+			...(rule.messages ? { messages: rule.messages } : {}),
 			_status: 'published' as const,
 		}
 		let ruleId: number

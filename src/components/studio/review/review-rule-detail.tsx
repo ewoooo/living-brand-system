@@ -2,11 +2,17 @@
 
 import { Controller } from '@/components/shared/controller'
 import {
+	formatComparisonNarrative,
+	formatMeasurementQuestion,
 	formatObservationActual,
 	formatObservationExpected,
 } from '@/components/studio/review/result/check-observation-format'
 import { Empty, EmptyTitle } from '@/components/ui/empty'
-import type { AiCheckResult, CheckResult } from '@/features/asset-check/checkers/types'
+import type {
+	AiCheckResult,
+	CheckResult,
+	CriterionComparison,
+} from '@/features/asset-check/checkers/types'
 import { formatConfidence } from '@/features/asset-check/utils/check-image-verdict'
 
 type Observation = NonNullable<AiCheckResult['observations']>[number]
@@ -25,6 +31,8 @@ type Observation = NonNullable<AiCheckResult['observations']>[number]
 export function ReviewRuleDetail({ outcome }: { outcome: CheckResult }) {
 	const observations =
 		'observations' in outcome.rawResult ? outcome.rawResult.observations : undefined
+	// deterministic 룰은 관찰 대신 측정·기준 비교를 남긴다 — 근거 자리를 비워 두지 않는다.
+	const comparisons = outcome.rawResult.comparisons
 
 	return (
 		<Controller.Root
@@ -44,6 +52,10 @@ export function ReviewRuleDetail({ outcome }: { outcome: CheckResult }) {
 								observation={observation}
 							/>
 						))
+					) : comparisons?.length ? (
+						comparisons.map((comparison) => (
+							<ComparisonItem key={comparison.measurement} comparison={comparison} />
+						))
 					) : (
 						<Empty className="gap-2 py-8">
 							<EmptyTitle>이 룰은 기준별 근거를 남기지 않습니다</EmptyTitle>
@@ -52,6 +64,25 @@ export function ReviewRuleDetail({ outcome }: { outcome: CheckResult }) {
 				</Controller.Group>
 			</Controller.Content>
 		</Controller.Root>
+	)
+}
+
+/**
+ * 측정 하나의 판정·기준·관찰·근거. AI 관찰 항목과 같은 3줄로 읽히게 맞춘다.
+ * 신뢰도(meta)는 없다 — 픽셀을 직접 재므로 추정 확신도라는 개념이 없다.
+ */
+function ComparisonItem({ comparison }: { comparison: CriterionComparison }) {
+	const narrative = formatComparisonNarrative(comparison)
+
+	return (
+		<Controller.Item
+			data-slot="review-comparison"
+			tone={comparison.satisfied ? 'success' : 'destructive'}
+			status={comparison.satisfied ? 'Pass' : 'Fail'}
+			heading={formatMeasurementQuestion(comparison.measurement)}
+		>
+			{narrative && <span>{narrative}</span>}
+		</Controller.Item>
 	)
 }
 
