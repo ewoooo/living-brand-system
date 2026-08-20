@@ -171,7 +171,7 @@ function SlotSpecEditor({
 					/>
 				</Controller.Row>
 			</div>
-			<Controller.Field label="AI 지시 — 이 슬롯의 생성 규칙" className="mt-1">
+			<Controller.Field label="AI에게 전달할 문구" className="mt-1">
 				<Controller.Textarea
 					value={input.aiInstruction ?? ''}
 					onChange={(event) => patch({ aiInstruction: event.target.value || undefined })}
@@ -320,7 +320,7 @@ export function TemplateLayerEditor({
 		return (
 			<LayerCard heading={selected.name}>
 				{policy}
-				<Controller.Field label={`텍스트 편집 — ${selected.name}`} className="mb-3">
+				<Controller.Field label="내용" className="mb-3">
 					<Controller.Textarea
 						value={selected.text}
 						onChange={(event) => onCommit({ text: event.target.value })}

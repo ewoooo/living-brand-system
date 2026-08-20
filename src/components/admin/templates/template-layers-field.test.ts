@@ -224,7 +224,7 @@ describe('TemplateLayersField 폼 계약', () => {
 
 		render(createElement(TemplateLayersField))
 		fireEvent.click(screen.getByRole('button', { name: /제목/ }))
-		fireEvent.change(screen.getByLabelText('텍스트 편집 — 제목'), {
+		fireEvent.change(screen.getByLabelText('내용'), {
 			target: { value: '변경' },
 		})
 
