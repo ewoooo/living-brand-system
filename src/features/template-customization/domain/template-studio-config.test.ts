@@ -109,6 +109,27 @@ describe('deriveTemplateStudioConfig', () => {
 		expect(findManifestControl(manifest, 'background.color')).toMatchObject({ kind: 'color' })
 	})
 
+	it('배경 정책이 디머를 끄면 디머 컨트롤 둘 다 매니페스트에서 빠진다', () => {
+		const manifest = getTemplateRuntimeManifest({
+			...template,
+			backgroundPolicy: { dimmer: false },
+		})
+
+		expect(findManifestControl(manifest, 'background.dimmer')).toBeUndefined()
+		expect(findManifestControl(manifest, 'background.dimmerOpacity')).toBeUndefined()
+	})
+
+	it('디머 미지정은 허용이다 — 기존 저장분과 다른 정책 키의 언어를 따른다', () => {
+		const manifest = getTemplateRuntimeManifest({ ...template, backgroundPolicy: {} })
+
+		expect(findManifestControl(manifest, 'background.dimmer')).toMatchObject({
+			kind: 'toggle',
+		})
+		expect(findManifestControl(manifest, 'background.dimmerOpacity')).toMatchObject({
+			kind: 'range',
+		})
+	})
+
 	it('배경 형식을 전부 막으면 파생이 거부한다', () => {
 		expect(() =>
 			getTemplateRuntimeManifest({ ...template, backgroundPolicy: { types: [] } }),

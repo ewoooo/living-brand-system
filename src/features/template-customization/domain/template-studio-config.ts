@@ -121,6 +121,8 @@ export type TemplateBackgroundPolicy = {
 	types?: readonly TemplateBackgroundType[]
 	imageConfigIds?: readonly number[]
 	graphicConfigIds?: readonly string[]
+	/** 배경 위 디머 허용 — 다른 키처럼 미지정은 허용이다(기존 저장분 호환). false만 금지다. */
+	dimmer?: boolean
 }
 
 /** Template Studio SSR에 노출하는 node config 부분집합. */
@@ -567,24 +569,31 @@ function buildBackgroundGroup(
 				label: 'Background Color',
 				defaultValue: null,
 			},
-			// 강도를 따로 두는 이유는 껐다 켜도 맞춰 둔 값이 남아야 하기 때문이다.
-			{
-				id: BACKGROUND_DIMMER_CONTROL_ID,
-				kind: 'toggle',
-				label: 'Dimmer',
-				defaultValue: false,
-			},
-			{
-				id: BACKGROUND_DIMMER_OPACITY_CONTROL_ID,
-				kind: 'range',
-				label: 'Dimmer Opacity',
-				defaultValue: 0.2,
-				min: 0,
-				// 실용 상한 — 1.0은 배경을 완전한 검정으로 덮어 배경을 고른 의미가 없어진다.
-				max: 0.7,
-				step: 0.01,
-				display: { precision: 2 },
-			},
+			// 형식(types)과 같은 정책 흐름 — 정책이 끄면 컨트롤이 매니페스트에서 빠지고
+			// 사이드바에 행 자체가 그려지지 않는다. 슬롯의 controlId는 상수라 그대로 남고,
+			// 소비자(provider·sidebar)는 컨트롤 부재를 이미 견딘다.
+			...(policy?.dimmer === false
+				? []
+				: ([
+						// 강도를 따로 두는 이유는 껐다 켜도 맞춰 둔 값이 남아야 하기 때문이다.
+						{
+							id: BACKGROUND_DIMMER_CONTROL_ID,
+							kind: 'toggle',
+							label: 'Dimmer',
+							defaultValue: false,
+						},
+						{
+							id: BACKGROUND_DIMMER_OPACITY_CONTROL_ID,
+							kind: 'range',
+							label: 'Dimmer Opacity',
+							defaultValue: 0.2,
+							min: 0,
+							// 실용 상한 — 1.0은 배경을 완전한 검정으로 덮어 배경을 고른 의미가 없어진다.
+							max: 0.7,
+							step: 0.01,
+							display: { precision: 2 },
+						},
+					] as const)),
 		],
 	}
 }

@@ -129,6 +129,19 @@ export function TemplateBackgroundPolicyField({ path }: Props) {
 					</Controller.Row>
 				</Controller.Group>
 
+				{/* 형식과 같은 정책 언어 — 미지정은 허용, false만 금지(기존 저장분 호환). */}
+				<Controller.Group title="배경 위 디머" collapsible={false}>
+					<Controller.Row label="허용">
+						<Controller.Segmented
+							aria-label="디머 허용"
+							options={ON_OFF}
+							disabled={disabled}
+							value={policy.dimmer === false ? 'off' : 'on'}
+							onChange={(next) => patch({ dimmer: next === 'on' })}
+						/>
+					</Controller.Row>
+				</Controller.Group>
+
 				{allows('image') ? (
 					<Controller.Group title="사용할 이미지 프로파일" collapsible={false}>
 						{profilesLoadError ? (
