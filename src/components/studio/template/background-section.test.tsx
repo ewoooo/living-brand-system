@@ -67,6 +67,8 @@ function Harness({
 		graphicConfigId: forwardStraightRuntimeManifest.id,
 		graphicValues: createControllerValues(forwardStraightRuntimeManifest.controller.groups),
 		image: initialImage,
+		dimmer: false,
+		dimmerOpacity: 0.2,
 	})
 	return (
 		// 살아 있는 자산 카드는 열림 상태를 킷이 소유한다 — 실제 화면과 같은 껍데기를 씌운다.
@@ -87,6 +89,21 @@ function Harness({
 						value,
 						label: value[0]?.toUpperCase() + value.slice(1),
 					})),
+				}}
+				dimmerDefinition={{
+					id: 'background.dimmer',
+					kind: 'toggle',
+					label: 'Dimmer',
+					defaultValue: false,
+				}}
+				dimmerOpacityDefinition={{
+					id: 'background.dimmerOpacity',
+					kind: 'range',
+					label: 'Dimmer Opacity',
+					defaultValue: 0.2,
+					min: 0,
+					max: 0.7,
+					step: 0.01,
 				}}
 				colorDefinition={{
 					id: 'background.color',

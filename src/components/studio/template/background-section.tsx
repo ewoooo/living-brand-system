@@ -38,6 +38,9 @@ type BackgroundSectionProps = {
 	/** Template의 공통 Controller Definition — availability와 options를 그대로 소비한다. */
 	typeDefinition: Extract<ControllerControlDefinition, { kind: 'select' }>
 	colorDefinition: Extract<ControllerControlDefinition, { kind: 'color' }>
+	/** 배경 위 디머 — 형식 분기 밖에 있다. 어떤 배경이든 글자가 묻힐 수 있다. */
+	dimmerDefinition: Extract<ControllerControlDefinition, { kind: 'toggle' }>
+	dimmerOpacityDefinition: Extract<ControllerControlDefinition, { kind: 'range' }>
 	/** 템플릿 캔버스 종횡비(w/h) — 배경 transform 패드가 같은 비율로 그려진다. */
 	canvasAspectRatio?: number
 	/** Image Config를 캔버스 비율로 제한한 슬롯 범위 계약. */
@@ -72,6 +75,8 @@ export function BackgroundSection({
 	groupPresentation,
 	typeDefinition,
 	colorDefinition,
+	dimmerDefinition,
+	dimmerOpacityDefinition,
 	canvasAspectRatio,
 	imageContracts,
 	featureBindings,
@@ -237,6 +242,25 @@ export function BackgroundSection({
 						/>
 					)}
 				</>
+			)}
+
+			{/* 형식 분기 밖 — 색·이미지·그래픽 어디서든 배경이 글자를 삼킬 수 있다. */}
+			<ControllerControlRenderer
+				definition={dimmerDefinition}
+				value={value.dimmer}
+				onChange={(next) => {
+					if (typeof next === 'boolean') onChange({ dimmer: next })
+				}}
+			/>
+			{/* 꺼져 있을 때는 그리지 않는다 — 움직여도 화면이 안 바뀌는 슬라이더를 남기지 않는다. */}
+			{value.dimmer && (
+				<ControllerControlRenderer
+					definition={dimmerOpacityDefinition}
+					value={value.dimmerOpacity}
+					onChange={(next) => {
+						if (typeof next === 'number') onChange({ dimmerOpacity: next })
+					}}
+				/>
 			)}
 		</ControllerGroupRenderer>
 	)

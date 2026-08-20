@@ -44,6 +44,8 @@ import type { TemplateNodeConfig } from '@/types/template'
 
 const BACKGROUND_TYPE_CONTROL_ID = 'background.type'
 const BACKGROUND_COLOR_CONTROL_ID = 'background.color'
+const BACKGROUND_DIMMER_CONTROL_ID = 'background.dimmer'
+const BACKGROUND_DIMMER_OPACITY_CONTROL_ID = 'background.dimmerOpacity'
 const TEXT_COLOR_CONTROL_ID = 'text.color'
 
 const BACKGROUND_TYPE_OPTIONS: readonly { value: TemplateBackgroundType; label: string }[] = [
@@ -102,6 +104,9 @@ export type TemplateBackgroundSlot = TemplateSlotBindingBase & {
 	/** 공통 controller.groups에 있는 background type Definition의 stable id. */
 	typeControlId: typeof BACKGROUND_TYPE_CONTROL_ID
 	colorControlId: typeof BACKGROUND_COLOR_CONTROL_ID
+	/** 배경 위 디머의 on/off와 강도 — 형식과 무관하게 항상 있다. */
+	dimmerControlId: typeof BACKGROUND_DIMMER_CONTROL_ID
+	dimmerOpacityControlId: typeof BACKGROUND_DIMMER_OPACITY_CONTROL_ID
 	imageConfig: { mode: 'selectable'; allowedConfigIds?: readonly number[] }
 }
 
@@ -300,10 +305,14 @@ export function parseTemplateStudioConfig(input: unknown): TemplateStudioConfig 
 					'kind',
 					'typeControlId',
 					'colorControlId',
+					'dimmerControlId',
+					'dimmerOpacityControlId',
 					'imageConfig',
 				])
 				assertTemplateString(slot.typeControlId, 'slot.typeControlId')
 				assertTemplateString(slot.colorControlId, 'slot.colorControlId')
+				assertTemplateString(slot.dimmerControlId, 'slot.dimmerControlId')
+				assertTemplateString(slot.dimmerOpacityControlId, 'slot.dimmerOpacityControlId')
 				assertTemplateImagePolicy(slot.imageConfig)
 				break
 			default:
@@ -558,6 +567,24 @@ function buildBackgroundGroup(
 				label: 'Background Color',
 				defaultValue: null,
 			},
+			// 강도를 따로 두는 이유는 껐다 켜도 맞춰 둔 값이 남아야 하기 때문이다.
+			{
+				id: BACKGROUND_DIMMER_CONTROL_ID,
+				kind: 'toggle',
+				label: 'Dimmer',
+				defaultValue: false,
+			},
+			{
+				id: BACKGROUND_DIMMER_OPACITY_CONTROL_ID,
+				kind: 'range',
+				label: 'Dimmer Opacity',
+				defaultValue: 0.2,
+				min: 0,
+				// 실용 상한 — 1.0은 배경을 완전한 검정으로 덮어 배경을 고른 의미가 없어진다.
+				max: 0.7,
+				step: 0.01,
+				display: { precision: 2 },
+			},
 		],
 	}
 }
@@ -702,6 +729,8 @@ export function deriveTemplateStudioConfig(
 			kind: 'background',
 			typeControlId: BACKGROUND_TYPE_CONTROL_ID,
 			colorControlId: BACKGROUND_COLOR_CONTROL_ID,
+			dimmerControlId: BACKGROUND_DIMMER_CONTROL_ID,
+			dimmerOpacityControlId: BACKGROUND_DIMMER_OPACITY_CONTROL_ID,
 			imageConfig: {
 				mode: 'selectable',
 				...(backgroundPolicy?.imageConfigIds
