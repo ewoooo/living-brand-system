@@ -25,7 +25,7 @@ export const LINEAR_FLUTED_GLASS_DEFAULT_INPUT = {
 	axisFalloff: 1.7,
 	flowSpeed: 0.06,
 	paletteShift: 1.2,
-	paletteDrift: 0.75,
+	paletteDrift: -0.2,
 	pulseIntensity: 0.3,
 	pulseSpeed: 0.28,
 	pulseDensity: 0.9,
