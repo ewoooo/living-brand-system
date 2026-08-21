@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CI_LOCKUP_CONTROLS } from '../ci-lockup/manifest'
 import { reducedMotion } from '../ci-lockup/motion'
 import { branchLabel, OVERSEAS_BRANCHES, SUBSIDIARIES } from '../ci-lockup/rules'
@@ -39,6 +39,23 @@ const ALL_AXES = CI_LOCKUP_CONTROLS.map((control) => control.id)
 const PLACEHOLDER_SUBSIDIARY = SUBSIDIARIES.find((sub) => sub.placeholder) ?? SUBSIDIARIES[0]
 const REAL_SUBSIDIARIES = SUBSIDIARIES.filter((sub) => !sub.placeholder)
 
+/**
+ * 한 바퀴치 순서를 섞는다(shuffled bag) — 매번 무작위로 고르면 어떤 이름은 두 번 나오기 전에 다른
+ * 이름이 한 번도 안 나온다. 바구니를 비우고 다시 채우면 한 바퀴 안에 전부 한 번씩 나온다.
+ *
+ * 🔑 **왜 섞나**: 목록이 성격으로 묶여 있다 — 세부사업명을 가진 다섯이 앞에 몰려 있어(`rules.ts`),
+ *    순서대로 돌리면 「센터 다섯 → 지역명 열아홉」으로 읽힌다(사용자 지적 2026-08-21). 목록 순서는
+ *    admin 드롭다운에서 그 묶음이 유용하므로 그대로 두고, **회전만** 섞는다.
+ */
+function shuffled(items: readonly string[]): string[] {
+	const out = [...items]
+	for (let i = out.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1))
+		;[out[i], out[j]] = [out[j], out[i]]
+	}
+	return out
+}
+
 export type CiLockupHeroSource = 'subsidiary' | 'branch'
 
 export function CiLockupHeroView({
@@ -52,18 +69,26 @@ export function CiLockupHeroView({
 }) {
 	const overseas = source === 'branch'
 	// 자회사는 국문 이름, 해외지사는 영문 지역명이 돈다(정본 도판이 그렇게 갈라져 있다).
-	const names = overseas
-		? OVERSEAS_BRANCHES.map(branchLabel)
-		: REAL_SUBSIDIARIES.map((sub) => sub.ko)
-	const [index, setIndex] = useState(0)
+	// 🔴 `useMemo`인 이유는 성능이 아니라 **참조 안정성**이다 — 매 렌더 새 배열이면 아래 effect가
+	//    매번 다시 걸려 타이머가 초기화되고 이름이 영원히 첫 것에 머문다.
+	const names = useMemo(
+		() =>
+			overseas ? OVERSEAS_BRANCHES.map(branchLabel) : REAL_SUBSIDIARIES.map((sub) => sub.ko),
+		[overseas],
+	)
+	// 🔴 첫 이름은 **목록 순서 그대로**다 — 서버와 클라이언트가 다른 이름을 그리면 하이드레이션이
+	//    어긋난다. 섞는 일은 마운트 뒤 타이머 안에서만 일어난다.
+	const [name, setName] = useState(names[0])
 
 	useEffect(() => {
 		if (reducedMotion()) return
-		const timer = setInterval(() => setIndex((n) => (n + 1) % names.length), CYCLE_MS)
+		let bag: string[] = []
+		const timer = setInterval(() => {
+			if (bag.length === 0) bag = shuffled(names)
+			setName(bag.pop() as string)
+		}, CYCLE_MS)
 		return () => clearInterval(timer)
-	}, [names.length])
-
-	const name = names[index % names.length]
+	}, [names])
 
 	return (
 		<CiLockupView
