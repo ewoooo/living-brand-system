@@ -10,8 +10,10 @@ import { GuidelineBlocks } from './guideline-blocks'
 const blocks: GuidelineDocument['blocks'] = [{ blockType: 'block', id: 'block-1' }]
 
 describe('GuidelineBlocks', () => {
+	// normal의 backgroundClass는 null이다 — 색을 갖지 않은 블록은 면을 칠하지 않는다.
+	// 칠하면 문서(Page)가 깐 옅은 면을 그 위에서 덮는다(guideline-block-frame.tsx).
 	it.each([
-		['normal', undefined, 'bg-background', 'text-foreground'],
+		['normal', undefined, null, 'text-foreground'],
 		['secondary', 'secondary', 'bg-secondary', 'text-secondary-foreground'],
 		['inverted', 'inverted', 'bg-foreground', 'text-background'],
 	] as const)('블록 컬러 variant %s를 적용한다', (expectedVariant, variant, backgroundClass, foregroundClass) => {
@@ -21,7 +23,12 @@ describe('GuidelineBlocks', () => {
 		const frame = container.firstElementChild
 
 		expect(frame).toHaveAttribute('data-variant', expectedVariant)
-		expect(frame).toHaveClass(backgroundClass, foregroundClass)
+		expect(frame).toHaveClass(foregroundClass)
+		if (backgroundClass) {
+			expect(frame).toHaveClass(backgroundClass)
+		} else {
+			expect(frame).not.toHaveClass('bg-background')
+		}
 	})
 
 	it('Better Editor preview에서만 블록 선택 ID를 노출한다', () => {

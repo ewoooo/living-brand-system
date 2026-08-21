@@ -78,23 +78,51 @@ DON'T
 const payload = await getPayload({ config })
 const existing = await payload.find({
 	collection: 'image-profiles',
+	depth: 0,
 	where: { slug: { equals: data.slug } },
 	limit: 1,
 	draft: true,
 })
 
+// 미리보기 이미지는 필수다. 이 시드가 고를 수 있는 정답이 없으므로 이미 붙어 있는 값을 지키고,
+// 없을 때만 published 브랜드 이미지 중 첫 장을 임시로 붙인다 — 실제 이미지는 어드민이 바꾼다.
+const current = existing.docs[0]?.previewImage
+const previewImage =
+	typeof current === 'object' && current !== null
+		? current.id
+		: (current ?? (await pickFallbackPreviewImage()))
+
+async function pickFallbackPreviewImage() {
+	const images = await payload.find({
+		collection: 'application-images',
+		depth: 0,
+		limit: 1,
+		select: { filename: true },
+		sort: '-updatedAt',
+		where: { _status: { equals: 'published' } },
+	})
+	const image = images.docs[0]
+	if (!image) {
+		throw new Error(
+			'미리보기 이미지로 쓸 published 브랜드 이미지가 없습니다. 어드민에서 한 장 업로드한 뒤 다시 실행하세요.',
+		)
+	}
+	console.log(`previewImage 임시 지정: application-images#${image.id} (${image.filename})`)
+	return image.id
+}
+
 if (existing.docs[0]) {
 	await payload.update({
 		collection: 'image-profiles',
 		id: existing.docs[0].id,
-		data,
+		data: { ...data, previewImage },
 		draft: false,
 	})
 	console.log(`updated: ${data.name}`)
 } else {
 	await payload.create({
 		collection: 'image-profiles',
-		data,
+		data: { ...data, previewImage },
 		draft: false,
 	})
 	console.log(`created: ${data.name}`)

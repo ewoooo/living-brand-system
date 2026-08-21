@@ -4,8 +4,8 @@ import { adminFieldOnly, adminOnly, selfOrAdmin } from '@/lib/auth'
 export const Users: CollectionConfig = {
 	slug: 'users',
 	labels: {
-		singular: '사용자',
-		plural: '사용자',
+		singular: '사용자 설정',
+		plural: '사용자 설정',
 	},
 	admin: {
 		useAsTitle: 'email',

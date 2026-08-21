@@ -1,6 +1,6 @@
 'use client'
 
-import { Controller } from '@/components/studio/shared/controller'
+import { Controller } from '@/components/shared/controller'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
 import type { VideoExportSpec } from '@/features/studio-export/export-contract'
@@ -86,6 +86,34 @@ export function VideoControls({
 				onChange={onDurationChange}
 			/>
 		</div>
+	)
+}
+
+/**
+ * Footer에서 캔버스 좌표계 대비 출력 배율을 고른다.
+ * 선택지가 하나뿐이면(캔버스가 이미 인코딩 한도에 가까우면) 읽기 전용으로 둔다.
+ */
+export function ScaleControls({
+	scale,
+	options,
+	onChange,
+}: {
+	scale: number
+	options: readonly number[]
+	onChange: (scale: number) => void
+}) {
+	return (
+		<Controller.Row label="Scale" readonly={options.length <= 1}>
+			{options.length <= 1 ? (
+				<span className="text-sm text-muted-foreground">{scale}×</span>
+			) : (
+				<Controller.Select
+					options={options.map((value) => ({ value: String(value), label: `${value}×` }))}
+					value={String(scale)}
+					onChange={(next) => onChange(Number(next))}
+				/>
+			)}
+		</Controller.Row>
 	)
 }
 

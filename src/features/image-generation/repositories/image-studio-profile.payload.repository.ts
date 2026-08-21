@@ -13,7 +13,8 @@ export async function listPublishedImageProfileDefinitions(
 	const payload = await getPayload({ config })
 	const profiles = await payload.find({
 		collection: 'image-profiles',
-		depth: 0,
+		// 미리보기 이미지를 채우려면 upload 관계가 한 단계 populate돼야 한다(depth 0은 id만 준다).
+		depth: 1,
 		draft: false,
 		limit: 100,
 		// worker에게 숨긴 모델은 Service Base Definition 파생에만 쓰고 projector가 반환에서 제거한다.
@@ -25,6 +26,7 @@ export async function listPublishedImageProfileDefinitions(
 			imageModelPreset: true,
 			name: true,
 			exportPolicy: true,
+			previewImage: true,
 			slug: true,
 		} as never,
 		sort: 'displayOrder',
@@ -42,10 +44,12 @@ export async function listPublishedImageProfileDefinitions(
 			controllerPresentation,
 			features,
 			exportPolicy,
+			previewImage,
 		} = document as typeof document & {
 			controllerRestrictions?: unknown
 			controllerPresentation?: unknown
 			features?: unknown
+			previewImage?: unknown
 		}
 		return {
 			id,
@@ -56,6 +60,7 @@ export async function listPublishedImageProfileDefinitions(
 			controllerPresentation,
 			features,
 			exportPolicy,
+			previewImage,
 		}
 	})
 }

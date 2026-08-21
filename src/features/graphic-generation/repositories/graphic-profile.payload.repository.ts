@@ -11,7 +11,9 @@ export async function listPublishedGraphicProfileDefinitions(
 	const payload = await getPayload({ config })
 	const profiles = await payload.find({
 		collection: 'graphic-profiles',
-		depth: 0,
+		// 미리보기 이미지를 채우려면 upload 관계가 한 단계 populate돼야 한다(depth 0은 id만 준다).
+		// 반환 계약은 아래 projector가 좁히므로 populate로 필드를 더 고르지는 않는다.
+		depth: 1,
 		draft: false,
 		limit: 100,
 		overrideAccess: false,
@@ -20,6 +22,7 @@ export async function listPublishedGraphicProfileDefinitions(
 			controllerPresentation: true,
 			name: true,
 			exportPolicy: true,
+			previewImage: true,
 			runtime: true,
 		} as never,
 		sort: 'displayOrder',
@@ -28,12 +31,20 @@ export async function listPublishedGraphicProfileDefinitions(
 	})
 
 	return profiles.docs.map((document) => {
-		const { id, name, runtime, controllerRestrictions, controllerPresentation, exportPolicy } =
-			document as typeof document & {
-				controllerRestrictions?: unknown
-				controllerPresentation?: unknown
-				exportPolicy?: PublishedGraphicProfileDefinition['exportPolicy']
-			}
+		const {
+			id,
+			name,
+			runtime,
+			controllerRestrictions,
+			controllerPresentation,
+			exportPolicy,
+			previewImage,
+		} = document as typeof document & {
+			controllerRestrictions?: unknown
+			controllerPresentation?: unknown
+			exportPolicy?: PublishedGraphicProfileDefinition['exportPolicy']
+			previewImage?: unknown
+		}
 		return {
 			id,
 			name,
@@ -41,6 +52,7 @@ export async function listPublishedGraphicProfileDefinitions(
 			controllerRestrictions,
 			controllerPresentation,
 			exportPolicy,
+			previewImage,
 		}
 	})
 }

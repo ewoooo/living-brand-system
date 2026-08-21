@@ -4,7 +4,7 @@ import type { ChangeEvent } from 'react'
 import { useState } from 'react'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { WIDGET_CAPTION } from '../readout'
+import { CONTROL_LABEL } from '../readout'
 
 /**
  * 레이아웃 그리드 오버레이 — 이미지 위에 "균일 섹션" 그리드 가이드를 겹쳐 레이아웃 규칙을 검수한다.
@@ -231,7 +231,7 @@ function NumberField({
 }) {
 	return (
 		<label className="flex flex-col gap-1">
-			<span className={`font-medium ${WIDGET_CAPTION}`}>{label}</span>
+			<span className={CONTROL_LABEL}>{label}</span>
 			<input
 				type="number"
 				value={value}

@@ -9,9 +9,12 @@
 /* HD체 (HD현대 공개 배포, Sandoll 제작). Light·Medium·Bold 3종 전부, 한글 11,172자 전부.
    웨이트마다 라틴/한글을 unicode-range로 갈라 둔다 — CI 락업은 워드마크(영문)만 쓰므로
    10KB짜리 라틴 조각만 받고, 한글 조각(약 500KB)은 한글이 실제로 그려지는 화면에서만 받는다.
-   원본 OTF는 리포 밖(.scratch/fonts/HD_OTF)에 있고, pyftsubset --flavor=woff2로 만든다. */
+   원본 OTF는 브랜드팀 제공본(리포 밖)이고, pyftsubset --flavor=woff2로 만든다.
+   🔴 family 별칭은 `HD`가 아니라 **`HD OTF`**다 — Figma 정본이 이 이름으로 내려주고(HD_LBS_Template 78:38),
+      템플릿 임포트는 Figma의 폰트명을 인라인 style에 그대로 굳힌다(`lower-figma-visuals.ts`). 별칭이 어긋나면
+      템플릿이 웹폰트를 못 집고 **로컬 설치 폰트**로 떨어진다(설치한 기기에서만 보이는 회귀). */
 @font-face {
-	font-family: "HD";
+	font-family: "HD OTF";
 	src: url("/fonts/hd/HD-Light-latin.woff2") format("woff2");
 	font-weight: 300;
 	font-style: normal;
@@ -20,7 +23,7 @@
 }
 
 @font-face {
-	font-family: "HD";
+	font-family: "HD OTF";
 	src: url("/fonts/hd/HD-Light-ko.woff2") format("woff2");
 	font-weight: 300;
 	font-style: normal;
@@ -29,7 +32,7 @@
 }
 
 @font-face {
-	font-family: "HD";
+	font-family: "HD OTF";
 	src: url("/fonts/hd/HD-Medium-latin.woff2") format("woff2");
 	font-weight: 500;
 	font-style: normal;
@@ -38,7 +41,7 @@
 }
 
 @font-face {
-	font-family: "HD";
+	font-family: "HD OTF";
 	src: url("/fonts/hd/HD-Medium-ko.woff2") format("woff2");
 	font-weight: 500;
 	font-style: normal;
@@ -47,7 +50,7 @@
 }
 
 @font-face {
-	font-family: "HD";
+	font-family: "HD OTF";
 	src: url("/fonts/hd/HD-Bold-latin.woff2") format("woff2");
 	font-weight: 700;
 	font-style: normal;
@@ -56,12 +59,27 @@
 }
 
 @font-face {
-	font-family: "HD";
+	font-family: "HD OTF";
 	src: url("/fonts/hd/HD-Bold-ko.woff2") format("woff2");
 	font-weight: 700;
 	font-style: normal;
 	font-display: block;
 	unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+AC00-D7A3, U+FF01-FF60;
+}
+
+/* 🔴 임시. CI 락업 조립의 **워드마크 전체**(라틴·한글 모두)를 이 서체로 그린다 — 정본 서체가 아니고,
+   그나마 인상이 가까운 것으로 사용자가 고른 것이다(이사만루 = GongGothic Medium, 공게임즈 X 폰트릭스,
+   웹폰트·상업용 허용). 같은 높이에서 글자 폭이 정본에 가깝다(대 0.921 : 정본 0.936, HD 배포체 0.834).
+   파일이 Medium인데 400으로 다는 것도 사용자 지정이다.
+   🔴 라틴만 있는 서체로 일부를 덮지 말 것 — 락업 하나 안의 텍스트는 한 서체로 통일한다(사용자 결정).
+   🔴 정본 서체가 도착하면 **이 블록과 `public/fonts/hd/Isamanru-Medium.woff2`를 지우고**
+   `ci-lockup/rules.ts`의 `FONT`만 갈면 된다. 그 밖에 쓰는 곳은 없다. */
+@font-face {
+	font-family: "Isamanru";
+	src: url("/fonts/hd/Isamanru-Medium.woff2") format("woff2");
+	font-weight: 400;
+	font-style: normal;
+	font-display: block;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -72,6 +90,9 @@
 	/* 제목 서체는 아직 정해지지 않았다 — body와 같은 Pretendard로 떨어진다.
 	   `.font-title`과 typography의 title 변형은 자리를 지키고 있으니, 서체가 정해지면 여기만 바꾼다. */
 	--font-title: "Pretendard", system-ui, sans-serif;
+	/* 본문·컨트롤의 기준 크기. Tailwind 기본은 14px이고 이 제품은 13px을 쓴다.
+	   line-height는 기본 비율(calc(1.25 / 0.875) ≈ 1.43)을 그대로 두어 크기에 따라 함께 줄어든다. */
+	--text-sm: 0.8125rem;
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-inverted: var(--inverted);

@@ -15,8 +15,10 @@ export async function elementToPng(
 	const blob = await toBlob(element, {
 		...(options.transparent ? {} : { backgroundColor: '#fff' }),
 		cacheBust: true,
-		canvasHeight: options.height * options.scale,
-		canvasWidth: options.width * options.scale,
+		// html-to-image가 canvas 크기를 canvasWidth × pixelRatio로 잡는다 — 양쪽에 배율을 주면
+		// 제곱으로 커진다. 크기는 원본 좌표로 주고 배율은 pixelRatio 한 곳만 갖는다.
+		canvasHeight: options.height,
+		canvasWidth: options.width,
 		pixelRatio: options.scale,
 	})
 	if (!blob) throw new Error('PNG rendering failed.')

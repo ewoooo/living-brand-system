@@ -1,10 +1,15 @@
 'use client'
 
-import { Typography } from '@/components/ui/typography'
+import { ControllerRange } from '@/components/shared/controller'
 
 export const DEFAULT_PREVIEW_SIZE = 50
 
-/** 출력에는 영향 없이 데스크톱 캔버스의 표시 크기만 조절한다. */
+/**
+ * 출력에는 영향 없이 데스크톱 캔버스의 표시 크기만 조절한다.
+ * 트랙·채움·키보드는 킷의 Value Range 프리미티브가 소유한다(docs/10 §3.6) — 여기서는
+ * 이 컨트롤이 무엇을 재는지(라벨·범위·표기)만 고정한다.
+ * 떠 있는 자리는 `ControllerBar`가 갖는다(`components/shared/controller/bar.tsx`).
+ */
 export function PreviewSizeControl({
 	value,
 	onChange,
@@ -13,34 +18,15 @@ export function PreviewSizeControl({
 	onChange: (value: number) => void
 }) {
 	return (
-		<div
-			data-slot="preview-size-control"
-			className="absolute bottom-10 left-1/2 z-10 hidden w-[233px] -translate-x-1/2 rounded-3xl bg-background p-3 shadow-lg lg:block"
-		>
-			<input
-				type="range"
-				aria-label="프리뷰 크기"
-				aria-valuetext={`${value}%`}
-				min={25}
-				max={100}
-				step={5}
-				value={value}
-				onChange={(event) => onChange(event.currentTarget.valueAsNumber)}
-				className="peer absolute top-3 right-3 left-3 z-10 h-9 cursor-ew-resize opacity-0"
-			/>
-			<div className="relative flex h-9 items-center justify-between overflow-hidden rounded-lg bg-muted px-3 peer-focus-visible:ring-2 peer-focus-visible:ring-ring/30">
-				<div
-					aria-hidden
-					className="absolute inset-y-0 left-0 bg-foreground/10"
-					style={{ width: `${value}%` }}
-				/>
-				<Typography as="span" size="sm" tone="muted" weight="medium" className="relative">
-					Preview Size
-				</Typography>
-				<Typography as="span" size="sm" tone="muted" className="relative font-mono">
-					{value}%
-				</Typography>
-			</div>
-		</div>
+		<ControllerRange
+			label="Preview Size"
+			value={value}
+			min={25}
+			max={100}
+			step={5}
+			format={(size) => `${size}%`}
+			onChange={onChange}
+			className="w-48"
+		/>
 	)
 }

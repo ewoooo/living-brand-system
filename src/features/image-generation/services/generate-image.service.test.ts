@@ -2,32 +2,24 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
 	env: {
-		IMAGE_DEV_FALLBACK: undefined as 'true' | 'false' | undefined,
 		GEMINI_API_KEY: undefined as string | undefined,
 		NODE_ENV: 'test' as 'development' | 'production' | 'test',
 		OPENAI_API_KEY: undefined as string | undefined,
 	},
 	acquireImageGenerationSlot: vi.fn(),
-	devGenerateImages: vi.fn(),
 	findPublishedImageProfile: vi.fn(),
 	generateBrandImages: vi.fn(),
-	loadGeneratedImage: vi.fn(),
 	normalizeImageProfilePrompt: vi.fn(),
 	releaseImageGenerationSlot: vi.fn(),
+	resolveGeneratedImageReference: vi.fn(),
 	storeGeneratedImages: vi.fn(),
 }))
-
-const ONE_PIXEL_PNG =
-	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
 
 vi.mock('@/env', () => ({ env: mocks.env }))
 vi.mock('@/features/image-generation/image-generation-gate', () => ({
 	// 게이트 창 상태는 게이트 단위 테스트가 검증한다 — 여기서는 서비스 연결(획득·해제 순서)만 본다.
 	acquireImageGenerationSlot: mocks.acquireImageGenerationSlot,
 	ImageGenerationLimitError: class extends Error {},
-}))
-vi.mock('@/features/image-generation/repositories/dev-image-generation.rest.repository', () => ({
-	devGenerateImages: mocks.devGenerateImages,
 }))
 vi.mock(
 	'@/features/image-generation/repositories/image-generation.ai.repository',
@@ -43,7 +35,7 @@ vi.mock('@/features/image-generation/repositories/image-profile.payload.reposito
 	findPublishedImageProfile: mocks.findPublishedImageProfile,
 }))
 vi.mock('@/features/image-generation/repositories/generated-image.payload.repository', () => ({
-	loadGeneratedImage: mocks.loadGeneratedImage,
+	resolveGeneratedImageReference: mocks.resolveGeneratedImageReference,
 	storeGeneratedImages: mocks.storeGeneratedImages,
 }))
 vi.mock('@/features/image-generation/services/normalize-image-profile-prompt.service', () => ({
@@ -52,7 +44,6 @@ vi.mock('@/features/image-generation/services/normalize-image-profile-prompt.ser
 }))
 
 import {
-	adjustImageCamera,
 	generateImages,
 	generateImagesWithSettings,
 	ImageGenerationUnavailableError,
@@ -68,12 +59,11 @@ describe('generateImages', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		mocks.env.NODE_ENV = 'test'
-		mocks.env.IMAGE_DEV_FALLBACK = undefined
 		mocks.env.GEMINI_API_KEY = undefined
 		mocks.env.OPENAI_API_KEY = undefined
 		mocks.acquireImageGenerationSlot.mockReturnValue(mocks.releaseImageGenerationSlot)
 		mocks.findPublishedImageProfile.mockResolvedValue(null)
-		mocks.loadGeneratedImage.mockResolvedValue(null)
+		mocks.resolveGeneratedImageReference.mockResolvedValue(null)
 		mocks.storeGeneratedImages.mockResolvedValue([
 			{
 				collection: 'generated-images',
@@ -85,9 +75,6 @@ describe('generateImages', () => {
 	})
 
 	it('fails closed when no image provider is configured', async () => {
-		mocks.env.NODE_ENV = 'production'
-		mocks.env.IMAGE_DEV_FALLBACK = 'true'
-
 		await expect(
 			generateImagesWithSettings({
 				userInput: 'sample',
@@ -98,32 +85,11 @@ describe('generateImages', () => {
 				user: { id: 1 },
 			}),
 		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)
-		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
 		expect(mocks.acquireImageGenerationSlot).not.toHaveBeenCalled()
 	})
 
-	it('uses Pollinations only when development explicitly enables it', async () => {
-		mocks.env.NODE_ENV = 'development'
-		mocks.env.IMAGE_DEV_FALLBACK = 'true'
-		mocks.devGenerateImages.mockResolvedValue(['data:image/jpeg;base64,dev'])
-
-		const result = await generateImagesWithSettings({
-			userInput: 'sample',
-			count: 2,
-			aspectRatio: '1:1',
-			imageModelPreset: 'openai-gpt-image-2',
-			imageSize: '1K',
-			user: { id: 1 },
-		})
-
-		expect(mocks.devGenerateImages).toHaveBeenCalledWith('sample', '1024x1024', 2)
-		expect(result.images).toEqual(['data:image/jpeg;base64,dev'])
-	})
-
 	it('prefers the configured OpenAI provider', async () => {
-		mocks.env.NODE_ENV = 'development'
-		mocks.env.IMAGE_DEV_FALLBACK = 'true'
 		mocks.env.OPENAI_API_KEY = 'key'
 		mocks.generateBrandImages.mockResolvedValue({
 			images: ['data:image/png;base64,openai'],
@@ -147,7 +113,6 @@ describe('generateImages', () => {
 			aspectRatio: '1:1',
 			imageSize: '1K',
 		})
-		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 	})
 
 	it('published 프로파일을 정규화해 저장된 출력 계약으로 생성한다', async () => {
@@ -239,6 +204,10 @@ describe('generateImages', () => {
 				name: 'Technical Illustration',
 			}),
 		})
+		// 참조 없는 생성은 sourceImage를 기록하지 않는다.
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.not.objectContaining({ sourceImage: expect.anything() }),
+		)
 	})
 
 	it('슬롯 비율 오버라이드는 프로파일 비율 대신 모델 호출에 반영된다', async () => {
@@ -495,9 +464,7 @@ describe('generateImages', () => {
 		expect(mocks.acquireImageGenerationSlot).not.toHaveBeenCalled()
 	})
 
-	it('Google 키가 없는 Nano Banana 프로파일은 dev 폴백으로 보내지 않는다', async () => {
-		mocks.env.NODE_ENV = 'development'
-		mocks.env.IMAGE_DEV_FALLBACK = 'true'
+	it('Google 키가 없는 Nano Banana 프로파일은 다른 모델로 보내지 않는다', async () => {
 		mocks.findPublishedImageProfile.mockResolvedValue({
 			id: 5,
 			name: 'Technical Illustration',
@@ -521,7 +488,6 @@ describe('generateImages', () => {
 				count: 1,
 			}),
 		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)
-		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
 	})
 
@@ -537,143 +503,6 @@ describe('generateImages', () => {
 			}),
 		).rejects.toBeInstanceOf(ImageProfileNotFoundError)
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
-	})
-
-	it('시드 이미지와 해석된 카메라 프롬프트로 시점을 조정한다', async () => {
-		mocks.env.GEMINI_API_KEY = 'key'
-		const effectivePrompt = JSON.stringify({
-			composition: 'ISO-metric view',
-			instructions: 'x'.repeat(600),
-			subject: '유조선',
-		})
-		mocks.loadGeneratedImage.mockResolvedValue({
-			data: Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
-			effectivePrompt,
-			inputPrompt: '유조선',
-		})
-		mocks.findPublishedImageProfile.mockResolvedValue({
-			id: 5,
-			name: 'Technical Illustration',
-			imageModelPreset: 'google-nano-banana-2-lite',
-			aspectRatio: '16:9',
-			imageSize: '1K',
-			cameraControl: false,
-			features: [{ blockType: 'cameraControl' }],
-		})
-		mocks.generateBrandImages.mockResolvedValue({
-			images: ['data:image/png;base64,adjusted'],
-			model: 'gemini-3.1-flash-lite-image',
-			provider: 'google',
-		})
-
-		const result = await adjustImageCamera({
-			camera: { azimuthDeg: 45, elevationDeg: 20 },
-			count: 1,
-			generatedImageId: 8,
-			profileId: 5,
-			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
-			user: { id: 1 },
-		})
-
-		expect(result.camera).toEqual({
-			input: { azimuthDeg: 45, elevationDeg: 20 },
-			resolved: { azimuth: 'front-right', elevation: 'elevated' },
-		})
-		const generationInput = mocks.generateBrandImages.mock.calls[0]?.[0]
-		expect(JSON.parse(generationInput.prompt)).toMatchObject({
-			camera: 'front-right three-quarter view, slightly elevated camera angle',
-			subject: '유조선',
-		})
-		expect([...generationInput.seedImage].slice(0, 8)).toEqual([
-			0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-		])
-		expect(mocks.loadGeneratedImage).toHaveBeenCalledWith({
-			generatedImageId: 8,
-			profileId: 5,
-			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
-			user: { id: 1 },
-		})
-		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
-			expect.objectContaining({ inputPrompt: '유조선' }),
-		)
-	})
-
-	it('조회할 수 없는 생성 이미지 ID를 거부한다', async () => {
-		mocks.env.GEMINI_API_KEY = 'key'
-		mocks.findPublishedImageProfile.mockResolvedValue({
-			id: 5,
-			name: 'Technical Illustration',
-			imageModelPreset: 'google-nano-banana-2-lite',
-			aspectRatio: '16:9',
-			imageSize: '1K',
-			features: [{ blockType: 'cameraControl' }],
-		})
-
-		await expect(
-			adjustImageCamera({
-				camera: { azimuthDeg: 0, elevationDeg: 0 },
-				count: 1,
-				generatedImageId: 404,
-				profileId: 5,
-				requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
-				user: { id: 1 },
-			}),
-		).rejects.toBeInstanceOf(InvalidSeedImageError)
-		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
-	})
-
-	it('카메라 조정을 지원하지 않는 published 프로파일은 시드 조회 전에 거부한다', async () => {
-		mocks.findPublishedImageProfile.mockResolvedValue({
-			id: 5,
-			name: 'Flat Graphic',
-			slug: 'flat-graphic',
-			imageModelPreset: 'openai-gpt-image-2',
-			aspectRatio: '1:1',
-			imageSize: '1K',
-		})
-
-		await expect(
-			adjustImageCamera({
-				camera: { azimuthDeg: 0, elevationDeg: 0 },
-				count: 1,
-				generatedImageId: 8,
-				profileId: 5,
-				requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
-				user: { id: 1 },
-			}),
-		).rejects.toBeInstanceOf(InvalidImageControllerInputError)
-		expect(mocks.loadGeneratedImage).not.toHaveBeenCalled()
-		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
-	})
-
-	it('시드 이미지 편집은 Pollinations 개발 폴백을 사용하지 않는다', async () => {
-		mocks.env.NODE_ENV = 'development'
-		mocks.env.IMAGE_DEV_FALLBACK = 'true'
-		mocks.loadGeneratedImage.mockResolvedValue({
-			data: Buffer.from(ONE_PIXEL_PNG.split(',')[1] ?? '', 'base64'),
-			effectivePrompt: '{"subject":"유조선"}',
-			inputPrompt: '유조선',
-		})
-		mocks.findPublishedImageProfile.mockResolvedValue({
-			id: 5,
-			name: 'Technical Illustration',
-			imageModelPreset: 'openai-gpt-image-2',
-			aspectRatio: '1:1',
-			imageSize: '1K',
-			features: [{ blockType: 'cameraControl' }],
-		})
-
-		await expect(
-			adjustImageCamera({
-				camera: { azimuthDeg: 0, elevationDeg: 0 },
-				count: 1,
-				generatedImageId: 8,
-				profileId: 5,
-				requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
-				user: { id: 1 },
-			}),
-		).rejects.toBeInstanceOf(ImageGenerationUnavailableError)
-		expect(mocks.devGenerateImages).not.toHaveBeenCalled()
 	})
 
 	it('모델 호출 전에 사용자 ID로 생성 게이트를 획득하고 성공 후 해제한다', async () => {
@@ -734,6 +563,245 @@ describe('generateImages', () => {
 			}),
 		).rejects.toThrow('limit reached')
 		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+	})
+
+	it('참조가 있으면 생성 플랜의 seedImage로 넘긴다', async () => {
+		mocks.env.GEMINI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '유조선' },
+			normalizedInput: {},
+		})
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,seeded'],
+			model: 'gemini-3.1-flash-lite-image',
+			provider: 'google',
+		})
+		// 참조 fixture를 사용자 프롬프트와 다른 값으로 둔다 — 우선순위(사용자가 이김)가 falsifiable하도록.
+		mocks.resolveGeneratedImageReference.mockResolvedValue({
+			data: Buffer.from('seed'),
+			generatedImageId: 8,
+			prompt: { effective: '{"subject":"화물선"}', input: '화물선' },
+		})
+
+		await generateImages({
+			userInput: '유조선',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			reference: { generatedImageId: 8, requestUrl: 'http://localhost/api/generate-image' },
+		})
+
+		// expect.any(Uint8Array)는 jsdom 테스트 환경에서 Buffer와 realm이 갈려 instanceof가 어긋난다 —
+		// 바이트를 펼쳐 비교한다.
+		const [call] = mocks.generateBrandImages.mock.calls[0]
+		expect([...call.seedImage]).toEqual([...Buffer.from('seed')])
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.objectContaining({
+				effectivePrompt: '{"subject":"유조선"}',
+				inputPrompt: '유조선',
+				sourceImage: 8,
+			}),
+		)
+	})
+
+	it('프롬프트를 비우고 참조만 보내면 참조의 프롬프트를 물려받는다', async () => {
+		mocks.env.GEMINI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,seeded'],
+			model: 'gemini-3.1-flash-lite-image',
+			provider: 'google',
+		})
+		mocks.resolveGeneratedImageReference.mockResolvedValue({
+			data: Buffer.from('seed'),
+			generatedImageId: 8,
+			prompt: { effective: '{"subject":"유조선"}', input: '유조선' },
+		})
+
+		await generateImages({
+			userInput: '',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			reference: { generatedImageId: 8, requestUrl: 'http://localhost/api/generate-image' },
+		})
+
+		// 사용자 입력이 없으므로 정규화 모델을 부르지 않는다.
+		expect(mocks.normalizeImageProfilePrompt).not.toHaveBeenCalled()
+		expect(mocks.storeGeneratedImages).toHaveBeenCalledWith(
+			expect.objectContaining({
+				effectivePrompt: '{"subject":"유조선"}',
+				inputPrompt: '유조선',
+			}),
+		)
+	})
+
+	it('참조도 프롬프트도 없으면 컨트롤러 입력 오류로 거부한다', async () => {
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+
+		await expect(
+			generateImages({ userInput: '', profileId: 5, user: { id: 1 }, count: 1 }),
+		).rejects.toThrow('rejected prompt')
+	})
+
+	it('해석할 수 없는 참조는 하드 거부하고 조용히 프롬프트만으로 흘러가지 않는다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '1:1',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		// 남의 생성 이미지 id를 참조로 보낸 경우를 흉내낸다 — 저장소 4중 where가 걸러 null을 돌려준다.
+		mocks.resolveGeneratedImageReference.mockResolvedValue(null)
+
+		await expect(
+			generateImages({
+				userInput: '유조선',
+				profileId: 5,
+				user: { id: 1 },
+				count: 1,
+				reference: {
+					generatedImageId: 999,
+					requestUrl: 'http://localhost/api/generate-image',
+				},
+			}),
+		).rejects.toBeInstanceOf(InvalidSeedImageError)
+		// 하드 거부의 실질: null이 조용히 프롬프트-only 생성으로 흘러가지 않는다.
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+	})
+
+	it('프로파일이 카메라 feature를 열지 않았는데 camera 값을 보내면 거부한다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Flat Graphic',
+			slug: 'flat-graphic',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '1:1',
+			imageSize: '1K',
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '유조선' },
+			normalizedInput: {},
+		})
+
+		await expect(
+			generateImages({
+				userInput: '유조선',
+				profileId: 5,
+				user: { id: 1 },
+				count: 1,
+				camera: { azimuthDeg: 0, elevationDeg: 0 },
+			}),
+		).rejects.toBeInstanceOf(InvalidImageControllerInputError)
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+		// 카메라 신뢰 경계 검증이 참조 다운로드·유료 정규화 호출보다 먼저 거부해야 한다(회귀 방지).
+		expect(mocks.resolveGeneratedImageReference).not.toHaveBeenCalled()
+		expect(mocks.normalizeImageProfilePrompt).not.toHaveBeenCalled()
+	})
+
+	it('feature는 열렸지만 azimuthDeg가 허용 구간 밖이면 거부한다', async () => {
+		mocks.env.OPENAI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'openai-gpt-image-2',
+			aspectRatio: '1:1',
+			imageSize: '1K',
+			features: [
+				{ blockType: 'cameraControl', azimuths: ['front'], elevations: ['eye-level'] },
+			],
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.normalizeImageProfilePrompt.mockResolvedValue({
+			finalPrompt: { subject: '유조선' },
+			normalizedInput: {},
+		})
+
+		await expect(
+			generateImages({
+				userInput: '유조선',
+				profileId: 5,
+				user: { id: 1 },
+				count: 1,
+				camera: { azimuthDeg: 90, elevationDeg: 0 },
+			}),
+		).rejects.toBeInstanceOf(InvalidImageControllerInputError)
+		expect(mocks.generateBrandImages).not.toHaveBeenCalled()
+		// 카메라 신뢰 경계 검증이 참조 다운로드·유료 정규화 호출보다 먼저 거부해야 한다(회귀 방지).
+		expect(mocks.resolveGeneratedImageReference).not.toHaveBeenCalled()
+		expect(mocks.normalizeImageProfilePrompt).not.toHaveBeenCalled()
+	})
+
+	it('카메라 값을 주면 프롬프트에 각도 키를 얹는다', async () => {
+		mocks.env.GEMINI_API_KEY = 'key'
+		mocks.findPublishedImageProfile.mockResolvedValue({
+			id: 5,
+			name: 'Technical Illustration',
+			imageModelPreset: 'google-nano-banana-2-lite',
+			aspectRatio: '16:9',
+			imageSize: '1K',
+			features: [{ blockType: 'cameraControl' }],
+			profilePrompt: [],
+			userPromptNormalization: [],
+		})
+		mocks.generateBrandImages.mockResolvedValue({
+			images: ['data:image/png;base64,seeded'],
+			model: 'gemini-3.1-flash-lite-image',
+			provider: 'google',
+		})
+		mocks.resolveGeneratedImageReference.mockResolvedValue({
+			data: Buffer.from('seed'),
+			generatedImageId: 8,
+			prompt: { effective: '{"subject":"유조선"}', input: '유조선' },
+		})
+
+		await generateImages({
+			userInput: '',
+			profileId: 5,
+			user: { id: 1 },
+			count: 1,
+			camera: { azimuthDeg: 90, elevationDeg: 0 },
+			reference: { generatedImageId: 8, requestUrl: 'http://localhost/api/generate-image' },
+		})
+
+		const [plan] = mocks.generateBrandImages.mock.calls[0]
+		expect(JSON.parse(plan.prompt)).toMatchObject({
+			subject: '유조선',
+			camera: expect.stringContaining('right side view'),
+		})
 	})
 })
 

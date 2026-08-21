@@ -141,7 +141,7 @@ studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그�
 
 ### 컨트롤러 컨트롤 계약 (§3.6)
 
-스튜디오 컨트롤러의 개별 컨트롤은 아래 계약을 따릅니다. 디자인 정본은 Figma HD_LBS_UI의 **Controller API**(node `4:5578`), 구현 원형은 `src/components/studio/shared/controller/`의 **Controller 컴파운드 킷**입니다. 패널은 `Root` → `Header`·`Content`·`Footer`, 본문은 `Group` → 개별 컨트롤로 조합합니다. `Group`은 제목과 접힘 상태를 직접 소유합니다. 기존 `Panel`은 `Root`·`Content`·`Footer`를 묶은 호환 래퍼입니다.
+스튜디오 컨트롤러의 개별 컨트롤은 아래 계약을 따릅니다. 디자인 정본은 Figma HD_LBS_UI의 **Controller API**(node `4:5578`), 구현 원형은 `src/components/shared/controller/`의 **Controller 컴파운드 킷**입니다(Studio와 가이드라인이 함께 쓰므로 `components/shared/`에 있습니다). 패널은 `Root` → `Header`·`Content`·`Footer`, 본문은 `Group` → 개별 컨트롤로 조합합니다. `Group`은 제목과 접힘 상태를 직접 소유합니다. 기존 `Panel`은 `Root`·`Content`·`Footer`를 묶은 호환 래퍼입니다.
 
 Runtime Manifest부터 Effective Config, Provider, Artifact, Export까지 이어지는 전체 데이터 흐름은 [Studio](features/studio.md)를 정본으로 삼습니다. 이 절은 Controller의 표현과 상호작용 계약만 설명합니다.
 
@@ -199,9 +199,9 @@ Controller 사용 구조는 다섯 책임으로 나눕니다.
 
 별도 `ControllerProvider`는 두지 않습니다. 편집 계약과 세션 값은 화면의 Studio Provider가 소유하고, Controller 컴파운드는 표현 레이아웃만 소유합니다. 여러 Controller Root 사이에서 공유할 표현 상태가 실제로 생길 때만 Provider를 추가합니다.
 
-세 Studio의 Admin UI는 Runtime Manifest를 읽기 전용으로 보여주되, Image는 Profile이 선택한 feature로 좁힌 Controller projection을 보여줍니다. Admin은 `{ controlId, availability, defaultValue, maxLength, optionValues, min, max }`만 sparse JSON `controllerRestrictions`로 저장하고 `kind`·label·placeholder·display·aspectRatio·group title·collapsible·defaultOpen을 입력하지 않습니다. Draft는 작성 중인 불완전 상태를 허용하지만 publish는 공통 parser로 unknown field·중복 id·kind별 기본값과 제약을 엄격하게 검증합니다. 세 Studio는 legacy Controller/Policy 저장을 읽지 않고 Effective `config.controller.groups`만 소비합니다.
+세 Studio의 Admin UI는 Runtime Manifest를 읽기 전용으로 보여주되, Image는 Profile이 선택한 feature로 좁힌 Controller projection을 보여줍니다. Image·Graphic Admin은 `{ controlId, availability, defaultValue, maxLength, optionValues, min, max }`만 sparse JSON `controllerRestrictions`로 저장하고 `kind`·label·placeholder·display·aspectRatio·group title·collapsible·defaultOpen을 입력하지 않습니다. Template Admin은 `controllerRestrictions`를 쓰지 않고 배경(`backgroundPolicy`)·레이어별 `overrides[nodeId]`·출력(`exportPolicy`)만 저장하며, `controllerPresentation`은 계산된 기본값입니다. Draft는 작성 중인 불완전 상태를 허용하지만 publish는 공통 parser로 unknown field·중복 id·kind별 기본값과 제약을 엄격하게 검증합니다. 세 Studio는 legacy Controller/Policy 저장을 읽지 않고 Effective `config.controller.groups`만 소비합니다.
 
-어드민은 화면 패널을 구성하지 않고 기본값·선택지·범위·availability만 `controllerRestrictions`로 저작합니다. Image Runtime Manifest의 control 종류·그룹·표현·stable ID와 전체 supported feature는 Generation Model capability가 소유하고, Image Profile은 feature를 선택합니다. Restrictions를 여러 번 적용해도 같은 Effective Definition이 나와야 합니다. `enabled`로의 잠금 해제, select 선택지 추가, range 확장, 알 수 없는 ID는 발행 시 거부합니다. Graphic의 서버 안전 Manifest Catalog는 직렬화 가능한 Runtime Manifest만 소유하고, Artifact 생성 runtime과 파일 변환 adapter는 각각 runtime/client와 studio-export 모듈이 소유합니다. `Visibility`는 Controller 계약에 두지 않습니다. 현재 렌더러는 Effective Definition에 들어 있는 control을 모두 표시합니다.
+어드민은 화면 패널을 구성하지 않고 기본값·선택지·범위·availability만 `controllerRestrictions`로 저작합니다(Template은 예외 — 위 문단 참고). Image Runtime Manifest의 control 종류·그룹·표현·stable ID와 전체 supported feature는 Generation Model capability가 소유하고, Image Profile은 feature를 선택합니다. Restrictions를 여러 번 적용해도 같은 Effective Definition이 나와야 합니다. `enabled`로의 잠금 해제, select 선택지 추가, range 확장, 알 수 없는 ID는 발행 시 거부합니다. Graphic의 서버 안전 Manifest Catalog는 직렬화 가능한 Runtime Manifest만 소유하고, Artifact 생성 runtime과 파일 변환 adapter는 각각 runtime/client와 studio-export 모듈이 소유합니다. `Visibility`는 Controller 계약에 두지 않습니다. 현재 렌더러는 Effective Definition에 들어 있는 control을 모두 표시합니다.
 
 Graphic Canvas는 `type`만 보고 공용 `P5Canvas`·`WebGLCanvas`를 선택합니다. Graphic별 직렬화 Manifest는 서버 Catalog에, 순수 SVG·binding adapter는 model Catalog에, 브라우저 P5/WebGL mount·Controller 값 변환은 client Runtime Catalog에 분리합니다. Graphic Canvas와 Template Background는 같은 Runtime adapter를 각자 화면 컨테이너에 mount하며, 파일 출력 형식으로 Template 노출 여부를 제한하지 않습니다. 세 Catalog는 같은 stable runtime ID로만 연결하며, client runtime 함수를 Config에 싣지 않습니다. Worker와 Template은 코드 Catalog 등록 여부가 아니라 published Graphic Profile에서 파생된 Effective Config만 목록으로 받습니다. 따라서 새 그래픽을 코드에 등록해도 Admin이 publish하기 전에는 노출되지 않습니다.
 
@@ -232,14 +232,31 @@ type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
 | --- | --- | --- | --- |
 | text | `string \| null` | `maxLength`(카운터 `n/max`로 표시), `multiline` | `Controller.Row`+`Controller.Input` / `Controller.Field`+`Controller.Textarea` |
 | toggle | `boolean` | — | `Controller.Segmented` (On/Off) |
-| select | `string \| null` | `options[]` | `Controller.Row`+`Controller.Select` |
+| select | `string \| null` | `options[]`, `variant`(`list` 기본 / `segmented`) | `Controller.Row`+`Controller.Select`, `segmented`면 `Controller.Segmented` |
 | color | `#rrggbb \| null` | — | `Controller.ColorRow` |
 | range | `number` | `min`/`max`/`step`, 표기 포맷 | `Controller.Range` (채움 폭=값) |
 | pad | `{ x, y }` (-1~1) | `aspectRatio`(Wide/Portrait/Square) | `Controller.Pad` |
 | orbit | `{ azimuthDeg, elevationDeg }` | 스냅 스텝 | `Controller.CameraControl` + 오빗 프리뷰 |
 | asset | 자산 참조 `\| null` | 소스(브랜드 이미지 등) | `Controller.AssetCard`(카드 + 열기 버튼), 패널은 `Controller.Browser` |
 
+`select`의 `variant`는 **표현이 아니라 선택지 성격**을 말합니다. 기본 `list`는 드롭다운이라 누르기 전까지 무엇이 있는지 보이지 않고, `segmented`는 선택지를 한 줄에 펴 놓습니다 — 정본이 **세트로** 제시해 몇 가지인지가 곧 정보인 축에만 씁니다(CI 락업의 「꼴」이 첫 소비자). 선택지가 많으면 폭을 먹으므로 목록형이 기본입니다.
+
 현재 공용 `ControllerControlDefinition`은 데이터만으로 바로 그릴 수 있는 `text`·`toggle`·`select`·`color`·`range`·`pad`를 제공합니다. `orbit`은 도메인 프리뷰 슬롯이 필요하고 `asset`은 대응 primitive가 아직 없어 화면 컴포지션에 남깁니다. 두 종류는 실제 공용 renderer가 생길 때 Definition에 합류합니다.
+
+읽기·탐색 파츠 6종 — 값을 조작하지 않고 결과를 보여주거나 위치를 옮기는 자리입니다. 검수 화면이 첫 소비자이고(디자인 `56:2` "Review Usecase"), 리프 컨트롤과 달리 직렬화 Definition의 어휘가 아니라 **컴포지션 파츠**입니다.
+
+| 파츠 | 무엇 | 디자인 |
+| --- | --- | --- |
+| `Controller.Status` | 행·섹션 끝의 상태 타일(36px). 정적 표시이며 버튼이 아닙니다 — 이름은 필수 `label`이 sr-only로 갖습니다 | `59:2885` |
+| `Controller.ListRow` | 두 줄 목록 행(48px). `onClick`이 없으면 `div`로 렌더해 눌러도 아무 일 없는 버튼을 만들지 않습니다 | `59:2757` |
+| `Controller.Group`의 `trailing` | 제목 행 오른끝 표시. 🔴 접히는 그룹에는 줄 수 없습니다 — 그 자리는 chevron이 씁니다 | `56:2087` |
+| `Controller.Card` | 접힌 판정 하나. 채움(`bg-muted`) + 배지 | `56:3` |
+| `Controller.Item` | 펼친 판정 항목. 구분선 + 색 글자 | `56:2087` |
+| `Controller.Pagination` | 바 안의 위치 이동 `‹ n / N ›`. 숫자는 `aria-hidden`이고 위치는 sr-only 한 문장이 말합니다 | `56:2471` |
+
+🔴 **`Card`와 `Item`의 시각을 통일하지 마십시오.** 같은 내용을 다른 밀도로 보여주는 짝이고, 채움(카드)과 구분선(항목)의 차이가 "접힌 것"과 "펼친 것"을 가르는 유일한 단서입니다. 상태도 카드는 배지, 항목은 색 글자입니다 — 항목이 쌓이는 자리에서 배지를 반복하면 목록이 배지 벽이 됩니다.
+
+🔴 `Status`의 `muted`와 `ListRow`·`Card`의 hover는 `bg-muted`가 아니라 `foreground/5` **겹침**입니다. 이 파츠들이 앉는 면이 이미 `bg-muted`라 같은 토큰을 쓰면 보이지 않습니다(`ROW_ACTION`·`ROW_SELECT_TRIGGER`와 같은 규칙).
 
 경계 규칙:
 
@@ -248,6 +265,8 @@ type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
 - **편집 검증과 실행 검증을 나눕니다.** Provider는 `acceptsControllerDraftValue`로 입력 kind·범위·availability를 검사하되 길이를 초과한 text는 오류 표시를 위해 보존합니다. 외부 I/O 직전에는 `acceptsControllerExecutionValue`로 길이까지 검사하고, `readonly`·`disabled` control에는 발행 기본값만 허용합니다.
 - **Definition 컴포지션은 단일 단계 `groups[] → controls[]`까지만 제공합니다.** 조건 노출·탭 분기·액션은 실제 생산자가 생기기 전까지 `visibleWhen` 류의 DSL로 추측하지 않습니다. **예외는 "브라우저 열기" 하나입니다** — 자산 카드는 값을 고르는 패널 없이는 성립하지 않아 액션이 컨트롤의 일부입니다. 이 액션만 킷이 갖고(`Controller.Browser`가 여는 상태를 소유), 나머지 액션·조건 노출은 계속 보류합니다.
 - **트리거는 자기 브라우저 안에서만 존재합니다.** 여는 버튼은 `Controller.Browser.Trigger`로 그 브라우저의 컴파운드 안에만 살고, 무엇을 여는지 모르는 범용 `Controller.Trigger`는 만들지 않습니다 — 그런 트리거는 브라우저 밖에서도 타입이 통과해 검증되지 않는 계약이 됩니다. 짝은 구조로 강제됩니다: `Trigger`·`Panel`은 `Browser.Root`의 Dialog 컨텍스트가 없으면 렌더에서 죽습니다.
+- **`Controller.Field`의 `action`은 컴포지션 슬롯입니다.** 라벨 행 오른끝에 버튼 하나(복사 등)를 놓는 ReactNode 자리이며, 직렬화 Definition의 어휘가 아닙니다 — 위의 "액션은 보류" 규칙은 Definition에 그대로 유효합니다. 카운터 자리를 대신 쓰지 않습니다: 카운터는 `n/max` 표시부라 조작 요소가 들어가면 계약이 거짓말이 됩니다. 그 자리에 넣는 표준 버튼은 `Controller.Action`입니다 — Row/Field 면 위에서는 색을 바꾸지 않고 `foreground/5`로 **겹칩니다**(ghost 기본 hover인 `bg-muted`는 면과 같은 색이라 묻힙니다). 같은 겹침 규칙을 `ROW_SELECT_TRIGGER`가 이미 쓰고 있어, 단계를 바꿀 때는 두 상수를 함께 옮깁니다. 원형은 MCP 화면의 명령 복사 버튼(`mcp-key-issuer.tsx`, 디자인 64:1283)입니다.
+- **자산 브라우저의 목록은 패널이 열릴 때 가져옵니다.** 페이지는 시작 계약 하나만 싣고, 교체 후보 전체는 Provider가 `useLazyResource`로 들고 있다가 패널 본문(picker)이 마운트될 때 `*.client.ts`로 한 번 가져옵니다 — radix가 닫힌 패널 콘텐츠를 언마운트하므로 mount가 곧 "열림"입니다. 비었을 때의 세 사연(로딩·실패·후보 없음)은 `browseEmptyMessage`가 `Controller.AssetCard`의 `empty` 자리에 씁니다. 재시도 버튼은 두지 않습니다 — 닫았다 열면 다시 가져옵니다.
 - **네임스페이스 객체(`Controller`)는 client 소비 전용입니다.** RSC에서 점 접근이 필요하면 개별 named export(`ControllerRow` 등)를 씁니다.
 
 아키텍처 층과 원칙 — 컨트롤러는 다섯 층으로 쌓입니다: **디자인 SSOT**(Figma Controller API) → **Published Definition** → **Renderer·킷**(`ControllerRenderer` + `controller/`) → **Domain Sidebar** → **상태·서비스**(Studio Provider가 값을 소유하고 `*.client.ts`가 I/O를 소유). 층을 지키는 원칙:
@@ -325,7 +344,7 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 
 ### 폭·표면색·세로 리듬은 프레임이 소유
 
-- 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1250px]`). 예외는 프리미티브의 **내재 콘텐츠 폭**뿐입니다 — `dialog`의 `max-w-sm`, `tooltip`의 `max-w-xs`, `bubble`의 `max-w-[80%]`처럼 오버레이·말풍선이 자기 판형을 갖는 것은 페이지 폭 소유가 아닙니다. 금지 대상은 화면·블록 컴포넌트가 페이지 폭을 스스로 좁히는 것(`<Card className="max-w-2xl">` 등)입니다.
+- 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1540px]`). 예외는 프리미티브의 **내재 콘텐츠 폭**뿐입니다 — `dialog`의 `max-w-sm`, `tooltip`의 `max-w-xs`, `bubble`의 `max-w-[80%]`처럼 오버레이·말풍선이 자기 판형을 갖는 것은 페이지 폭 소유가 아닙니다. 금지 대상은 화면·블록 컴포넌트가 페이지 폭을 스스로 좁히는 것(`<Card className="max-w-2xl">` 등)입니다.
 - 표면 배경색은 컴포넌트 안에 칠하지 않고 `GuidelineBlockFrame`의 `variant`(`normal`/`secondary`/`inverted`)로 받습니다.
 - 블록 간 세로 리듬도 프레임이 소유합니다(`content-frame.tsx:21`의 `py-8`). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
 

@@ -1,7 +1,10 @@
 import { getPayload } from 'payload'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MAX_IMAGE_BYTES } from '../image-data-uri'
-import { loadGeneratedImage, storeGeneratedImages } from './generated-image.payload.repository'
+import {
+	resolveGeneratedImageReference,
+	storeGeneratedImages,
+} from './generated-image.payload.repository'
 
 const ONE_PIXEL_PNG =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
@@ -45,16 +48,16 @@ describe('GeneratedImage repository', () => {
 		const user = { id: 1 }
 
 		await expect(
-			loadGeneratedImage({
+			resolveGeneratedImageReference({
 				generatedImageId: 8,
 				profileId: 5,
-				requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
+				requestUrl: 'http://localhost/api/generate-image',
 				user,
 			}),
 		).resolves.toEqual({
 			data,
-			effectivePrompt: '{"subject":"파란 세럼병"}',
-			inputPrompt: '파란 세럼병',
+			generatedImageId: 8,
+			prompt: { effective: '{"subject":"파란 세럼병"}', input: '파란 세럼병' },
 		})
 		expect(find).toHaveBeenCalledWith({
 			collection: 'generated-images',
@@ -97,12 +100,12 @@ describe('GeneratedImage repository', () => {
 		const input = {
 			generatedImageId: 8,
 			profileId: 5,
-			requestUrl: 'http://localhost/api/generate-image/camera-adjustment',
+			requestUrl: 'http://localhost/api/generate-image',
 			user: { id: 1 },
 		}
 
-		await expect(loadGeneratedImage(input)).resolves.toBeNull()
-		await expect(loadGeneratedImage(input)).resolves.toBeNull()
+		await expect(resolveGeneratedImageReference(input)).resolves.toBeNull()
+		await expect(resolveGeneratedImageReference(input)).resolves.toBeNull()
 		expect(fetchImage).not.toHaveBeenCalled()
 	})
 

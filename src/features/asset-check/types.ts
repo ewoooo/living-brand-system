@@ -32,9 +32,15 @@ export interface CheckImageContextValue {
 	select: (id: string) => void
 	addFiles: (files: FileList | File[]) => void
 	scenarioKey: string
-	setScenarioKey: (key: string) => void
+	/** imageId를 생략하면 선택 이미지에 적용한다 — 시나리오는 이미지마다 다를 수 있다. */
+	setScenarioKey: (key: string, imageId?: string) => void
 	showFailOnly: boolean
 	toggleFailOnly: () => void
 	/** 선택 이미지를 검수 실행한다. */
 	runCheck: () => void
+	/** 모든 이미지를 순차로 검수 실행한다. */
+	runAllChecks: () => void
+	/** 근거 패널이 펼친 룰의 checkKey. 파일을 옮기면 해제된다. */
+	selectedRuleKey: string | null
+	selectRule: (checkKey: string | null) => void
 }

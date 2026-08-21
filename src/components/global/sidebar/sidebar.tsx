@@ -67,17 +67,29 @@ function SidebarRoot({
 	children,
 	className,
 	collapsed = false,
+	footer,
 	...props
-}: SidebarRootProps) {
+}: SidebarRootProps & { footer?: React.ReactNode }) {
 	const { isMobile } = useSidebar()
 	const navigation = (
 		<nav
 			aria-label={ariaLabel}
-			className="flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden rounded-xl bg-background p-4 text-foreground shadow-lg transition-[padding] duration-200 ease-linear motion-reduce:transition-none xl:group-data-[collapsed=false]/sidebar-api:p-3"
+			className="flex min-h-0 w-full flex-col gap-2 overflow-hidden rounded-xl bg-background p-4 text-foreground shadow-lg transition-[padding] duration-200 ease-linear motion-reduce:transition-none xl:group-data-[collapsed=false]/sidebar-api:p-3"
 		>
 			{children}
 		</nav>
 	)
+
+	// 🔴 Figma(HD_LBS_UI 62:5828)에서 이것은 목차 안의 항목이 아니라 **분리된 두 번째 카드**다.
+	//    목차가 길어져 스크롤해도 이 카드는 바닥에 남는다 — 그래서 nav 안이 아니라 형제로 둔다.
+	const footerCard = footer ? (
+		<div
+			data-slot="sidebar-footer-card"
+			className="shrink-0 rounded-xl bg-background p-4 text-foreground shadow-lg transition-[padding] duration-200 ease-linear motion-reduce:transition-none xl:group-data-[collapsed=false]/sidebar-api:p-3"
+		>
+			{footer}
+		</div>
+	) : null
 
 	if (isMobile) {
 		return (
@@ -85,10 +97,11 @@ function SidebarRoot({
 				<aside
 					data-slot="sidebar-root"
 					data-collapsed={collapsed}
-					className={cn('h-full bg-transparent p-4', className)}
+					className={cn('flex h-full flex-col gap-2 bg-transparent p-4', className)}
 					{...props}
 				>
 					{navigation}
+					{footerCard}
 				</aside>
 			</SidebarPrimitive>
 		)
@@ -99,12 +112,13 @@ function SidebarRoot({
 			data-slot="sidebar-root"
 			data-collapsed={collapsed}
 			className={cn(
-				'group/sidebar-api relative hidden h-full w-[100px] shrink-0 overflow-hidden bg-transparent p-4 transition-[width] duration-200 ease-linear motion-reduce:transition-none md:block xl:data-[collapsed=false]:w-[265px]',
+				'group/sidebar-api relative hidden h-full w-[100px] shrink-0 flex-col gap-2 overflow-hidden bg-transparent p-4 transition-[width] duration-200 ease-linear motion-reduce:transition-none md:flex xl:data-[collapsed=false]:w-[265px]',
 				className,
 			)}
 			{...props}
 		>
 			{navigation}
+			{footerCard}
 		</aside>
 	)
 }

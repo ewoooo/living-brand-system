@@ -29,6 +29,15 @@ export type StudioRuntimeManifest = {
 	}
 }
 
+/**
+ * Admin이 등록한 미리보기 이미지의 표시 계약 — 자산 브라우저 카드와 트리거 배경이 쓴다.
+ * 업로드 문서 원본이 아니라 표시에 필요한 두 값만 지난다(docs/07: 안전 계약 필드만 나간다).
+ */
+export type StudioPreviewImage = {
+	url: string
+	alt: string
+}
+
 /** 모든 Studio가 발행하는 공통 Controller envelope. 도메인 실행 정보는 교차 타입으로 확장한다. */
 export type StudioControllerConfig<
 	Kind extends StudioKind = StudioKind,
@@ -40,6 +49,8 @@ export type StudioControllerConfig<
 	name: string
 	/** Runtime 구조와 분리해 Admin이 정한 그룹 표현 정책. Runtime Manifest에는 존재하지 않는다. */
 	controllerPresentation?: StudioControllerPresentation
+	/** Admin이 고른 미리보기 이미지. Runtime Manifest에는 존재하지 않는다(프로파일·템플릿이 갖는다). */
+	previewImage?: StudioPreviewImage
 }
 
 export type ControllerOption<Value extends string = string> = {
@@ -74,10 +85,19 @@ export type ControllerControlDefinition =
 			defaultValue: string | null
 			options: readonly ControllerOption[]
 			placeholder?: string
+			/**
+			 * 선택지를 어떻게 내놓는가. 기본 `list`는 드롭다운이라 **누르기 전까지 무엇이 있는지 모른다**.
+			 * `segmented`는 선택지를 한 줄에 다 펴 놓고 배경 pill만 미끄러진다 — 선택지가 몇 개인지가
+			 * 곧 정보인 축(꼴처럼 정본이 세트로 제시하는 것)에 쓴다. 선택지가 많으면 폭을 먹으므로
+			 * 목록형이 기본이다.
+			 */
+			variant?: 'list' | 'segmented'
 	  })
 	| (ControllerControlBase & {
 			kind: 'color'
 			defaultValue: string | null
+			/** 허용 색 목록(#rrggbb). 없으면 자유 색상이다 — select의 options에 대응한다. */
+			values?: readonly string[]
 	  })
 	| (ControllerControlBase & {
 			kind: 'range'
@@ -116,6 +136,8 @@ export type ControllerControlRestriction = {
 	defaultValue?: ControllerControlValue
 	maxLength?: number
 	optionValues?: readonly string[]
+	/** color control의 허용 색 좁힘 — optionValues의 색 버전이다. */
+	colorValues?: readonly string[]
 	min?: number
 	max?: number
 }
@@ -130,6 +152,10 @@ const STUDIO_KINDS: readonly StudioKind[] = ['template', 'image', 'graphic']
 const AVAILABILITIES: readonly ControllerAvailability[] = ['enabled', 'readonly', 'disabled']
 const COLOR_PATTERN = /^#[0-9a-f]{6}$/i
 const CONTROL_BASE_KEYS = ['id', 'kind', 'label', 'defaultValue', 'availability'] as const
+type SelectVariant = NonNullable<
+	Extract<ControllerControlDefinition, { kind: 'select' }>['variant']
+>
+const SELECT_VARIANTS: readonly SelectVariant[] = ['list', 'segmented']
 
 /** unknown Admin/Payload 입력에서 공통 envelope와 Controller Definition v1을 검증한다. */
 export function parseStudioControllerConfig(input: unknown): StudioControllerConfig {
@@ -146,6 +172,7 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	}
 	if (config.version !== 1) invalid('version', '지원하는 버전은 1입니다.')
 	assertNonEmptyString(config.name, 'name')
+	if (config.previewImage != null) validatePreviewImage(config.previewImage)
 	parseStudioArtifactCapabilities(config.artifacts)
 
 	const controller = asRecord(config.controller, 'controller')
@@ -360,7 +387,10 @@ function isControllerValueShape(
 					control.options.some((option) => option.value === value))
 			)
 		case 'color':
-			return value === null || (typeof value === 'string' && COLOR_PATTERN.test(value))
+			if (value === null) return true
+			if (typeof value !== 'string' || !COLOR_PATTERN.test(value)) return false
+			// 팔레트가 정해진 control은 목록 밖 색을 받지 않는다 — select가 options 밖 값을 막는 것과 같다.
+			return !control.values || control.values.includes(value.toLowerCase())
 		case 'range':
 			return (
 				typeof value === 'number' &&
@@ -443,7 +473,11 @@ function validateControl(value: unknown, path: string) {
 			}
 			return
 		case 'select': {
-			assertOnlyKeys(control, [...CONTROL_BASE_KEYS, 'options', 'placeholder'], path)
+			assertOnlyKeys(
+				control,
+				[...CONTROL_BASE_KEYS, 'options', 'placeholder', 'variant'],
+				path,
+			)
 			assertNullableString(control.defaultValue, `${path}.defaultValue`)
 			if (!Array.isArray(control.options) || control.options.length === 0) {
 				invalid(`${path}.options`, '하나 이상의 선택지가 필요합니다.')
@@ -466,15 +500,31 @@ function validateControl(value: unknown, path: string) {
 			if (control.placeholder !== undefined && typeof control.placeholder !== 'string') {
 				invalid(`${path}.placeholder`, '문자열이어야 합니다.')
 			}
+			if (
+				control.variant !== undefined &&
+				!SELECT_VARIANTS.includes(control.variant as SelectVariant)
+			) {
+				invalid(`${path}.variant`, '지원하지 않는 값입니다.')
+			}
 			return
 		}
-		case 'color':
-			assertOnlyKeys(control, CONTROL_BASE_KEYS, path)
+		case 'color': {
+			assertOnlyKeys(control, [...CONTROL_BASE_KEYS, 'values'], path)
 			assertNullableString(control.defaultValue, `${path}.defaultValue`)
 			if (control.defaultValue !== null && !COLOR_PATTERN.test(control.defaultValue)) {
 				invalid(`${path}.defaultValue`, '#rrggbb 형식이어야 합니다.')
 			}
+			if (control.values !== undefined) {
+				const values = assertColorValues(control.values, `${path}.values`)
+				if (
+					control.defaultValue !== null &&
+					!values.has(control.defaultValue.toLowerCase())
+				) {
+					invalid(`${path}.defaultValue`, 'values에 포함되어야 합니다.')
+				}
+			}
 			return
+		}
 		case 'range':
 			assertOnlyKeys(control, [...CONTROL_BASE_KEYS, 'min', 'max', 'step', 'display'], path)
 			assertNumber(control.defaultValue, `${path}.defaultValue`)
@@ -522,6 +572,31 @@ function validateControl(value: unknown, path: string) {
 	}
 }
 
+function validatePreviewImage(value: unknown) {
+	const image = asRecord(value, 'previewImage')
+	assertOnlyKeys(image, ['url', 'alt'], 'previewImage')
+	assertNonEmptyString(image.url, 'previewImage.url')
+	// alt는 빈 문자열을 허용한다 — 장식 이미지의 유효한 대체 텍스트이고, 이 값 때문에 Config 파싱이
+	// 죽으면 스튜디오 전체가 열리지 않는다.
+	if (typeof image.alt !== 'string') invalid('previewImage.alt', '문자열이어야 합니다.')
+}
+
+/**
+ * Payload upload 문서를 표시 계약으로 좁힌다 — 미리보기가 없거나 파일이 아직 없으면 undefined다.
+ * 카드가 쓰는 크기는 320×240 thumbnail이므로 있으면 그것을 쓰고, 없으면 원본으로 떨어진다.
+ */
+export function toStudioPreviewImage(value: unknown): StudioPreviewImage | undefined {
+	if (!value || typeof value !== 'object') return undefined
+	const document = value as {
+		url?: unknown
+		alt?: unknown
+		sizes?: { thumbnail?: { url?: unknown } }
+	}
+	const url = document.sizes?.thumbnail?.url ?? document.url
+	if (typeof url !== 'string' || url.length === 0) return undefined
+	return { url, alt: typeof document.alt === 'string' ? document.alt : '' }
+}
+
 function validateControllerPresentation(value: unknown, groupIds: ReadonlySet<string>) {
 	const presentation = asRecord(value, 'controllerPresentation')
 	assertOnlyKeys(presentation, ['groups'], 'controllerPresentation')
@@ -555,7 +630,16 @@ function projectControllerRestriction(value: unknown): ControllerControlRestrict
 	const control = asRecord(value, 'controller restriction control')
 	assertOnlyKeys(
 		control,
-		['controlId', 'availability', 'defaultValue', 'maxLength', 'optionValues', 'min', 'max'],
+		[
+			'controlId',
+			'availability',
+			'defaultValue',
+			'maxLength',
+			'optionValues',
+			'colorValues',
+			'min',
+			'max',
+		],
 		'controller restriction control',
 	)
 	assertNonEmptyString(control.controlId, 'controller restriction control.controlId')
@@ -584,6 +668,9 @@ function projectControllerRestriction(value: unknown): ControllerControlRestrict
 			values.add(option)
 		}
 	}
+	if (control.colorValues !== undefined) {
+		assertColorValues(control.colorValues, 'controller restriction control.colorValues')
+	}
 	if (control.min !== undefined) assertNumber(control.min, 'controller restriction control.min')
 	if (control.max !== undefined) assertNumber(control.max, 'controller restriction control.max')
 	if (control.defaultValue !== undefined) {
@@ -598,6 +685,7 @@ function projectControllerRestriction(value: unknown): ControllerControlRestrict
 		),
 		...definedProperty('maxLength', control.maxLength as number | undefined),
 		...definedProperty('optionValues', control.optionValues as string[] | undefined),
+		...definedProperty('colorValues', control.colorValues as string[] | undefined),
 		...definedProperty('min', control.min as number | undefined),
 		...definedProperty('max', control.max as number | undefined),
 	}
@@ -712,7 +800,7 @@ function applyControlRestriction(
 				...definedProperty('defaultValue', restriction.defaultValue as boolean | undefined),
 			}
 			break
-		case 'color':
+		case 'color': {
 			if (
 				restriction.maxLength ||
 				restriction.optionValues ||
@@ -723,6 +811,13 @@ function applyControlRestriction(
 					`${base.kind} control에 지원하지 않는 restriction입니다: ${base.id}`,
 				)
 			}
+			const allowed = restriction.colorValues?.map((value) => value.toLowerCase())
+			const baseValues = base.values
+			if (allowed && baseValues && allowed.some((value) => !baseValues.includes(value))) {
+				throw new Error(
+					`Controller restriction colorValues가 기본 계약을 확장합니다: ${base.id}`,
+				)
+			}
 			next = {
 				...base,
 				...definedProperty('availability', availability),
@@ -730,8 +825,10 @@ function applyControlRestriction(
 					'defaultValue',
 					restriction.defaultValue as string | null | undefined,
 				),
+				...definedProperty('values', allowed ?? baseValues),
 			}
 			break
+		}
 		case 'pad':
 			if (
 				restriction.maxLength ||
@@ -802,6 +899,22 @@ function assertNonEmptyString(value: unknown, path: string): asserts value is st
 
 function assertNullableString(value: unknown, path: string): asserts value is string | null {
 	if (value !== null && typeof value !== 'string') invalid(path, '문자열 또는 null이어야 합니다.')
+}
+
+/** 허용 색 목록을 검증하고 비교용 소문자 집합으로 돌려준다 — hex 대소문자는 같은 색이다. */
+function assertColorValues(value: unknown, path: string): ReadonlySet<string> {
+	if (!Array.isArray(value) || value.length === 0) {
+		invalid(path, '하나 이상의 색이 필요합니다.')
+	}
+	const values = new Set<string>()
+	for (const [index, item] of value.entries()) {
+		assertNonEmptyString(item, `${path}[${index}]`)
+		if (!COLOR_PATTERN.test(item)) invalid(`${path}[${index}]`, '#rrggbb 형식이어야 합니다.')
+		const normalized = item.toLowerCase()
+		if (values.has(normalized)) invalid(`${path}[${index}]`, '중복되었습니다.')
+		values.add(normalized)
+	}
+	return values
 }
 
 function assertNumber(value: unknown, path: string): asserts value is number {

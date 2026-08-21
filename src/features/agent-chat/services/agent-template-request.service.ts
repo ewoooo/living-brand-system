@@ -5,9 +5,10 @@ import {
 } from '@/features/template-core/domain/collect-template-slots'
 import { projectTemplateRenderModel } from '@/features/template-core/domain/project-template-render-model'
 import {
-	deriveTemplateConfig,
-	type TemplateConfig,
-} from '@/features/template-customization/domain/template-config'
+	deriveTemplateStudioConfig,
+	type PublishedHtmlTemplate,
+	type TemplateStudioConfig,
+} from '@/features/template-customization/domain/template-studio-config'
 import { AgentConfigurationError } from '@/lib/errors'
 import {
 	type AgentTemplateDocument,
@@ -34,8 +35,8 @@ export type AgentTemplateImageAttachment = {
 	width: number
 	height: number
 	values: TemplateSlotValues
-	output: TemplateConfig['output']
-	controller: TemplateConfig['controller']
+	output: TemplateStudioConfig['output']
+	controller: TemplateStudioConfig['controller']
 }
 
 /**
@@ -92,7 +93,7 @@ export async function prepareTemplateImage(
 
 	if (!renderModel) throw new AgentConfigurationError('Template is not available.')
 
-	const studioConfig = deriveTemplateConfig({
+	const studioConfig = deriveTemplateStudioConfig({
 		kind: 'html',
 		id: template.id,
 		name: template.name,
@@ -101,9 +102,8 @@ export async function prepareTemplateImage(
 		width: renderModel.width,
 		height: renderModel.height,
 		templateVersion: template.updatedAt,
-		controllerRestrictions: template.controllerRestrictions,
-		controllerPresentation: template.controllerPresentation,
 		exportPolicy: template.exportPolicy,
+		backgroundPolicy: template.backgroundPolicy as PublishedHtmlTemplate['backgroundPolicy'],
 	})
 	return {
 		type: 'template-image' as const,

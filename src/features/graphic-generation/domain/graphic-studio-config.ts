@@ -24,6 +24,7 @@ export type PublishedGraphicProfileDefinition = {
 	controllerRestrictions?: unknown
 	exportPolicy?: unknown
 	controllerPresentation?: unknown
+	previewImage?: unknown
 }
 
 /** unknown 입력을 공통 Controller 계약과 Graphic runtime descriptor로 검증한다. */
@@ -66,6 +67,7 @@ export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
 		'output',
 		'controller',
 		'controllerPresentation',
+		'previewImage',
 		'type',
 	])
 	assertGraphicIdentity(config, input)

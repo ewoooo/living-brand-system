@@ -1,6 +1,7 @@
 'use client'
 
 import { type CSSProperties, useEffect, useRef, useState } from 'react'
+import { ControllerBar } from '@/components/shared/controller'
 import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
 import {
 	DEFAULT_PREVIEW_SIZE,
@@ -52,7 +53,7 @@ export function TemplateCanvas() {
 		<div ref={stageRef} className="relative grid h-full min-h-0 min-w-0 overflow-hidden">
 			<div
 				data-slot="template-preview"
-				className="m-auto shrink-0 overflow-hidden shadow-lg lg:[transform:scale(var(--preview-scale))]"
+				className="m-auto shrink-0 overflow-hidden shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none lg:[transform:scale(var(--preview-scale))]"
 				style={
 					{
 						...preview,
@@ -86,7 +87,9 @@ export function TemplateCanvas() {
 					/>
 				</div>
 			</div>
-			<PreviewSizeControl value={previewSize} onChange={setPreviewSize} />
+			<ControllerBar placement="canvas">
+				<PreviewSizeControl value={previewSize} onChange={setPreviewSize} />
+			</ControllerBar>
 		</div>
 	)
 }
@@ -163,6 +166,7 @@ function TemplateGraphicBackground({
 					}
 					return frame
 				})
+				canvas.registerGraphicVideo(mounted.artifacts.video?.source ?? null)
 			})
 			.catch((mountError) => {
 				console.error(mountError)
@@ -172,10 +176,11 @@ function TemplateGraphicBackground({
 		return () => {
 			disposed = true
 			canvas.registerGraphicFrame(null)
+			canvas.registerGraphicVideo(null)
 			runtime?.destroy()
 			runtimeRef.current = null
 		}
-	}, [canvas.registerGraphicFrame, config, height, width])
+	}, [canvas.registerGraphicFrame, canvas.registerGraphicVideo, config, height, width])
 
 	return (
 		<div

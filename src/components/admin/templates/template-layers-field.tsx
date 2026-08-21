@@ -7,19 +7,21 @@ import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { FieldDescription } from '@/components/ui/field'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { TemplateNodeConfig, TemplateNodeConfigMap } from '@/types/template'
+import { AdminSectionHeading } from '../shared/admin-section-heading'
 import { ImageTransformOverlay } from './image-transform-overlay'
 import { TemplateLayerEditor } from './template-layer-editors'
 import {
 	canAssignImage,
+	hasLayerEditor,
 	type LayerRow,
 	parseLayers,
 	pruneCarrierChildImageKeys,
 	typeLabel,
 } from './template-layers'
 
+// 정본(83:1431) 실측 캔버스 높이.
 const DEFAULT_CANVAS_HEIGHT = 560
 const DEFAULT_LAYER_WIDTH = 260
 const DEFAULT_WORKSPACE_GAP = 16
@@ -57,7 +59,7 @@ function TemplateCanvas({
 	return (
 		<div
 			ref={canvasRef}
-			className="flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-md border bg-muted"
+			className="flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-3xl border bg-muted"
 			style={{ height: canvasHeight }}
 		>
 			{hasHtml && width && height ? (
@@ -106,7 +108,7 @@ function LayerList({
 }) {
 	return (
 		<section
-			className="shrink-0 rounded-md border p-2"
+			className="shrink-0 rounded-3xl border p-3"
 			style={{ width: layerWidth, height: canvasHeight }}
 		>
 			<h3 className="mb-1 text-base font-medium">레이어</h3>
@@ -127,6 +129,8 @@ function LayerList({
 								size="sm"
 								className="h-7 w-full justify-start px-1 font-normal"
 								style={{ paddingLeft: layer.depth * 14 + 4 }}
+								// 편집 UI 없는 레이어는 선택 불가 — 빈 패널 대신 목록에서 잠근다(안내 문구 제거 결정).
+								disabled={!hasLayerEditor(layer)}
 								onClick={() => onSelect(layer.id)}
 							>
 								<span className="w-11 shrink-0 text-xs text-muted-foreground">
@@ -172,10 +176,11 @@ export function TemplateLayersField() {
 		return () => observer.disconnect()
 	}, [])
 
-	const layers = useMemo(
-		() => (typeof html === 'string' && html.trim() ? parseLayers(html) : []),
-		[html],
-	)
+	// DOMParser는 서버에 없다 — 서버 렌더는 빈 목록으로 그리고 마운트 후 파싱한다(previewOrigin과 같은 패턴).
+	const [layers, setLayers] = useState<LayerRow[]>([])
+	useEffect(() => {
+		setLayers(typeof html === 'string' && html.trim() ? parseLayers(html) : [])
+	}, [html])
 	const selected = layers.find((layer) => layer.id === selectedId) ?? null
 	const hasHtml = typeof html === 'string' && html.trim().length > 0
 	const previewDocument = useMemo(
@@ -214,7 +219,8 @@ export function TemplateLayersField() {
 		!!selected && canAssignImage(selected) && !!nodeConfigs[selected.id]?.backgroundImage
 
 	return (
-		<div className="mb-[var(--base)]">
+		<div className="lbs-kit mt-[calc(80px-var(--base))] mb-20">
+			<AdminSectionHeading>레이어 설정</AdminSectionHeading>
 			<div className="flex items-start" style={{ gap: layout.workspaceGap }}>
 				<TemplateCanvas
 					canvasHeight={layout.canvasHeight}
@@ -246,17 +252,18 @@ export function TemplateLayersField() {
 				/>
 			</div>
 
-			<Separator className="my-6" />
-
-			{selected ? (
-				<TemplateLayerEditor
-					config={nodeConfigs[selected.id] ?? {}}
-					onCommit={commitNodeConfig}
-					selected={selected}
-				/>
-			) : hasHtml ? (
-				<FieldDescription>레이어를 선택하면 값을 편집할 수 있습니다.</FieldDescription>
-			) : null}
+			{/* 정본(83:1466)에는 구분선이 없다 — 캔버스와 레이어 카드 사이는 24px 여백만. */}
+			<div className="mt-6">
+				{selected ? (
+					<TemplateLayerEditor
+						config={nodeConfigs[selected.id] ?? {}}
+						onCommit={commitNodeConfig}
+						selected={selected}
+					/>
+				) : hasHtml ? (
+					<FieldDescription>레이어를 선택하면 값을 편집할 수 있습니다.</FieldDescription>
+				) : null}
+			</div>
 		</div>
 	)
 }

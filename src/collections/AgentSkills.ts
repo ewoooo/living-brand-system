@@ -69,7 +69,6 @@ export const AgentSkills: CollectionConfig = {
 						'brand-typefaces',
 						'application-images',
 						'templates',
-						'plugins',
 					],
 					hasMany: true,
 					admin: {

@@ -27,12 +27,13 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { BetterEditorPublishButton as BetterEditorPublishButton_e4a80c849de3e1722a2102dbd878fdcd } from '../../../components/admin/guideline-documents/better-editor-publish-button'
 import { GuidelineDocumentTreeList as GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2 } from '../../../components/admin/guideline-documents/guideline-document-tree-list'
 import { ColorSwatchCell as ColorSwatchCell_88fca198b056ae91f3276aaa342114bd } from '../../../components/admin/brand-colors/color-swatch-cell'
+import { ImageProfileFeaturesField as ImageProfileFeaturesField_7bfadbf4609425feb60c9cc16350f523 } from '../../../components/admin/studio/image-profile-features-field'
 import { StudioControllerRestrictionsField as StudioControllerRestrictionsField_715c81ea8a3b886458ef2633d308523c } from '../../../components/admin/studio/studio-controller-restrictions-field'
 import { StudioControllerPresentationField as StudioControllerPresentationField_715c81ea8a3b886458ef2633d308523c } from '../../../components/admin/studio/studio-controller-restrictions-field'
-import { StudioOutputFormatsField as StudioOutputFormatsField_2b4d6cf4a441099f2efd973bee4050a7 } from '../../../components/admin/studio/studio-output-formats-field'
-import { StudioOutputNumberOptionsField as StudioOutputNumberOptionsField_a332d6920f506f30c6bd7cf1cbbf3441 } from '../../../components/admin/studio/studio-output-number-options-field'
+import { StudioExportPolicyField as StudioExportPolicyField_100bfeb2a58aa702365ab77b55c4baee } from '../../../components/admin/studio/studio-export-policy-field'
 import { ImageProfileTestPanel as ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640 } from '../../../components/admin/image-profiles/image-profile-test-panel'
 import { TemplateLayersField as TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6 } from '../../../components/admin/templates/template-layers-field'
+import { TemplateBackgroundPolicyField as TemplateBackgroundPolicyField_db5e24a3a4d2a7d4f0c86814bf290e5c } from '../../../components/admin/templates/template-background-policy-field'
 import { SidebarDivider as SidebarDivider_34b02386e3687855f2c939d264827b16 } from '../../../components/admin/templates/sidebar-divider'
 import { FigmaHtmlImportField as FigmaHtmlImportField_be9c443aa962726f6d016f5ca8fc7c1f } from '../../../components/admin/templates/figma-html-import-field'
 import { CheckScenarioChecksField as CheckScenarioChecksField_e627639efdf8e16289f7f26d48157b23 } from '../../../components/admin/check-scenarios/check-scenario-checks-field'
@@ -46,9 +47,9 @@ import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from 
 import { SettingsBanner as SettingsBanner_d26de2934fab2f5e50b16fb3e402473a } from 'payload-better-editor/client'
 import { AdminIcon as AdminIcon_4f65402b63e32c200eaebfffc82692d5 } from '../../../components/admin/shell/admin-icon'
 import { AdminLogo as AdminLogo_b128a563ad49bc8ad325bf59906df38b } from '../../../components/admin/shell/admin-logo'
-import { DashboardSummary as DashboardSummary_e4ea5033f5334ffbe503ae744b0630cf } from '../../../components/admin/shell/dashboard-summary'
 import { AdminDialKitProvider as AdminDialKitProvider_2809bec1466a2967300927dd21f321ee } from '../../../components/admin/shell/admin-dialkit-provider'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
+import { AdminDashboard as AdminDashboard_adf1a76d71cf28463d12de604eddd5a4 } from '../../../components/admin/shell/admin-dashboard'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -82,12 +83,13 @@ export const importMap = {
   "/components/admin/guideline-documents/better-editor-publish-button#BetterEditorPublishButton": BetterEditorPublishButton_e4a80c849de3e1722a2102dbd878fdcd,
   "/components/admin/guideline-documents/guideline-document-tree-list#GuidelineDocumentTreeList": GuidelineDocumentTreeList_cbf6266b788a4c70ca37fe64fb741dc2,
   "/components/admin/brand-colors/color-swatch-cell#ColorSwatchCell": ColorSwatchCell_88fca198b056ae91f3276aaa342114bd,
+  "/components/admin/studio/image-profile-features-field#ImageProfileFeaturesField": ImageProfileFeaturesField_7bfadbf4609425feb60c9cc16350f523,
   "/components/admin/studio/studio-controller-restrictions-field#StudioControllerRestrictionsField": StudioControllerRestrictionsField_715c81ea8a3b886458ef2633d308523c,
   "/components/admin/studio/studio-controller-restrictions-field#StudioControllerPresentationField": StudioControllerPresentationField_715c81ea8a3b886458ef2633d308523c,
-  "/components/admin/studio/studio-output-formats-field#StudioOutputFormatsField": StudioOutputFormatsField_2b4d6cf4a441099f2efd973bee4050a7,
-  "/components/admin/studio/studio-output-number-options-field#StudioOutputNumberOptionsField": StudioOutputNumberOptionsField_a332d6920f506f30c6bd7cf1cbbf3441,
+  "/components/admin/studio/studio-export-policy-field#StudioExportPolicyField": StudioExportPolicyField_100bfeb2a58aa702365ab77b55c4baee,
   "/components/admin/image-profiles/image-profile-test-panel#ImageProfileTestPanel": ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640,
   "/components/admin/templates/template-layers-field#TemplateLayersField": TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6,
+  "/components/admin/templates/template-background-policy-field#TemplateBackgroundPolicyField": TemplateBackgroundPolicyField_db5e24a3a4d2a7d4f0c86814bf290e5c,
   "/components/admin/templates/sidebar-divider#SidebarDivider": SidebarDivider_34b02386e3687855f2c939d264827b16,
   "/components/admin/templates/figma-html-import-field#FigmaHtmlImportField": FigmaHtmlImportField_be9c443aa962726f6d016f5ca8fc7c1f,
   "/components/admin/check-scenarios/check-scenario-checks-field#CheckScenarioChecksField": CheckScenarioChecksField_e627639efdf8e16289f7f26d48157b23,
@@ -101,8 +103,8 @@ export const importMap = {
   "payload-better-editor/client#SettingsBanner": SettingsBanner_d26de2934fab2f5e50b16fb3e402473a,
   "/components/admin/shell/admin-icon#AdminIcon": AdminIcon_4f65402b63e32c200eaebfffc82692d5,
   "/components/admin/shell/admin-logo#AdminLogo": AdminLogo_b128a563ad49bc8ad325bf59906df38b,
-  "/components/admin/shell/dashboard-summary#DashboardSummary": DashboardSummary_e4ea5033f5334ffbe503ae744b0630cf,
   "/components/admin/shell/admin-dialkit-provider#AdminDialKitProvider": AdminDialKitProvider_2809bec1466a2967300927dd21f321ee,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
+  "/components/admin/shell/admin-dashboard#AdminDashboard": AdminDashboard_adf1a76d71cf28463d12de604eddd5a4,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

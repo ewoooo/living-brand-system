@@ -6,6 +6,8 @@ import {
 	type GraphicStudioValue,
 } from '@/features/graphic-generation/contexts/graphic-studio-context'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
+import { fetchGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.client'
+import { useLazyResource } from '@/hooks/use-lazy-resource'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
@@ -19,19 +21,15 @@ import {
  * 알고 서로를 모른다. Definition은 기본값·제약을, Provider는 현재 값과 출력 액션을 소유한다.
  */
 export function GraphicStudioProvider({
-	configs,
+	config: initial,
 	children,
 }: {
-	configs: readonly GraphicStudioConfig[]
+	config: GraphicStudioConfig
 	children: ReactNode
 }) {
-	const initial = configs[0]
-	if (!initial) {
-		throw new Error('GraphicStudioProvider는 계약이 최소 하나 있을 때만 사용할 수 있습니다.')
-	}
-
-	const [profileId, setProfileId] = useState(initial.id)
-	const config = configs.find((item) => item.id === profileId) ?? initial
+	// 교체 후보 전체는 자산 브라우저가 열릴 때 가져온다 — 페이지는 시작 계약 하나만 싣는다.
+	const browse = useLazyResource(fetchGraphicStudioConfigs)
+	const [config, setConfig] = useState(initial)
 	const groups = config.controller.groups
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	const [bindings, setBindings] = useState<ControllerRuntimeBindings>({})
@@ -75,22 +73,22 @@ export function GraphicStudioProvider({
 
 	const selectProfile = useCallback(
 		(nextProfileId: string) => {
-			const next = configs.find((item) => item.id === nextProfileId)
-			if (!next || next.id === profileId) return
+			const next = browse.data?.find((item) => item.id === nextProfileId)
+			if (!next || next.id === config.id) return
 			bindingsRef.current = {}
 			setBindings({})
 			setValues(createControllerValues(next.controller.groups))
-			setProfileId(next.id)
+			setConfig(next)
 		},
-		[configs, profileId],
+		[browse.data, config.id],
 	)
 	const contextValue = useMemo<GraphicStudioValue>(
 		() => ({
-			profiles: { options: configs, select: selectProfile },
+			profiles: { browse, select: selectProfile },
 			config,
 			controls: { values, bindings, update, registerBindings },
 		}),
-		[bindings, config, configs, registerBindings, selectProfile, update, values],
+		[bindings, browse, config, registerBindings, selectProfile, update, values],
 	)
 
 	return (

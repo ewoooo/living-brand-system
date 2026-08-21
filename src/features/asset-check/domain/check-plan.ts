@@ -5,6 +5,7 @@
  */
 import { getChecker, type RegisteredChecker } from '@/features/asset-check/checkers/registry'
 import type { HeuristicCriterion } from '@/features/asset-check/checkers/types'
+import type { NeedsReviewReasonCode } from '@/features/asset-check/domain/needs-review'
 import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 
 /** Check 1건의 실행 방식 판정. 모든 Check는 정확히 하나의 plan을 받는다(전수 분류). */
@@ -27,30 +28,6 @@ export type CheckPlan =
 
 /** 서버 모델 호출이 필요한 plan — runAiCheck가 받는 유일한 입력 형태다. */
 export type AiCheckPlan = Extract<CheckPlan, { kind: 'ai-criteria' | 'ai-advisory' }>
-
-// needs_review 사유 코드별 사용자 문구의 단일 소유자 — 판정·조립 경로 전체가 이 표만 참조한다.
-export const NEEDS_REVIEW_DETAILS = {
-	reference_asset_unavailable: '레퍼런스 이미지 불러오기 실패',
-	invalid_criteria: 'Heuristic 판정 기준 없음',
-	ai_checker_invalid: 'AI 검사 도구 설정 오류',
-	ai_not_configured: 'AI 설정 없음',
-	image_not_available: 'AI 평가용 이미지 없음',
-	ai_output_invalid: 'AI 관측값 형식 오류',
-	ai_request_failed: 'AI 평가 실패',
-	checker_not_registered: 'Checker 미등록',
-} as const
-
-export type NeedsReviewReasonCode = keyof typeof NEEDS_REVIEW_DETAILS
-
-/** 사유 코드 하나로 needs_review 원판정을 만든다. 문구는 NEEDS_REVIEW_DETAILS가 소유한다. */
-export function needsReview(reasonCode: NeedsReviewReasonCode) {
-	return {
-		status: 'needs_review' as const,
-		fulfillment: null,
-		detail: NEEDS_REVIEW_DETAILS[reasonCode],
-		reasonCode,
-	}
-}
 
 /** Check 배열을 같은 순서·같은 개수의 plan 배열로 전수 분류한다. */
 export function planChecks(checks: RuntimeCheck[]): CheckPlan[] {

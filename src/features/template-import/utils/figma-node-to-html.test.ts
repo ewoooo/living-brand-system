@@ -146,6 +146,38 @@ describe('convertFigmaNodeToHtml — 텍스트', () => {
 		expect(convertFigmaNodeToHtml(GRID_FRAME).html).not.toContain('font-family:"Inter"')
 	})
 
+	it('스타일 이름이 웨이트 숫자를 이긴다 — 이름으로만 웨이트를 나르는 폰트(HD OTF)', () => {
+		// 실제 사고(2026-08-20): HD OTF는 Bold/Medium/Light 모두 usWeightClass가 400이라
+		// Figma가 fontWeight:400을 내려 모든 텍스트가 Medium으로 그려졌다.
+		const text = (style: Record<string, unknown>) => ({
+			id: '1:1',
+			name: 't',
+			type: 'TEXT',
+			characters: 'FUTURE BUILDERS',
+			absoluteBoundingBox: { x: 0, y: 0, width: 600, height: 100 },
+			style: { fontFamily: 'HD OTF', fontSize: 96, ...style },
+		})
+		// 스타일 이름이 정본: fontWeight 400이어도 Bold면 700.
+		expect(
+			rootStyle(convertFigmaNodeToHtml(text({ fontStyle: 'Bold', fontWeight: 400 })).html),
+		).toContain('font-weight:700')
+		// fontStyle이 없으면 PostScript 이름 접미사로 복원한다.
+		expect(
+			rootStyle(
+				convertFigmaNodeToHtml(text({ fontPostScriptName: 'HDOTF-Lt', fontWeight: 400 }))
+					.html,
+			),
+		).toContain('font-weight:300')
+		// 이름에서 웨이트를 못 읽으면(Regular) 숫자를 그대로 쓴다.
+		expect(
+			rootStyle(convertFigmaNodeToHtml(text({ fontStyle: 'Regular', fontWeight: 400 })).html),
+		).toContain('font-weight:400')
+		// 합성 이름은 더 구체적인 쪽이 이긴다: SemiBold는 Bold(700)가 아니라 600.
+		expect(
+			rootStyle(convertFigmaNodeToHtml(text({ fontStyle: 'SemiBold Italic' })).html),
+		).toContain('font-weight:600')
+	})
+
 	it('JUSTIFIED를 유효한 CSS 값 justify로 옮긴다(justified는 무효)', () => {
 		const { html } = convertFigmaNodeToHtml({
 			id: '1:1',
@@ -258,8 +290,29 @@ describe('convertFigmaNodeToHtml — 텍스트', () => {
 			},
 		}
 		const s = rootStyle(convertFigmaNodeToHtml(node).html)
-		// floor(60 / 20) = 3줄
+		// (60 - 16) / 20 = 2.2 → 2 + 마지막 줄 = 3줄
 		expect(s).toContain('-webkit-line-clamp:3')
+	})
+
+	it('마지막 줄의 줄간격이 1px 모자란 박스에서도 그 줄을 살린다', () => {
+		// 실제 Figma 노드(HD_LBS_Template 78:38): 3줄이 다 보이는데 floor(329/110)=2가 나와
+		// Figma에 없는 말줄임이 생겼다. 마지막 줄은 글리프 높이(100px)만 들어가면 그려진다.
+		const node = {
+			id: '1:1',
+			name: 't',
+			type: 'TEXT',
+			characters: 'HD현대\n한국조선해양\n2026 리포트',
+			absoluteBoundingBox: { x: 0, y: 0, width: 613, height: 329 },
+			style: {
+				fontFamily: 'HD OTF',
+				fontSize: 100,
+				textAutoResize: 'TRUNCATE',
+				textTruncation: 'ENDING',
+				lineHeightUnit: 'PIXELS',
+				lineHeightPx: 110,
+			},
+		}
+		expect(rootStyle(convertFigmaNodeToHtml(node).html)).toContain('-webkit-line-clamp:3')
 	})
 
 	it('말줄임 없는 고정 박스(NONE/생략) 텍스트는 박스에서 잘리고, HEIGHT/HUG는 잘리지 않는다', () => {

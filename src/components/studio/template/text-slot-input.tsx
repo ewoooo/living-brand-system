@@ -1,9 +1,9 @@
 'use client'
 
-import { Controller } from '@/components/studio/shared/controller'
-import { ControllerControlRenderer } from '@/components/studio/shared/controller-renderer'
+import { Controller } from '@/components/shared/controller'
+import { ControllerControlRenderer } from '@/components/shared/controller-renderer'
 import { Typography } from '@/components/ui/typography'
-import type { TemplateTextSlot } from '@/features/template-customization/domain/template-config'
+import type { TemplateTextSlot } from '@/features/template-customization/domain/template-studio-config'
 import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
 
 type TextSlotInputProps = {

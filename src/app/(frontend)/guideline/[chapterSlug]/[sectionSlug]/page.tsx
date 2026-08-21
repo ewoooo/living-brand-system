@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { GuidelineSection } from '@/features/guideline/components/pages/guideline-section'
 import { getGuidelineSectionPreview } from '@/features/guideline/services/get-guideline-document-preview.service'
 import { getGuidelineSection } from '@/features/guideline/services/get-guideline-section.service'
+// 🔴 임시(개발용) import — 아래 slug 분기와 함께 지운다.
 import { isManager, isPayloadUser } from '@/lib/auth'
 import { authenticateRequest } from '@/lib/request-auth'
 

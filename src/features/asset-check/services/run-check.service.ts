@@ -12,13 +12,13 @@ import type {
 import {
 	type AiCheckPlan,
 	type CheckPlan,
-	needsReview,
 	planChecks,
 } from '@/features/asset-check/domain/check-plan'
 import {
 	evaluateAdvisory,
 	evaluateHeuristic,
 } from '@/features/asset-check/domain/heuristic.evaluator'
+import { needsReview } from '@/features/asset-check/domain/needs-review'
 import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
 	type AiCheckRunResult,
@@ -43,6 +43,12 @@ export interface HeuristicCheckResult {
 const AI_CHECK_BATCH_SIZE = 4
 
 /**
+ * 오버레이 가독성용 그리드 해상도. 1920px 산출물이 512px로 줄어도 타이틀 획이 3px 이상 남는다.
+ * ponytail: 512로 고정한다 — 더 키우면 픽셀 수가 제곱으로 늘고, 더 줄이면 워드마크 획이 1px 밑으로 내려간다.
+ */
+const DETAIL_GRID_MAX_DIM = 512
+
+/**
  * 검수 대상 이미지를 deterministic/manual 룰까지만 즉시 판정한다.
  * 실행 방식 판단은 planChecks가 한 번에 끝내고, 여기서는 plan kind만 기계적으로 소비한다.
  * AI 계열 plan(실행 불가 포함)은 pendingCheckKeys로 분리해 후속 요청이 실행한다.
@@ -52,8 +58,10 @@ export async function runImmediateCheck(
 	buffer: Buffer,
 	inputChecks?: RuntimeCheck[],
 ): Promise<ImmediateCheckResult> {
-	const [grid, checks, palette] = await Promise.all([
+	const [grid, detailGrid, checks, palette] = await Promise.all([
 		extractPixelGrid(buffer),
+		// 오버레이 가독성은 글자 획 경계를 봐야 해서 128px로는 측정이 성립하지 않는다.
+		extractPixelGrid(buffer, DETAIL_GRID_MAX_DIM),
 		inputChecks ?? getRuntimeChecks(),
 		getCheckPalette(),
 	])
@@ -62,7 +70,7 @@ export async function runImmediateCheck(
 
 	const results: Record<string, CheckResult> = {}
 	const pendingCheckKeys: string[] = []
-	const ctx = { pixels, palette, grid, image }
+	const ctx = { pixels, palette, grid, detailGrid, image }
 	for (const plan of planChecks(checks)) {
 		const { check } = plan
 		if (results[check.key]) continue

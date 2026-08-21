@@ -44,6 +44,8 @@ export function CheckImageProvider({
 		scenarios.length > 0 ? getCheckScenario(scenarios).key : '',
 	)
 	const [showFailOnly, setShowFailOnly] = useState(false)
+	// 근거 패널이 어느 룰을 펼쳤는지. 사이드바가 고르고 캔버스가 읽으므로 둘 다 아는 곳에 둔다.
+	const [selectedRuleKey, setSelectedRuleKey] = useState<string | null>(null)
 
 	// 미리보기 object URL은 언마운트 시 일괄 해제한다(이미지는 제거 경로가 없어 세션 동안 유지됨).
 	const imagesRef = useRef(images)
@@ -71,7 +73,8 @@ export function CheckImageProvider({
 			pendingCheckKeys: undefined,
 			rulesetSnapshot: undefined,
 		}))
-		void runFullCheck(file, checkScenarioKey, {
+		// 순차 배치(runAllChecks)가 한 건의 종료를 기다릴 수 있도록 promise를 돌려준다.
+		return runFullCheck(file, checkScenarioKey, {
 			onServerResult: ({ checkSessionId, results, pendingCheckKeys, rulesetSnapshot }) => {
 				patchImage(id, (image) => {
 					// 대기 중 시나리오가 바뀌면 이전 시나리오 판정은 버린다
@@ -121,13 +124,17 @@ export function CheckImageProvider({
 		setSelectedId(added[0].id)
 	}
 
-	function setScenarioKey(key: string) {
+	/**
+	 * 시나리오는 이미지마다 다를 수 있다 — 목록의 행이 자기 imageId를 준다.
+	 * 생략하면 선택 이미지에 적용한다. 새로 올리는 파일의 기본값도 마지막 선택을 따른다.
+	 */
+	function setScenarioKey(key: string, imageId = selectedId) {
 		if (scenarios.length === 0) return
 		const scenario = getCheckScenario(scenarios, key)
 		setScenarioKeyValue(scenario.key)
-		if (!selectedId) return
+		if (!imageId) return
 		// 시나리오가 바뀌면 진행 중 검수는 무효이므로 idle로 되돌리고 재검수를 기다린다
-		patchImage(selectedId, () => ({
+		patchImage(imageId, () => ({
 			checkSessionId: undefined,
 			scenarioKey: scenario.key,
 			results: undefined,
@@ -145,6 +152,25 @@ export function CheckImageProvider({
 		startCheck(target.id, target.file, target.scenarioKey)
 	}
 
+	/**
+	 * 모든 이미지를 순차로 검수한다 — 앞 건이 끝나야 다음이 시작한다.
+	 * 🔴 /api/check에 속도 제한이 없어 동시 실행은 곧 AI 호출 동시 발생이다. 상한 병렬로 올리려면
+	 * 서버 가드를 함께 본다.
+	 */
+	async function runAllChecks() {
+		for (const image of images) {
+			// 진행 중인 건만 건너뛴다 — 완료된 이미지도 다시 검수하는 것이 '전부 검사'다.
+			if (image.status === 'running' || !image.scenarioKey) continue
+			await startCheck(image.id, image.file, image.scenarioKey)
+		}
+	}
+
+	function select(id: string) {
+		setSelectedId(id)
+		// 다른 파일로 옮기면 앞 파일의 근거는 의미가 없다
+		setSelectedRuleKey(null)
+	}
+
 	// selected 참조를 안정화해 소비 측 useMemo(뷰 계산)가 불필요하게 무효화되지 않게 한다
 	const selected = useMemo(
 		() => images.find((image) => image.id === selectedId) ?? null,
@@ -156,13 +182,16 @@ export function CheckImageProvider({
 		images,
 		selectedId,
 		selected,
-		select: setSelectedId,
+		select,
 		addFiles,
 		scenarioKey: selected?.scenarioKey ?? scenarioKey,
 		setScenarioKey,
 		showFailOnly,
 		toggleFailOnly: () => setShowFailOnly((value) => !value),
 		runCheck,
+		runAllChecks,
+		selectedRuleKey,
+		selectRule: setSelectedRuleKey,
 	}
 
 	return <CheckImageContext.Provider value={value}>{children}</CheckImageContext.Provider>

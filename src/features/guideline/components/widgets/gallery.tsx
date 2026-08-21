@@ -1,14 +1,20 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import type { ReactNode } from 'react'
+import { ControllerBar } from '@/components/shared/controller'
+import { helperLabel } from '@/features/guideline/components/globals/guideline-helper-label'
+import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
+import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
+import { CI_LOCKUP_MANIFEST } from '@/features/guideline/widgets/ci-lockup/manifest'
+import { CiLockupHeroWidget } from '@/features/guideline/widgets/ci-lockup-hero/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
-import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
+import { LAYOUT_GRID_MANIFEST } from '@/features/guideline/widgets/layout-grid/manifest'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
@@ -62,7 +68,25 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 	const bgGroup = colorGroups.find((g) => g.name === 'Background Color') ?? colorGroups[0] ?? null
 
 	return [
-		{ name: 'ci-lockup', node: <CiLockupWidget /> },
+		{
+			// 🔑 컨트롤은 매니페스트가 만든다 — 갤러리도 스코프 안에서 그려야 실제 화면과 갈리지 않는다.
+			//    스코프 없이 두면 컨트롤 없는 정적 락업이 되어 「이 위젯은 조작이 안 된다」로 읽힌다.
+			name: 'ci-lockup',
+			node: (
+				<GuidelineControllerScope manifest={CI_LOCKUP_MANIFEST}>
+					<ControllerBar placement="scroll" aria-label={helperLabel('CI 락업')}>
+						<GuidelineControllerPill />
+					</ControllerBar>
+					<CiLockupWidget />
+				</GuidelineControllerScope>
+			),
+		},
+		// 히어로는 컨트롤을 열지 않는다 — 스코프 없이도 자기 값으로 그려진다(축을 전부 고정한다).
+		{
+			name: 'ci-lockup-hero (자회사)',
+			node: <CiLockupHeroWidget source="subsidiary" h={120} />,
+		},
+		{ name: 'ci-lockup-hero (해외지사)', node: <CiLockupHeroWidget source="branch" h={100} /> },
 		{ name: 'icon-grid', node: <IconGridWidget /> },
 		{ name: 'stem-clear-space', node: <StemClearSpaceWidget /> },
 		{ name: 'hd-color-palette (균일)', node: <HdColorPaletteWidget layout="uniform" /> },
@@ -201,7 +225,18 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 			),
 		},
 		{ name: 'layout-grid', node: <LayoutGridWidget /> },
-		{ name: 'layout-grid-controls', node: <LayoutGridControlsWidget /> },
+		{
+			// 컨트롤은 위젯이 아니라 **매니페스트**가 만든다. 갤러리도 같은 경로로 그려야
+			// 미리보기가 실제 화면과 갈리지 않는다(제한 없는 = admin이 아무것도 좁히지 않은 상태).
+			name: 'layout-grid 컨트롤러',
+			node: (
+				<GuidelineControllerScope manifest={LAYOUT_GRID_MANIFEST}>
+					<ControllerBar placement="scroll" aria-label={helperLabel('Layout')}>
+						<GuidelineControllerPill />
+					</ControllerBar>
+				</GuidelineControllerScope>
+			),
+		},
 		{ name: 'layout-grid-overlay', node: <LayoutGridOverlayWidget /> },
 	]
 }

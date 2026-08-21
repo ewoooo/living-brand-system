@@ -1,6 +1,16 @@
 import type { ReactNode } from 'react'
 import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
+import { GuidelineHelperRegion } from '@/features/guideline/components/globals/guideline-helper'
+import {
+	surfaceScopeClass,
+	surfaceStyle,
+} from '@/features/guideline/components/globals/guideline-surface'
+import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
+import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
+import { controllerEntryFor } from '@/features/guideline/controllers/registry'
+import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
+import { CiLockupHeroWidget } from '@/features/guideline/widgets/ci-lockup-hero/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
@@ -8,8 +18,6 @@ import { HAIRLINE_GRID } from '@/features/guideline/widgets/hairline'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
-import { LayoutGridScope } from '@/features/guideline/widgets/layout-grid/store'
-import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/component'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
 import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
@@ -21,7 +29,6 @@ import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/c
 import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/component'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
 import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/component'
-import { isLightColor } from '@/lib/color'
 import type { GuidelineDocument } from '@/payload-types'
 import { IMAGE_RATIO_CLASS_NAMES, type ImageRatio } from '@/types/image-ratio'
 import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
@@ -54,6 +61,30 @@ function renderWidget(child: Child): ReactNode {
 					verticalMinHeightPx={child.verticalMinHeightPx}
 				/>
 			)
+		case 'ciLockupWidget':
+			// 🔑 축마다의 고정값을 그대로 넘긴다 — **알약에서 뺀 축에만** 적용된다(`view.tsx`의 `pick`).
+			//    그래서 한 블록에 판을 여럿 두고 꼴·표현만 다르게 고정할 수 있다(정본 지면 구성).
+			return (
+				<CiLockupWidget
+					fixed={{
+						h: child.h,
+						subsidiaryOn: child.subsidiaryOn,
+						subsidiary: child.subsidiary,
+						branchOn: child.branchOn,
+						branch: child.branch,
+						form: child.form,
+						language: child.language,
+						colorType: child.colorType,
+						mono: child.mono,
+						clearSpace: child.clearSpace,
+						measured: child.measured,
+						heightControl: child.heightControl,
+						hiddenControls: child.hiddenControls,
+					}}
+				/>
+			)
+		case 'ciLockupHeroWidget':
+			return <CiLockupHeroWidget source={child.source} h={child.h} />
 		case 'iconGridWidget':
 			return <IconGridWidget />
 		case 'stemClearSpaceWidget':
@@ -84,24 +115,6 @@ function renderWidget(child: Child): ReactNode {
 					marginPct={child.marginPct}
 					gutterX={child.gutterX}
 					gutterY={child.gutterY}
-					lockMargin={child.lockMargin}
-					lockGutterX={child.lockGutterX}
-					lockGutterY={child.lockGutterY}
-				/>
-			)
-		case 'layoutGridControlsWidget':
-			// 같은 페이지의 layoutGridWidget 전부를 통제하는 단일 패널(모듈 스토어 공유).
-			// 조절 허용 여부가 페이지별 템플릿을 만든다 — 불허한 값은 admin 값으로 고정된다.
-			return (
-				<LayoutGridControlsWidget
-					marginPct={child.marginPct}
-					marginAdjustable={child.marginAdjustable}
-					gutterX={child.gutterX}
-					gutterXAdjustable={child.gutterXAdjustable}
-					gutterY={child.gutterY}
-					gutterYAdjustable={child.gutterYAdjustable}
-					guidesOn={child.guidesOn}
-					guidesAdjustable={child.guidesAdjustable}
 				/>
 			)
 		case 'layoutGridOverlayWidget':
@@ -234,22 +247,27 @@ function Arrange({
 		)
 	}
 
-	if (arrangement === 'featured') {
-		// 첫 자식 전폭으로 강조 + 나머지는 columns 그리드.
+	if (arrangement === 'featured' || arrangement === 'featuredSide') {
+		// 첫 자식만 크게 두고 나머지는 남은 칸에 흘린다. 두 값의 차이는 **어느 축을 먹느냐**뿐이다.
+		// 🔑 그리드 하나로 그린다 — 바깥 flex + 안쪽 그리드로 나누면 두 층의 간격이 따로 놀아
+		//    맞붙임(gap='none')에서 첫 칸만 선이 아니라 틈으로 떨어진다.
 		const [first, ...rest] = items
+		// 🔴 남은 칸이 몇 줄을 먹는지 세어야 왼쪽 칸이 정확히 그만큼 내려온다. 열이 하나뿐이면
+		//    옆에 흘릴 자리가 없어 위아래 배치와 같아진다.
+		const sideRows = Math.max(1, Math.ceil(rest.length / Math.max(1, cols - 1)))
+		const featuredCell =
+			arrangement === 'featuredSide'
+				? { gridColumn: 1, gridRow: `span ${sideRows}` }
+				: { gridColumn: '1 / -1' }
 		return (
-			<div className="flex flex-col gap-4">
-				{first ? <div>{renderChild(first, aspectClass)}</div> : null}
-				{rest.length > 0 ? (
-					<div
-						className={`grid ${gridGap}`}
-						style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-					>
-						{rest.map((child) => (
-							<div key={child.id}>{renderChild(child, aspectClass)}</div>
-						))}
-					</div>
-				) : null}
+			<div
+				className={`grid ${gridGap}`}
+				style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+			>
+				{first ? <div style={featuredCell}>{renderChild(first, aspectClass)}</div> : null}
+				{rest.map((child) => (
+					<div key={child.id}>{renderChild(child, aspectClass)}</div>
+				))}
 			</div>
 		)
 	}
@@ -267,78 +285,77 @@ function Arrange({
 	)
 }
 
-// brand-colors 참조에서 hex를 뽑는다(데이터 색 → inline style, 닫힌 토큰 규칙의 색-데이터 예외).
-function bgHex(color: LayoutBlockType['background']): string | undefined {
-	return color && typeof color === 'object' && color.hex ? color.hex : undefined
-}
-
-/**
- * 색을 데이터로 주입한 면의 **토큰 스코프**를 함께 선언한다.
- *
- * 🔴 배경 hex만 인라인으로 넣으면 프레임 variant가 배경·전경을 짝으로 갖고 있던 것을 우회한다.
- *    라이트 모드 페이지에 어두운 브랜드 색을 깔면 면만 어두워지고, 안쪽 위젯은 라이트 팔레트의
- *    near-black 컨트롤을 그대로 그려 어두운 면에 묻힌다. 반대도 같다 — 다크 모드에 흰 면을 깔면
- *    밝은 전경이 흰 면에서 사라진다. 면을 칠하는 자리에서 스코프를 뒤집어 두면 시맨틱 토큰만 쓰는
- *    위젯은 전경·테두리·muted가 전부 따라온다.
- *
- * 위젯·블록에 `dark:` 변형은 0건이라 토큰 재선언만으로 충분하다. `dark:`를 쓰기 시작하면 다크
- * 페이지 안의 밝은 섬에서는 그 변형이 여전히 걸린다는 점(`.dark *` 후손 선택자)을 같이 봐야 한다.
- */
-function surfaceScopeClass(hex: string | undefined): string | undefined {
-	if (!hex) return undefined
-	// text-foreground를 함께 준다 — 색 클래스가 없는 면은 바깥에서 **계산된** 색을 상속하므로
-	// 토큰만 다시 선언해서는 글자 색이 따라오지 않는다.
-	return `${isLightColor(hex) ? 'light' : 'dark'} text-foreground`
-}
-
-// 레이아웃 그리드 컨트롤 패널은 배치 영역이 아니라 **헤더(제목·설명 아래)**에 온다 —
-// innerBackground 안에 두면 판형과 같은 어두운 면에 얹혀 읽기 어렵고, 배치 셀 하나를 차지한다.
+// 컨트롤은 배치 영역이 아니라 **화면 하단의 Floating Controller**에 온다
+// (components/globals/guideline-helper.tsx). 배치 셀 안에 두면 셀 하나를 차지하고 판형과 같은
+// 어두운 면에 얹혀 읽기 어려우며, 스크롤을 내리면 조작 대상만 남고 손잡이가 화면 밖으로 나간다.
+//
+// 🔑 **이 렌더러는 어떤 위젯이 컨트롤러인지 모른다.** 레지스트리에 물어볼 뿐이다
+// (`controllers/registry.ts`). 그래서 컨트롤러를 여는 위젯이 늘어도 여기는 안 바뀐다.
+//
 // 값 스코프는 **블록 단위**다: 모듈 스토어로 두면 섹션 라우트가 여러 Page를 한 화면에 렌더할 때
-// 페이지마다 놓인 패널이 서로 간섭한다. 그래서 패널과 배치를 한 provider로 함께 감싼다.
+// 페이지마다 놓인 컨트롤이 서로 간섭한다. 그래서 컨트롤과 배치를 한 provider로 함께 감싼다 —
+// 하단 바로 가는 것은 DOM뿐이고 React 트리는 이 provider 안에 남는다.
 function splitControls(children: NonNullable<LayoutBlockType['children']>) {
-	const controls = children.filter((child) => child.blockType === 'layoutGridControlsWidget')
-	const arranged = children.filter((child) => child.blockType !== 'layoutGridControlsWidget')
-	const needsScope =
-		controls.length > 0 || arranged.some((c) => c.blockType === 'layoutGridWidget')
-	return { controls, arranged, needsScope }
+	// 🔴 블록당 컨트롤러는 하나다 — 값 스코프가 블록 단위이므로 둘을 켜면 나중 것이 먼저 것을
+	//    덮는다. 먼저 선언한 자식이 이긴다.
+	const source = children.find((child) => controllerEntryFor(child.blockType))
+	const entry = source ? controllerEntryFor(source.blockType) : undefined
+	// 자기 그림이 있는 위젯은 배치에 남는다 — 걷어내는 것은 그릴 것이 없는 패널뿐이다.
+	const arranged = children.filter((child) => !controllerEntryFor(child.blockType)?.panelOnly)
+	// 자식이 컨트롤러를 열지 않으면 매니페스트도 제한도 없다.
+	const controller =
+		source && entry
+			? // 위젯 필드를 이름 가방으로 넘긴다 — 필드 이름을 아는 것은 레지스트리 하나뿐이다.
+				{ manifest: entry.manifest, restrictions: entry.toRestrictions({ ...source }) }
+			: null
+	return { controller, arranged }
 }
 
 export function LayoutBlock({ block }: { block: LayoutBlockType }) {
-	const outerBg = bgHex(block.background)
-	const innerBg = bgHex(block.innerBackground)
-	const { controls, arranged, needsScope } = splitControls(block.children ?? [])
+	// 톤은 `background`에만 붙는다 — 배치 영역 면(innerBackground)을 옅게 깐 자리가 아직 없다.
+	const { controller, arranged } = splitControls(block.children ?? [])
 
-	const body = (
-		<>
-			{controls.map((child) => (
-				<div key={child.id}>{renderWidget(child)}</div>
-			))}
-			<div
-				className={surfaceScopeClass(innerBg)}
-				style={innerBg ? { background: innerBg } : undefined}
-			>
-				<Arrange
-					arrangement={block.arrangement}
-					columns={block.columns ?? 2}
-					gap={block.gap ?? 'default'}
-					aspectRatio={block.aspectRatio ?? '1:1'}
-					items={arranged}
-				/>
-			</div>
-		</>
+	const arrangedSurface = (
+		<div
+			className={surfaceScopeClass(block.innerBackground, 'solid')}
+			style={surfaceStyle(block.innerBackground, 'solid')}
+		>
+			<Arrange
+				arrangement={block.arrangement}
+				columns={block.columns ?? 2}
+				gap={block.gap ?? 'default'}
+				aspectRatio={block.aspectRatio ?? '1:1'}
+				items={arranged}
+			/>
+		</div>
+	)
+
+	// 관측 영역은 **판형이 놓인 면**이다 — 제목·설명이 아니다. 조작 대상이 화면에서 사라지면
+	// 컨트롤도 함께 물러나야 슬라이더를 움직였는데 아무 변화가 없는 상태가 생기지 않는다.
+	const body = controller ? (
+		<GuidelineControllerScope
+			manifest={controller.manifest}
+			restrictions={controller.restrictions}
+		>
+			<GuidelineHelperRegion label={block.title} controls={<GuidelineControllerPill />}>
+				{arrangedSurface}
+			</GuidelineHelperRegion>
+		</GuidelineControllerScope>
+	) : (
+		arrangedSurface
 	)
 
 	return (
 		<GuidelineBlockFrame
 			layout={block.width ?? 'padded'}
-			className={surfaceScopeClass(outerBg)}
-			style={outerBg ? { background: outerBg } : undefined}
+			className={surfaceScopeClass(block.background, block.backgroundTone)}
+			style={surfaceStyle(block.background, block.backgroundTone)}
 		>
 			{block.title ? <GuidelineHeader variant="block" title={block.title} /> : null}
 			{block.description ? (
 				<GuidelineDescription variant="block" description={block.description} />
 			) : null}
-			{needsScope ? <LayoutGridScope>{body}</LayoutGridScope> : body}
+			{body}
 		</GuidelineBlockFrame>
 	)
 }

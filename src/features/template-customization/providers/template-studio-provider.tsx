@@ -21,6 +21,7 @@ import {
 import { requestImageGeneration } from '@/features/image-generation/services/generate-image.client'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import {
+	type TemplateAssignedImage,
 	type TemplateBackgroundPatch,
 	type TemplateBackgroundState,
 	type TemplateImageSlotPatch,
@@ -31,21 +32,30 @@ import {
 import {
 	findTemplateControl,
 	listCompatibleTemplateImageConfigs,
-	type PublishedHtmlTemplate,
+	type PublishedTemplateView,
 	partitionTemplateSlots,
 	type ResolvedTemplateImageConfig,
 	type TemplateBackgroundSlot,
 	type TemplateBackgroundType,
-	type TemplateConfig,
 	type TemplateImageConfigSlot,
+	type TemplateStudioConfig,
 	type TemplateTextSlot,
 	type TemplateVectorSlot,
-} from '@/features/template-customization/domain/template-config'
+} from '@/features/template-customization/domain/template-studio-config'
 import {
 	composeTemplateStudioHtml,
 	createTemplateRasterArtifact,
+	createTemplateVideoArtifact,
 	type TemplateRasterArtifact,
+	type TemplateVideoArtifact,
 } from '@/features/template-customization/runtime/template-runtime.client'
+import { fetchCreateNavigation } from '@/features/template-customization/services/get-create-navigation.client'
+import {
+	fetchSampleImages,
+	type SampleImageOption,
+} from '@/features/template-customization/services/list-sample-images.client'
+import { useLazyResource } from '@/hooks/use-lazy-resource'
+import type { CanvasVideoSource } from '@/modules/studio-artifact/studio-artifact'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlDefinition,
@@ -60,7 +70,7 @@ const PINNED_CONFIG_ERROR_MESSAGE = '고정된 이미지 프로파일을 사용�
 const SELECTABLE_CONFIG_ERROR_MESSAGE = '사용 가능한 이미지 프로파일이 없습니다.'
 
 function useTemplateTextSession(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	textSlots: readonly TemplateTextSlot[],
 	html: string,
 	previewRef: RefObject<HTMLDivElement | null>,
@@ -105,7 +115,7 @@ function useTemplateTextSession(
 }
 
 function useTemplateImageSession(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	imageSlots: readonly TemplateImageConfigSlot[],
 ): TemplateStudioValue['images'] {
 	const contracts = useMemo(
@@ -178,6 +188,23 @@ function useTemplateImageSession(
 			),
 		[contracts, imageSlots],
 	)
+	const selectSampleImage = useCallback(
+		(slotId: string, option: SampleImageOption) =>
+			// 생성 중이던 요청 결과가 뒤늦게 덮지 않도록 error·generating도 함께 정리한다.
+			setStates((current) => ({
+				...current,
+				[slotId]: {
+					...current[slotId],
+					imageMode: current[slotId]?.imageMode ?? 'preset',
+					prompt: current[slotId]?.prompt ?? '',
+					generating: false,
+					error: null,
+					featureValues: current[slotId]?.featureValues ?? {},
+					image: toAssignedSampleImage(option),
+				},
+			})),
+		[],
+	)
 	const generate = useCallback(
 		async (slotId: string) => {
 			const state = states[slotId]
@@ -197,7 +224,8 @@ function useTemplateImageSession(
 					generated
 						? {
 								image: {
-									backgroundImage: generated.url,
+									kind: 'generated',
+									url: generated.url,
 									generatedImageId: generated.id,
 									profileId: requestProfileId,
 								},
@@ -211,8 +239,16 @@ function useTemplateImageSession(
 	)
 
 	return useMemo(
-		() => ({ states, contracts, update, updateFeature, selectProfile, generate }),
-		[contracts, generate, selectProfile, states, update, updateFeature],
+		() => ({
+			states,
+			contracts,
+			update,
+			updateFeature,
+			selectProfile,
+			selectSampleImage,
+			generate,
+		}),
+		[contracts, generate, selectProfile, selectSampleImage, states, update, updateFeature],
 	)
 }
 
@@ -256,7 +292,7 @@ function useTemplateLayerSession(
 }
 
 function useTemplateBackgroundSession(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slot: TemplateBackgroundSlot | undefined,
 ): TemplateStudioValue['background'] {
 	const contracts = useMemo(
@@ -318,6 +354,16 @@ function useTemplateBackgroundSession(
 			setState((current) => selectBackgroundImageProfile(current, profileId, contracts)),
 		[contracts],
 	)
+	const selectSampleImage = useCallback(
+		(option: SampleImageOption) =>
+			setState((current) => ({
+				...current,
+				generating: false,
+				error: null,
+				image: toAssignedSampleImage(option),
+			})),
+		[],
+	)
 	const selectGraphicConfig = useCallback(
 		(configId: string) =>
 			setState((current) =>
@@ -348,7 +394,14 @@ function useTemplateBackgroundSession(
 			...current,
 			generating: false,
 			...(generated
-				? { image: { url: generated.url, generatedImageId: generated.id } }
+				? {
+						image: {
+							kind: 'generated' as const,
+							url: generated.url,
+							generatedImageId: generated.id,
+							profileId: contract.config.id,
+						},
+					}
 				: { error: GENERATION_ERROR_MESSAGE }),
 		}))
 	}, [contracts, state])
@@ -365,6 +418,7 @@ function useTemplateBackgroundSession(
 			selectType,
 			updateFeature,
 			selectImageProfile,
+			selectSampleImage,
 			selectGraphicConfig,
 			updateGraphic,
 			generate,
@@ -377,6 +431,7 @@ function useTemplateBackgroundSession(
 			graphicBindings,
 			selectGraphicConfig,
 			selectImageProfile,
+			selectSampleImage,
 			selectType,
 			setColor,
 			state,
@@ -396,18 +451,30 @@ function useTemplateBackgroundSession(
 export function TemplateStudioProvider({
 	config,
 	template,
-	navigation,
+	categoryTitle,
 	children,
 }: {
-	config: TemplateConfig
-	template: PublishedHtmlTemplate
-	navigation: TemplateStudioValue['navigation']
+	config: TemplateStudioConfig
+	template: PublishedTemplateView
+	categoryTitle: string | null
 	children: ReactNode
 }) {
+	// 교체 후보 목록은 자산 브라우저가 열릴 때 가져온다 — 페이지는 현재 카테고리 이름 하나만 싣는다.
+	const templateBrowse = useLazyResource(fetchCreateNavigation)
+	// Preset 목록도 같은 규칙이다 — 배경이든 슬롯이든 처음 여는 브라우저가 한 번만 가져온다.
+	const sampleImages = useLazyResource(fetchSampleImages)
+	const navigation = useMemo<TemplateStudioValue['navigation']>(
+		() => ({ categoryTitle, browse: templateBrowse }),
+		[categoryTitle, templateBrowse],
+	)
 	const previewRef = useRef<HTMLDivElement>(null)
 	const graphicFrameRef = useRef<(() => string) | null>(null)
 	const registerGraphicFrame = useCallback((capture: (() => string) | null) => {
 		graphicFrameRef.current = capture
+	}, [])
+	const graphicVideoRef = useRef<CanvasVideoSource | null>(null)
+	const registerGraphicVideo = useCallback((source: CanvasVideoSource | null) => {
+		graphicVideoRef.current = source
 	}, [])
 	const { html, width, height } = template
 	const slots = config.template.slots
@@ -485,31 +552,67 @@ export function TemplateStudioProvider({
 			width,
 		})
 	}, [background.state.type, composedHtml, height, width])
+	// 배경이 graphic이어도 video artifact를 내지 않는 runtime이 있다(forward-straight는 vector·raster뿐).
+	// 타입만 보고 MP4를 Video 경로로 돌리면 producer가 던진다 — 선언을 보고 정적 MP4로 떨어뜨린다.
+	const supportsBackgroundVideo =
+		background.state.type === 'graphic' &&
+		Boolean(
+			background.graphicConfigs.find(
+				(candidate) => candidate.id === background.state.graphicConfigId,
+			)?.artifacts.video,
+		)
+	const videoArtifact = useCallback(
+		(size: { width: number; height: number }): Promise<TemplateVideoArtifact> => {
+			const graphicVideo = graphicVideoRef.current
+			if (!graphicVideo) throw new Error('그래픽 배경 미리보기가 준비되지 않았습니다.')
+			// composedHtml은 배경이 graphic일 때 캔버스 배경을 transparent로 비운다 — 그 위에 겹친다.
+			// 캔버스 크기가 아니라 요청된 프레임 크기로 굽는다 — 배율을 올려도 전경이 흐려지지 않는다.
+			return createTemplateVideoArtifact({
+				background: graphicVideo,
+				height: size.height,
+				html: composedHtml,
+				width: size.width,
+			})
+		},
+		[composedHtml],
+	)
 
 	const value = useMemo<TemplateStudioValue>(
 		() => ({
 			navigation,
+			sampleImages,
 			config,
 			text,
 			images,
 			vectors,
 			layers,
 			background,
-			canvas: { html: composedHtml, artifact, previewRef, registerGraphicFrame },
+			canvas: {
+				html: composedHtml,
+				artifact,
+				videoArtifact: supportsBackgroundVideo ? videoArtifact : null,
+				previewRef,
+				registerGraphicFrame,
+				registerGraphicVideo,
+			},
 			execution: { controllerValues },
 		}),
 		[
 			artifact,
 			background,
+			supportsBackgroundVideo,
 			composedHtml,
+			sampleImages,
 			config,
 			controllerValues,
 			images,
 			layers,
 			navigation,
 			registerGraphicFrame,
+			registerGraphicVideo,
 			text,
 			vectors,
+			videoArtifact,
 		],
 	)
 
@@ -558,7 +661,7 @@ function selectImageProfile(
 }
 
 function initialTemplateTextValues(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slots: readonly TemplateTextSlot[],
 ): Record<string, string> {
 	return Object.fromEntries(
@@ -571,7 +674,7 @@ function initialTemplateTextValues(
 
 function updateTemplateText(
 	current: Record<string, string>,
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slots: readonly TemplateTextSlot[],
 	slotId: string,
 	next: string,
@@ -621,6 +724,7 @@ function updateTemplateImageSlot(
 		...current,
 		[slotId]: {
 			...previous,
+			...(patch.imageMode === undefined ? {} : { imageMode: patch.imageMode }),
 			...(prompt === undefined ? {} : { prompt }),
 			...(patch.transform === undefined ? {} : { transform: patch.transform }),
 		},
@@ -638,7 +742,8 @@ function applyImageRequestResult(
 	return { ...current, [slotId]: { ...previous, ...patch } }
 }
 
-function updateTemplateBackground(
+/** patch의 모든 키를 반영해야 한다 — 키를 빠뜨리면 컨트롤이 눌려도 상태가 안 바뀐다(2026-08-20 디머 실사고). export는 그 회귀 테스트용. */
+export function updateTemplateBackground(
 	current: TemplateBackgroundState,
 	patch: TemplateBackgroundPatch,
 	contracts: readonly ResolvedTemplateImageConfig[],
@@ -654,6 +759,8 @@ function updateTemplateBackground(
 		...current,
 		...(patch.imageMode === undefined ? {} : { imageMode: patch.imageMode }),
 		...(prompt === undefined ? {} : { prompt }),
+		...(patch.dimmer === undefined ? {} : { dimmer: patch.dimmer }),
+		...(patch.dimmerOpacity === undefined ? {} : { dimmerOpacity: patch.dimmerOpacity }),
 	}
 }
 
@@ -760,7 +867,7 @@ function getBackgroundFeatureBindings(
 }
 
 function templateControllerValues(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	textSlots: readonly TemplateTextSlot[],
 	textValues: Readonly<Record<string, string>>,
 	textColor: string | null,
@@ -777,6 +884,8 @@ function templateControllerValues(
 	if (backgroundSlot) {
 		values[backgroundSlot.typeControlId] = background.type
 		values[backgroundSlot.colorControlId] = background.color
+		values[backgroundSlot.dimmerControlId] = background.dimmer
+		values[backgroundSlot.dimmerOpacityControlId] = background.dimmerOpacity
 	}
 	return values
 }
@@ -789,6 +898,8 @@ function initialImageState(
 		slot.imageConfig.mode === 'pinned' ? slot.imageConfig.configId : contracts[0]?.config.id
 	return {
 		profileId,
+		// 슬롯은 생성이 먼저 있던 자리라 기존 흐름을 첫 화면으로 둔다 — Preset은 한 번 눌러 연다.
+		imageMode: 'generate',
 		prompt:
 			contracts.find((contract) => contract.config.id === profileId)?.prompt.defaultValue ??
 			'',
@@ -807,12 +918,16 @@ function initialImageState(
 }
 
 function initialBackgroundState(
-	config: TemplateConfig,
+	config: TemplateStudioConfig,
 	slot: TemplateBackgroundSlot | undefined,
 	contracts: readonly ResolvedTemplateImageConfig[],
 ): TemplateBackgroundState {
 	const typeControl = slot ? findTemplateControl(config, slot.typeControlId) : undefined
 	const colorControl = slot ? findTemplateControl(config, slot.colorControlId) : undefined
+	const dimmerControl = slot ? findTemplateControl(config, slot.dimmerControlId) : undefined
+	const dimmerOpacityControl = slot
+		? findTemplateControl(config, slot.dimmerOpacityControlId)
+		: undefined
 	const type =
 		typeControl?.kind === 'select' && isBackgroundType(typeControl.defaultValue)
 			? typeControl.defaultValue
@@ -830,6 +945,9 @@ function initialBackgroundState(
 			? createControllerValues(config.template.graphicConfigs[0].controller.groups)
 			: {},
 		error: contracts.length > 0 ? null : SELECTABLE_CONFIG_ERROR_MESSAGE,
+		dimmer: dimmerControl?.kind === 'toggle' ? dimmerControl.defaultValue : false,
+		dimmerOpacity:
+			dimmerOpacityControl?.kind === 'range' ? dimmerOpacityControl.defaultValue : 0,
 	}
 }
 
@@ -865,4 +983,17 @@ function resolvedPrompt(prompt: string, contract: ResolvedTemplateImageConfig) {
 
 function isBackgroundType(value: string | null): value is TemplateBackgroundType {
 	return value === 'color' || value === 'image' || value === 'graphic'
+}
+
+/** 고른 순간의 표시 정보까지 세션에 담는다 — 목록을 다시 열지 않아도 카드가 그려진다. */
+function toAssignedSampleImage(option: SampleImageOption): TemplateAssignedImage {
+	return {
+		kind: 'sample',
+		url: option.url,
+		sampleImageId: option.id,
+		name: option.name,
+		alt: option.alt,
+		thumbnailUrl: option.thumbnailUrl,
+		lineArt: option.lineArt,
+	}
 }

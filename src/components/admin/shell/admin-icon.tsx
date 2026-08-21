@@ -7,8 +7,8 @@ export function AdminIcon() {
 				backgroundColor: 'currentColor',
 				display: 'block',
 				height: '100%',
-				mask: 'url("/logos/logo.svg") center / contain no-repeat',
-				WebkitMask: 'url("/logos/logo.svg") center / contain no-repeat',
+				mask: 'url("/symbols/symbol_blk.svg") center / contain no-repeat',
+				WebkitMask: 'url("/symbols/symbol_blk.svg") center / contain no-repeat',
 				width: '100%',
 			}}
 		/>

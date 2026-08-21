@@ -18,3 +18,31 @@ export const THEME_PANEL = 'bg-muted'
  */
 export const BRAND_PANEL_LIGHT = 'bg-neutral-100'
 export const BRAND_PANEL_DARK = 'bg-neutral-900'
+
+/**
+ * CI 락업 표본 판 — 표현마다 규정이 정한 면이다(사용자 지정 2026-08-18).
+ * 기본형·단색형(BLACK)은 밝은 면, WHITE 워드마크·단색형(WHITE)은 검은 면에 얹는다.
+ *
+ * 🔴 위 `BRAND_PANEL_*`와 **값이 다르다**(#f5f5f5 · #171717). 저쪽은 서체 표본 등이 쓰는 판이고
+ *    여기 두 값은 CI 규정이 정한 판이다. 같아 보여도 섞지 말 것 — 하나로 합치면 어느 쪽이 규정인지
+ *    구별이 사라진다.
+ * 🔴 클래스가 아니라 hex인 이유: 표현이 바뀔 때 판도 **연속으로** 물들어야 해서 inline style로
+ *    transition을 걸어야 한다(클래스 전환은 이산이다).
+ */
+export const CI_STAGE_LIGHT = '#f2f2f2'
+export const CI_STAGE_DARK = '#000000'
+
+/**
+ * 브랜드 판 **위에 얹히는 컨트롤**(CI 락업의 SVG 내보내기 버튼).
+ *
+ * 🔴 판이 테마를 따르지 않으므로 그 위의 컨트롤도 따르면 안 된다. `outline` 버튼의 기본값은
+ *    `border-foreground`·`text-foreground`라, 다크 모드에서 **흰 판 위에 흰 아이콘**이 놓여
+ *    사라진다(사용자 지적 2026-08-20). 판의 tone이 정해야 하는 값이다.
+ * 🔑 판 색이 둘뿐이라(`CI_STAGE_LIGHT`·`CI_STAGE_DARK`) 짝도 둘이면 된다 — 판을 뒤집은 면에
+ *    그 면의 전경을 얹는다. 알파를 조금 남기는 것은 버튼이 아트워크가 아니라 UI로 읽히게 하려는 것이고,
+ *    hover에서 불투명해진다.
+ */
+export const CI_STAGE_CONTROL_LIGHT =
+	'border-neutral-900 bg-neutral-900/85 text-neutral-50 hover:bg-neutral-900 hover:text-neutral-50'
+export const CI_STAGE_CONTROL_DARK =
+	'border-neutral-100 bg-neutral-100/85 text-neutral-900 hover:bg-neutral-100 hover:text-neutral-900'

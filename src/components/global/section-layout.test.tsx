@@ -19,20 +19,23 @@ describe('SectionLayout', () => {
 		)
 	})
 
-	it('workspace는 데스크톱 외부 스크롤과 전역 footer를 제거한다', () => {
+	it('workspace는 데스크톱 외부 스크롤을 제거한다', () => {
 		const { container } = render(
 			<SectionLayout nav={<nav />} mobileNavigation={false} variant="workspace">
 				<div>Studio</div>
 			</SectionLayout>,
 		)
 
-		expect(container.querySelector('[data-slot="sidebar-wrapper"]')).toHaveClass(
+		// 🔴 상단 여백은 셸이 아니라 본문 안쪽이 갖는다 — 그래야 본문이 헤더 밑으로 흘러간다.
+		expect(container.querySelector('[data-slot="sidebar-wrapper"]')).not.toHaveClass(
+			'xl:pt-(--global-header-height)',
+		)
+		expect(container.querySelector('main')).toHaveClass(
 			'pt-[50px]',
 			'xl:pt-(--global-header-height)',
 		)
 		expect(container.querySelector('[data-slot="section-scroll-container"]')).toHaveClass(
 			'lg:overflow-hidden',
 		)
-		expect(container.querySelector('[data-slot="global-footer"]')).not.toBeInTheDocument()
 	})
 })

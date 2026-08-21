@@ -12,12 +12,13 @@ import {
 	resolveGraphicStudioOutput,
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
+import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import {
-	deriveTemplateConfig,
+	deriveTemplateStudioConfig,
 	type PublishedHtmlTemplate,
-} from '@/features/template-customization/domain/template-config'
+} from '@/features/template-customization/domain/template-studio-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import { TemplateStudioProvider } from '@/features/template-customization/providers/template-studio-provider'
 import type { TemplateRasterArtifactProducer } from '@/features/template-customization/runtime/template-runtime.client'
@@ -46,6 +47,19 @@ vi.mock('@/features/studio-export/hooks/use-export', () => ({
 		run: (request: { format: string }) => mocks.exportTemplate(request.format),
 	}),
 }))
+const browseMocks = vi.hoisted(() => ({
+	fetchCreateNavigation: vi.fn(async () => [] as unknown[]),
+}))
+vi.mock(
+	'@/features/template-customization/services/get-create-navigation.client',
+	() => browseMocks,
+)
+
+const sampleMocks = vi.hoisted(() => ({
+	fetchSampleImages: vi.fn(async () => [] as unknown[]),
+}))
+vi.mock('@/features/template-customization/services/list-sample-images.client', () => sampleMocks)
+
 vi.mock('next/navigation', () => ({
 	useRouter: () => ({ push: mocks.push }),
 }))
@@ -70,20 +84,27 @@ const template: PublishedHtmlTemplate = {
 	templateVersion: '2026-07-29T00:00:00.000Z',
 }
 
-const navigation: GetCreateNavigationOutput = {
-	categories: [
-		{
-			id: 1,
-			title: '카드',
-			slug: 'cards',
-			href: '/studio/template/cards',
-			templates: [
-				{ id: 1, name: '테스트 템플릿', href: '/studio/template/cards/1' },
-				{ id: 2, name: '두 번째 템플릿', href: '/studio/template/cards/2' },
-			],
-		},
-	],
-}
+const navigationCategories: GetCreateNavigationOutput['categories'] = [
+	{
+		id: 1,
+		title: '카드',
+		slug: 'cards',
+		templates: [
+			{
+				id: 1,
+				name: '테스트 템플릿',
+				slug: 'test-template',
+				href: '/studio/template/test-template',
+			},
+			{
+				id: 2,
+				name: '두 번째 템플릿',
+				slug: 'second-template',
+				href: '/studio/template/second-template',
+			},
+		],
+	},
+]
 
 const imageConfigs = [createImageConfig(11), createImageConfig(7)]
 const effectiveGraphicConfigs = graphicRuntimeManifests.map((manifest) => ({
@@ -95,14 +116,15 @@ function TemplateGenerator({
 	imageConfigs: providedImageConfigs = imageConfigs,
 	graphicConfigs: providedGraphicConfigs = effectiveGraphicConfigs,
 	...props
-}: Omit<ComponentProps<typeof TemplateGeneratorView>, 'config'> & {
+}: Omit<ComponentProps<typeof TemplateGeneratorView>, 'config' | 'template'> & {
+	template: PublishedHtmlTemplate
 	imageConfigs?: readonly ImageStudioConfig[]
 	graphicConfigs?: readonly GraphicStudioConfig[]
 }) {
 	return (
 		<TemplateGeneratorView
 			{...props}
-			config={deriveTemplateConfig(
+			config={deriveTemplateStudioConfig(
 				props.template,
 				providedImageConfigs,
 				providedGraphicConfigs,
@@ -144,16 +166,16 @@ function GraphicMutationProbe() {
 	return (
 		<>
 			<span data-testid="graphic-config">{background.state.graphicConfigId}</span>
-			<span data-testid="graphic-viewpoint">
-				{String(background.state.graphicValues.viewpoint)}
+			<span data-testid="graphic-perspective">
+				{String(background.state.graphicValues.perspectiveGamma)}
 			</span>
-			<button
-				type="button"
-				onClick={() => background.updateGraphic('viewpoint', 'low-angle')}
-			>
+			<button type="button" onClick={() => background.updateGraphic('perspectiveGamma', 2.5)}>
 				update graphic
 			</button>
-			<button type="button" onClick={() => background.updateGraphic('viewpoint', 'invalid')}>
+			<button
+				type="button"
+				onClick={() => background.updateGraphic('perspectiveGamma', 'invalid')}
+			>
 				invalid graphic
 			</button>
 			<button type="button" onClick={() => background.selectGraphicConfig('secondary')}>
@@ -191,6 +213,7 @@ function useTestTemplateExport() {
 			fileName: template.name,
 			width: config.template.exportOption.canvas.width,
 			height: config.template.exportOption.canvas.height,
+			maxScale: config.template.exportOption.maxScale,
 			controller: {
 				groups: config.controller.groups,
 				values: execution.controllerValues,
@@ -217,6 +240,18 @@ function BackgroundTypeMutationProbe() {
 	)
 }
 
+function VideoArtifactProbe() {
+	const { background, canvas } = useTemplateStudio()
+	return (
+		<>
+			<span data-testid="video-artifact">{canvas.videoArtifact ? 'video' : 'none'}</span>
+			<button type="button" onClick={() => background.selectType('graphic')}>
+				select graphic background
+			</button>
+		</>
+	)
+}
+
 function GraphicCaptureProbe() {
 	const { background, canvas } = useTemplateStudio()
 	useEffect(() => {
@@ -234,26 +269,6 @@ function GraphicCaptureProbe() {
 	)
 }
 
-function TemplateControlMutationProbe() {
-	const { text, background } = useTemplateStudio()
-	return (
-		<>
-			<span data-testid="template-text">{text.values['1:1']}</span>
-			<span data-testid="template-text-color">{text.color}</span>
-			<span data-testid="template-background-color">{background.state.color}</span>
-			<button type="button" onClick={() => text.setValue('1:1', '변경 제목')}>
-				change template text
-			</button>
-			<button type="button" onClick={() => text.setColor('#abcdef')}>
-				change template text color
-			</button>
-			<button type="button" onClick={() => background.setColor('#abcdef')}>
-				change template background color
-			</button>
-		</>
-	)
-}
-
 function ImageRaceProbe() {
 	const { images } = useTemplateStudio()
 	const state = images.states['1:1']
@@ -261,7 +276,9 @@ function ImageRaceProbe() {
 		<>
 			<span data-testid="slot-profile">{state?.profileId}</span>
 			<span data-testid="slot-generating">{String(state?.generating)}</span>
-			<span data-testid="slot-image-profile">{state?.image?.profileId ?? 'none'}</span>
+			<span data-testid="slot-image-profile">
+				{state?.image?.kind === 'generated' ? state.image.profileId : 'none'}
+			</span>
 			<button type="button" onClick={() => void images.generate('1:1')}>
 				start slot generation
 			</button>
@@ -315,15 +332,13 @@ describe('TemplateGenerator', () => {
 	})
 
 	it('공통 Studio 작업대에서 템플릿을 내보낸다', () => {
-		const { container } = render(
-			<TemplateGenerator navigation={navigation} template={template} />,
-		)
+		const { container } = render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
 		expect(container.querySelector('[data-slot="studio-workspace"]')).not.toBeNull()
-		expect(container.querySelector('[data-slot="studio-workspace-sidebar"]')).toHaveClass(
-			'lg:max-h-full',
-			'lg:overflow-hidden',
-		)
+		// 사이드바는 높이만 가두고 overflow는 잠그지 않는다 — 자산 브라우저 패널이 캔버스 위로 나가야 한다.
+		const workspaceSidebar = container.querySelector('[data-slot="studio-workspace-sidebar"]')
+		expect(workspaceSidebar).toHaveClass('lg:max-h-full')
+		expect(workspaceSidebar).not.toHaveClass('lg:overflow-hidden')
 		expect(container.querySelector('[data-slot="studio-workspace-canvas"]')).toHaveClass(
 			'lg:max-h-full',
 			'lg:overflow-hidden',
@@ -332,7 +347,7 @@ describe('TemplateGenerator', () => {
 		const header = container.querySelector('[data-slot="controller-header"]')
 		expect(header).not.toBeNull()
 		expect(
-			within(header as HTMLElement).getByRole('combobox', { name: '템플릿 변경' }),
+			within(header as HTMLElement).getByRole('button', { name: '템플릿 변경' }),
 		).toBeInTheDocument()
 
 		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
@@ -343,16 +358,16 @@ describe('TemplateGenerator', () => {
 
 	it('공통 Export 판정이 거부하면 Format이 있어도 내보내기 버튼을 잠근다', () => {
 		mocks.canExportTemplate.mockReturnValue(false)
-		render(<TemplateGenerator navigation={navigation} template={template} />)
+		render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
 		expect(screen.getByRole('button', { name: '내보내기' })).toBeDisabled()
 	})
 
 	it('UI는 Effective Config 포맷을 표시하고 Template adapter가 없는 요청은 실행 직전 차단한다', () => {
-		const derived = deriveTemplateConfig(template, imageConfigs, effectiveGraphicConfigs)
+		const derived = deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)
 		const config = { ...derived, output: { ...derived.output, formats: ['svg'] as const } }
 		render(
-			<TemplateStudioProvider config={config} template={template} navigation={navigation}>
+			<TemplateStudioProvider config={config} template={template} categoryTitle="카드">
 				<TemplateOutputProbe />
 			</TemplateStudioProvider>,
 		)
@@ -367,9 +382,9 @@ describe('TemplateGenerator', () => {
 		mocks.captureGraphicFrame.mockReturnValue('/graphic-frame.png')
 		render(
 			<TemplateStudioProvider
-				config={deriveTemplateConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
 				template={template}
-				navigation={navigation}
+				categoryTitle="카드"
 			>
 				<GraphicCaptureProbe />
 			</TemplateStudioProvider>,
@@ -388,9 +403,7 @@ describe('TemplateGenerator', () => {
 	})
 
 	it('출력 캔버스 비율을 작업 영역에 맞춰 프리뷰에 반영한다', () => {
-		const { container } = render(
-			<TemplateGenerator navigation={navigation} template={template} />,
-		)
+		const { container } = render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
 		act(() => {
 			mocks.resizeObserverCallback?.(
@@ -403,68 +416,21 @@ describe('TemplateGenerator', () => {
 		expect(preview).toHaveStyle({ width: '800px', height: '600px' })
 	})
 
-	it('Template Controller의 readonly 기본값을 세션에 적용하고 Context action에서도 변경을 거부한다', () => {
-		const controlledTemplate: PublishedHtmlTemplate = {
-			...template,
-			html: '<p data-node-id="1:1" data-figma-type="TEXT" data-name="Title">원본 제목</p>',
-			nodeConfigs: { '1:1': { input: { label: '제목', maxLength: 20, maxLines: 1 } } },
-			controllerRestrictions: {
-				controls: [
-					{
-						controlId: 'text:1:1',
-						availability: 'readonly',
-						defaultValue: '고정 제목',
-						maxLength: 20,
-					},
-					{
-						controlId: 'text.color',
-						availability: 'readonly',
-						defaultValue: '#112233',
-					},
-					{
-						controlId: 'background.color',
-						availability: 'readonly',
-						defaultValue: '#ffffff',
-					},
-				],
-			},
-		}
-		const config = deriveTemplateConfig(controlledTemplate)
-		render(
-			<TemplateStudioProvider
-				config={config}
-				template={controlledTemplate}
-				navigation={navigation}
-			>
-				<TemplateControlMutationProbe />
-			</TemplateStudioProvider>,
-		)
-
-		expect(screen.getByTestId('template-text')).toHaveTextContent('고정 제목')
-		expect(screen.getByTestId('template-text-color')).toHaveTextContent('#112233')
-		expect(screen.getByTestId('template-background-color')).toHaveTextContent('#ffffff')
-		fireEvent.click(screen.getByRole('button', { name: 'change template text' }))
-		fireEvent.click(screen.getByRole('button', { name: 'change template text color' }))
-		fireEvent.click(screen.getByRole('button', { name: 'change template background color' }))
-		expect(screen.getByTestId('template-text')).toHaveTextContent('고정 제목')
-		expect(screen.getByTestId('template-text-color')).toHaveTextContent('#112233')
-		expect(screen.getByTestId('template-background-color')).toHaveTextContent('#ffffff')
-	})
-
-	it('아이덴티티 카드의 Change로 선택한 템플릿 작업대로 이동한다', async () => {
-		const user = userEvent.setup()
-		render(<TemplateGenerator navigation={navigation} template={template} />)
+	it('아이덴티티 카드의 Change로 연 자산 브라우저에서 고른 템플릿 작업대로 이동한다', async () => {
+		// 목록은 패널이 열릴 때 /api/templates에서 온다 — 페이지는 카테고리 이름만 싣는다.
+		browseMocks.fetchCreateNavigation.mockResolvedValue(navigationCategories)
+		render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
 		// 카드가 현재 템플릿 이름과 카테고리를 보여준다.
 		expect(screen.getByText('테스트 템플릿')).toBeInTheDocument()
 		expect(screen.getByText('카드')).toBeInTheDocument()
 
-		// jsdom에는 pointer capture가 없어 트리거는 키보드로 연다(radix pointer 경로 회피).
-		screen.getByRole('combobox', { name: '템플릿 변경' }).focus()
-		await user.keyboard('{ArrowDown}')
-		await user.click(screen.getByRole('option', { name: '두 번째 템플릿' }))
+		fireEvent.click(screen.getByRole('button', { name: '템플릿 변경' }))
+		const panel = screen.getByRole('dialog', { name: 'Templates' })
+		fireEvent.click(await within(panel).findByRole('button', { name: /두 번째 템플릿/ }))
 
-		expect(mocks.push).toHaveBeenCalledWith('/studio/template/cards/2')
+		expect(mocks.push).toHaveBeenCalledWith('/studio/template/second-template')
+		expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 	})
 
 	it('개방된 이미지 슬롯에서 생성한 이미지를 미리보기에 합성한다', async () => {
@@ -473,7 +439,7 @@ describe('TemplateGenerator', () => {
 		})
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					// 이미지 슬롯 노드는 임포트가 캐리어로 마킹한 표면이다 — compose는 캐리어 전용.
@@ -498,13 +464,36 @@ describe('TemplateGenerator', () => {
 		)
 	})
 
+	// 슬롯의 첫 화면은 Generate다 — Preset으로 옮기는 패치가 세션 상태에 닿지 않으면 세그먼트가 움직이지 않는다.
+	it('이미지 슬롯의 Image Type을 Preset으로 옮기면 샘플 이미지 카드가 나온다', async () => {
+		const user = userEvent.setup()
+		render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+				}}
+			/>,
+		)
+
+		await user.click(screen.getByRole('radio', { name: 'Preset' }))
+
+		expect(screen.getByRole('radio', { name: 'Preset' })).toHaveAttribute(
+			'aria-checked',
+			'true',
+		)
+		expect(await screen.findByRole('button', { name: '샘플 이미지 선택' })).toBeInTheDocument()
+	})
+
 	it('저작 config의 imageColorize를 이미지 교체 시 재적용한다', async () => {
 		mocks.requestImageGeneration.mockResolvedValue({
 			generatedImages: [{ id: 5, url: '/api/generated-images/file/bg.png' }],
 		})
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -542,7 +531,7 @@ describe('TemplateGenerator', () => {
 		const { container } = render(
 			<TemplateGenerator
 				imageConfigs={[noColorConfig]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -581,7 +570,7 @@ describe('TemplateGenerator', () => {
 		const { container } = render(
 			<TemplateGenerator
 				imageConfigs={[colorConfig, plainConfig]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -606,7 +595,7 @@ describe('TemplateGenerator', () => {
 	it('일괄 텍스트 색을 만졌을 때만 모든 텍스트 슬롯에 합성한다', () => {
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<p data-node-id="t1" style="color:#1a1a1a">TITLE</p><p data-node-id="t2" style="color:#1a1a1a">YEARS</p>',
@@ -635,7 +624,7 @@ describe('TemplateGenerator', () => {
 		})
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -658,13 +647,116 @@ describe('TemplateGenerator', () => {
 		})
 	})
 
+	// 색 치환은 라인 아트에만 뜻이 있다 — 샘플은 선화로 표시된 것만 열고 사진은 그대로 얹는다.
+	it.each([
+		{ lineArt: true, label: '선화 샘플은 색 치환을 받는다', colorized: true },
+		{ lineArt: false, label: '선화가 아닌 샘플은 그대로 얹는다', colorized: false },
+	])('$label', async ({ colorized, lineArt }) => {
+		const user = userEvent.setup()
+		sampleMocks.fetchSampleImages.mockResolvedValue([
+			{
+				id: 11,
+				name: '도면 A',
+				alt: '도면 A',
+				url: '/api/sample-images/file/drawing.png',
+				thumbnailUrl: '/api/sample-images/file/drawing-320x240.png',
+				lineArt,
+			},
+		])
+		const { container } = render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: {
+						'1:1': { imageInput: { profileId: 7 }, imageColorize: { line: '#ff0000' } },
+					},
+				}}
+			/>,
+		)
+
+		await user.click(screen.getByRole('radio', { name: 'Preset' }))
+		await user.click(await screen.findByRole('button', { name: '샘플 이미지 선택' }))
+		await user.click(await screen.findByRole('button', { name: /도면 A/ }))
+
+		await waitFor(() =>
+			expect(container.innerHTML).toContain('/api/sample-images/file/drawing.png'),
+		)
+		expect(container.innerHTML.includes('rgb(255, 0, 0)')).toBe(colorized)
+		// 치환이 열린 상태에는 그 색을 바꿀 손잡이도 함께 있어야 한다 — 판정과 UI가 갈리면 손잡이 없는 색이 된다.
+		expect(screen.queryByLabelText('Line Color 색상 선택') !== null).toBe(colorized)
+	})
+
+	it('자산 브라우저가 분류 태그로 샘플 이미지를 거른다', async () => {
+		const user = userEvent.setup()
+		// 분류 목록은 값에서 역산한다 — 분류 테이블이 없으므로 빈 값은 어느 태그에도 안 걸린다.
+		sampleMocks.fetchSampleImages.mockResolvedValue([
+			{
+				id: 11,
+				name: '엔진 A',
+				alt: '',
+				url: '/a.png',
+				thumbnailUrl: '/a.png',
+				lineArt: true,
+				group: '엔진',
+			},
+			{
+				id: 12,
+				name: '선박 B',
+				alt: '',
+				url: '/b.png',
+				thumbnailUrl: '/b.png',
+				lineArt: true,
+				group: '선박',
+			},
+			{
+				id: 13,
+				name: '미분류 C',
+				alt: '',
+				url: '/c.png',
+				thumbnailUrl: '/c.png',
+				lineArt: true,
+				group: '',
+			},
+		])
+		render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+					nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+				}}
+			/>,
+		)
+
+		await user.click(screen.getByRole('radio', { name: 'Preset' }))
+		await user.click(await screen.findByRole('button', { name: '샘플 이미지 선택' }))
+
+		// 필터를 걸기 전에는 분류가 없는 것까지 전부 보인다.
+		expect(await screen.findByRole('button', { name: /엔진 A/ })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: /선박 B/ })).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: /미분류 C/ })).toBeInTheDocument()
+
+		await user.click(screen.getByRole('button', { name: '엔진' }))
+
+		expect(screen.getByRole('button', { name: /엔진 A/ })).toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: /선박 B/ })).toBeNull()
+		expect(screen.queryByRole('button', { name: /미분류 C/ })).toBeNull()
+
+		// 태그를 다시 눌러 끄면 전체로 돌아온다 — 빈 선택이 곧 전체다.
+		await user.click(screen.getByRole('button', { name: '엔진' }))
+		expect(screen.getByRole('button', { name: /선박 B/ })).toBeInTheDocument()
+	})
+
 	it('생성 후 transform 조작이 편집 transform으로 합성되고, 생성 전에는 비활성이다', async () => {
 		mocks.requestImageGeneration.mockResolvedValue({
 			generatedImages: [{ id: 5, url: '/api/generated-images/file/bg.png' }],
 		})
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier="" style="width:400px;height:300px;"></div>',
@@ -696,7 +788,7 @@ describe('TemplateGenerator', () => {
 	it('만진 배경색이 캔버스(루트 프레임) 배경으로 합성된다', () => {
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px;background-color:rgb(0,40,10)"></div>',
@@ -723,7 +815,7 @@ describe('TemplateGenerator', () => {
 		})
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px"></div>',
@@ -762,7 +854,7 @@ describe('TemplateGenerator', () => {
 					createImageConfig(11),
 					createImageConfig(7, undefined, '고정 기본값'),
 				]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={template}
 			/>,
 		)
@@ -786,7 +878,7 @@ describe('TemplateGenerator', () => {
 		const user = userEvent.setup()
 		const { container } = render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px;background-color:rgb(0,40,10)"></div>',
@@ -819,7 +911,7 @@ describe('TemplateGenerator', () => {
 		})
 		await waitFor(() =>
 			expect(mocks.updateGraphicPreview).toHaveBeenLastCalledWith(
-				expect.objectContaining({ rayIntensity: 0.83 }),
+				expect.objectContaining({ rayIntensity: 0.96 }),
 			),
 		)
 		expect(canvasOf().style.background).toBe('transparent')
@@ -843,7 +935,7 @@ describe('TemplateGenerator', () => {
 
 	it('선택한 Effective 포맷으로 내보낸다', async () => {
 		const user = userEvent.setup()
-		render(<TemplateGenerator navigation={navigation} template={template} />)
+		render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
 		screen.getByRole('combobox', { name: 'Format' }).focus()
 		await user.keyboard('{ArrowDown}')
@@ -857,7 +949,7 @@ describe('TemplateGenerator', () => {
 		const pinned = render(
 			<TemplateGenerator
 				imageConfigs={[]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -873,7 +965,7 @@ describe('TemplateGenerator', () => {
 		render(
 			<TemplateGenerator
 				imageConfigs={[]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -888,7 +980,7 @@ describe('TemplateGenerator', () => {
 		mocks.requestImageGeneration.mockResolvedValue({ generatedImages: [] })
 		render(
 			<TemplateGenerator
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" style="width:911px;height:492px;"></div>',
@@ -919,7 +1011,7 @@ describe('TemplateGenerator', () => {
 		render(
 			<TemplateGenerator
 				imageConfigs={[fixedConfig]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -950,7 +1042,7 @@ describe('TemplateGenerator', () => {
 		'readonly',
 		'disabled',
 	] as const)('Background Type이 %s면 action과 generic patch로 우회할 수 없다', (availability) => {
-		const base = deriveTemplateConfig(template, imageConfigs, effectiveGraphicConfigs)
+		const base = deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)
 		const config = {
 			...base,
 			controller: {
@@ -963,7 +1055,7 @@ describe('TemplateGenerator', () => {
 			},
 		} satisfies typeof base
 		render(
-			<TemplateStudioProvider config={config} template={template} navigation={navigation}>
+			<TemplateStudioProvider config={config} template={template} categoryTitle="카드">
 				<BackgroundTypeMutationProbe />
 			</TemplateStudioProvider>,
 		)
@@ -972,6 +1064,23 @@ describe('TemplateGenerator', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'select invalid background' }))
 		fireEvent.click(screen.getByRole('button', { name: 'patch graphic background' }))
 		expect(screen.getByTestId('background-type')).toHaveTextContent('color')
+	})
+
+	it('video artifact를 내지 않는 graphic 배경에서는 Video 경로를 열지 않는다', () => {
+		// forward-straight는 vector·raster만 낸다 — 배경 타입만 보고 MP4를 Video로 돌리면 던진다.
+		expect(forwardStraightRuntimeManifest.artifacts).not.toHaveProperty('video')
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				template={template}
+				categoryTitle="카드"
+			>
+				<VideoArtifactProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic background' }))
+		expect(screen.getByTestId('video-artifact')).toHaveTextContent('none')
 	})
 
 	it('이미지 생성 중 Profile action·generic patch를 막고 stale 응답을 기록하지 않는다', async () => {
@@ -984,7 +1093,7 @@ describe('TemplateGenerator', () => {
 			createImageConfig(11, undefined, '첫 프롬프트'),
 			createImageConfig(7, undefined, '둘째 프롬프트'),
 		]
-		const config = deriveTemplateConfig(studioTemplate, configs, effectiveGraphicConfigs)
+		const config = deriveTemplateStudioConfig(studioTemplate, configs, effectiveGraphicConfigs)
 		let resolveFirst:
 			| ((value: { generatedImages: { id: number; url: string }[] }) => void)
 			| null = null
@@ -994,11 +1103,7 @@ describe('TemplateGenerator', () => {
 			}),
 		)
 		const first = render(
-			<TemplateStudioProvider
-				config={config}
-				template={studioTemplate}
-				navigation={navigation}
-			>
+			<TemplateStudioProvider config={config} template={studioTemplate} categoryTitle="카드">
 				<TemplateSidebarTestBridge />
 				<ImageRaceProbe />
 			</TemplateStudioProvider>,
@@ -1030,11 +1135,7 @@ describe('TemplateGenerator', () => {
 			}),
 		)
 		render(
-			<TemplateStudioProvider
-				config={config}
-				template={studioTemplate}
-				navigation={navigation}
-			>
+			<TemplateStudioProvider config={config} template={studioTemplate} categoryTitle="카드">
 				<ImageRaceProbe />
 			</TemplateStudioProvider>,
 		)
@@ -1057,7 +1158,7 @@ describe('TemplateGenerator', () => {
 		const { container } = render(
 			<TemplateGenerator
 				imageConfigs={[createImageConfig(11), createImageConfig(7)]}
-				navigation={navigation}
+				categoryTitle="카드"
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
@@ -1091,9 +1192,9 @@ describe('TemplateGenerator', () => {
 		}
 		const first = render(
 			<TemplateStudioProvider
-				config={deriveTemplateConfig(studioTemplate, [editable])}
+				config={deriveTemplateStudioConfig(studioTemplate, [editable])}
 				template={studioTemplate}
-				navigation={navigation}
+				categoryTitle="카드"
 			>
 				<FeatureMutationProbe />
 			</TemplateStudioProvider>,
@@ -1131,9 +1232,9 @@ describe('TemplateGenerator', () => {
 		}
 		render(
 			<TemplateStudioProvider
-				config={deriveTemplateConfig(overrideTemplate, [readonlyConfig])}
+				config={deriveTemplateStudioConfig(overrideTemplate, [readonlyConfig])}
 				template={overrideTemplate}
-				navigation={navigation}
+				categoryTitle="카드"
 			>
 				<FeatureMutationProbe />
 			</TemplateStudioProvider>,
@@ -1151,7 +1252,7 @@ describe('TemplateGenerator', () => {
 				groups: forwardStraightRuntimeManifest.controller.groups.map((group) => ({
 					...group,
 					controls: group.controls.map((control) =>
-						control.id === 'viewpoint'
+						control.id === 'perspectiveGamma'
 							? { ...control, availability: 'readonly' as const }
 							: control,
 					),
@@ -1160,18 +1261,18 @@ describe('TemplateGenerator', () => {
 		}
 		const first = render(
 			<TemplateStudioProvider
-				config={deriveTemplateConfig(template, imageConfigs, [readonlyGraphic])}
+				config={deriveTemplateStudioConfig(template, imageConfigs, [readonlyGraphic])}
 				template={template}
-				navigation={navigation}
+				categoryTitle="카드"
 			>
 				<GraphicMutationProbe />
 			</TemplateStudioProvider>,
 		)
 
 		fireEvent.click(screen.getByRole('button', { name: 'update graphic' }))
-		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('flat')
+		expect(screen.getByTestId('graphic-perspective')).toHaveTextContent('1')
 		fireEvent.click(screen.getByRole('button', { name: 'invalid graphic' }))
-		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('flat')
+		expect(screen.getByTestId('graphic-perspective')).toHaveTextContent('1')
 		first.unmount()
 
 		const secondary = {
@@ -1181,21 +1282,21 @@ describe('TemplateGenerator', () => {
 		} satisfies GraphicStudioConfig
 		render(
 			<TemplateStudioProvider
-				config={deriveTemplateConfig(template, imageConfigs, [
+				config={deriveTemplateStudioConfig(template, imageConfigs, [
 					effectiveGraphicConfigs[0],
 					secondary,
 				])}
 				template={template}
-				navigation={navigation}
+				categoryTitle="카드"
 			>
 				<GraphicMutationProbe />
 			</TemplateStudioProvider>,
 		)
 		fireEvent.click(screen.getByRole('button', { name: 'update graphic' }))
-		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('low-angle')
+		expect(screen.getByTestId('graphic-perspective')).toHaveTextContent('2.5')
 		fireEvent.click(screen.getByRole('button', { name: 'select secondary graphic' }))
 		expect(screen.getByTestId('graphic-config')).toHaveTextContent('secondary')
-		expect(screen.getByTestId('graphic-viewpoint')).toHaveTextContent('flat')
+		expect(screen.getByTestId('graphic-perspective')).toHaveTextContent('1')
 	})
 })
 
@@ -1284,7 +1385,11 @@ function createImageConfig(
 					type: 'color-adjustment',
 					controls: { line: 'lineColor', background: 'backgroundColor' },
 				},
-				{ type: 'camera-control' },
+				{
+					type: 'camera-control',
+					azimuths: CAMERA_AZIMUTHS,
+					elevations: CAMERA_ELEVATIONS,
+				},
 			],
 		},
 	}

@@ -11,13 +11,13 @@ import type { GraphicRuntime } from '@/features/graphic-generation/runtime/clien
 import { useGraphicExport } from '@/features/studio-export/hooks/use-graphic-export'
 
 type GraphicGeneratorProps = {
-	configs: readonly GraphicStudioConfig[]
+	config: GraphicStudioConfig
 }
 
 /** 가변 그래픽 Definition을 하나의 편집 세션·Controller·Canvas에 배선한다. */
-export function GraphicGenerator({ configs }: GraphicGeneratorProps) {
+export function GraphicGenerator({ config }: GraphicGeneratorProps) {
 	return (
-		<GraphicStudioProvider configs={configs}>
+		<GraphicStudioProvider config={config}>
 			<GraphicWorkspace />
 		</GraphicStudioProvider>
 	)

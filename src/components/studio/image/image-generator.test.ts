@@ -9,39 +9,52 @@ import {
 import type { ImageModelPreset } from '@/features/image-generation/image-model'
 import { ImageGenerator } from './image-generator'
 
-const RESULT = {
-	aspectRatio: '2:3' as const,
-	generatedImages: [
+const browseMocks = vi.hoisted(() => ({
+	fetchImageStudioConfigs: vi.fn(async () => [] as unknown[]),
+}))
+vi.mock('@/features/image-generation/services/list-image-studio-configs.client', () => browseMocks)
+
+const SESSION = {
+	images: [
 		{
-			collection: 'generated-images' as const,
-			createdAt: '2026-08-10T03:00:00.000Z',
-			id: 8,
-			url: '/api/generated-images/file/generated.png',
+			src: '/api/generated-images/file/generated.png',
+			generatedImageId: 8,
+			profileId: 5,
 		},
 	],
-	images: ['/api/generated-images/file/generated.png'],
-	imageSize: '1K' as const,
-	model: 'gpt-image-2',
-	profileId: 5,
-	prompt: '{"subject":"드론"}',
+	reference: null,
+	output: { aspectRatio: '2:3' as const, imageSize: '1K' as const },
+}
+
+// 카메라를 한 번 돌린 뒤의 세션 — 참조 8을 물고 조정본 9를 낳았다.
+// output 비율은 프로파일 기본값(2:3)과 일부러 다르다 — 재생성이 컨트롤 값이 아니라
+// 참조가 만들어진 비율을 넘기는지 구분하려면 두 값이 갈려 있어야 한다.
+const ADJUSTED_SESSION = {
+	images: [
+		{
+			src: '/api/generated-images/file/adjusted.png',
+			generatedImageId: 9,
+			profileId: 5,
+		},
+	],
+	reference: SESSION.images[0],
+	output: { aspectRatio: '16:9' as const, imageSize: '1K' as const },
 }
 
 const mocks = vi.hoisted(() => ({
-	adjustCamera: vi.fn(),
 	generate: vi.fn(),
-	// 결과·선택은 테스트마다 갈아끼운다 — 카메라 잠금이 선택에서 파생되기 때문이다.
-	session: { result: null as unknown, selected: null as number | null },
+	// 세션·선택은 테스트마다 갈아끼운다 — 카메라 잠금이 선택에서 파생되기 때문이다.
+	state: { session: null as unknown, selected: null as number | null },
 }))
 
 vi.mock('@/features/image-generation/hooks/use-image-generation', () => ({
 	useImageGeneration: () => ({
-		adjustCamera: mocks.adjustCamera,
 		error: null,
 		generate: mocks.generate,
 		loading: false,
 		requested: 0,
-		result: mocks.session.result,
-		selected: mocks.session.selected,
+		selected: mocks.state.selected,
+		session: mocks.state.session,
 		setSelected: vi.fn(),
 	}),
 }))
@@ -104,14 +117,14 @@ function config(
 describe('ImageGenerator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mocks.session = { result: null, selected: null }
+		mocks.state = { session: null, selected: null }
 	})
 	afterEach(cleanup)
 
 	it('첫 계약의 프로파일로 생성하고 장수·비율·해상도는 계약 시작값을 따른다', () => {
 		render(
 			createElement(ImageGenerator, {
-				configs: [config(5, '에센허브 브랜드 제품컷')],
+				config: config(5, '에센허브 브랜드 제품컷'),
 			}),
 		)
 
@@ -129,19 +142,15 @@ describe('ImageGenerator', () => {
 		})
 	})
 
-	it('라우트가 지정한 프로파일을 처음 선택한다', () => {
-		render(
-			createElement(ImageGenerator, {
-				configs: [config(5, '일러스트레이션'), config(7, '그라디언트')],
-				initialProfileId: 7,
-			}),
-		)
+	// 어느 프로파일로 시작할지는 라우트(page)가 정한다 — 여기서는 받은 계약을 그리는지만 본다.
+	it('전달받은 시작 계약의 프로파일을 그린다', () => {
+		render(createElement(ImageGenerator, { config: config(7, '그라디언트') }))
 
 		expect(screen.getByText('그라디언트')).toBeInTheDocument()
 	})
 
 	it('빈 캔버스의 예시를 프롬프트에 반영한다', () => {
-		render(createElement(ImageGenerator, { configs: [config(5, '제품컷')] }))
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
 
 		fireEvent.click(
 			screen.getByRole('button', {
@@ -155,7 +164,7 @@ describe('ImageGenerator', () => {
 	})
 
 	it('색을 개방하지 않은 프로파일에는 Profile Settings 섹션이 없다', () => {
-		render(createElement(ImageGenerator, { configs: [config(5, '제품컷')] }))
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
 
 		expect(screen.queryByText('Profile Settings')).not.toBeInTheDocument()
 	})
@@ -163,11 +172,9 @@ describe('ImageGenerator', () => {
 	it('색을 개방한 프로파일은 계약의 색을 조작 가능한 행으로 보여준다', () => {
 		render(
 			createElement(ImageGenerator, {
-				configs: [
-					config(5, '라인 일러스트', {
-						colorAdjustment: { line: '#000dff', background: '#00ffd4' },
-					}),
-				],
+				config: config(5, '라인 일러스트', {
+					colorAdjustment: { line: '#000dff', background: '#00ffd4' },
+				}),
 			}),
 		)
 
@@ -180,7 +187,7 @@ describe('ImageGenerator', () => {
 	it('라인 색만 개방한 프로파일은 배경 색 행을 그리지 않는다', () => {
 		render(
 			createElement(ImageGenerator, {
-				configs: [config(5, '라인 일러스트', { colorAdjustment: { line: '#000dff' } })],
+				config: config(5, '라인 일러스트', { colorAdjustment: { line: '#000dff' } }),
 			}),
 		)
 
@@ -191,9 +198,7 @@ describe('ImageGenerator', () => {
 	it('해상도 선택지가 하나뿐이면 읽기 전용으로 그린다', () => {
 		render(
 			createElement(ImageGenerator, {
-				configs: [
-					config(5, '라이트 모델', { imageModelPreset: 'google-nano-banana-2-lite' }),
-				],
+				config: config(5, '라이트 모델', { imageModelPreset: 'google-nano-banana-2-lite' }),
 			}),
 		)
 
@@ -219,7 +224,7 @@ describe('ImageGenerator', () => {
 			},
 		}
 
-		render(createElement(ImageGenerator, { configs: [moved] }))
+		render(createElement(ImageGenerator, { config: moved }))
 
 		expect(screen.queryByText('Custom Settings')).not.toBeInTheDocument()
 		expect(screen.getAllByRole('combobox', { name: '장수' })).toHaveLength(1)
@@ -228,23 +233,48 @@ describe('ImageGenerator', () => {
 	})
 
 	it('결과를 고르기 전에는 Camera Controls가 잠기고 고른 뒤에 열린다', () => {
-		const view = render(createElement(ImageGenerator, { configs: [config(5, '제품컷')] }))
+		const view = render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
 
 		expect(screen.getByRole('button', { name: 'Camera Controls' })).toBeDisabled()
 		expect(screen.queryByRole('combobox', { name: 'X' })).not.toBeInTheDocument()
 
-		mocks.session = { result: RESULT, selected: 0 }
-		view.rerender(createElement(ImageGenerator, { configs: [config(5, '제품컷')] }))
+		mocks.state = { session: SESSION, selected: 0 }
+		view.rerender(createElement(ImageGenerator, { config: config(5, '제품컷') }))
 
 		expect(screen.getByRole('button', { name: 'Camera Controls' })).toBeEnabled()
 		expect(screen.getByRole('combobox', { name: 'X' })).toBeInTheDocument()
 	})
 
+	// 참조 고정: 조정본을 골라 둔 채 다시 돌려도 시드는 언제나 최초 원본이다(세대 누적 열화 방지).
+	it('카메라 재생성은 선택한 조정본이 아니라 고정된 참조를 통합 라우트로 보낸다', () => {
+		mocks.state = { session: ADJUSTED_SESSION, selected: 1 }
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
+
+		// 메인 생성 버튼과 카메라 재생성 버튼이 같은 이름을 쓴다 — 뒤엣것이 카메라다.
+		const buttons = screen.getAllByRole('button', { name: '이미지 생성' })
+		fireEvent.click(buttons[buttons.length - 1] as HTMLElement)
+
+		expect(mocks.generate).toHaveBeenCalledWith(
+			{
+				// 프로파일 기본값 2:3이 아니라 참조가 만들어진 16:9 — 조정본이 다른 비율로
+				// 돌아오면 그리드에서 참조 카드가 잘린다.
+				aspectRatio: '16:9',
+				camera: { azimuthDeg: 0, elevationDeg: 0 },
+				count: 1,
+				imageSize: '1K',
+				profileId: 5,
+				prompt: '',
+				reference: { generatedImageId: 8 },
+			},
+			ADJUSTED_SESSION.reference,
+		)
+	})
+
 	it('시점 조정을 지원하지 않는 프로파일은 Camera Controls를 그리지 않는다', () => {
-		mocks.session = { result: RESULT, selected: 0 }
+		mocks.state = { session: SESSION, selected: 0 }
 		render(
 			createElement(ImageGenerator, {
-				configs: [config(5, '평면 그래픽', { cameraControl: false })],
+				config: config(5, '평면 그래픽', { cameraControl: false }),
 			}),
 		)
 
@@ -252,7 +282,7 @@ describe('ImageGenerator', () => {
 	})
 
 	it('발행된 프로파일이 없으면 컨트롤러 없이 안내만 그린다', () => {
-		render(createElement(ImageGenerator, { configs: [] }))
+		render(createElement(ImageGenerator, { config: null }))
 
 		expect(screen.getByText('발행된 이미지 프로파일이 없습니다')).toBeInTheDocument()
 		expect(screen.queryByRole('textbox', { name: 'Prompt' })).not.toBeInTheDocument()
@@ -262,28 +292,33 @@ describe('ImageGenerator', () => {
 describe('ImageProfilePicker', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mocks.session = { result: null, selected: null }
+		mocks.state = { session: null, selected: null }
 	})
 	afterEach(cleanup)
 
-	function openBrowser(configs: ImageStudioConfig[], initialProfileId?: number) {
-		render(createElement(ImageGenerator, { configs, initialProfileId }))
+	// 목록은 패널이 열릴 때 /api/image-profiles에서 온다 — 카드는 그 응답이 도착한 뒤에 나타난다.
+	async function openBrowser(configs: ImageStudioConfig[], initialProfileId?: number) {
+		browseMocks.fetchImageStudioConfigs.mockResolvedValue(configs)
+		const initial = configs.find(({ id }) => id === initialProfileId) ?? configs[0]
+		render(createElement(ImageGenerator, { config: initial ?? null }))
 		const trigger = screen.getByRole('button', { name: '프로파일 변경' })
 		expect(trigger.closest('[data-slot="controller-header"]')).not.toBeNull()
 		fireEvent.click(trigger)
-		return { panel: screen.getByRole('dialog', { name: 'Image Profiles' }), trigger }
+		const panel = screen.getByRole('dialog', { name: 'Image Profiles' })
+		await within(panel).findByRole('button', { name: new RegExp(configs[0]?.name ?? '') })
+		return { panel, trigger }
 	}
 
-	it('Change로 자산 브라우저가 열리고 프로파일마다 카드가 있다', () => {
-		const { panel } = openBrowser([config(5, '제품컷'), config(7, '그라디언트')])
+	it('Change로 자산 브라우저가 열리고 프로파일마다 카드가 있다', async () => {
+		const { panel } = await openBrowser([config(5, '제품컷'), config(7, '그라디언트')])
 
 		expect(within(panel).getByRole('button', { name: /제품컷/ })).toBeInTheDocument()
 		expect(within(panel).getByRole('button', { name: /그라디언트/ })).toBeInTheDocument()
 	})
 
 	// 배지는 그 프로파일이 무엇을 열어주는지의 표시라 계약의 개방 필드에서만 파생한다.
-	it('배지를 계약의 개방 필드에서 파생한다', () => {
-		const { panel } = openBrowser([
+	it('배지를 계약의 개방 필드에서 파생한다', async () => {
+		const { panel } = await openBrowser([
 			config(1, '카메라만'),
 			config(2, '색만', {
 				cameraControl: false,
@@ -310,8 +345,8 @@ describe('ImageProfilePicker', () => {
 		expect(within(cards.none).queryByText('Line Control')).not.toBeInTheDocument()
 	})
 
-	it('현재 프로파일 카드를 aria-current로 알린다', () => {
-		const { panel } = openBrowser([config(5, '제품컷'), config(7, '그라디언트')], 7)
+	it('현재 프로파일 카드를 aria-current로 알린다', async () => {
+		const { panel } = await openBrowser([config(5, '제품컷'), config(7, '그라디언트')], 7)
 
 		expect(within(panel).getByRole('button', { name: /그라디언트/ })).toHaveAttribute(
 			'aria-current',
@@ -322,8 +357,8 @@ describe('ImageProfilePicker', () => {
 		)
 	})
 
-	it('카드를 고르면 프로파일이 바뀌고 패널이 닫힌다', () => {
-		const { panel } = openBrowser([
+	it('카드를 고르면 프로파일이 바뀌고 패널이 닫힌다', async () => {
+		const { panel } = await openBrowser([
 			config(5, '제품컷'),
 			config(7, '그라디언트', { maxPromptLength: 42 }),
 		])
@@ -343,7 +378,7 @@ describe('ImageProfilePicker', () => {
 	})
 
 	it('Esc로 닫히고 포커스가 트리거로 돌아온다', async () => {
-		const { trigger } = openBrowser([config(5, '제품컷'), config(7, '그라디언트')])
+		const { trigger } = await openBrowser([config(5, '제품컷'), config(7, '그라디언트')])
 
 		fireEvent.keyDown(document, { key: 'Escape' })
 
@@ -353,8 +388,8 @@ describe('ImageProfilePicker', () => {
 	})
 
 	// 후보가 자기 자신뿐이면 고를 것이 없다 — 카드는 남기고 그 사실을 적는다.
-	it('프로파일이 하나뿐이면 카드와 함께 교체 대상이 없다고 알린다', () => {
-		const { panel } = openBrowser([config(5, '제품컷')])
+	it('프로파일이 하나뿐이면 카드와 함께 교체 대상이 없다고 알린다', async () => {
+		const { panel } = await openBrowser([config(5, '제품컷')])
 
 		expect(within(panel).getByRole('button', { name: /제품컷/ })).toHaveAttribute(
 			'aria-current',

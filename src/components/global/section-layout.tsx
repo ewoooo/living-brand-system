@@ -1,13 +1,11 @@
 import { SidePanelOpen } from '@carbon/icons-react'
 import type React from 'react'
-import { GlobalFooter } from '@/components/global/footer/global-footer'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 
 type SectionLayoutProps = {
 	nav: React.ReactNode
 	children: React.ReactNode
-	pageNavigation?: React.ReactNode
 	mobileNavigation?: boolean
 	sidebarStorageKey?: string
 	variant?: 'document' | 'workspace'
@@ -15,43 +13,40 @@ type SectionLayoutProps = {
 
 /**
  * 섹션(가이드라인·검수·제작) 공통 레이아웃 셸 — 사이드 nav + 스크롤 main.
- * 이 셸은 nav·스크롤·랜드마크·footer만 소유하고, 본문 폭과 여백은 ContentFrame이 맡는다.
+ * 이 셸은 nav·스크롤·랜드마크만 소유하고, 본문 폭과 여백은 ContentFrame이 맡는다.
  */
 export function SectionLayout({
 	nav,
 	children,
-	pageNavigation,
 	mobileNavigation = true,
 	sidebarStorageKey,
 	variant = 'document',
 }: SectionLayoutProps) {
 	return (
-		<SidebarProvider
-			className="h-full min-h-0 pt-[50px] xl:pt-(--global-header-height)"
-			storageKey={sidebarStorageKey}
-		>
-			{nav}
-			<SectionBody
-				mobileNavigation={mobileNavigation}
-				pageNavigation={pageNavigation}
-				variant={variant}
-			>
+		<SidebarProvider className="h-full min-h-0" storageKey={sidebarStorageKey}>
+			{/*
+			 * 🔴 상단 여백을 셸(SidebarProvider)이 아니라 **두 슬롯이 각각** 갖는다. 셸에 두면
+			 * 스크롤 영역 자체가 헤더 아래에서 시작해 본문이 헤더 밑으로 흘러갈 공간이 없다.
+			 * nav는 여백을 그대로 유지하고(헤더에 가리면 안 된다), 본문만 헤더까지 올라간다.
+			 * 🔴 nav(`Sidebar.Root`)는 `h-full`인 flex 아이템이라 이 상자의 안쪽 높이를 따른다 —
+			 *    fixed가 아니므로 여백을 걷으면 함께 올라간다(실측).
+			 */}
+			<div className="flex shrink-0 pt-[50px] xl:pt-(--global-header-height)">{nav}</div>
+			<SectionBody mobileNavigation={mobileNavigation} variant={variant}>
 				{children}
 			</SectionBody>
 		</SidebarProvider>
 	)
 }
 
-/** nav 옆의 남은 화면을 차지하며 본문·페이지 이동·footer의 세로 크기를 결정한다. */
+/** nav 옆의 남은 화면을 차지하며 본문·페이지 이동의 세로 크기를 결정한다. */
 function SectionBody({
 	children,
 	mobileNavigation,
-	pageNavigation,
 	variant,
 }: {
 	children: React.ReactNode
 	mobileNavigation: boolean
-	pageNavigation?: React.ReactNode
 	variant: 'document' | 'workspace'
 }) {
 	return (
@@ -71,9 +66,10 @@ function SectionBody({
 					<SidePanelOpen data-icon="inline-start" />
 				</SidebarTrigger>
 			)}
-			<main className="min-h-0 w-full flex-1">{children}</main>
-			{pageNavigation}
-			{variant === 'document' && <GlobalFooter />}
+			{/* 첫 화면은 헤더에 가리지 않고, 스크롤하면 콘텐츠가 헤더 뒤로 지나간다. */}
+			<main className="min-h-0 w-full flex-1 pt-[50px] xl:pt-(--global-header-height)">
+				{children}
+			</main>
 		</div>
 	)
 }

@@ -104,7 +104,7 @@ function NavigationHeaderRoot({ className, ...props }: NavigationHeaderRootProps
 		<header
 			data-slot="navigation-header"
 			className={cn(
-				'relative z-50 shrink-0 overflow-visible border-border border-b bg-header-background',
+				'relative z-50 shrink-0 overflow-visible bg-header-background',
 				className,
 			)}
 			{...props}
@@ -367,7 +367,7 @@ function NavigationHeaderSymbolLink({
 				alt=""
 				className="size-3.5 dark:brightness-0"
 				height={14}
-				src="/logos/logo.svg"
+				src="/symbols/symbol_wht.svg"
 				width={14}
 			/>
 		</Link>

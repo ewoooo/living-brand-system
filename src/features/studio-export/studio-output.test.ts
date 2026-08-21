@@ -3,6 +3,7 @@ import { STUDIO_OUTPUT_FORMATS } from './export-contract'
 import {
 	parseStudioOutputCapability,
 	projectStudioOutputPolicy,
+	resolveMaxExportScale,
 	resolveStudioArtifactOutputFormats,
 	resolveStudioOutputCapability,
 	resolveStudioOutputFormats,
@@ -156,5 +157,37 @@ describe('StudioOutputCapability', () => {
 				{ allowedFormats: ['mp4'], video: { maxWidth: 1920 } },
 			),
 		).toThrow('Runtime보다 넓습니다')
+	})
+})
+
+describe('resolveMaxExportScale', () => {
+	it('H.264 한도 안에서 가장 큰 정수 배율을 준다', () => {
+		// 630×891 → 4배 2520×3564는 35,234 매크로블록으로 Level 5.1 한도(36,864) 안이다.
+		expect(resolveMaxExportScale(630, 891)).toBe(4)
+		// 1260×1782는 2배가 같은 프레임이므로 2배까지만 간다.
+		expect(resolveMaxExportScale(1260, 1782)).toBe(2)
+		expect(resolveMaxExportScale(1920, 1080)).toBe(2)
+	})
+
+	it('이미 한도에 가까운 캔버스도 최소 1배는 보장한다', () => {
+		expect(resolveMaxExportScale(4096, 4096)).toBe(1)
+	})
+
+	it('fps를 주면 초당 처리량 예산까지 본다', () => {
+		// 630×891 4배는 35,234 매크로블록. 30fps면 1,057,020으로 MaxMBPS(2,073,600) 안이지만
+		// 60fps면 2,114,040으로 넘는다 — 그 지점에서 3배로 내려온다.
+		expect(resolveMaxExportScale(630, 891, 24)).toBe(4)
+		expect(resolveMaxExportScale(630, 891, 30)).toBe(4)
+		expect(resolveMaxExportScale(630, 891, 60)).toBe(3)
+	})
+
+	it('1920×1080 캔버스는 60fps에서도 2배 = 4K까지 간다', () => {
+		// 3840×2160은 32,400 매크로블록, 60fps면 1,944,000으로 Level 5.2 예산 안이다.
+		expect(resolveMaxExportScale(1920, 1080, 60)).toBe(2)
+		expect(resolveMaxExportScale(1920, 1080, 30)).toBe(2)
+	})
+
+	it('fps를 주지 않으면 프레임 크기 예산만 본다 — 시간축 없는 PNG·JPEG용이다', () => {
+		expect(resolveMaxExportScale(630, 891)).toBe(4)
 	})
 })

@@ -60,6 +60,32 @@ import * as migration_20260813_050920_studio_runtime_contract_convergence from '
 import * as migration_20260813_075510_studio_export_policy from './20260813_075510_studio_export_policy';
 import * as migration_20260813_105904_unify_studio_output_policy from './20260813_105904_unify_studio_output_policy';
 import * as migration_20260814_023629_add_controller_presentation from './20260814_023629_add_controller_presentation';
+import * as migration_20260814_062523_image_profile_camera_sectors from './20260814_062523_image_profile_camera_sectors';
+import * as migration_20260814_065504_template_slug from './20260814_065504_template_slug';
+import * as migration_20260814_075620_add_linear_fluted_glass_runtime from './20260814_075620_add_linear_fluted_glass_runtime';
+import * as migration_20260814_083322_studio_preview_image from './20260814_083322_studio_preview_image';
+import * as migration_20260818_021417_ci_lockup_widget from './20260818_021417_ci_lockup_widget';
+import * as migration_20260818_024535_generated_image_source_image from './20260818_024535_generated_image_source_image';
+import * as migration_20260818_064023_sample_images from './20260818_064023_sample_images';
+import * as migration_20260818_093907_remove_plugins_collection from './20260818_093907_remove_plugins_collection';
+import * as migration_20260818_102721_sample_image_line_art from './20260818_102721_sample_image_line_art';
+import * as migration_20260819_054538_sample_image_group from './20260819_054538_sample_image_group';
+import * as migration_20260819_075057_drop_layout_grid_locks from './20260819_075057_drop_layout_grid_locks';
+import * as migration_20260819_084217_ci_lockup_controller_fields from './20260819_084217_ci_lockup_controller_fields';
+import * as migration_20260819_085700_ci_lockup_axis_defaults from './20260819_085700_ci_lockup_axis_defaults';
+import * as migration_20260819_090753_ci_lockup_snapshot_repair from './20260819_090753_ci_lockup_snapshot_repair';
+import * as migration_20260819_090804_guideline_background_tone from './20260819_090804_guideline_background_tone';
+import * as migration_20260819_090805_ci_lockup_height_axis from './20260819_090805_ci_lockup_height_axis';
+import * as migration_20260819_094517_ci_sections_snapshot_merge from './20260819_094517_ci_sections_snapshot_merge';
+import * as migration_20260819_101815_template_background_policy from './20260819_101815_template_background_policy';
+import * as migration_20260820_013946_ci_lockup_height_control from './20260820_013946_ci_lockup_height_control';
+import * as migration_20260820_022413_block_featured_side from './20260820_022413_block_featured_side';
+import * as migration_20260820_050919_ci_sections_stage_snapshot_merge from './20260820_050919_ci_sections_stage_snapshot_merge';
+import * as migration_20260820_062347_add_vertical_sweep_fluted_glass_runtimes from './20260820_062347_add_vertical_sweep_fluted_glass_runtimes';
+import * as migration_20260821_015321_ci_lockup_hero_widget from './20260821_015321_ci_lockup_hero_widget';
+import * as migration_20260821_021545_overseas_branch_list from './20260821_021545_overseas_branch_list';
+import * as migration_20260821_023619_placeholder_subsidiary_and_branch_labels from './20260821_023619_placeholder_subsidiary_and_branch_labels';
+import * as migration_20260821_025042_placeholder_subsidiary_technology from './20260821_025042_placeholder_subsidiary_technology';
 
 export const migrations = [
   {
@@ -365,11 +391,141 @@ export const migrations = [
   {
     up: migration_20260813_105904_unify_studio_output_policy.up,
     down: migration_20260813_105904_unify_studio_output_policy.down,
-		name: '20260813_105904_unify_studio_output_policy',
-	},
-	{
+    name: '20260813_105904_unify_studio_output_policy',
+  },
+  {
     up: migration_20260814_023629_add_controller_presentation.up,
     down: migration_20260814_023629_add_controller_presentation.down,
-    name: '20260814_023629_add_controller_presentation'
+    name: '20260814_023629_add_controller_presentation',
+  },
+  {
+    up: migration_20260814_062523_image_profile_camera_sectors.up,
+    down: migration_20260814_062523_image_profile_camera_sectors.down,
+    name: '20260814_062523_image_profile_camera_sectors',
+  },
+  {
+    up: migration_20260814_065504_template_slug.up,
+    down: migration_20260814_065504_template_slug.down,
+    name: '20260814_065504_template_slug',
+  },
+  {
+    up: migration_20260814_075620_add_linear_fluted_glass_runtime.up,
+    down: migration_20260814_075620_add_linear_fluted_glass_runtime.down,
+    name: '20260814_075620_add_linear_fluted_glass_runtime',
+  },
+  {
+    up: migration_20260814_083322_studio_preview_image.up,
+    down: migration_20260814_083322_studio_preview_image.down,
+    name: '20260814_083322_studio_preview_image',
+  },
+  {
+    up: migration_20260818_021417_ci_lockup_widget.up,
+    down: migration_20260818_021417_ci_lockup_widget.down,
+    name: '20260818_021417_ci_lockup_widget',
+  },
+  {
+    up: migration_20260818_024535_generated_image_source_image.up,
+    down: migration_20260818_024535_generated_image_source_image.down,
+    name: '20260818_024535_generated_image_source_image',
+  },
+  {
+    up: migration_20260818_064023_sample_images.up,
+    down: migration_20260818_064023_sample_images.down,
+    name: '20260818_064023_sample_images',
+  },
+  {
+    up: migration_20260818_093907_remove_plugins_collection.up,
+    down: migration_20260818_093907_remove_plugins_collection.down,
+    name: '20260818_093907_remove_plugins_collection',
+  },
+  {
+    up: migration_20260818_102721_sample_image_line_art.up,
+    down: migration_20260818_102721_sample_image_line_art.down,
+    name: '20260818_102721_sample_image_line_art',
+  },
+  {
+    up: migration_20260819_054538_sample_image_group.up,
+    down: migration_20260819_054538_sample_image_group.down,
+    name: '20260819_054538_sample_image_group',
+  },
+  {
+    up: migration_20260819_075057_drop_layout_grid_locks.up,
+    down: migration_20260819_075057_drop_layout_grid_locks.down,
+    name: '20260819_075057_drop_layout_grid_locks',
+  },
+  {
+    up: migration_20260819_084217_ci_lockup_controller_fields.up,
+    down: migration_20260819_084217_ci_lockup_controller_fields.down,
+    name: '20260819_084217_ci_lockup_controller_fields',
+  },
+  {
+    up: migration_20260819_085700_ci_lockup_axis_defaults.up,
+    down: migration_20260819_085700_ci_lockup_axis_defaults.down,
+    name: '20260819_085700_ci_lockup_axis_defaults',
+  },
+  {
+    up: migration_20260819_090753_ci_lockup_snapshot_repair.up,
+    down: migration_20260819_090753_ci_lockup_snapshot_repair.down,
+    name: '20260819_090753_ci_lockup_snapshot_repair',
+  },
+  {
+    up: migration_20260819_090804_guideline_background_tone.up,
+    down: migration_20260819_090804_guideline_background_tone.down,
+    name: '20260819_090804_guideline_background_tone',
+  },
+  {
+    up: migration_20260819_090805_ci_lockup_height_axis.up,
+    down: migration_20260819_090805_ci_lockup_height_axis.down,
+    name: '20260819_090805_ci_lockup_height_axis',
+  },
+  {
+    up: migration_20260819_094517_ci_sections_snapshot_merge.up,
+    down: migration_20260819_094517_ci_sections_snapshot_merge.down,
+    name: '20260819_094517_ci_sections_snapshot_merge',
+  },
+  {
+    up: migration_20260819_101815_template_background_policy.up,
+    down: migration_20260819_101815_template_background_policy.down,
+    name: '20260819_101815_template_background_policy',
+  },
+  {
+    up: migration_20260820_013946_ci_lockup_height_control.up,
+    down: migration_20260820_013946_ci_lockup_height_control.down,
+    name: '20260820_013946_ci_lockup_height_control',
+  },
+  {
+    up: migration_20260820_022413_block_featured_side.up,
+    down: migration_20260820_022413_block_featured_side.down,
+    name: '20260820_022413_block_featured_side',
+  },
+  {
+    up: migration_20260820_050919_ci_sections_stage_snapshot_merge.up,
+    down: migration_20260820_050919_ci_sections_stage_snapshot_merge.down,
+    name: '20260820_050919_ci_sections_stage_snapshot_merge',
+  },
+  {
+    up: migration_20260820_062347_add_vertical_sweep_fluted_glass_runtimes.up,
+    down: migration_20260820_062347_add_vertical_sweep_fluted_glass_runtimes.down,
+    name: '20260820_062347_add_vertical_sweep_fluted_glass_runtimes',
+  },
+  {
+    up: migration_20260821_015321_ci_lockup_hero_widget.up,
+    down: migration_20260821_015321_ci_lockup_hero_widget.down,
+    name: '20260821_015321_ci_lockup_hero_widget',
+  },
+  {
+    up: migration_20260821_021545_overseas_branch_list.up,
+    down: migration_20260821_021545_overseas_branch_list.down,
+    name: '20260821_021545_overseas_branch_list',
+  },
+  {
+    up: migration_20260821_023619_placeholder_subsidiary_and_branch_labels.up,
+    down: migration_20260821_023619_placeholder_subsidiary_and_branch_labels.down,
+    name: '20260821_023619_placeholder_subsidiary_and_branch_labels',
+  },
+  {
+    up: migration_20260821_025042_placeholder_subsidiary_technology.up,
+    down: migration_20260821_025042_placeholder_subsidiary_technology.down,
+    name: '20260821_025042_placeholder_subsidiary_technology'
   },
 ];

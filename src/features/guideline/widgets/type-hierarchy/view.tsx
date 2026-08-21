@@ -11,7 +11,7 @@ import {
 	type TierKey,
 } from '../brand-typeface'
 import { HAIRLINE_CELL, HAIRLINE_GRID } from '../hairline'
-import { SPEC_READOUT, WIDGET_CAPTION } from '../readout'
+import { SPEC_READOUT } from '../readout'
 
 // 좌: 규정대로 쌓인 문단 / 우: 단마다 스펙과 문구 입력칸을 세워 놓은 패널.
 // 세 칸이 늘 열려 있고, 한 칸에 포커스가 가면 좌측의 나머지 단이 죽어 그 단만 도드라진다.
@@ -141,11 +141,6 @@ export function TypeHierarchyView({ language }: { language: LanguageKey }) {
 						)
 					})}
 				</ul>
-
-				<p className={WIDGET_CAPTION}>
-					세 단의 문구를 바꿔 보세요. 굵기·행간은 규정이라 고정이고, 크기는 규정값을 넘지
-					않는 선에서 판 폭을 따릅니다.
-				</p>
 			</div>
 		</div>
 	)

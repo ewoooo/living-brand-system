@@ -1,8 +1,10 @@
 'use client'
 
-import { FieldDescription, FieldError, FieldLabel, useField } from '@payloadcms/ui'
+import { FieldDescription, FieldError, useField } from '@payloadcms/ui'
 import type { JSONFieldClientComponent } from 'payload'
 import type { ComponentProps } from 'react'
+import { AdminSectionHeading } from '@/components/admin/shared/admin-section-heading'
+import { Controller } from '@/components/shared/controller'
 import type {
 	ControllerControlDefinition,
 	ControllerControlRestriction,
@@ -22,6 +24,20 @@ type ControllerAdminFieldProps = ComponentProps<JSONFieldClientComponent> & {
 type StoredControllerPresentation = {
 	groups: { groupId: string; collapsible?: boolean; defaultOpen?: boolean }[]
 }
+
+const ON_OFF = [
+	{ value: 'on', label: 'On' },
+	{ value: 'off', label: 'Off' },
+] as const
+
+const AVAILABILITY_OPTIONS = [
+	{ value: 'default', label: '원본 사용' },
+	{ value: 'readonly', label: '읽기 전용' },
+	{ value: 'disabled', label: '사용 안 함' },
+] as const
+
+/** 셀렉트 기본값의 '선택 없음' — radix Select는 빈 문자열 값을 예약하므로 sentinel을 쓴다. */
+const NONE = '__none__'
 
 /** Runtime Manifest의 Controller projection을 읽기 전용으로 보여주고 제약값만 저장한다. */
 export function StudioControllerRestrictionsField({
@@ -47,17 +63,16 @@ export function StudioControllerRestrictionsField({
 	}
 
 	return (
-		<div className="field-type json mb-5">
-			<FieldLabel label="Controller 제한" path={path} />
+		<div className="lbs-kit field-type json mb-20">
+			<AdminSectionHeading>컨트롤러 제한</AdminSectionHeading>
 			<FieldError message={errorMessage} path={path} showError={showError} />
-			{groups.length === 0 ? (
-				<EmptyControllerMessage source={source} />
-			) : (
-				<div className="flex flex-col gap-4">
-					{groups.map((group) => (
-						<fieldset key={group.id} className="rounded-md border p-3">
-							<legend className="px-1 text-sm font-semibold">{group.title}</legend>
-							<div className="flex flex-col gap-3">
+			<div className="flex flex-col gap-2 rounded-3xl border bg-background px-3 pt-6 pb-3">
+				{groups.length === 0 ? (
+					<EmptyControllerMessage source={source} />
+				) : (
+					groups.map((group) => (
+						<Controller.Group key={group.id} title={group.title} collapsible={false}>
+							<div className="flex flex-col gap-4">
 								{group.controls.map((control) => (
 									<ControlRestrictionEditor
 										key={control.id}
@@ -70,10 +85,10 @@ export function StudioControllerRestrictionsField({
 									/>
 								))}
 							</div>
-						</fieldset>
-					))}
-				</div>
-			)}
+						</Controller.Group>
+					))
+				)}
+			</div>
 			<FieldDescription
 				description="컨트롤 종류·라벨·표시 형식은 원본 Definition이 소유합니다. 여기서는 기본값과 실행 범위만 좁힙니다."
 				path={path}
@@ -114,13 +129,13 @@ export function StudioControllerPresentationField({
 	}
 
 	return (
-		<div className="field-type json mb-5">
-			<FieldLabel label="Controller 표현" path={path} />
+		<div className="lbs-kit field-type json mb-20">
+			<AdminSectionHeading>컨트롤러 표현</AdminSectionHeading>
 			<FieldError message={errorMessage} path={path} showError={showError} />
 			{hasStaleGroups && (
 				<button
 					type="button"
-					className="mb-3 text-sm text-destructive underline"
+					className="mb-3 text-destructive text-sm underline"
 					disabled={disabled}
 					onClick={() =>
 						setValue({
@@ -133,52 +148,50 @@ export function StudioControllerPresentationField({
 					현재 Runtime에 없는 그룹 설정 정리
 				</button>
 			)}
-			{groups.length === 0 ? (
-				<EmptyControllerMessage source={source} />
-			) : (
-				<div className="flex flex-col gap-3">
-					{groups.map((group) => {
+			<div className="flex flex-col gap-2 rounded-3xl border bg-background px-3 pt-6 pb-3">
+				{groups.length === 0 ? (
+					<EmptyControllerMessage source={source} />
+				) : (
+					groups.map((group) => {
 						const policy = current.groups.find(({ groupId }) => groupId === group.id)
 						const collapsible = policy?.collapsible ?? true
 						const defaultOpen = collapsible ? (policy?.defaultOpen ?? true) : true
 						return (
-							<fieldset key={group.id} className="rounded-md border p-3">
-								<legend className="px-1 text-sm font-semibold">
-									{group.title}
-								</legend>
-								<div className="flex flex-wrap gap-4">
-									<label className="flex items-center gap-2 text-sm">
-										<input
-											type="checkbox"
-											checked={collapsible}
-											disabled={disabled}
-											onChange={(event) =>
-												update(group.id, {
-													collapsible: event.currentTarget.checked,
-												})
+							<Controller.Group
+								key={group.id}
+								title={group.title}
+								collapsible={false}
+							>
+								<div className="grid grid-cols-1 gap-1 md:grid-cols-2">
+									<Controller.Row label="접기 허용" disabled={disabled}>
+										<Controller.Segmented
+											aria-label={`${group.title} 접기 허용`}
+											options={ON_OFF}
+											value={collapsible ? 'on' : 'off'}
+											onChange={(next) =>
+												update(group.id, { collapsible: next === 'on' })
 											}
 										/>
-										접기 허용
-									</label>
-									<label className="flex items-center gap-2 text-sm">
-										<input
-											type="checkbox"
-											checked={defaultOpen}
-											disabled={disabled || !collapsible}
-											onChange={(event) =>
-												update(group.id, {
-													defaultOpen: event.currentTarget.checked,
-												})
+									</Controller.Row>
+									<Controller.Row
+										label="처음 열기"
+										disabled={disabled || !collapsible}
+									>
+										<Controller.Segmented
+											aria-label={`${group.title} 처음 열기`}
+											options={ON_OFF}
+											value={defaultOpen ? 'on' : 'off'}
+											onChange={(next) =>
+												update(group.id, { defaultOpen: next === 'on' })
 											}
 										/>
-										처음 열기
-									</label>
+									</Controller.Row>
 								</div>
-							</fieldset>
+							</Controller.Group>
 						)
-					})}
-				</div>
-			)}
+					})
+				)}
+			</div>
 			<FieldDescription
 				description="현재 열림 상태는 Creator 화면이 로컬로 소유하며, 여기서는 접힘 가능 여부와 최초 열림값만 정합니다."
 				path={path}
@@ -189,7 +202,7 @@ export function StudioControllerPresentationField({
 
 function EmptyControllerMessage({ source }: { source: ControllerAdminFieldProps['source'] }) {
 	return (
-		<p className="text-sm text-muted-foreground">
+		<p className="text-muted-foreground text-sm">
 			{source === 'graphic'
 				? 'Runtime을 선택하면 설정 가능한 그룹이 표시됩니다.'
 				: source === 'image'
@@ -212,47 +225,37 @@ function ControlRestrictionEditor({
 }) {
 	const overridesDefault = restriction && Object.hasOwn(restriction, 'defaultValue')
 	return (
-		<div className="grid gap-2 rounded-md bg-muted/40 p-3 md:grid-cols-2">
-			<div>
-				<strong className="text-sm">{control.label}</strong>
-				<div className="text-xs text-muted-foreground">{control.id}</div>
+		<div className="flex flex-col gap-1">
+			{/* 컨트롤 이름 행 — 레이어 카드 제목과 같은 좌측 8px 정렬. */}
+			<div className="flex h-8 items-center justify-between px-2">
+				<span className="font-medium text-sm">{control.label}</span>
+				<span className="text-muted-foreground text-xs">{control.id}</span>
 			</div>
-			<label className="text-sm">
-				사용 상태
-				<select
-					className="mt-1 block h-9 w-full rounded-md border bg-background px-2"
-					disabled={disabled}
-					value={restriction?.availability ?? ''}
-					onChange={(event) =>
+			<Controller.Row label="사용 상태" disabled={disabled}>
+				<Controller.Segmented
+					aria-label={`${control.label} 사용 상태`}
+					options={AVAILABILITY_OPTIONS}
+					value={restriction?.availability ?? 'default'}
+					onChange={(next) =>
 						onChange({
 							availability:
-								event.currentTarget.value === 'readonly' ||
-								event.currentTarget.value === 'disabled'
-									? event.currentTarget.value
-									: undefined,
-						})
-					}
-				>
-					<option value="">원본 사용</option>
-					<option value="readonly">읽기 전용</option>
-					<option value="disabled">사용 안 함</option>
-				</select>
-			</label>
-			<label className="flex items-center gap-2 text-sm">
-				<input
-					type="checkbox"
-					checked={Boolean(overridesDefault)}
-					disabled={disabled}
-					onChange={(event) =>
-						onChange({
-							defaultValue: event.currentTarget.checked
-								? control.defaultValue
-								: undefined,
+								next === 'readonly' || next === 'disabled' ? next : undefined,
 						})
 					}
 				/>
-				기본값 재정의
-			</label>
+			</Controller.Row>
+			<Controller.Row label="기본값 재정의" disabled={disabled}>
+				<Controller.Segmented
+					aria-label={`${control.label} 기본값 재정의`}
+					options={ON_OFF}
+					value={overridesDefault ? 'on' : 'off'}
+					onChange={(next) =>
+						onChange({
+							defaultValue: next === 'on' ? control.defaultValue : undefined,
+						})
+					}
+				/>
+			</Controller.Row>
 			{overridesDefault ? (
 				<DefaultValueEditor
 					control={control}
@@ -263,71 +266,117 @@ function ControlRestrictionEditor({
 			) : null}
 			{control.kind === 'text' ? (
 				<NumberRestriction
-					label={`최대 글자 수 (원본 ${control.maxLength ?? '없음'})`}
+					label="최대 글자 수"
+					original={control.maxLength}
 					value={restriction?.maxLength}
 					disabled={disabled}
 					onChange={(maxLength) => onChange({ maxLength })}
 				/>
 			) : null}
 			{control.kind === 'range' ? (
-				<>
+				<div className="grid grid-cols-1 gap-1 md:grid-cols-2">
 					<NumberRestriction
-						label={`최솟값 (원본 ${control.min})`}
+						label="최솟값"
+						original={control.min}
 						value={restriction?.min}
 						disabled={disabled}
 						onChange={(min) => onChange({ min })}
 					/>
 					<NumberRestriction
-						label={`최댓값 (원본 ${control.max})`}
+						label="최댓값"
+						original={control.max}
 						value={restriction?.max}
 						disabled={disabled}
 						onChange={(max) => onChange({ max })}
 					/>
-				</>
+				</div>
 			) : null}
 			{control.kind === 'select' ? (
-				<div className="md:col-span-2">
-					<div className="mb-1 text-sm">허용 선택지</div>
-					<div className="flex flex-wrap gap-3">
-						{control.options.map((option) => {
-							const selected =
-								restriction?.optionValues?.includes(option.value) ?? true
-							return (
-								<label
-									key={option.value}
-									className="flex items-center gap-1.5 text-sm"
-								>
-									<input
-										type="checkbox"
-										checked={selected}
-										disabled={disabled}
-										onChange={() => {
-											const values = new Set(
-												restriction?.optionValues ??
-													control.options.map(({ value }) => value),
-											)
-											if (selected) values.delete(option.value)
-											else values.add(option.value)
-											const optionValues = control.options
-												.map(({ value }) => value)
-												.filter((value) => values.has(value))
-											onChange({
-												optionValues:
-													optionValues.length === control.options.length
-														? undefined
-														: optionValues,
-											})
-										}}
-									/>
-									{option.label}
-								</label>
-							)
-						})}
-					</div>
-				</div>
+				<Controller.Row label="허용 선택지" disabled={disabled}>
+					<Controller.Chips
+						aria-label={`${control.label} 허용 선택지`}
+						options={control.options}
+						value={control.options
+							.map(({ value }) => value)
+							.filter(
+								(candidate) =>
+									restriction?.optionValues?.includes(candidate) ?? true,
+							)}
+						onChange={(next) => {
+							const optionValues = control.options
+								.map(({ value }) => value)
+								.filter((candidate) => next.includes(candidate))
+							onChange({
+								optionValues:
+									optionValues.length === control.options.length
+										? undefined
+										: optionValues,
+							})
+						}}
+					/>
+				</Controller.Row>
+			) : null}
+			{control.kind === 'color' ? (
+				<ColorValuesRestriction
+					baseValues={control.values}
+					value={restriction?.colorValues}
+					disabled={disabled}
+					onChange={(colorValues) => onChange({ colorValues })}
+				/>
 			) : null}
 		</div>
 	)
+}
+
+/**
+ * color control의 허용 색 좁힘 — 원본이 자유 색상이라 고를 목록이 없으므로 hex를 직접 적는다.
+ * 비우면 좁히지 않는다(자유 색상 유지).
+ */
+function ColorValuesRestriction({
+	baseValues,
+	value,
+	disabled,
+	onChange,
+}: {
+	baseValues?: readonly string[]
+	value?: readonly string[]
+	disabled?: boolean
+	onChange: (value: readonly string[] | undefined) => void
+}) {
+	return (
+		<Controller.Field
+			label={`허용 색 (원본 ${baseValues?.length ? `${baseValues.length}개` : '자유 색상'})`}
+			disabled={disabled}
+		>
+			<Controller.Input
+				className="text-left font-mono"
+				placeholder="#000000, #ffffff — 비우면 자유 색상"
+				value={value?.join(', ') ?? ''}
+				onChange={(event) => onChange(parseColorValues(event.currentTarget.value))}
+			/>
+			{value?.length ? (
+				<div className="mt-1 flex flex-wrap gap-1">
+					{value.map((color) => (
+						<span
+							key={color}
+							title={color}
+							// 색은 데이터라 style로 흐른다(docs/09 §4 예외).
+							style={{ backgroundColor: color }}
+							className="size-5 rounded-sm border"
+						/>
+					))}
+				</div>
+			) : null}
+		</Controller.Field>
+	)
+}
+
+function parseColorValues(input: string): readonly string[] | undefined {
+	const values = input
+		.split(/[,\s]+/)
+		.map((value) => value.trim().toLowerCase())
+		.filter(Boolean)
+	return values.length > 0 ? [...new Set(values)] : undefined
 }
 
 function DefaultValueEditor({
@@ -343,95 +392,104 @@ function DefaultValueEditor({
 }) {
 	if (control.kind === 'toggle') {
 		return (
-			<label className="flex items-center gap-2 text-sm">
-				<input
-					type="checkbox"
-					checked={value === true}
-					disabled={disabled}
-					onChange={(event) => onChange(event.currentTarget.checked)}
+			<Controller.Row label="기본값" disabled={disabled}>
+				<Controller.Segmented
+					aria-label={`${control.label} 기본값`}
+					options={ON_OFF}
+					value={value === true ? 'on' : 'off'}
+					onChange={(next) => onChange(next === 'on')}
 				/>
-				기본 토글 값
-			</label>
+			</Controller.Row>
 		)
 	}
 	if (control.kind === 'select') {
 		return (
-			<select
-				className="h-9 rounded-md border bg-background px-2"
-				disabled={disabled}
-				value={typeof value === 'string' ? value : ''}
-				onChange={(event) => onChange(event.currentTarget.value || null)}
-			>
-				<option value="">선택 없음</option>
-				{control.options.map((option) => (
-					<option key={option.value} value={option.value}>
-						{option.label}
-					</option>
-				))}
-			</select>
+			<Controller.Row label="기본값" disabled={disabled}>
+				<Controller.Select
+					options={[
+						{ value: NONE, label: '선택 없음' },
+						...control.options.map(({ value: optionValue, label }) => ({
+							value: optionValue,
+							label,
+						})),
+					]}
+					value={typeof value === 'string' && value ? value : NONE}
+					onChange={(next) => onChange(next === NONE ? null : next)}
+				/>
+			</Controller.Row>
 		)
 	}
 	if (control.kind === 'pad') {
 		const point = typeof value === 'object' && value ? value : control.defaultValue
 		return (
-			<div className="flex gap-2">
+			<div className="grid grid-cols-1 gap-1 md:grid-cols-2">
 				{(['x', 'y'] as const).map((axis) => (
-					<label key={axis} className="text-sm">
-						{axis.toUpperCase()}
-						<input
+					<Controller.Row
+						key={axis}
+						label={`기본값 ${axis.toUpperCase()}`}
+						disabled={disabled}
+					>
+						<Controller.Input
 							type="number"
 							min={-1}
 							max={1}
 							step="any"
 							value={point[axis]}
-							disabled={disabled}
 							onChange={(event) =>
 								onChange({ ...point, [axis]: Number(event.currentTarget.value) })
 							}
-							className="ml-1 h-9 w-24 rounded-md border bg-background px-2"
 						/>
-					</label>
+					</Controller.Row>
 				))}
 			</div>
 		)
 	}
-	const inputType =
-		control.kind === 'range' ? 'number' : control.kind === 'color' ? 'color' : 'text'
+	if (control.kind === 'color') {
+		return (
+			<Controller.ColorRow
+				label="기본값"
+				disabled={disabled}
+				value={typeof value === 'string' ? value : ''}
+				isEmpty={typeof value !== 'string' || !value}
+				onChange={(hex) => onChange(hex)}
+			/>
+		)
+	}
 	return (
-		<input
-			type={inputType}
-			className="h-9 rounded-md border bg-background px-2"
-			disabled={disabled}
-			value={typeof value === 'string' || typeof value === 'number' ? value : ''}
-			onChange={(event) =>
-				onChange(
-					control.kind === 'range'
-						? Number(event.currentTarget.value)
-						: event.currentTarget.value,
-				)
-			}
-		/>
+		<Controller.Row label="기본값" disabled={disabled}>
+			<Controller.Input
+				type={control.kind === 'range' ? 'number' : 'text'}
+				value={typeof value === 'string' || typeof value === 'number' ? value : ''}
+				onChange={(event) =>
+					onChange(
+						control.kind === 'range'
+							? Number(event.currentTarget.value)
+							: event.currentTarget.value,
+					)
+				}
+			/>
+		</Controller.Row>
 	)
 }
 
 function NumberRestriction({
 	label,
+	original,
 	value,
 	disabled,
 	onChange,
 }: {
 	label: string
+	original?: number
 	value?: number
 	disabled?: boolean
 	onChange: (value: number | undefined) => void
 }) {
 	return (
-		<label className="text-sm">
-			{label}
-			<input
+		<Controller.Row label={label} disabled={disabled}>
+			<Controller.Input
 				type="number"
-				className="mt-1 block h-9 w-full rounded-md border bg-background px-2"
-				disabled={disabled}
+				placeholder={`원본 ${original ?? '없음'}`}
 				value={value ?? ''}
 				onChange={(event) =>
 					onChange(
@@ -439,7 +497,7 @@ function NumberRestriction({
 					)
 				}
 			/>
-		</label>
+		</Controller.Row>
 	)
 }
 

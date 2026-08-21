@@ -356,7 +356,7 @@
 ## 6. 생성 이미지와 에셋 제너레이션 기록
 
 현재 Create 기능은 요청 범위에서 입력과 결과를 다루며 `AssetGenerationSession`, `AssetGenerationInput`, `AssetGenerationOutput`을 저장하지 않습니다.
-Image 기능의 프로파일 기반 생성과 카메라 조정은 `generated-images`에 결과 파일과 실행 조건을 저장합니다. 저장 전 Admin 프로파일 테스트는 레코드를 만들지 않습니다.
+Image 기능의 프로파일 기반 생성은 `generated-images`에 결과 파일과 실행 조건을 저장합니다. 저장 전 Admin 프로파일 테스트는 레코드를 만들지 않습니다.
 이 모델은 향후 제작 사용량을 사용자·기간·기능별로 추적해야 할 때만 도입합니다.
 현재 `CheckSession`은 업로드된 이미지를 직접 입력으로 받으므로 이 계획 모델에 의존하지 않습니다.
 
@@ -367,7 +367,7 @@ Image 기능의 프로파일 기반 생성과 카메라 조정은 `generated-ima
 
 | 단계 | 작성 내용 |
 | --- | --- |
-| 생성·수집 | 프로파일 기반 이미지 생성 service가 결과 파일, 이미지 프로파일, 원본·최종 프롬프트, 모델, 출력 조건, 생성 사용자를 기록한다. |
+| 생성·수집 | 프로파일 기반 이미지 생성 service가 결과 파일, 이미지 프로파일, 원본·최종 프롬프트, 모델, 출력 조건, 참조 원본(있으면), 생성 사용자를 기록한다. |
 | 전송 | 인증된 생성 route가 trusted Payload upload 흐름으로 전달한다. |
 | 저장 | 파일은 `generated-images` object storage에, 실행 조건과 사용자 ID는 Payload collection과 PostgreSQL에 저장한다. |
 | 처리 | 생성 당시 값은 수정하지 않고 템플릿이 사용할 때 파일 참조만 연결한다. |

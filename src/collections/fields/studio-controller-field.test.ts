@@ -1,5 +1,6 @@
 import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
+import { CAMERA_AZIMUTHS } from '@/features/image-generation/camera-control'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 import { GraphicProfiles } from '../GraphicProfiles'
 import { ImageProfiles } from '../ImageProfiles'
@@ -13,8 +14,8 @@ function namedField(fields: Field[], name: string): Field & { name: string } {
 }
 
 describe('studioControllerRestrictionsField', () => {
-	it('세 Studio가 full Controller를 저장하지 않고 같은 Restrictions만 저작한다', () => {
-		for (const collection of [ImageProfiles, Templates, GraphicProfiles]) {
+	it('두 Profile Studio가 full Controller를 저장하지 않고 같은 Restrictions만 저작한다', () => {
+		for (const collection of [ImageProfiles, GraphicProfiles]) {
 			const restrictions = namedField(collection.fields, 'controllerRestrictions')
 			expect(restrictions).toMatchObject({ type: 'json' })
 			expect('admin' in restrictions ? restrictions.admin : undefined).toHaveProperty(
@@ -24,6 +25,19 @@ describe('studioControllerRestrictionsField', () => {
 				collection.fields.some((field) => 'name' in field && field.name === 'controller'),
 			).toBe(false)
 		}
+	})
+
+	it('템플릿에는 Controller 제한·표현 필드를 두지 않는다 — 레이어와 배경 설정이 소유한다', () => {
+		const findField = (name: string) =>
+			Templates.fields.find((candidate) => 'name' in candidate && candidate.name === name)
+		expect(findField('controllerRestrictions')).toBeUndefined()
+		expect(findField('controllerPresentation')).toBeUndefined()
+		expect(namedField(Templates.fields, 'backgroundPolicy')).toBeDefined()
+	})
+
+	it('프로파일 컬렉션에는 그대로 남는다 — 거기엔 파생 순환이 없다', () => {
+		expect(namedField(GraphicProfiles.fields, 'controllerRestrictions')).toBeDefined()
+		expect(namedField(ImageProfiles.fields, 'controllerRestrictions')).toBeDefined()
 	})
 
 	it('Image Profile은 legacy capability 필드를 저장하지 않는다', () => {
@@ -50,18 +64,19 @@ describe('studioControllerRestrictionsField', () => {
 		] as const) {
 			const exportPolicy = namedField(collection.fields, 'exportPolicy')
 			if (exportPolicy.type !== 'group') throw new Error('exportPolicy must be a group')
+			// 렌더는 그룹 컴포넌트가 통째로 소유한다(정본 76:4 카드) — 하위 필드는 스키마만 갖는다.
+			expect(exportPolicy.admin).toMatchObject({
+				components: {
+					Field: {
+						path: '/components/admin/studio/studio-export-policy-field#StudioExportPolicyField',
+						clientProps: { source },
+					},
+				},
+			})
 			expect(namedField(exportPolicy.fields, 'allowedFormats')).toMatchObject({
 				type: 'select',
 				hasMany: true,
 				options: STUDIO_OUTPUT_FORMAT_OPTIONS,
-				admin: {
-					components: {
-						Field: {
-							path: '/components/admin/studio/studio-output-formats-field#StudioOutputFormatsField',
-							clientProps: { source },
-						},
-					},
-				},
 			})
 			const print = namedField(exportPolicy.fields, 'print')
 			const video = namedField(exportPolicy.fields, 'video')
@@ -160,6 +175,19 @@ describe('imageProfileFeaturesField', () => {
 		expect(features.blocks[0]?.fields).toEqual([
 			expect.objectContaining({ name: 'background', type: 'checkbox' }),
 		])
-		expect(features.blocks[1]?.fields).toEqual([])
+		// 카메라 구간은 질의 대상이 아니라 계약 제한이므로 JSON에 담는다(테이블·enum을 만들지 않는다).
+		expect(features.blocks[1]?.fields).toEqual([
+			expect.objectContaining({ name: 'azimuths', type: 'json' }),
+			expect.objectContaining({ name: 'elevations', type: 'json' }),
+		])
+		// 고를 수 있는 값은 런타임 구간뿐이다 — 임의 값을 적는 칸이 아니다. 렌더는 features
+		// 필드 컴포넌트가 통째로 소유하고(토글 On=블록 추가), 구간 옵션을 clientProps로 받는다.
+		expect(features.admin?.components?.Field).toMatchObject({
+			path: '/components/admin/studio/image-profile-features-field#ImageProfileFeaturesField',
+			clientProps: {
+				schemaPath: 'image-profiles.features',
+				azimuthOptions: CAMERA_AZIMUTHS.map((value) => expect.objectContaining({ value })),
+			},
+		})
 	})
 })

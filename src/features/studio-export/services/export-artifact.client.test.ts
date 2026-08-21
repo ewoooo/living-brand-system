@@ -47,7 +47,7 @@ const JPEG_REQUEST = {
 	artifact: 'raster',
 	format: 'jpeg',
 	colorProfile: { space: 'rgb', icc: 'srgb' },
-	options: { quality: 90 },
+	options: { quality: 90, scale: 1 },
 } as const
 
 class StubImage {
@@ -163,6 +163,7 @@ describe('Artifact export', () => {
 			width: 600,
 			height: 300,
 			quality: 90,
+			scale: 1,
 		})
 	})
 

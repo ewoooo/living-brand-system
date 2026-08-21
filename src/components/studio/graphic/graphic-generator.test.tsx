@@ -7,11 +7,20 @@ import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain
 import forwardStraightRuntimeManifest, {
 	FORWARD_STRAIGHT_DEFAULT_INPUT,
 } from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
+import { createForwardStraightScene } from '@/features/graphic-generation/graphic-runtimes/forward-straight/model'
 import radialFlutedGlassRuntimeManifest, {
 	RADIAL_FLUTED_GLASS_DEFAULT_INPUT,
 } from '@/features/graphic-generation/graphic-runtimes/radial-fluted-glass/definition'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 import { GraphicGenerator } from './graphic-generator'
+
+const browseMocks = vi.hoisted(() => ({
+	fetchGraphicStudioConfigs: vi.fn(async () => [] as unknown[]),
+}))
+vi.mock(
+	'@/features/graphic-generation/services/list-graphic-studio-configs.client',
+	() => browseMocks,
+)
 
 const forwardStraightConfig = {
 	...forwardStraightRuntimeManifest,
@@ -200,7 +209,7 @@ describe('GraphicGenerator', () => {
 			},
 		} satisfies GraphicStudioConfig
 
-		render(createElement(GraphicGenerator, { configs: [config] }))
+		render(createElement(GraphicGenerator, { config: config }))
 
 		expect(screen.getByLabelText('Caption')).toHaveAttribute('maxlength', '20')
 		expect(screen.getByLabelText('Color 색상 선택')).toBeInTheDocument()
@@ -213,20 +222,22 @@ describe('GraphicGenerator', () => {
 
 	it('P5 Definition을 Controller primitive로 그리고 변경값을 캔버스에 전달한다', async () => {
 		const user = userEvent.setup()
-		render(createElement(GraphicGenerator, { configs: [forwardStraightConfig] }))
+		render(createElement(GraphicGenerator, { config: forwardStraightConfig }))
 
-		expect(screen.getByRole('radio', { name: 'Off' })).toBeChecked()
-		const viewpoint = screen.getByRole('combobox', { name: '시점' })
-		expect(viewpoint).toHaveTextContent('평면')
-		expect(screen.getByRole('combobox', { name: '각도' })).toHaveTextContent('보통')
+		expect(screen.getByLabelText('선 색상 색상 선택')).toBeInTheDocument()
+		expect(screen.getByRole('slider', { name: '열 간격' })).toHaveAttribute(
+			'aria-valuenow',
+			'40',
+		)
+		const gamma = screen.getByRole('slider', { name: '원근 압축' })
+		expect(gamma).toHaveAttribute('aria-valuenow', '1')
 
-		fireEvent.click(screen.getByRole('radio', { name: 'On' }))
-		viewpoint.focus()
-		await user.keyboard('{ArrowDown}{ArrowDown}{Enter}')
+		gamma.focus()
+		await user.keyboard('{ArrowRight}')
 
 		await waitFor(() =>
 			expect(mocks.preview.update).toHaveBeenLastCalledWith(
-				expect.objectContaining({ variableWeightEnabled: true, viewpoint: 'low-angle' }),
+				expect.objectContaining({ perspectiveGamma: 1.1 }),
 			),
 		)
 	})
@@ -240,7 +251,7 @@ describe('GraphicGenerator', () => {
 			},
 		} satisfies GraphicStudioConfig
 
-		render(createElement(GraphicGenerator, { configs: [config] }))
+		render(createElement(GraphicGenerator, { config: config }))
 
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
 		expect(screen.getByText('PNG')).toBeInTheDocument()
@@ -249,7 +260,7 @@ describe('GraphicGenerator', () => {
 
 	it('Shader Definition을 WebGL preview와 MP4 Export UI에 연결한다', async () => {
 		const { unmount } = render(
-			createElement(GraphicGenerator, { configs: [radialFlutedGlassConfig] }),
+			createElement(GraphicGenerator, { config: radialFlutedGlassConfig }),
 		)
 
 		await waitFor(() =>
@@ -275,7 +286,7 @@ describe('GraphicGenerator', () => {
 		})
 		await waitFor(() =>
 			expect(mocks.shaderPreview.update).toHaveBeenLastCalledWith(
-				expect.objectContaining({ rayIntensity: 0.83 }),
+				expect.objectContaining({ rayIntensity: 0.96 }),
 			),
 		)
 
@@ -296,7 +307,7 @@ describe('GraphicGenerator', () => {
 		})
 		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
-		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassConfig] }))
+		render(createElement(GraphicGenerator, { config: radialFlutedGlassConfig }))
 		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
 
 		const width = screen.getByRole('spinbutton', { name: 'Width' })
@@ -330,7 +341,7 @@ describe('GraphicGenerator', () => {
 	})
 
 	it('출력 사이즈 비율을 프리뷰 영역에 맞춰 반영한다', async () => {
-		render(createElement(GraphicGenerator, { configs: [radialFlutedGlassConfig] }))
+		render(createElement(GraphicGenerator, { config: radialFlutedGlassConfig }))
 		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
 		const observerCount = mocks.resizeObserverCount
 
@@ -359,7 +370,7 @@ describe('GraphicGenerator', () => {
 	it('등록된 id와 type이 일치하지 않으면 런타임을 실행하지 않는다', async () => {
 		render(
 			createElement(GraphicGenerator, {
-				configs: [{ ...forwardStraightConfig, type: 'shader' }],
+				config: { ...forwardStraightConfig, type: 'shader' },
 			}),
 		)
 
@@ -390,7 +401,7 @@ describe('GraphicGenerator', () => {
 			},
 		} satisfies GraphicStudioConfig
 
-		render(createElement(GraphicGenerator, { configs: [config] }))
+		render(createElement(GraphicGenerator, { config: config }))
 		await waitFor(() =>
 			expect(screen.getByRole('slider', { name: '기준점' })).toHaveStyle({
 				aspectRatio: '1.3333333333333333',
@@ -417,7 +428,7 @@ describe('GraphicGenerator', () => {
 			},
 		} satisfies GraphicStudioConfig
 
-		render(createElement(GraphicGenerator, { configs: [config] }))
+		render(createElement(GraphicGenerator, { config: config }))
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
 		expect(
 			mocks.onInputChange?.({
@@ -431,7 +442,7 @@ describe('GraphicGenerator', () => {
 	})
 
 	it('캔버스의 입력 변경을 같은 Context를 통해 Pad에 되돌린다', async () => {
-		render(createElement(GraphicGenerator, { configs: [forwardStraightConfig] }))
+		render(createElement(GraphicGenerator, { config: forwardStraightConfig }))
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
 
 		mocks.onInputChange?.({
@@ -457,7 +468,7 @@ describe('GraphicGenerator', () => {
 		const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
 		const { unmount } = render(
-			createElement(GraphicGenerator, { configs: [forwardStraightConfig] }),
+			createElement(GraphicGenerator, { config: forwardStraightConfig }),
 		)
 
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
@@ -480,8 +491,13 @@ describe('GraphicGenerator', () => {
 			reader.onload = () => resolve(String(reader.result))
 			reader.readAsText(blob)
 		})
+		const expected = createForwardStraightScene(
+			{ ...FORWARD_STRAIGHT_DEFAULT_INPUT, origin: { x: 0.525, y: 0.5 } },
+			{ width: 640, height: 600 },
+		)
 		expect(svg).toContain('width="640" height="600"')
-		expect(svg).toContain('cx="336.00" cy="300.00"')
+		expect(svg.split('<line').length - 1).toBe(expected.dashes.length)
+		expect(svg).toContain(`x1="${expected.dashes[0].x1.toFixed(2)}"`)
 		expect(click.mock.instances[0]).toMatchObject({
 			download: 'forward-straight.svg',
 			href: 'blob:forward-straight',
@@ -493,19 +509,22 @@ describe('GraphicGenerator', () => {
 	})
 
 	it('Change 브라우저에서 Graphic을 교체하고 새 계약의 기본값으로 초기화한다', async () => {
-		render(
-			createElement(GraphicGenerator, {
-				configs: [forwardStraightConfig, radialFlutedGlassConfig],
-			}),
-		)
+		// 교체 후보 목록은 패널이 열릴 때 /api/graphic-profiles에서 온다.
+		browseMocks.fetchGraphicStudioConfigs.mockResolvedValue([
+			forwardStraightConfig,
+			radialFlutedGlassConfig,
+		])
+		render(createElement(GraphicGenerator, { config: forwardStraightConfig }))
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
-		fireEvent.click(screen.getByRole('radio', { name: 'On' }))
+		const gamma = screen.getByRole('slider', { name: '원근 압축' })
+		fireEvent.keyDown(gamma, { key: 'ArrowRight' })
+		await waitFor(() => expect(gamma).not.toHaveAttribute('aria-valuenow', '1'))
 
 		const trigger = screen.getByRole('button', { name: '그래픽 변경' })
 		expect(trigger.closest('[data-slot="controller-header"]')).not.toBeNull()
 		fireEvent.click(trigger)
 		const panel = screen.getByRole('dialog', { name: 'Graphic Profiles' })
-		const forwardCard = within(panel).getByRole('button', {
+		const forwardCard = await within(panel).findByRole('button', {
 			name: new RegExp(forwardStraightRuntimeManifest.name),
 		})
 		const shaderCard = within(panel).getByRole('button', {
@@ -520,12 +539,16 @@ describe('GraphicGenerator', () => {
 
 		fireEvent.click(screen.getByRole('button', { name: '그래픽 변경' }))
 		fireEvent.click(
-			within(screen.getByRole('dialog', { name: 'Graphic Profiles' })).getByRole('button', {
-				name: new RegExp(forwardStraightRuntimeManifest.name),
-			}),
+			await within(screen.getByRole('dialog', { name: 'Graphic Profiles' })).findByRole(
+				'button',
+				{ name: new RegExp(forwardStraightRuntimeManifest.name) },
+			),
 		)
 
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledTimes(2))
-		expect(screen.getByRole('radio', { name: 'Off' })).toBeChecked()
+		expect(screen.getByRole('slider', { name: '원근 압축' })).toHaveAttribute(
+			'aria-valuenow',
+			'1',
+		)
 	})
 })

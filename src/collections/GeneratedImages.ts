@@ -12,8 +12,8 @@ const managerFieldRead: FieldAccess = ({ req }) => isManager(req.user)
 export const GeneratedImages: CollectionConfig = {
 	slug: 'generated-images',
 	labels: {
-		singular: '생성 이미지',
-		plural: '생성 이미지',
+		singular: '이미지 생성',
+		plural: '이미지 생성',
 	},
 	access: {
 		read: ({ req }) =>
@@ -100,6 +100,16 @@ export const GeneratedImages: CollectionConfig = {
 			admin: {
 				position: 'sidebar',
 				description: '생성 요청 당시 인증된 사용자 ID입니다.',
+			},
+		},
+		{
+			name: 'sourceImage',
+			type: 'relationship',
+			relationTo: 'generated-images',
+			access: { read: managerFieldRead },
+			admin: {
+				position: 'sidebar',
+				description: '이 이미지를 만들 때 참조한 원본 생성 이미지입니다.',
 			},
 		},
 	],

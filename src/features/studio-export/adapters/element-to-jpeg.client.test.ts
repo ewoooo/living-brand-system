@@ -18,7 +18,7 @@ describe('elementToJpeg', () => {
 		)
 		const element = document.createElement('div')
 
-		await elementToJpeg(element, { width: 600, height: 300, quality: 90 })
+		await elementToJpeg(element, { width: 600, height: 300, quality: 90, scale: 1 })
 
 		expect(toJpeg).toHaveBeenCalledWith(
 			element,
@@ -31,7 +31,12 @@ describe('elementToJpeg', () => {
 		vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
 
 		await expect(
-			elementToJpeg(document.createElement('div'), { width: 600, height: 300, quality: 90 }),
+			elementToJpeg(document.createElement('div'), {
+				width: 600,
+				height: 300,
+				quality: 90,
+				scale: 1,
+			}),
 		).rejects.toThrow('JPEG 변환 결과를 읽지 못했습니다.')
 	})
 })

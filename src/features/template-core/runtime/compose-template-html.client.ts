@@ -175,6 +175,42 @@ export type TemplateCanvasBackground = {
 	clear?: boolean
 	color?: string
 	imageUrl?: string
+	/**
+	 * 배경 위에 깔 디머의 불투명도(0~1) — 배경 형식과 무관하게 캔버스 전면을 덮는다.
+	 * 값을 주지 않으면 디머를 건드리지 않는다: graphic 래스터 경로가 이미 디머가 들어간 HTML을
+	 * 한 번 더 합성하므로, 미지정을 "지우기"로 읽으면 그 경로에서 디머가 사라진다.
+	 */
+	dimmer?: number
+}
+
+const CANVAS_DIMMER_ATTRIBUTE = 'data-canvas-dimmer'
+
+/**
+ * 배경 바로 위·템플릿 콘텐츠 바로 아래에 반투명 검정을 한 겹 깐다 — 밝은 배경에서 글자가 묻히는 것을 막는다.
+ * 루트 프레임의 첫 자식이므로 프레임 자신의 배경(색·이미지)과 뒤에 깔린 graphic shader를 함께 덮고,
+ * 뒤따르는 형제 노드(텍스트·로고)는 그 위에 그려진다.
+ */
+function applyCanvasDimmer(doc: Document, root: HTMLElement, opacity: number) {
+	// 재합성이 멱등이어야 한다 — 이전 디머를 지우고 다시 넣는다(colorize 오버레이와 같은 규칙).
+	for (const child of Array.from(root.children)) {
+		if (child.hasAttribute(CANVAS_DIMMER_ATTRIBUTE)) child.remove()
+	}
+	// 세션 값이 그대로 흘러오는 자리다 — 범위를 벗어난 수는 CSS에서 조용히 무시되므로 여기서 자른다.
+	const alpha = Math.min(1, Math.max(0, opacity))
+	if (alpha === 0) return
+	// 루트가 static이면 디머가 조상 기준으로 퍼진다 — 자기 프레임에 가둔다.
+	if (!root.style.position) root.style.position = 'relative'
+	const dimmer = doc.createElement('div')
+	dimmer.setAttribute(CANVAS_DIMMER_ATTRIBUTE, '')
+	dimmer.style.position = 'absolute'
+	dimmer.style.left = '0'
+	dimmer.style.top = '0'
+	dimmer.style.width = '100%'
+	dimmer.style.height = '100%'
+	dimmer.style.backgroundColor = `rgba(0, 0, 0, ${alpha})`
+	// 캔버스는 슬롯을 눌러 고르는 편집면이다 — 전면을 덮는 장식이 클릭을 가로채면 안 된다.
+	dimmer.style.pointerEvents = 'none'
+	root.insertBefore(dimmer, root.firstChild)
 }
 
 /**
@@ -190,7 +226,10 @@ export function composeTemplateHtml(
 	if (!baseHtml) return baseHtml
 	const canvasBackground = options?.canvasBackground
 	const hasCanvasBackground = Boolean(
-		canvasBackground?.clear || canvasBackground?.color || canvasBackground?.imageUrl,
+		canvasBackground?.clear ||
+			canvasBackground?.color ||
+			canvasBackground?.imageUrl ||
+			canvasBackground?.dimmer !== undefined,
 	)
 	if (!hasCanvasBackground && (!nodeConfigs || Object.keys(nodeConfigs).length === 0)) {
 		return baseHtml
@@ -237,11 +276,17 @@ export function composeTemplateHtml(
 				}
 				if (!carrier.style.backgroundRepeat) carrier.style.backgroundRepeat = 'no-repeat'
 			}
-			if (config.backgroundImage && config.generatedImageId) {
+			// 세션이 실은 assetRef가 우선이고, Admin이 저장한 generatedImageId가 그 다음이다.
+			const assetRef =
+				config.assetRef ??
+				(config.generatedImageId
+					? ({ collection: 'generated-images', id: config.generatedImageId } as const)
+					: undefined)
+			if (config.backgroundImage && assetRef) {
 				// 발행 검증(metadataRef)이 요소의 data-asset-*와 실제 URL의 일치를 요구하므로
-				// placeholder 에셋 참조를 생성 이미지 참조로 바꾼다.
-				carrier.setAttribute('data-asset-collection', 'generated-images')
-				carrier.setAttribute('data-asset-id', String(config.generatedImageId))
+				// placeholder 에셋 참조를 실제로 배정된 자산 참조로 바꾼다.
+				carrier.setAttribute('data-asset-collection', assetRef.collection)
+				carrier.setAttribute('data-asset-id', String(assetRef.id))
 			}
 			// 컬러 치환은 transform보다 먼저 — img 캐리어가 div로 치환될 수 있고, transform은
 			// 치환 결과(2겹 전체)의 캐리어에 붙어야 이동·회전이 컬러 결과를 통째로 움직인다.
@@ -309,6 +354,9 @@ export function composeTemplateHtml(
 			root.style.backgroundSize = 'cover'
 			root.style.backgroundPosition = 'center'
 			root.style.backgroundRepeat = 'no-repeat'
+		}
+		if (canvasBackground.dimmer !== undefined) {
+			applyCanvasDimmer(doc, root, canvasBackground.dimmer)
 		}
 	}
 

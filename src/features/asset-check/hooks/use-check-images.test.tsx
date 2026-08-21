@@ -1,17 +1,30 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
-import { ImageCheckControls } from '@/components/studio/review/upload/image-check-controls'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+import { ReviewSidebar } from '@/components/studio/sidebar/review-sidebar'
 import { CheckImageProvider } from './use-check-images'
 
 describe('CheckImageProvider', () => {
-	it('renders review controls when no CheckScenario is published', () => {
+	afterEach(cleanup)
+
+	it('발행된 검수 시나리오가 없으면 실행을 잠근다', () => {
 		render(
 			<CheckImageProvider scenarios={[]}>
-				<ImageCheckControls />
+				<ReviewSidebar sections={[]} />
 			</CheckImageProvider>,
 		)
 
-		expect(screen.getByText('발행된 검수 시나리오 없음')).toBeInTheDocument()
-		expect(screen.getByRole('button', { name: '검사하기' })).toBeDisabled()
+		expect(screen.getByRole('button', { name: '검사' })).toBeDisabled()
+		expect(screen.getByRole('button', { name: '전부 검사' })).toBeDisabled()
+	})
+
+	it('시나리오가 있어도 파일이 없으면 목록 자리가 드롭존이다', () => {
+		render(
+			<CheckImageProvider scenarios={[{ key: 'quick', title: '빠른 검수', checkKeys: [] }]}>
+				<ReviewSidebar sections={[]} />
+			</CheckImageProvider>,
+		)
+
+		expect(screen.getByText('Drag & Drop')).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: '전부 검사' })).toBeDisabled()
 	})
 })

@@ -1,5 +1,7 @@
 import type { Block } from 'payload'
 import { ImageLeaf } from '@/features/guideline/leaves/image/schema'
+import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/schema'
+import { CiLockupHeroWidget } from '@/features/guideline/widgets/ci-lockup-hero/schema'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/schema'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/schema'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/schema'
@@ -19,7 +21,7 @@ import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/s
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/schema'
 import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/schema'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
-import { baseBlockFields } from '../shared/fields'
+import { backgroundToneField, baseBlockFields } from '../shared/fields'
 
 // page 바로 하위의 레이아웃 컨테이너. widget/image(leaf)들을 품고 배치(width·arrangement·columns)를 소유한다.
 // 🔴 rules는 컨테이너(Block)에만 = provenance 불변식(collectGuidelineCheckSources가 block.rules를 훑음).
@@ -61,6 +63,7 @@ export const LayoutBlock: Block = {
 			relationTo: 'brand-colors',
 			admin: { description: '블록 전체(전체 폭) 배경색입니다. 비우면 기본.' },
 		},
+		backgroundToneField(),
 		{
 			name: 'innerBackground',
 			type: 'relationship',
@@ -77,10 +80,14 @@ export const LayoutBlock: Block = {
 			options: [
 				{ label: '그리드', value: 'grid' },
 				{ label: '캐러셀', value: 'carousel' },
-				{ label: '피처드', value: 'featured' },
+				{ label: '피처드 — 첫 칸이 윗줄 전체', value: 'featured' },
+				{ label: '피처드 — 첫 칸이 왼쪽 열 전체', value: 'featuredSide' },
 				{ label: '메이슨리', value: 'masonry' },
 			],
-			admin: { description: '위젯 배치 방식입니다. grid/carousel/masonry/featured 구현.' },
+			admin: {
+				description:
+					'위젯 배치 방식입니다. 피처드 둘은 첫 자식만 크게 두고 나머지를 남은 칸에 흘립니다 — 윗줄이냐 왼쪽 열이냐만 다릅니다.',
+			},
 		},
 		{
 			name: 'columns',
@@ -120,6 +127,8 @@ export const LayoutBlock: Block = {
 			// leaf = Image(정적) | Widget(인터랙티브) 형제 위계. Text/Shape/Link는 추후.
 			blocks: [
 				ImageLeaf,
+				CiLockupWidget,
+				CiLockupHeroWidget,
 				ClearspaceOverlayWidget,
 				ClearspaceViewerWidget,
 				DoDontWidget,

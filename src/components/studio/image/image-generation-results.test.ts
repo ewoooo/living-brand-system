@@ -9,19 +9,19 @@ function props(overrides: { color?: { line: string; background?: string } | null
 	return {
 		aspectRatio: '16:9' as const,
 		color: overrides.color ?? null,
+		items: [
+			{ src: SRC, generatedImageId: 1, profileId: 5 },
+			{
+				src: '/api/generated-images/file/generated-2.png',
+				generatedImageId: 2,
+				profileId: 5,
+			},
+		],
 		loading: false,
 		onSelect: vi.fn(),
+		referenceIndex: null as number | null,
 		requested: 2,
-		result: {
-			aspectRatio: '16:9' as const,
-			imageSize: '1K' as const,
-			images: [SRC, '/api/generated-images/file/generated-2.png'],
-			model: 'gemini-3.1-flash-lite-image',
-			profileId: 5,
-			profileName: 'Technical Illustration',
-			prompt: '{"subject":"유조선"}',
-		},
-		selected: null,
+		selected: null as number | null,
 	}
 }
 
@@ -29,15 +29,21 @@ describe('ImageGenerationResults', () => {
 	afterEach(cleanup)
 
 	// 선택은 컨트롤러(카메라 섹션·저장 CTA)를 여는 입력이라 캔버스는 올려보내기만 한다.
-	it('결과 카드 클릭을 선택으로 올리고 선택된 번호를 알린다', () => {
+	it('결과 카드 클릭을 선택으로 올린다', () => {
 		const base = props()
 		const view = render(createElement(ImageGenerationResults, base))
+
+		expect(
+			screen.getByText('이미지를 클릭해 선택하면 시점 조정과 저장을 할 수 있어요'),
+		).toBeInTheDocument()
 
 		fireEvent.click(screen.getByRole('button', { name: '생성 결과 1' }))
 		expect(base.onSelect).toHaveBeenCalledWith(0)
 
 		view.rerender(createElement(ImageGenerationResults, { ...base, selected: 0 }))
-		expect(screen.getByText('1번 선택됨')).toBeInTheDocument()
+		expect(
+			screen.queryByText('이미지를 클릭해 선택하면 시점 조정과 저장을 할 수 있어요'),
+		).not.toBeInTheDocument()
 	})
 
 	it('색이 없으면 오버레이 없이 원본만 보인다', () => {
@@ -66,5 +72,17 @@ describe('ImageGenerationResults', () => {
 		expect(overlays[0]?.style.backgroundColor).toBe('rgb(0, 13, 255)')
 		// 색을 얹어도 선택 버튼은 이름을 잃지 않는다 — 원본을 visibility로 숨기면 alt까지 사라진다.
 		expect(screen.getByRole('button', { name: '생성 결과 1' })).toBeInTheDocument()
+	})
+
+	// 참조도 결과와 똑같이 고를 수 있다(원본만 저장하고 싶을 수 있다) — 다른 것은 이름뿐이라
+	// 그리드가 참조를 결과 번호에서 빼고 세는지가 유일한 확인거리다.
+	it('참조 카드에 참조 이름을 붙이고 결과 번호에서 뺀다', () => {
+		const base = { ...props(), referenceIndex: 0, selected: 1 }
+		render(createElement(ImageGenerationResults, base))
+
+		expect(screen.getByRole('button', { name: '참조 원본' })).toBeInTheDocument()
+		// 참조가 0번을 차지해도 첫 결과는 '생성 결과 2'가 아니라 '생성 결과 1'이다.
+		expect(screen.getByRole('button', { name: '생성 결과 1' })).toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: '생성 결과 2' })).not.toBeInTheDocument()
 	})
 })

@@ -130,24 +130,36 @@ describe('prepareTemplateSave', () => {
 		expect(req.payload.update).not.toHaveBeenCalled()
 	})
 
-	it('published Template의 Controller override가 기본 슬롯 계약을 확장하면 거부한다', async () => {
+	it('배경 형식을 모두 끄면 발행을 거부하고, 정책이 없으면 통과한다', async () => {
 		const req = buildRequest()
 
 		await expect(
 			prepareTemplateSave({
 				data: {
 					_status: 'published',
-					baseHtml: '<p data-node-id="name" data-figma-type="TEXT">이름</p>',
-					html: '<p data-node-id="name" data-figma-type="TEXT">이름</p>',
-					overrides: { name: { input: { label: '이름', maxLength: 20 } } },
+					baseHtml: '<p data-node-id="name">이름</p>',
+					html: '<p data-node-id="name">이름</p>',
+					overrides: {},
 					width: 1200,
 					height: 800,
-					controllerRestrictions: {
-						controls: [{ controlId: 'unknown' }],
-					},
+					backgroundPolicy: { types: [] },
 				},
 				req: req as never,
 			}),
-		).resolves.toContain('restriction control')
+		).resolves.toContain('배경 형식')
+
+		await expect(
+			prepareTemplateSave({
+				data: {
+					_status: 'published',
+					baseHtml: '<p data-node-id="name">이름</p>',
+					html: '<p data-node-id="name">이름</p>',
+					overrides: {},
+					width: 1200,
+					height: 800,
+				},
+				req: req as never,
+			}),
+		).resolves.toBeNull()
 	})
 })

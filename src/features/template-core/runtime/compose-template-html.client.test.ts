@@ -109,6 +109,29 @@ describe('composeTemplateHtml image carrier', () => {
 		expect(carrier.getAttribute('data-asset-id')).toBe('9')
 	})
 
+	it('세션이 실은 assetRef로 캐리어의 자산 참조를 바꾼다', () => {
+		const sample = '/api/sample-images/file/submarine.png'
+		const frameHtml =
+			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
+			'<div data-node-id="rect-1" data-figma-type="RECTANGLE" data-image-carrier=""' +
+			' data-asset-collection="application-images" data-asset-id="3"' +
+			' style="background-image:url(/api/application-images/file/ph.png)"></div>' +
+			'</div>'
+		const html = composeTemplateHtml(frameHtml, {
+			'frame-1': {
+				backgroundImage: sample,
+				assetRef: { collection: 'sample-images', id: 12 },
+			},
+		})
+		const carrier = new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-image-carrier]') as HTMLElement
+
+		expect(carrier.style.backgroundImage).toContain(sample)
+		expect(carrier.getAttribute('data-asset-collection')).toBe('sample-images')
+		expect(carrier.getAttribute('data-asset-id')).toBe('12')
+	})
+
 	it('요소 자신이 캐리어면(사각형 직접 선택) 그 요소에서 교체·재바인딩한다', () => {
 		const frameHtml =
 			'<div data-node-id="frame-1" data-figma-type="FRAME" style="overflow:hidden">' +
@@ -713,6 +736,76 @@ describe('composeTemplateHtml canvas background', () => {
 
 		expect(root.style.background).toBe('transparent')
 		expect(root.style.backgroundImage).toBe('none')
+	})
+
+	const dimmerOf = (html: string) => rootOf(html).querySelector('[data-canvas-dimmer]')
+
+	it('디머는 루트의 첫 자식으로 들어가 전면을 덮는다 — 배경 위, 콘텐츠 아래', () => {
+		const html = composeTemplateHtml(canvasHtml, {}, { canvasBackground: { dimmer: 0.2 } })
+		const root = rootOf(html)
+		// 첫 자식이어야 뒤따르는 텍스트·로고가 그 위에 그려진다.
+		const dimmer = root.firstElementChild as HTMLElement
+		expect(dimmer.hasAttribute('data-canvas-dimmer')).toBe(true)
+		expect(dimmer.style.backgroundColor).toBe('rgba(0, 0, 0, 0.2)')
+		expect(dimmer.style.position).toBe('absolute')
+		expect(dimmer.style.width).toBe('100%')
+		expect(dimmer.style.height).toBe('100%')
+		// 편집면의 클릭을 가로채면 슬롯을 고를 수 없다.
+		expect(dimmer.style.pointerEvents).toBe('none')
+		// 루트가 static이면 디머가 조상 기준으로 퍼진다.
+		expect(root.style.position).toBe('relative')
+		// 저작 배경색은 그대로 남고 디머가 그 위에 얹힌다.
+		expect(root.style.backgroundColor).toBe('rgb(0, 40, 10)')
+	})
+
+	it('배경 형식과 무관하게 얹힌다 — color·image·graphic(clear) 모두', () => {
+		for (const background of [
+			{ color: '#ffffff', dimmer: 0.3 },
+			{ imageUrl: generatedBackground, dimmer: 0.3 },
+			{ clear: true, dimmer: 0.3 },
+		]) {
+			const html = composeTemplateHtml(canvasHtml, {}, { canvasBackground: background })
+			expect(dimmerOf(html)).not.toBeNull()
+		}
+	})
+
+	it('재합성이 멱등이다 — 디머가 쌓이지 않는다', () => {
+		const once = composeTemplateHtml(canvasHtml, {}, { canvasBackground: { dimmer: 0.2 } })
+		const twice = composeTemplateHtml(once, {}, { canvasBackground: { dimmer: 0.2 } })
+
+		expect(twice).toBe(once)
+		expect(rootOf(twice).querySelectorAll('[data-canvas-dimmer]')).toHaveLength(1)
+	})
+
+	it('디머를 주지 않은 재합성은 이미 깔린 디머를 지우지 않는다', () => {
+		// graphic 래스터 경로가 캡처한 프레임을 얹으려 합성 HTML을 한 번 더 통과시킨다.
+		const dimmed = composeTemplateHtml(canvasHtml, {}, { canvasBackground: { dimmer: 0.2 } })
+		const withFrame = composeTemplateHtml(
+			dimmed,
+			{},
+			{ canvasBackground: { imageUrl: generatedBackground } },
+		)
+
+		expect(dimmerOf(withFrame)).not.toBeNull()
+	})
+
+	it('0과 범위 밖 값을 자른다 — 세션 값이 그대로 흘러오는 자리다', () => {
+		expect(
+			dimmerOf(composeTemplateHtml(canvasHtml, {}, { canvasBackground: { dimmer: 0 } })),
+		).toBeNull()
+		expect(
+			dimmerOf(composeTemplateHtml(canvasHtml, {}, { canvasBackground: { dimmer: -1 } })),
+		).toBeNull()
+		const over = composeTemplateHtml(canvasHtml, {}, { canvasBackground: { dimmer: 5 } })
+		expect((dimmerOf(over) as HTMLElement).style.backgroundColor).toBe('rgb(0, 0, 0)')
+	})
+
+	it('디머 0은 이미 깔린 디머를 걷어낸다 — 창작자가 껐을 때', () => {
+		const dimmed = composeTemplateHtml(canvasHtml, {}, { canvasBackground: { dimmer: 0.2 } })
+
+		expect(
+			dimmerOf(composeTemplateHtml(dimmed, {}, { canvasBackground: { dimmer: 0 } })),
+		).toBeNull()
 	})
 
 	it('배경 인자를 주지 않으면 출력이 base 그대로다 — 기존 호출부 무영향', () => {

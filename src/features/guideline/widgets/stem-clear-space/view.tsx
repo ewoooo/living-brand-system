@@ -277,11 +277,6 @@ export function ClearSpaceView({
 					</div>
 				</div>
 			</div>
-
-			<p className={WIDGET_CAPTION}>
-				최소 여백 = <b style={{ color }}>{n}A</b>. 단위 <b>A</b>는 워드마크의 수직 줄기
-				두께입니다.
-			</p>
 		</div>
 	)
 }

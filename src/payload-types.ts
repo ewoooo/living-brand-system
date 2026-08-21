@@ -75,13 +75,13 @@ export interface Config {
     'brand-typefaces': BrandTypeface;
     'brand-icons': BrandIcon;
     'application-images': ApplicationImage;
+    'sample-images': SampleImage;
     'image-profiles': ImageProfile;
     'graphic-profiles': GraphicProfile;
     'generated-images': GeneratedImage;
     templates: Template;
     'template-categories': TemplateCategory;
     'template-assets': TemplateAsset;
-    plugins: Plugin;
     'check-scenarios': CheckScenario;
     rules: Rule;
     'rule-checkers': RuleChecker;
@@ -110,13 +110,13 @@ export interface Config {
     'brand-typefaces': BrandTypefacesSelect<false> | BrandTypefacesSelect<true>;
     'brand-icons': BrandIconsSelect<false> | BrandIconsSelect<true>;
     'application-images': ApplicationImagesSelect<false> | ApplicationImagesSelect<true>;
+    'sample-images': SampleImagesSelect<false> | SampleImagesSelect<true>;
     'image-profiles': ImageProfilesSelect<false> | ImageProfilesSelect<true>;
     'graphic-profiles': GraphicProfilesSelect<false> | GraphicProfilesSelect<true>;
     'generated-images': GeneratedImagesSelect<false> | GeneratedImagesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
     'template-assets': TemplateAssetsSelect<false> | TemplateAssetsSelect<true>;
-    plugins: PluginsSelect<false> | PluginsSelect<true>;
     'check-scenarios': CheckScenariosSelect<false> | CheckScenariosSelect<true>;
     rules: RulesSelect<false> | RulesSelect<true>;
     'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
@@ -242,6 +242,14 @@ export interface GuidelineDocument {
    * 문서 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
+  /**
+   * 문서 전체(제목·본문·블록)를 덮는 배경색입니다. 비우면 기본.
+   */
+  background?: (number | null) | BrandColor;
+  /**
+   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
+   */
+  backgroundTone?: ('solid' | 'tint') | null;
   blocks?: (ContentColumnsBlock | CalloutBlock | LayoutBlock)[] | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
@@ -296,6 +304,50 @@ export interface ApplicationImage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-colors".
+ */
+export interface BrandColor {
+  id: number;
+  name: string;
+  hex: string;
+  /**
+   * PMS 표기입니다. 예: 705C, Warm Red C
+   */
+  pantone?: string | null;
+  /**
+   * 인쇄 CMYK 표기입니다. 예: C 0 M 100 Y 90 K 0
+   */
+  cmyk?: string | null;
+  /**
+   * 이 배경 위에 CI 기본형(Full Color)을 쓸 수 있는지 여부입니다.
+   */
+  allowsFullColorLogo?: boolean | null;
+  /**
+   * 이 배경 위에 CI WHITE 워드마크를 쓸 수 있는지 여부입니다.
+   */
+  allowsWhiteWordmark?: boolean | null;
+  /**
+   * 이 배경 위에 올리는 CI 단색분리형의 색입니다. 단색형은 모든 배경에서 쓸 수 있고 색만 갈립니다.
+   */
+  monoLogoFill?: ('black' | 'white') | null;
+  /**
+   * 팔레트 색상군입니다. 예: red, yellow, neutral
+   */
+  colorGroup?: string | null;
+  /**
+   * Light(1)~Dark(5) 명도 단계입니다. 톤 스펙트럼이 없는 컬러는 비워둡니다.
+   */
+  tone?: number | null;
+  /**
+   * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
+   */
+  isMain?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ContentColumnsBlock".
  */
 export interface ContentColumnsBlock {
@@ -339,50 +391,6 @@ export interface ContentColumnsBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'contentColumns';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brand-colors".
- */
-export interface BrandColor {
-  id: number;
-  name: string;
-  hex: string;
-  /**
-   * PMS 표기입니다. 예: 705C, Warm Red C
-   */
-  pantone?: string | null;
-  /**
-   * 인쇄 CMYK 표기입니다. 예: C 0 M 100 Y 90 K 0
-   */
-  cmyk?: string | null;
-  /**
-   * 이 배경 위에 CI 기본형(Full Color)을 쓸 수 있는지 여부입니다.
-   */
-  allowsFullColorLogo?: boolean | null;
-  /**
-   * 이 배경 위에 CI WHITE 워드마크를 쓸 수 있는지 여부입니다.
-   */
-  allowsWhiteWordmark?: boolean | null;
-  /**
-   * 이 배경 위에 올리는 CI 단색분리형의 색입니다. 단색형은 모든 배경에서 쓸 수 있고 색만 갈립니다.
-   */
-  monoLogoFill?: ('black' | 'white') | null;
-  /**
-   * 팔레트 색상군입니다. 예: red, yellow, neutral
-   */
-  colorGroup?: string | null;
-  /**
-   * Light(1)~Dark(5) 명도 단계입니다. 톤 스펙트럼이 없는 컬러는 비워둡니다.
-   */
-  tone?: number | null;
-  /**
-   * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
-   */
-  isMain?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * 문서와 블록이 참조해 적용하는 검수 규칙 정의입니다.
@@ -541,13 +549,17 @@ export interface LayoutBlock {
    */
   background?: (number | null) | BrandColor;
   /**
+   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
+   */
+  backgroundTone?: ('solid' | 'tint') | null;
+  /**
    * 자식 레이아웃(그리드/캐러셀 등) 영역 배경색입니다. 비우면 없음.
    */
   innerBackground?: (number | null) | BrandColor;
   /**
-   * 위젯 배치 방식입니다. grid/carousel/masonry/featured 구현.
+   * 위젯 배치 방식입니다. 피처드 둘은 첫 자식만 크게 두고 나머지를 남은 칸에 흘립니다 — 윗줄이냐 왼쪽 열이냐만 다릅니다.
    */
-  arrangement?: ('grid' | 'carousel' | 'featured' | 'masonry') | null;
+  arrangement?: ('grid' | 'carousel' | 'featured' | 'featuredSide' | 'masonry') | null;
   /**
    * grid 열 수입니다(행은 자식 개수로 자동).
    */
@@ -568,6 +580,8 @@ export interface LayoutBlock {
   children?:
     | (
         | ImageLeaf
+        | CiLockupWidget
+        | CiLockupHeroWidget
         | ClearspaceOverlayWidget
         | ClearspaceViewerWidget
         | DoDontWidget
@@ -608,6 +622,151 @@ export interface ImageLeaf {
   id?: string | null;
   blockName?: string | null;
   blockType: 'image';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CiLockupWidget".
+ */
+export interface CiLockupWidget {
+  /**
+   * 초기값 — H (60~240).
+   */
+  h?: number | null;
+  /**
+   * 초기값 — 자회사.
+   */
+  subsidiaryOn?: boolean | null;
+  /**
+   * 초기값 — 자회사명.
+   */
+  subsidiary?:
+    | (
+        | '현대중공업'
+        | '현대삼호'
+        | '현대마린솔루션'
+        | '현대마린엔진'
+        | '현대이엔티'
+        | '현대오일뱅크'
+        | '현대케미칼'
+        | '현대쉘베이스오일'
+        | '현대오씨아이'
+        | '현대이앤에프'
+        | '현대일렉트릭'
+        | '현대에너지솔루션'
+        | '현대사이트솔루션'
+        | '현대로보틱스'
+        | '현대스포츠'
+        | '하이드로젠'
+        | '건설기계'
+        | '한국조선해양'
+        | '현대테크놀로지'
+      )
+    | null;
+  /**
+   * 초기값 — 해외지사.
+   */
+  branchOn?: boolean | null;
+  /**
+   * 초기값 — 지사명.
+   */
+  branch?:
+    | (
+        | 'EUROPE R&D CENTER'
+        | 'INDIA R&D CENTER'
+        | 'CHINA R&D CENTER'
+        | 'SWITZERLAND R&D CENTER'
+        | 'HUNGARY TECHNOLOGIES CENTER'
+        | 'SINGAPORE SERVICE CENTER'
+        | 'HOUSTON TRAINING CENTER'
+        | 'VIETNAM SHIPYARD'
+        | 'ATLANTA PARTS CENTER'
+        | 'EUROPE'
+        | 'LONDON'
+        | 'ATHENS'
+        | 'OSLO'
+        | 'SINGAPORE'
+        | 'TOKYO'
+        | 'HOUSTON'
+        | 'NEW JERSEY'
+        | 'PANAMA'
+        | 'DUBAI'
+        | 'GERMANY'
+        | 'CHINA'
+        | 'VIETNAM'
+        | 'INDIA'
+        | 'PHILIPPINES'
+        | 'SAUDI ARABIA'
+        | 'ATLANTA'
+        | 'BRAZIL'
+        | 'SOUTH AFRICA'
+      )
+    | null;
+  /**
+   * 초기값 — 꼴.
+   */
+  form?: ('horizontal' | 'horizontalA' | 'horizontalB' | 'vertical') | null;
+  /**
+   * 초기값 — 언어.
+   */
+  language?: ('ko' | 'en' | 'hd') | null;
+  /**
+   * 초기값 — 색상 표현.
+   */
+  colorType?: ('fullColor' | 'whiteWordmark' | 'mono') | null;
+  /**
+   * 초기값 — 단색 색상.
+   */
+  mono?: ('BLACK' | 'WHITE') | null;
+  /**
+   * 초기값 — 클리어스페이스.
+   */
+  clearSpace?: ('off' | 'normal' | 'exception') | null;
+  /**
+   * 초기값 — 치수.
+   */
+  measured?: boolean | null;
+  /**
+   * H를 알약에 노출합니다. 기본은 꺼짐 — H는 독자가 고를 값이 아니라 나란히 놓인 락업들의 비율을 맞추려고 저작자가 정하는 값입니다.
+   */
+  heightControl?: boolean | null;
+  /**
+   * 알약에서 뺄 축. 뺀 축은 위 초기값에 고정됩니다(예: 자회사 섹션에서 해외지사·지사명).
+   */
+  hiddenControls?:
+    | (
+        | 'h'
+        | 'subsidiaryOn'
+        | 'subsidiary'
+        | 'branchOn'
+        | 'branch'
+        | 'form'
+        | 'language'
+        | 'colorType'
+        | 'mono'
+        | 'clearSpace'
+        | 'measured'
+      )[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'ciLockupWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CiLockupHeroWidget".
+ */
+export interface CiLockupHeroWidget {
+  /**
+   * 무엇이 도는가. 자회사명은 국문, 해외지사 지역명은 영문입니다.
+   */
+  source?: ('subsidiary' | 'branch') | null;
+  /**
+   * 심볼 높이(px). 락업의 모든 치수가 이 값의 배수입니다(60~240).
+   */
+  h?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'ciLockupHeroWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -836,18 +995,6 @@ export interface LayoutGridWidget {
    * 수직 거터를 이 판형만 고정합니다(0~100). 비우면 패널을 따릅니다.
    */
   gutterY?: number | null;
-  /**
-   * 마진을 패널에서 분리해 초기값에 고정합니다.
-   */
-  lockMargin?: boolean | null;
-  /**
-   * 수평 거터를 패널에서 분리해 초기값에 고정합니다.
-   */
-  lockGutterX?: boolean | null;
-  /**
-   * 수직 거터를 패널에서 분리해 초기값에 고정합니다.
-   */
-  lockGutterY?: boolean | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'layoutGridWidget';
@@ -1127,6 +1274,45 @@ export interface BrandIcon {
   focalY?: number | null;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sample-images".
+ */
+export interface SampleImage {
+  id: number;
+  name: string;
+  alt: string;
+  /**
+   * 스튜디오 자산 브라우저의 태그 필터에 쓰는 분류입니다(예: 엔진). 비워 두면 필터에 나타나지 않습니다.
+   */
+  group?: string | null;
+  /**
+   * 흰 바탕에 선으로만 그린 이미지입니다. 켜면 템플릿 슬롯에서 프로파일의 색 조정이 이 이미지에도 걸립니다. 사진에 켜면 두 색으로 뭉개집니다.
+   */
+  lineArt?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
  * 이미지 유형별 시스템 프롬프트와 유저 프롬프트 후보를 관리하고 테스트합니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1140,6 +1326,10 @@ export interface ImageProfile {
    */
   generateSlug?: boolean | null;
   slug: string;
+  /**
+   * 스튜디오에서 이 항목을 고를 때 카드에 표시할 이미지입니다.
+   */
+  previewImage: number | ApplicationImage;
   /**
    * 숫자가 낮을수록 Studio 내비게이션에서 먼저 표시됩니다.
    */
@@ -1169,9 +1359,6 @@ export interface ImageProfile {
         id?: string | null;
       }[]
     | null;
-  /**
-   * 비우면 기능을 열지 않습니다. 값과 사용 상태는 Controller 제한이 소유합니다.
-   */
   features?: (ImageProfileColorAdjustmentFeature | ImageProfileCameraControlFeature)[] | null;
   controllerRestrictions?:
     | {
@@ -1198,7 +1385,7 @@ export interface ImageProfile {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       * 전부 켜면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {
@@ -1220,9 +1407,9 @@ export interface ImageProfile {
         | number
         | boolean
         | null;
+      maxDurationSeconds?: number | null;
       maxWidth?: number | null;
       maxHeight?: number | null;
-      maxDurationSeconds?: number | null;
     };
     original?: boolean | null;
   };
@@ -1245,6 +1432,24 @@ export interface ImageProfileColorAdjustmentFeature {
  * via the `definition` "ImageProfileCameraControlFeature".
  */
 export interface ImageProfileCameraControlFeature {
+  azimuths?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  elevations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'cameraControl';
@@ -1261,7 +1466,16 @@ export interface GraphicProfile {
   /**
    * 실행 구현은 코드 registry가 소유합니다. 프로파일은 해당 runtime의 편집 범위만 좁힙니다.
    */
-  runtime: 'forward-straight' | 'radial-fluted-glass';
+  runtime:
+    | 'forward-straight'
+    | 'linear-fluted-glass'
+    | 'radial-fluted-glass'
+    | 'sweep-fluted-glass'
+    | 'vertical-fluted-glass';
+  /**
+   * 스튜디오에서 이 항목을 고를 때 카드에 표시할 이미지입니다.
+   */
+  previewImage: number | ApplicationImage;
   displayOrder: number;
   controllerRestrictions?:
     | {
@@ -1288,7 +1502,7 @@ export interface GraphicProfile {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       * 전부 켜면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {
@@ -1310,9 +1524,9 @@ export interface GraphicProfile {
         | number
         | boolean
         | null;
+      maxDurationSeconds?: number | null;
       maxWidth?: number | null;
       maxHeight?: number | null;
-      maxDurationSeconds?: number | null;
     };
   };
   updatedAt: string;
@@ -1347,6 +1561,10 @@ export interface GeneratedImage {
    * 생성 요청 당시 인증된 사용자 ID입니다.
    */
   createdBy: number | User;
+  /**
+   * 이 이미지를 만들 때 참조한 원본 생성 이미지입니다.
+   */
+  sourceImage?: (number | null) | GeneratedImage;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1396,17 +1614,13 @@ export interface User {
 export interface Template {
   id: number;
   name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
   description?: string | null;
-  controllerRestrictions?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  controllerPresentation?:
+  backgroundPolicy?:
     | {
         [k: string]: unknown;
       }
@@ -1422,7 +1636,7 @@ export interface Template {
     allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
     print?: {
       /**
-       * 비우면 72, 150, 300ppi를 모두 허용합니다.
+       * 전부 켜면 제한을 저장하지 않습니다.
        */
       allowedPpi?:
         | {
@@ -1444,9 +1658,9 @@ export interface Template {
         | number
         | boolean
         | null;
+      maxDurationSeconds?: number | null;
       maxWidth?: number | null;
       maxHeight?: number | null;
-      maxDurationSeconds?: number | null;
     };
   };
   sourceUrl?: string | null;
@@ -1460,6 +1674,10 @@ export interface Template {
     | number
     | boolean
     | null;
+  /**
+   * 스튜디오에서 이 항목을 고를 때 카드에 표시할 이미지입니다.
+   */
+  previewImage: number | ApplicationImage;
   /**
    * Figma 너비(px). 가져오기가 채웁니다.
    */
@@ -1536,19 +1754,6 @@ export interface TemplateAsset {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plugins".
- */
-export interface Plugin {
-  id: number;
-  name: string;
-  description?: string | null;
-  pluginType: 'generator' | 'checker';
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * 검수 목적에 맞게 실행할 Check를 조립하고 발행합니다.
@@ -1837,10 +2042,6 @@ export interface AgentSkill {
                   relationTo: 'templates';
                   value: number | Template;
                 }
-              | {
-                  relationTo: 'plugins';
-                  value: number | Plugin;
-                }
             )[]
           | null;
         id?: string | null;
@@ -2078,6 +2279,10 @@ export interface PayloadLockedDocument {
         value: number | ApplicationImage;
       } | null)
     | ({
+        relationTo: 'sample-images';
+        value: number | SampleImage;
+      } | null)
+    | ({
         relationTo: 'image-profiles';
         value: number | ImageProfile;
       } | null)
@@ -2100,10 +2305,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'template-assets';
         value: number | TemplateAsset;
-      } | null)
-    | ({
-        relationTo: 'plugins';
-        value: number | Plugin;
       } | null)
     | ({
         relationTo: 'check-scenarios';
@@ -2205,6 +2406,8 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   headerImage?: T;
+  background?: T;
+  backgroundTone?: T;
   blocks?:
     | T
     | {
@@ -2272,6 +2475,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
   description?: T;
   width?: T;
   background?: T;
+  backgroundTone?: T;
   innerBackground?: T;
   arrangement?: T;
   columns?: T;
@@ -2281,6 +2485,8 @@ export interface LayoutBlockSelect<T extends boolean = true> {
     | T
     | {
         image?: T | ImageLeafSelect<T>;
+        ciLockupWidget?: T | CiLockupWidgetSelect<T>;
+        ciLockupHeroWidget?: T | CiLockupHeroWidgetSelect<T>;
         clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
         clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
         doDontWidget?: T | DoDontWidgetSelect<T>;
@@ -2310,6 +2516,37 @@ export interface LayoutBlockSelect<T extends boolean = true> {
  */
 export interface ImageLeafSelect<T extends boolean = true> {
   image?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CiLockupWidget_select".
+ */
+export interface CiLockupWidgetSelect<T extends boolean = true> {
+  h?: T;
+  subsidiaryOn?: T;
+  subsidiary?: T;
+  branchOn?: T;
+  branch?: T;
+  form?: T;
+  language?: T;
+  colorType?: T;
+  mono?: T;
+  clearSpace?: T;
+  measured?: T;
+  heightControl?: T;
+  hiddenControls?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CiLockupHeroWidget_select".
+ */
+export interface CiLockupHeroWidgetSelect<T extends boolean = true> {
+  source?: T;
+  h?: T;
   id?: T;
   blockName?: T;
 }
@@ -2396,9 +2633,6 @@ export interface LayoutGridWidgetSelect<T extends boolean = true> {
   marginPct?: T;
   gutterX?: T;
   gutterY?: T;
-  lockMargin?: T;
-  lockGutterX?: T;
-  lockGutterY?: T;
   id?: T;
   blockName?: T;
 }
@@ -2661,12 +2895,49 @@ export interface ApplicationImagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sample-images_select".
+ */
+export interface SampleImagesSelect<T extends boolean = true> {
+  name?: T;
+  alt?: T;
+  group?: T;
+  lineArt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "image-profiles_select".
  */
 export interface ImageProfilesSelect<T extends boolean = true> {
   name?: T;
   generateSlug?: T;
   slug?: T;
+  previewImage?: T;
   displayOrder?: T;
   imageModelPreset?: T;
   profilePrompt?:
@@ -2709,9 +2980,9 @@ export interface ImageProfilesSelect<T extends boolean = true> {
           | T
           | {
               allowedFps?: T;
+              maxDurationSeconds?: T;
               maxWidth?: T;
               maxHeight?: T;
-              maxDurationSeconds?: T;
             };
         original?: T;
       };
@@ -2733,6 +3004,8 @@ export interface ImageProfileColorAdjustmentFeatureSelect<T extends boolean = tr
  * via the `definition` "ImageProfileCameraControlFeature_select".
  */
 export interface ImageProfileCameraControlFeatureSelect<T extends boolean = true> {
+  azimuths?: T;
+  elevations?: T;
   id?: T;
   blockName?: T;
 }
@@ -2743,6 +3016,7 @@ export interface ImageProfileCameraControlFeatureSelect<T extends boolean = true
 export interface GraphicProfilesSelect<T extends boolean = true> {
   name?: T;
   runtime?: T;
+  previewImage?: T;
   displayOrder?: T;
   controllerRestrictions?: T;
   controllerPresentation?: T;
@@ -2759,9 +3033,9 @@ export interface GraphicProfilesSelect<T extends boolean = true> {
           | T
           | {
               allowedFps?: T;
+              maxDurationSeconds?: T;
               maxWidth?: T;
               maxHeight?: T;
-              maxDurationSeconds?: T;
             };
       };
   updatedAt?: T;
@@ -2781,6 +3055,7 @@ export interface GeneratedImagesSelect<T extends boolean = true> {
   aspectRatio?: T;
   imageSize?: T;
   createdBy?: T;
+  sourceImage?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2800,9 +3075,10 @@ export interface GeneratedImagesSelect<T extends boolean = true> {
  */
 export interface TemplatesSelect<T extends boolean = true> {
   name?: T;
+  generateSlug?: T;
+  slug?: T;
   description?: T;
-  controllerRestrictions?: T;
-  controllerPresentation?: T;
+  backgroundPolicy?: T;
   exportPolicy?:
     | T
     | {
@@ -2816,14 +3092,15 @@ export interface TemplatesSelect<T extends boolean = true> {
           | T
           | {
               allowedFps?: T;
+              maxDurationSeconds?: T;
               maxWidth?: T;
               maxHeight?: T;
-              maxDurationSeconds?: T;
             };
       };
   sourceUrl?: T;
   baseHtml?: T;
   overrides?: T;
+  previewImage?: T;
   width?: T;
   height?: T;
   category?: T;
@@ -2863,18 +3140,6 @@ export interface TemplateAssetsSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plugins_select".
- */
-export interface PluginsSelect<T extends boolean = true> {
-  name?: T;
-  description?: T;
-  pluginType?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3390,6 +3655,10 @@ export interface TaskSchedulePublish {
           value: number | ApplicationImage;
         } | null)
       | ({
+          relationTo: 'sample-images';
+          value: number | SampleImage;
+        } | null)
+      | ({
           relationTo: 'image-profiles';
           value: number | ImageProfile;
         } | null)
@@ -3404,10 +3673,6 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'templates';
           value: number | Template;
-        } | null)
-      | ({
-          relationTo: 'plugins';
-          value: number | Plugin;
         } | null)
       | ({
           relationTo: 'check-scenarios';

@@ -1,5 +1,5 @@
 import { toCheckResult } from '@/features/asset-check/checkers/check-result.adapter'
-import { needsReview, planChecks } from '@/features/asset-check/domain/check-plan'
+import { planChecks } from '@/features/asset-check/domain/check-plan'
 import {
 	type CheckSession,
 	CheckSessionInputMismatchError,
@@ -16,6 +16,7 @@ import {
 	measureObservationSchema,
 	presenceObservationSchema,
 } from '@/features/asset-check/domain/heuristic.evaluator'
+import { needsReview } from '@/features/asset-check/domain/needs-review'
 import type { RuntimeCheck } from '@/features/asset-check/domain/runtime-check'
 import {
 	findUnavailableAiReferenceCheckKeys,
@@ -40,7 +41,14 @@ import type { AgentChatSession, User } from '@/payload-types'
 interface StartCheckSessionInput {
 	agentChatSessionId?: AgentChatSession['id']
 	buffer: Buffer
-	deferHeuristic?: boolean
+	/**
+	 * heuristic(AI) 판정을 후속 요청으로 미룰 조건. 생략하면 이 요청에서 전부 끝낸다.
+	 * - 'always': 무조건 미룬다. 🔴 MCP는 LBS의 AI 키를 쓰지 않고 연결된 클라이언트 AI가
+	 *   관측하므로 반드시 이 값이어야 한다(docs/features/review.md) — 미루지 않으면 서버 AI가
+	 *   대신 판정해 관측 작업이 클라이언트에 반환되지 않는다.
+	 * - 'when-showable': 즉시 판정이 하나라도 있을 때만 미룬다(화면).
+	 */
+	deferHeuristic?: 'always' | 'when-showable'
 	imageName?: string
 	scenario?: CheckScenario
 	scenarioKey?: string
@@ -98,7 +106,13 @@ export async function startCheckSession(input: StartCheckSessionInput) {
 	try {
 		const immediate = await runImmediateCheck(input.buffer, rulesetSnapshot)
 		session.applyImmediateResults(immediate)
-		if (!input.deferHeuristic && session.pendingCheckKeys.length > 0) {
+		// 후속 요청으로 미뤄서 얻는 값은 "먼저 보여줄 판정이 있다"는 것뿐이다. 즉시 판정이 0건이면
+		// 화면은 어차피 AI가 끝날 때까지 빈 채로 기다리는데, 후속 요청은 원본 이미지를 한 번 더
+		// 올린다(3MB대 × 2). 보여줄 것이 없으면 나누지 않고 이 요청에서 끝낸다.
+		const defer =
+			input.deferHeuristic === 'always' ||
+			(input.deferHeuristic === 'when-showable' && Object.keys(immediate.results).length > 0)
+		if (!defer && session.pendingCheckKeys.length > 0) {
 			const aiCheck = await runHeuristicCheck(
 				input.buffer,
 				session.pendingCheckKeys,

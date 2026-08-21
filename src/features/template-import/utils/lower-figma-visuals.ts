@@ -345,20 +345,52 @@ export function resolveTextTruncation(node: Node): {
 	if (!truncates) return { truncates, fixedBox }
 	if (s.maxLines) return { truncates, fixedBox, lineClamp: s.maxLines }
 	if (fixedBox && s.lineHeightPx && node.absoluteBoundingBox) {
+		// 마지막 줄은 줄간격 전체가 아니라 글리프 높이(≈fontSize)만 들어가면 Figma가 그린다 —
+		// floor(높이÷줄높이)는 329px÷110px(줄간격 110·글자 100)처럼 1px 모자란 박스에서
+		// 마지막 줄을 통째로 날려, Figma에 없는 말줄임을 만든다.
+		const lastLineHeight = s.fontSize ?? s.lineHeightPx
 		return {
 			truncates,
 			fixedBox,
-			lineClamp: Math.max(1, Math.floor(node.absoluteBoundingBox.height / s.lineHeightPx)),
+			lineClamp: Math.max(
+				1,
+				Math.floor((node.absoluteBoundingBox.height - lastLineHeight) / s.lineHeightPx) + 1,
+			),
 		}
 	}
 	// ponytail: 줄높이 px가 없으면 줄 수 유도 불가 → clamp 없이 overflow:hidden clip만 남는다.
 	return { truncates, fixedBox }
 }
 
+/** 스타일 이름 → CSS 웨이트. 합성 이름이 있어 순서가 값이다(ExtraBold가 Bold보다 먼저). */
+const STYLE_NAME_WEIGHTS: ReadonlyArray<readonly [RegExp, number]> = [
+	[/thin|hairline/i, 100],
+	[/(extra|ultra) ?light/i, 200],
+	[/(semi|demi) ?bold/i, 600],
+	[/(extra|ultra) ?bold/i, 800],
+	[/black|heavy/i, 900],
+	[/light|-lt$/i, 300],
+	[/medium|-md$/i, 500],
+	[/bold|-bd$/i, 700],
+]
+
+/**
+ * 웨이트의 정본은 숫자가 아니라 디자이너가 고른 스타일 이름이다 — HD OTF처럼 웨이트를
+ * 이름으로만 나르는(OS/2 usWeightClass가 세 웨이트 모두 400인) 패밀리는 Figma가
+ * fontWeight를 400으로 내려 Bold/Light 구분이 통째로 사라진다. 이름이 숫자와 어긋나면
+ * 이름이 이기고, 이름에서 웨이트를 못 읽으면(Regular 등) 숫자로 돌아간다.
+ */
+function weightFromStyleName(s: NonNullable<Node['style']>): number | undefined {
+	const name = s.fontStyle ?? s.fontPostScriptName
+	if (!name) return undefined
+	return STYLE_NAME_WEIGHTS.find(([re]) => re.test(name))?.[1]
+}
+
 /** 텍스트 노드의 타이포 속성(폰트/색/정렬/줄높이/장식) → CSS. */
 export function createTextStyle(node: Node): IrCssStyle {
 	const s = node.style ?? {}
 	const italic = s.italic || /italic/i.test(s.fontStyle ?? '')
+	const fontWeight = weightFromStyleName(s) ?? s.fontWeight
 
 	// line-height: PIXELS=px, INTRINSIC_%(자동)=normal, FONT_SIZE_%=상대%.
 	let lineHeight: string | undefined
@@ -394,7 +426,7 @@ export function createTextStyle(node: Node): IrCssStyle {
 		color: findSolidColor(node.fills),
 		'font-family': s.fontFamily ? `"${s.fontFamily}"` : undefined,
 		'font-size': s.fontSize ? `${roundCssNumber(s.fontSize)}px` : undefined,
-		'font-weight': s.fontWeight ? String(s.fontWeight) : undefined,
+		'font-weight': fontWeight ? String(fontWeight) : undefined,
 		'font-style': italic ? 'italic' : undefined,
 		'line-height': lineHeight,
 		// Figma JUSTIFIED의 CSS 값은 justify — 소문자화만으로는 무효 값(justified)이 된다.

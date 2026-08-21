@@ -1,11 +1,9 @@
-import { APIError, type CollectionConfig } from 'payload'
+import { APIError, type CollectionConfig, slugField } from 'payload'
 import { prepareTemplateSave } from '@/features/template-import/services/prepare-template-save.service'
 import { isManager, managerOrAdmin } from '@/lib/auth'
-import {
-	studioControllerPresentationField,
-	studioControllerRestrictionsField,
-	studioExportPolicyField,
-} from './fields/studio-controller-field'
+import { previewImageField } from './fields/preview-image-field'
+import { studioExportPolicyField } from './fields/studio-controller-field'
+import { templateBackgroundPolicyField } from './fields/template-policy-field'
 import { draftVersions } from './shared'
 
 export const Templates: CollectionConfig = {
@@ -48,14 +46,45 @@ export const Templates: CollectionConfig = {
 			required: true,
 			localized: true,
 		},
+		// 🔴 slug는 localized가 아니다 — URL은 정체성이라 로케일마다 달라지면 링크가 갈라진다.
+		// name은 localized지만 slug는 한 번 파생된 뒤 그 값으로 고정된다(ImageProfiles와 같은 방식).
+		slugField({
+			useAsSlug: 'name',
+			required: true,
+			// 🔴 Payload 기본 slugify는 `[^\w-]+`를 버려 한글 이름이 전부 사라진다
+			// ('환영 카드' → '-'). 그대로 두면 두 번째 한글 템플릿이 slug unique 인덱스에
+			// 걸려 DB 오류로 저장이 깨진다. 낱말이 하나도 안 남으면 빈 값을 돌려주어
+			// required 검증이 "직접 입력하세요"로 막게 한다 — 실패를 DB가 아니라 폼에서 낸다.
+			slugify: ({ valueToSlugify }) => {
+				const slug =
+					valueToSlugify
+						?.trim()
+						.replace(/ /g, '-')
+						.replace(/[^\w-]+/g, '')
+						.toLowerCase() ?? ''
+				return /[a-z0-9]/.test(slug) ? slug : ''
+			},
+			// slug은 영문 소문자·숫자·하이픈만 받는다 — URL 세그먼트이므로 인코딩이 필요한 문자를
+			// 애초에 들이지 않는다. 이름이 영문이면 위 slugify가 알아서 채우고, 한글이면 비어서
+			// 이 검증이 "직접 입력하세요"로 막는다.
+			overrides: (field) => {
+				const slug = field.fields.find(
+					(candidate) => 'name' in candidate && candidate.name === 'slug',
+				)
+				if (slug?.type === 'text') {
+					slug.validate = (value: unknown) =>
+						typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)
+							? true
+							: '영문 소문자·숫자·하이픈만 사용하세요. 예: summer-poster'
+				}
+				return field
+			},
+		}),
 		{
 			name: 'description',
 			type: 'textarea',
 			localized: true,
 		},
-		studioControllerRestrictionsField({ source: 'template' }),
-		studioControllerPresentationField({ source: 'template' }),
-		studioExportPolicyField({ source: 'template' }),
 		{
 			// 워크스페이스: 캔버스 + 레이어 목록 + 값 편집을 한 컴포넌트가 렌더한다.
 			name: 'templateLayers',
@@ -66,6 +95,8 @@ export const Templates: CollectionConfig = {
 				},
 			},
 		},
+		templateBackgroundPolicyField(),
+		studioExportPolicyField({ source: 'template' }),
 		// 출처 URL. 입력창은 사이드바의 Figma 가져오기 필드와 통합했으므로 폼에서 숨긴다(컬럼·값 유지).
 		{
 			name: 'sourceUrl',
@@ -92,6 +123,7 @@ export const Templates: CollectionConfig = {
 		},
 
 		// ── 사이드바 (렌더 순서 = 배열 순서) ──
+		previewImageField(),
 		{
 			type: 'row',
 			admin: { position: 'sidebar' },

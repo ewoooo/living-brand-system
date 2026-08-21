@@ -16,6 +16,8 @@ import {
 import { useImageGeneration } from '@/features/image-generation/hooks/use-image-generation'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import type { ImageColorAdjustment } from '@/features/image-generation/runtime/image-colorize'
+import { fetchImageStudioConfigs } from '@/features/image-generation/services/list-image-studio-configs.client'
+import { useLazyResource } from '@/hooks/use-lazy-resource'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
@@ -28,23 +30,20 @@ import {
  * 모른다. Definition은 기본값·제약을, Provider는 현재 값·runtime binding·도메인 액션을 소유한다.
  */
 export function ImageStudioProvider({
-	configs,
-	initialProfileId,
+	config: initial,
 	children,
 }: {
-	configs: ImageStudioConfig[]
-	initialProfileId?: number
+	config: ImageStudioConfig
 	children: ReactNode
 }) {
-	const initial = configs.find(({ id }) => id === initialProfileId) ?? configs[0]
-	if (!initial) {
-		throw new Error('ImageStudioProvider는 계약이 최소 하나 있을 때만 사용할 수 있습니다.')
-	}
-
+	// 교체 후보 전체는 자산 브라우저가 열릴 때 가져온다 — 페이지는 시작 계약 하나만 싣는다.
+	const browse = useLazyResource(fetchImageStudioConfigs)
+	// 세션에서 한 번이라도 쓴 계약은 남긴다 — 결과 카드가 그 결과를 만든 프로파일의 출력 능력을 되찾는다.
+	const [configs, setConfigs] = useState<ImageStudioConfig[]>([initial])
 	const [profileId, setProfileId] = useState(initial.id)
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	const [angles, setAngles] = useState({ azimuthDeg: 0, elevationDeg: 0 })
-	const { adjustCamera, error, generate, loading, requested, result, selected, setSelected } =
+	const { error, generate, loading, requested, selected, session, setSelected } =
 		useImageGeneration()
 
 	const config = configs.find((item) => item.id === profileId) ?? initial
@@ -86,7 +85,14 @@ export function ImageStudioProvider({
 				: null,
 		[backgroundColor, lineColor],
 	)
-	const resultColor = result?.profileId === config.id ? colorValue : null
+	// 그리드가 그리는 목록 — 참조가 있으면 0번을 차지한다.
+	const items = useMemo(
+		() =>
+			session ? [...(session.reference ? [session.reference] : []), ...session.images] : [],
+		[session],
+	)
+	const referenceIndex = session?.reference ? 0 : null
+	const resultColor = items[0]?.profileId === config.id ? colorValue : null
 
 	const update = useCallback(
 		(controlId: string, value: ControllerControlValue) => {
@@ -99,32 +105,31 @@ export function ImageStudioProvider({
 
 	const selectProfile = useCallback(
 		(nextProfileId: number) => {
-			const next = configs.find((item) => item.id === nextProfileId)
+			const next = (browse.data ?? configs).find((item) => item.id === nextProfileId)
 			if (!next) return
+			setConfigs((current) =>
+				current.some((item) => item.id === next.id) ? current : [...current, next],
+			)
 			setValues((current) => reconcileProfileValues(next, current))
 			setProfileId(nextProfileId)
 		},
-		[configs],
+		[browse.data, configs],
 	)
 
-	// 시점 조정은 저장된 생성 이미지를 시드로 쓴다 — 셋(시드 URL·생성 이미지 id·프로파일)이
-	// 모두 있을 때만 대상이 성립하므로 한 객체로 파생한다.
-	const generatedImage = selected === null ? undefined : result?.generatedImages?.[selected]
-	const cameraSeed = useMemo(
-		() =>
-			supportsCamera && selected !== null && result?.profileId === config.id && generatedImage
-				? {
-						generatedImageId: generatedImage.id,
-						profileId: result.profileId,
-						src: result.images[selected],
-					}
-				: null,
-		[config.id, generatedImage, result, selected, supportsCamera],
-	)
+	// 참조는 한 번 정해지면 고정된다 — 조정본을 다시 참조로 삼지 않아 세대 누적 열화가 없다.
+	// 고정된 참조도 프로파일 일치는 지켜야 한다 — 서버가 시드를 scenario로 조회하므로
+	// 프로파일을 바꾼 뒤의 재생성은 언제나 InvalidSeedImageError가 된다.
+	const referenceImage = useMemo(() => {
+		const pinned = session?.reference
+		if (pinned) return pinned.profileId === config.id ? pinned : null
+		const picked = selected === null ? undefined : items[selected]
+		return picked?.generatedImageId && picked.profileId === config.id ? picked : null
+	}, [config.id, items, selected, session])
+	const cameraSeed = supportsCamera ? referenceImage : null
 
 	const value = useMemo<ImageStudioValue>(
 		() => ({
-			profiles: { options, select: selectProfile },
+			profiles: { options, browse, select: selectProfile },
 			config,
 			controls: { values, bindings, update },
 			prompt: {
@@ -168,22 +173,39 @@ export function ImageStudioProvider({
 				setAngles,
 				seedImage: cameraSeed?.src ?? null,
 				regenerate: () => {
-					if (!supportsCamera || !cameraSeed) return
-					void adjustCamera({
-						camera: angles,
-						count: 1,
-						generatedImageId: cameraSeed.generatedImageId,
-						profileId: cameraSeed.profileId,
-					})
+					if (!supportsCamera || !cameraSeed?.generatedImageId || !session) return
+					void generate(
+						{
+							// 참조가 만들어진 비율로 다시 그린다 — 같은 피사체를 다른 각도에서
+							// 볼 뿐이라, 비율이 갈리면 그리드에서 참조 카드가 잘린다.
+							aspectRatio: session.output.aspectRatio,
+							camera: angles,
+							count: 1,
+							imageSize: resolutionValue as ImageOutputSize,
+							profileId: config.id,
+							// 참조가 프롬프트를 물려주므로 비워 보낸다.
+							prompt: '',
+							reference: { generatedImageId: cameraSeed.generatedImageId },
+						},
+						cameraSeed,
+					)
 				},
 			},
-			results: { result, color: resultColor, requested, selected, select: setSelected },
+			results: {
+				items,
+				referenceIndex,
+				color: resultColor,
+				requested,
+				selected,
+				select: setSelected,
+				output: session?.output ?? null,
+			},
 		}),
 		[
-			adjustCamera,
 			angles,
 			batchValue,
 			bindings,
+			browse,
 			cameraSeed,
 			canRun,
 			colorDefinitions,
@@ -192,16 +214,18 @@ export function ImageStudioProvider({
 			definitions,
 			error,
 			generate,
+			items,
 			loading,
 			options,
 			prompt,
 			ratioValue,
+			referenceIndex,
 			requested,
 			resolutionValue,
-			result,
 			resultColor,
 			selected,
 			selectProfile,
+			session,
 			setSelected,
 			supportsCamera,
 			update,
