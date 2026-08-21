@@ -20,8 +20,13 @@ export async function CiLockupWidget({ fixed }: { fixed?: CiLockupFixed }) {
 	return <CiLockupView colors={await brandColors()} fixed={fixed} />
 }
 
-/** 색을 못 찾아도 판이 서야 한다 — 위젯 하나가 페이지 전체를 죽이지 않게 한다. */
-async function brandColors(): Promise<Record<string, string>> {
+/**
+ * 색을 못 찾아도 판이 서야 한다 — 위젯 하나가 페이지 전체를 죽이지 않게 한다.
+ *
+ * 🔑 export인 이유: 같은 락업을 다른 판에 얹는 위젯(`ci-lockup-hero`)이 같은 색 목록을 써야 한다.
+ *    목록을 두 곳에 적으면 색이 하나 늘 때 한쪽만 고쳐진다.
+ */
+export async function brandColors(): Promise<Record<string, string>> {
 	try {
 		const payload = await getPayload({ config })
 		const { docs } = await payload.find({
