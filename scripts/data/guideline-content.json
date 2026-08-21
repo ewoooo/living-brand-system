@@ -1,6 +1,772 @@
 {
 	"documents": [
 		{
+			"slug": "overseas-ci-horizontal-a",
+			"title": "가로형A",
+			"label": null,
+			"parent": "overseas-ci",
+			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "해외지사 CI – 가로형A 제작을 위한 그리드 설정과 적용 예시는 다음과 같습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 형태의 CI 응용형에 대해서 본 가이드에 기술된 CI 최소 여백 규정과 최소 크기 규정 예시를 참조합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "해외지사 CI 표기체계는 'HD+계열사명+지역명+세부사업명'으로 구성합니다. 신규 또는 명명 변경에 따른 시그니처 제작 시 담당부서와 협의 후 제작합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "full",
+					"background": {
+						"color": "#E9E9E9"
+					},
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "치수와 여백",
+					"children": [
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "LONDON",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "full",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 3,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "CI는 아래 3가지 방식으로 표현할 수 있습니다. Full Color 기본형, White 로고타입, 단색 CI 분리형.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								},
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Full Color 기본형은 흰색 혹은 밝은색 배경에 사용합니다. White 로고타입은 Trust Blue 혹은 어두운 배경색 위에 사용합니다. 단색 분리형은 충분한 색상 대비가 발생하지 않거나, 사인물 혹은 특수효과가 필요한 경우에 사용합니다.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
+					"children": [
+						{
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "LONDON",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "LONDON",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "LONDON",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
+			"slug": "subsidiary-ci-horizontal-a",
+			"title": "가로형A",
+			"label": null,
+			"parent": "subsidiary-ci",
+			"order": 0,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "자회사 CI – 가로형A 제작을 위한 그리드 설정과 적용 예시는 다음과 같습니다. 국문 조합은 로고타입 기본형과 동일한 높이를 적용하고, 영문 조합은 상하조합을 사용합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 형태의 CI 응용형에 대해서 본 가이드에 기술된 CI 최소 여백 규정과 최소 크기 규정 예시를 참조합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "정확하고 일관된 CI 사용을 위해서 반드시 승인된 HD CI 마스터 아트워크를 사용하도록 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "full",
+					"background": {
+						"color": "#E9E9E9"
+					},
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "치수와 여백",
+					"children": [
+						{
+							"h": 90,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "ko",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 90,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "padded",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 3,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "CI는 아래 3가지 방식으로 표현할 수 있습니다. Full Color 기본형, White 로고타입, 단색 CI 분리형.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								},
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Full Color 기본형은 흰색 혹은 밝은색 배경에 사용합니다. White 로고타입은 Trust Blue 혹은 어두운 배경색 위에 사용합니다. 단색 분리형은 충분한 색상 대비가 발생하지 않거나, 사인물 혹은 특수효과가 필요한 경우에 사용합니다.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
+					"children": [
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "ko",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "ko",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "ko",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalA",
+							"language": "en",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
 			"slug": "typography-typeface",
 			"title": "Overview",
 			"label": null,
@@ -62,6 +828,7 @@
 			"blocks": [
 				{
 					"width": "full",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -148,6 +915,7 @@
 			"blocks": [
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -180,6 +948,7 @@
 				},
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -288,6 +1057,7 @@
 					"background": {
 						"color": "#E9E9E9"
 					},
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -318,6 +1088,666 @@
 			"headerImage": null,
 			"rules": [],
 			"blocks": []
+		},
+		{
+			"slug": "overseas-ci-horizontal-b",
+			"title": "가로형B",
+			"label": null,
+			"parent": "overseas-ci",
+			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "해외지사 CI – 가로형B 제작을 위한 그리드 설정과 적용 예시는 다음과 같습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 형태의 CI 응용형에 대해서 본 가이드에 기술된 CI 최소 여백 규정과 최소 크기 규정 예시를 참조합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "해외지사 CI 표기체계는 'HD+계열사명+지역명+세부사업명'으로 구성합니다. 신규 또는 명명 변경에 따른 시그니처 제작 시 담당부서와 협의 후 제작합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "full",
+					"background": {
+						"color": "#E9E9E9"
+					},
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "치수와 여백",
+					"children": [
+						{
+							"h": 100,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "padded",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 3,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "CI는 아래 3가지 방식으로 표현할 수 있습니다. Full Color 기본형, White 로고타입, 단색 CI 분리형.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								},
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Full Color 기본형은 흰색 혹은 밝은색 배경에 사용합니다. White 로고타입은 Trust Blue 혹은 어두운 배경색 위에 사용합니다. 단색 분리형은 충분한 색상 대비가 발생하지 않거나, 사인물 혹은 특수효과가 필요한 경우에 사용합니다.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
+					"children": [
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "en",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "en",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
+			"slug": "subsidiary-ci-horizontal-b",
+			"title": "가로형B",
+			"label": null,
+			"parent": "subsidiary-ci",
+			"order": 1,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "자회사 CI – 가로형B 제작을 위한 그리드 설정과 적용 예시는 다음과 같습니다. 국문 조합은 로고타입 기본형과 동일한 높이를 적용하고, 영문 조합은 상하조합을 사용합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 형태의 CI 응용형에 대해서 본 가이드에 기술된 CI 최소 여백 규정과 최소 크기 규정 예시를 참조합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "정확하고 일관된 CI 사용을 위해서 반드시 승인된 HD CI 마스터 아트워크를 사용하도록 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "full",
+					"background": {
+						"color": "#E9E9E9"
+					},
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "치수와 여백",
+					"children": [
+						{
+							"h": 100,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "ko",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 100,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "padded",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 3,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "CI는 아래 3가지 방식으로 표현할 수 있습니다. Full Color 기본형, White 로고타입, 단색 CI 분리형.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								},
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Full Color 기본형은 흰색 혹은 밝은색 배경에 사용합니다. White 로고타입은 Trust Blue 혹은 어두운 배경색 위에 사용합니다. 단색 분리형은 충분한 색상 대비가 발생하지 않거나, 사인물 혹은 특수효과가 필요한 경우에 사용합니다.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
+					"children": [
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "ko",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "ko",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "ko",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "en",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontalB",
+							"language": "en",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				}
+			]
 		},
 		{
 			"slug": "typography-overview",
@@ -381,6 +1811,7 @@
 			"blocks": [
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 3,
 					"gap": "none",
@@ -466,10 +1897,15 @@
 				}
 			},
 			"headerImage": null,
-			"rules": [],
+			"rules": [
+				{
+					"rule": "logo-background-color"
+				}
+			],
 			"blocks": [
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 2,
 					"gap": "default",
@@ -505,6 +1941,7 @@
 				},
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -585,10 +2022,24 @@
 				}
 			},
 			"headerImage": null,
-			"rules": [],
+			"rules": [
+				{
+					"rule": "layout-margin-ratio"
+				},
+				{
+					"rule": "layout-grid-alignment"
+				},
+				{
+					"rule": "layout-gutter-consistency"
+				},
+				{
+					"rule": "layout-bleed-discipline"
+				}
+			],
 			"blocks": [
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 3,
 					"gap": "default",
@@ -620,27 +2071,18 @@
 							"guides": "shared",
 							"gutterX": 0,
 							"gutterY": 0,
-							"lockMargin": false,
-							"lockGutterX": true,
-							"lockGutterY": true,
 							"blockType": "layoutGridWidget",
 							"caption": ""
 						},
 						{
 							"sample": "grid-labels",
 							"guides": "shared",
-							"lockMargin": false,
-							"lockGutterX": false,
-							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "c",
 							"guides": "shared",
 							"gutterX": 0,
-							"lockMargin": false,
-							"lockGutterX": true,
-							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						}
 					],
@@ -755,6 +2197,7 @@
 					"background": {
 						"color": "#E9E9E9"
 					},
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -784,6 +2227,7 @@
 				},
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -796,6 +2240,823 @@
 								"file": "ko-horizontal-default.svg"
 							},
 							"blockType": "logoColorVariantWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "full",
+					"background": {
+						"color": "#E9E9E9"
+					},
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 2,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "치수와 여백",
+					"children": [
+						{
+							"h": 100,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "ko",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"form",
+								"language",
+								"colorType",
+								"mono"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 100,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "ko",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"form",
+								"language",
+								"colorType",
+								"mono"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "padded",
+					"backgroundTone": "solid",
+					"arrangement": "featuredSide",
+					"columns": 2,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형",
+					"children": [
+						{
+							"h": 100,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "ko",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 100,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "ko",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 100,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "ko",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
+			"slug": "overseas-ci-vertical",
+			"title": "세로형",
+			"label": null,
+			"parent": "overseas-ci",
+			"order": 2,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "해외지사 CI – 세로형 제작을 위한 그리드 설정과 적용 예시는 다음과 같습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 형태의 CI 응용형에 대해서 본 가이드에 기술된 CI 최소 여백 규정과 최소 크기 규정 예시를 참조합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "해외지사 CI 표기체계는 'HD+계열사명+지역명+세부사업명'으로 구성합니다. 신규 또는 명명 변경에 따른 시그니처 제작 시 담당부서와 협의 후 제작합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "full",
+					"background": {
+						"color": "#E9E9E9"
+					},
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "치수와 여백",
+					"children": [
+						{
+							"h": 100,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "padded",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 3,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "CI는 아래 3가지 방식으로 표현할 수 있습니다. Full Color 기본형, White 로고타입, 단색 CI 분리형.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								},
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Full Color 기본형은 흰색 혹은 밝은색 배경에 사용합니다. White 로고타입은 Trust Blue 혹은 어두운 배경색 위에 사용합니다. 단색 분리형은 충분한 색상 대비가 발생하지 않거나, 사인물 혹은 특수효과가 필요한 경우에 사용합니다.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
+					"children": [
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 70,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				}
+			]
+		},
+		{
+			"slug": "subsidiary-ci-vertical",
+			"title": "세로형",
+			"label": null,
+			"parent": "subsidiary-ci",
+			"order": 2,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "자회사 CI – 세로형 제작을 위한 그리드 설정과 적용 예시는 다음과 같습니다. 국문 조합은 로고타입 기본형과 동일한 높이를 적용하고, 영문 조합은 상하조합을 사용합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "모든 형태의 CI 응용형에 대해서 본 가이드에 기술된 CI 최소 여백 규정과 최소 크기 규정 예시를 참조합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "정확하고 일관된 CI 사용을 위해서 반드시 승인된 HD CI 마스터 아트워크를 사용하도록 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다. 추가 규정이 필요한 경우에는 관련 부서에 의뢰하여 정의해야 합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
+			"headerImage": null,
+			"rules": [],
+			"blocks": [
+				{
+					"width": "full",
+					"background": {
+						"color": "#E9E9E9"
+					},
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "치수와 여백",
+					"children": [
+						{
+							"h": 100,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "ko",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 100,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "padded",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 3,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "CI는 아래 3가지 방식으로 표현할 수 있습니다. Full Color 기본형, White 로고타입, 단색 CI 분리형.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								},
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Full Color 기본형은 흰색 혹은 밝은색 배경에 사용합니다. White 로고타입은 Trust Blue 혹은 어두운 배경색 위에 사용합니다. 단색 분리형은 충분한 색상 대비가 발생하지 않거나, 사인물 혹은 특수효과가 필요한 경우에 사용합니다.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
+					"children": [
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "ko",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "ko",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "ko",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"form",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
 						}
 					],
 					"rules": []
@@ -884,6 +3145,7 @@
 			"blocks": [
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -939,10 +3201,15 @@
 				}
 			},
 			"headerImage": null,
-			"rules": [],
+			"rules": [
+				{
+					"rule": "mono-logo-usage"
+				}
+			],
 			"blocks": [
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 2,
 					"gap": "default",
@@ -978,6 +3245,7 @@
 				},
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -1021,7 +3289,7 @@
 							"children": [
 								{
 									"mode": "normal",
-									"text": "HD현대의 키 레이아웃은 다양한 종횡비의 판형에서\r 유연하게 적용할 수 있는 레이아웃 확보가 가능합니다. \r로고, 텍스트, 이미지, 그래픽 등 레이아웃과 결합하여\r 운용할 수 있습니다. ",
+									"text": " 타입 1은 이미지가 판형 전체를 채우는 구성입니다.",
 									"type": "text",
 									"style": "",
 									"detail": 0,
@@ -1041,7 +3309,27 @@
 							"children": [
 								{
 									"mode": "normal",
-									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을\r 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다.\r추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여\r 정의해야 합니다.\r",
+									"text": "사진은 네 변 모두 재단선까지 확장하고, 그 위에 CI와 최소한의 문구만 올립니다. CI는 좌측 상단 첫 셀에 놓으며, 어두운 이미지 위에서는 단색분리형을 흰색으로 사용합니다. 문구는 가운데 셀에 한 덩어리로 배치해 이미지의 시선 흐름을 가리지 않습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "이미지 위에 놓이는 요소는 마진 안쪽에 머물러야 하며, 문구 가독성을 위해 별도의 박스나 그림자를 두지 않습니다.",
 									"type": "text",
 									"style": "",
 									"detail": 0,
@@ -1065,6 +3353,7 @@
 					"background": {
 						"color": "#E9E9E9"
 					},
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 2,
 					"gap": "default",
@@ -1074,17 +3363,11 @@
 						{
 							"sample": "b",
 							"guides": "on",
-							"lockMargin": false,
-							"lockGutterX": false,
-							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "b",
 							"guides": "off",
-							"lockMargin": false,
-							"lockGutterX": false,
-							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
@@ -1220,6 +3503,7 @@
 					"background": {
 						"color": "#E9E9E9"
 					},
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -1249,6 +3533,7 @@
 				},
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -1261,6 +3546,163 @@
 								"file": "en-horizontal-default.svg"
 							},
 							"blockType": "logoColorVariantWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "full",
+					"background": {
+						"color": "#E9E9E9"
+					},
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 2,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "치수와 여백",
+					"children": [
+						{
+							"h": 90,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"form",
+								"language",
+								"colorType",
+								"mono"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 90,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"form",
+								"language",
+								"colorType",
+								"mono"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "padded",
+					"backgroundTone": "solid",
+					"arrangement": "featured",
+					"columns": 2,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형",
+					"children": [
+						{
+							"h": 80,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "en",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 80,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "en",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
 						}
 					],
 					"rules": []
@@ -1340,6 +3782,7 @@
 			"blocks": [
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -1413,10 +3856,15 @@
 				}
 			},
 			"headerImage": null,
-			"rules": [],
+			"rules": [
+				{
+					"rule": "color-misuse"
+				}
+			],
 			"blocks": [
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -1490,7 +3938,7 @@
 							"children": [
 								{
 									"mode": "normal",
-									"text": "HD현대의 키 레이아웃은 다양한 종횡비의 판형에서\r 유연하게 적용할 수 있는 레이아웃 확보가 가능합니다. \r로고, 텍스트, 이미지, 그래픽 등 레이아웃과 결합하여\r 운용할 수 있습니다. ",
+									"text": "타입 2는 이미지를 셀 단위로 나누어 배치하는 구성입니다.",
 									"type": "text",
 									"style": "",
 									"detail": 0,
@@ -1510,7 +3958,27 @@
 							"children": [
 								{
 									"mode": "normal",
-									"text": "일관된 브랜드 아이덴티티 형성을 위해 다음의 규정을\r 엄격히 준수하며, 임의의 형태로 변형할 수 없습니다.\r추가 규정이 필요한 경우에는 관련된 부서에 의뢰하여\r 정의해야 합니다.\r",
+									"text": "모든 이미지는 재단선까지 확장하지 않고 그리드 안에 머물며, 셀 경계와 거터를 그대로 지킵니다. 이미지는 셀 하나에 놓거나 여러 셀에 걸쳐 놓을 수 있고, 걸친 이미지도 양 끝의 셀 경계에 정확히 맞춥니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "CI는 좌측 상단 첫 셀에 놓고, 문구는 같은 열 아래에 배치해 좌측 정렬 축을 만듭니다. 밝은 배경에서는 CI 기본형 또는 단색분리형 검정을 사용합니다.",
 									"type": "text",
 									"style": "",
 									"detail": 0,
@@ -1534,6 +4002,7 @@
 					"background": {
 						"color": "#E9E9E9"
 					},
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 2,
 					"gap": "default",
@@ -1543,17 +4012,11 @@
 						{
 							"sample": "a",
 							"guides": "on",
-							"lockMargin": false,
-							"lockGutterX": false,
-							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "a",
 							"guides": "off",
-							"lockMargin": false,
-							"lockGutterX": false,
-							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
@@ -1668,6 +4131,7 @@
 					"background": {
 						"color": "#E9E9E9"
 					},
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -1697,6 +4161,7 @@
 				},
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -1709,6 +4174,163 @@
 								"file": "hd-horizontal-default.svg"
 							},
 							"blockType": "logoColorVariantWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "full",
+					"background": {
+						"color": "#E9E9E9"
+					},
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 2,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "치수와 여백",
+					"children": [
+						{
+							"h": 100,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "hd",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"form",
+								"language",
+								"colorType",
+								"mono"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 100,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "vertical",
+							"language": "hd",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "normal",
+							"measured": true,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"form",
+								"language",
+								"colorType",
+								"mono"
+							],
+							"blockType": "ciLockupWidget"
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "padded",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 3,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형",
+					"children": [
+						{
+							"h": 100,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "hd",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 100,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "hd",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 100,
+							"subsidiaryOn": false,
+							"subsidiary": "현대중공업",
+							"branchOn": false,
+							"branch": "EUROPE R&D CENTER",
+							"form": "horizontal",
+							"language": "hd",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"subsidiary",
+								"branchOn",
+								"branch",
+								"language",
+								"colorType",
+								"mono",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
 						}
 					],
 					"rules": []
@@ -1788,6 +4410,7 @@
 			"blocks": [
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -1869,6 +4492,7 @@
 					"background": {
 						"color": "#E9E9E9"
 					},
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 2,
 					"gap": "default",
@@ -1878,17 +4502,11 @@
 						{
 							"sample": "c",
 							"guides": "on",
-							"lockMargin": false,
-							"lockGutterX": false,
-							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "c",
 							"guides": "off",
-							"lockMargin": false,
-							"lockGutterX": false,
-							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
@@ -2007,10 +4625,15 @@
 				}
 			},
 			"headerImage": null,
-			"rules": [],
+			"rules": [
+				{
+					"rule": "logo-misuse"
+				}
+			],
 			"blocks": [
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -2217,6 +4840,7 @@
 			"blocks": [
 				{
 					"width": "padded",
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 1,
 					"gap": "default",
@@ -2272,21 +4896,92 @@
 			"label": null,
 			"parent": "layout",
 			"order": 5,
-			"description": null,
+			"description": {
+				"root": {
+					"type": "root",
+					"format": "",
+					"indent": 0,
+					"version": 1,
+					"children": [
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "키 레이아웃은 모든 판형에 같은 방식으로 적용하는 HD현대의 기본 격자입니다. 판형 네 변에 같은 크기의 마진을 두고, 그 안쪽 영역을 가로·세로 각각 1:2:3 비율로 나누어 9개의 칸을 만듭니다. 좌측 상단 칸이 가장 작고 우측 하단 칸이 가장 크며, 모든 요소는 이 칸의 경계선에 맞추어 배치합니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "마진은 판형의 긴 축 길이를 기준으로 3~6% 사이에서 정하고, 짧은 축에도 같은 길이를 적용해 네 변의 여백이 항상 같도록 합니다. 칸과 칸 사이의 간격은 마진 길이를 넘지 않습니다. 이 간격을 넓히면 분할선을 중심으로 양쪽 칸의 내용이 각각 안쪽으로 물러날 뿐, 1:2:3 분할선의 위치는 달라지지 않습니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						},
+						{
+							"type": "paragraph",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"mode": "normal",
+									"text": "요소는 칸 하나에 놓거나 여러 칸에 걸쳐 놓을 수 있습니다. 이미지에 한해 판형 끝까지 확장할 수 있으며, 이때 확장한 변에만 여백이 없고 나머지 변은 칸 경계와 간격을 그대로 지킵니다. 텍스트와 CI는 어떤 경우에도 마진 안쪽에 머뭅니다.",
+									"type": "text",
+									"style": "",
+									"detail": 0,
+									"format": 0,
+									"version": 1
+								}
+							],
+							"direction": null,
+							"textStyle": "",
+							"textFormat": 0
+						}
+					],
+					"direction": null
+				}
+			},
 			"headerImage": null,
 			"rules": [],
 			"blocks": [
 				{
 					"width": "padded",
 					"background": {
-						"color": "#393636"
+						"color": "#000000"
 					},
+					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 3,
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "Key Layout 그리드",
+					"title": "",
 					"description": {
 						"root": {
 							"type": "root",
@@ -2299,18 +4994,10 @@
 									"format": "",
 									"indent": 0,
 									"version": 1,
-									"children": [
-										{
-											"mode": "normal",
-											"text": "판형을 축별로 1:2:3으로 나눈 9개 셀에 요소를 스냅한다. 마진은 해당 축 길이의 3~6%, 거터는 마진의 50~100%다. 값을 조절해도 1:2:3 분할선은 제자리에 있다.",
-											"type": "text",
-											"style": "",
-											"detail": 0,
-											"format": 0,
-											"version": 1
-										}
-									],
-									"direction": "ltr"
+									"children": [],
+									"direction": "ltr",
+									"textStyle": "",
+									"textFormat": 0
 								}
 							],
 							"direction": "ltr"
@@ -2322,17 +5009,11 @@
 							"guides": "shared",
 							"gutterX": 0,
 							"gutterY": 0,
-							"lockMargin": false,
-							"lockGutterX": true,
-							"lockGutterY": true,
 							"blockType": "layoutGridWidget"
 						},
 						{
 							"sample": "a",
 							"guides": "shared",
-							"lockMargin": false,
-							"lockGutterX": false,
-							"lockGutterY": false,
 							"blockType": "layoutGridWidget",
 							"caption": "검증용 캡션 — 국문 가로형"
 						},
@@ -2340,9 +5021,6 @@
 							"sample": "c",
 							"guides": "shared",
 							"gutterX": 0,
-							"lockMargin": false,
-							"lockGutterX": true,
-							"lockGutterY": false,
 							"blockType": "layoutGridWidget"
 						},
 						{
