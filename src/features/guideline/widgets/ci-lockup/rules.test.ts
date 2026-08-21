@@ -107,6 +107,16 @@ describe('CI 락업 조립 규칙', () => {
 		}
 	})
 
+	// 🔴 자리표시 계열사는 이름이 실존과 구별되지 않는다(무난한 업종어를 쓰기로 했다). 그래서
+	//    「실존만 도는 목록」을 만드는 유일한 근거가 이 플래그다 — 히어로가 이것으로 회전을 좁힌다.
+	it('자리표시 계열사는 플래그로만 구별되고 정확히 하나다', () => {
+		const placeholders = SUBSIDIARIES.filter((sub) => sub.placeholder)
+		expect(placeholders).toHaveLength(1)
+		// 목록 맨 끝이어야 한다 — 앞에 끼면 매니페스트 기본값(첫 항목)이 자리표시로 바뀐다.
+		expect(SUBSIDIARIES.at(-1)?.placeholder).toBe(true)
+		expect(SUBSIDIARIES[0].placeholder).toBeUndefined()
+	})
+
 	// 🔴 판 높이는 고정이라(선택마다 튀지 않게) 가장 높은 락업이 그 안에 들어가야 한다.
 	//    스펙 값이 바뀌어 넘치면 화면에서 잘리는데, 잘린 로고는 가이드라인으로 성립하지 않는다.
 	it('모든 락업이 클리어스페이스를 켠 채로도 고정 판 높이 안에 들어간다', () => {

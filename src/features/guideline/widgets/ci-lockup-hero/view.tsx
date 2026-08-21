@@ -23,8 +23,14 @@ const CYCLE_MS = 2200
 /** 🔑 축 목록은 매니페스트에서 파생한다 — 축이 늘면 여기 고정 목록이 저절로 따라온다. */
 const ALL_AXES = CI_LOCKUP_CONTROLS.map((control) => control.id)
 
-/** 해외지사 히어로가 계열사 자리에 세우는 일반명사. 목록 맨 끝의 자리표시 항목이다. */
-const PLACEHOLDER_SUBSIDIARY = SUBSIDIARIES[SUBSIDIARIES.length - 1]
+/**
+ * 🔑 자리표시 계열사는 **역할이 반대다.**
+ * - 해외지사 히어로: 계열사 자리에 **이것을 고정**한다 — 도는 것은 지역명이고, 거기에 실존 계열사를
+ *   세우면 그 조합이 승인된 표기처럼 읽힌다.
+ * - 자회사 히어로: 회전에서 **뺀다** — 이름이 무난해서 실존 18개 사이에 섞이면 구별할 길이 없다.
+ */
+const PLACEHOLDER_SUBSIDIARY = SUBSIDIARIES.find((sub) => sub.placeholder) ?? SUBSIDIARIES[0]
+const REAL_SUBSIDIARIES = SUBSIDIARIES.filter((sub) => !sub.placeholder)
 
 export type CiLockupHeroSource = 'subsidiary' | 'branch'
 
@@ -39,7 +45,9 @@ export function CiLockupHeroView({
 }) {
 	const overseas = source === 'branch'
 	// 자회사는 국문 이름, 해외지사는 영문 지역명이 돈다(정본 도판이 그렇게 갈라져 있다).
-	const names = overseas ? OVERSEAS_BRANCHES.map(branchLabel) : SUBSIDIARIES.map((sub) => sub.ko)
+	const names = overseas
+		? OVERSEAS_BRANCHES.map(branchLabel)
+		: REAL_SUBSIDIARIES.map((sub) => sub.ko)
 	const [index, setIndex] = useState(0)
 
 	useEffect(() => {

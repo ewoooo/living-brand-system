@@ -659,8 +659,7 @@ export interface CiLockupWidget {
         | '하이드로젠'
         | '건설기계'
         | '한국조선해양'
-        | '현대법인'
-        | '현대계열사'
+        | '현대테크놀로지'
       )
     | null;
   /**

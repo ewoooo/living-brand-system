@@ -206,7 +206,17 @@ export type Tier = (typeof TIERS)[number]
  * 🔴 **첫 줄이 항상 `Hyundai`인 것은 아니다** — 영문에 Hyundai가 없는 회사가 있어서 줄 배분을 데이터가
  *    직접 명시한다. 로직으로 나누면 그 회사에서 틀린다.
  */
-export type Subsidiary = { ko: string; en: readonly [string] | readonly [string, string] }
+export type Subsidiary = {
+	ko: string
+	en: readonly [string] | readonly [string, string]
+	/**
+	 * 실존 계열사가 아니라 **조판 실험용 자리표시**. 이름을 무난하게 두기로 했으므로(사용자 지정
+	 * 2026-08-21) 화면만 보고는 실존과 구별되지 않는다 — 그래서 플래그로 가른다.
+	 * 🔴 자회사 히어로는 이 항목을 **회전에서 뺀다**(`ci-lockup-hero/view.tsx`). 실존 18개 사이에
+	 *    섞이면 구별할 길이 없고, 해외지사 히어로에서는 반대로 이것이 고정 자리다.
+	 */
+	placeholder?: boolean
+}
 
 /**
  * 🔴 **기억으로 고치지 말 것.** 18개 전부 각 회사 공식 사이트·HD현대 그룹 영문 페이지에서 확인한 값이고
@@ -241,14 +251,14 @@ export const SUBSIDIARIES: readonly Subsidiary[] = [
 	{ ko: '한국조선해양', en: ['Korea Shipbuilding &', 'Offshore Engineering'] },
 
 	/*
-	 * 🔑 **자리표시 계열사**(사용자 지정 2026-08-21). 실존 계열사 이름을 쓰면 정본 CI 표기로
-	 *    오해되고, 그럴듯한 가짜 이름을 지으면 「새로 생긴 계열사」로 읽힌다. 그래서 일반명사로 둔다 —
-	 *    영문이 자연스럽게 읽히는 것이 조건이었고(`HD HYUNDAI COMPANY`), 국문은 그 대응어다.
+	 * 🔑 **자리표시 계열사**(사용자 지정 2026-08-21). 실존 계열사 이름을 쓰면 그 조합이 승인된 CI
+	 *    표기로 오해된다. 일반명사(`SUBSIDIARY`·`AFFILIATE`)도 후보였지만 그것은 모회사 관점의
+	 *    분류어라 락업 안에서 자기소개가 되지 않아, **무난한 업종어**로 정했다.
+	 * 🔴 그 선택의 대가는 「실존과 구별이 안 된다」다 — `placeholder` 플래그가 그 구별을 코드에 남긴다.
 	 * 🔴 **목록 맨 끝이다.** `SUBSIDIARIES[0]`은 정본 도판 값(현대중공업)이고 매니페스트 기본값이라
 	 *    앞에 끼우면 모든 판의 초기 계열사가 바뀐다.
 	 */
-	{ ko: '현대법인', en: ['Hyundai', 'Company'] },
-	{ ko: '현대계열사', en: ['Hyundai', 'Subsidiary'] },
+	{ ko: '현대테크놀로지', en: ['Hyundai', 'Technology'], placeholder: true },
 ]
 
 /**
