@@ -18,7 +18,7 @@ import { CiLockupView } from '../ci-lockup/view'
  */
 
 /** 이름이 바뀌는 간격(ms). ponytail: 상수 하나 — 조율이 필요해지면 admin 필드로 올린다. */
-const CYCLE_MS = 2200
+const CYCLE_MS = 1400
 
 /** 🔑 축 목록은 매니페스트에서 파생한다 — 축이 늘면 여기 고정 목록이 저절로 따라온다. */
 const ALL_AXES = CI_LOCKUP_CONTROLS.map((control) => control.id)
