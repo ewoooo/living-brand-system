@@ -1,6 +1,7 @@
 import type { Block } from 'payload'
 import { ImageLeaf } from '@/features/guideline/leaves/image/schema'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/schema'
+import { CiLockupHeroWidget } from '@/features/guideline/widgets/ci-lockup-hero/schema'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/schema'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/schema'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/schema'
@@ -127,6 +128,7 @@ export const LayoutBlock: Block = {
 			blocks: [
 				ImageLeaf,
 				CiLockupWidget,
+				CiLockupHeroWidget,
 				ClearspaceOverlayWidget,
 				ClearspaceViewerWidget,
 				DoDontWidget,

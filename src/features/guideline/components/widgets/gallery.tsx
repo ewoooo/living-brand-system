@@ -7,6 +7,7 @@ import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
 import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
 import { CI_LOCKUP_MANIFEST } from '@/features/guideline/widgets/ci-lockup/manifest'
+import { CiLockupHeroWidget } from '@/features/guideline/widgets/ci-lockup-hero/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
@@ -80,6 +81,12 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 				</GuidelineControllerScope>
 			),
 		},
+		// 히어로는 컨트롤을 열지 않는다 — 스코프 없이도 자기 값으로 그려진다(축을 전부 고정한다).
+		{
+			name: 'ci-lockup-hero (자회사)',
+			node: <CiLockupHeroWidget source="subsidiary" h={120} />,
+		},
+		{ name: 'ci-lockup-hero (해외지사)', node: <CiLockupHeroWidget source="branch" h={100} /> },
 		{ name: 'icon-grid', node: <IconGridWidget /> },
 		{ name: 'stem-clear-space', node: <StemClearSpaceWidget /> },
 		{ name: 'hd-color-palette (균일)', node: <HdColorPaletteWidget layout="uniform" /> },

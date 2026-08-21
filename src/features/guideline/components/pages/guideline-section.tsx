@@ -3,6 +3,7 @@ import type { GetGuidelineSectionOutput } from '../../services/get-guideline-sec
 import { GuidelineHeader, GuidelineHeaderImage } from '../globals/guideline-header'
 import { GuidelineHelperProvider, GuidelineHelperSlot } from '../globals/guideline-helper'
 import type { GuidelineVariant } from '../globals/guideline-variant'
+import { GuidelineBlocks } from '../guideline-blocks'
 import { RefreshRouteOnSave } from '../refresh-route-on-save'
 import { ScrollToPreviewDocument } from '../scroll-to-preview-document'
 import { GuidelinePage } from './guideline-page'
@@ -10,10 +11,12 @@ import { GuidelinePage } from './guideline-page'
 /**
  * 섹션 한 화면 — 머리(이미지 + 제목)와 Page 목록. 디자인 정본은 Figma HD_LBS_UI 61:3376.
  *
- * 🔴 **섹션 자체의 블록은 그리지 않는다.** 스키마에는 `section.blocks`가 남아 있지만 14개 섹션
- *    어디에도 값이 없고(2026-08-18 전수 확인), Figma의 본문에도 그 자리가 없다. 렌더하던 시절에는
- *    그것을 제목과 묶으려고 래핑이 두 겹 더 있었다 — 빈 계층이었다.
- *    필드를 실제로 지우는 것은 스키마 변경이라 공유 DB 확인 뒤 별도로 한다.
+ * 🔑 **섹션 블록은 값이 있을 때만 그린다**(2026-08-21 되살림). 2026-08-18에는 14개 섹션 어디에도
+ *    값이 없어 빈 계층이었고 그래서 렌더를 걷어냈다. 지금은 쓰임이 생겼다 — 섹션 맨 위, 하위 Page의
+ *    제목보다 앞에 놓이는 히어로다(자회사·해외지사 CI). 그 자리는 Page 블록으로는 만들 수 없다
+ *    (Page는 제목이 필수라 제목 없는 첫 Page를 둘 수 없다).
+ * 🔴 그때의 교훈은 남긴다 — **빈 배열이면 아무 계층도 만들지 않는다.** 옛 구현은 제목과 묶으려고
+ *    래핑을 두 겹 더 세웠고, 값이 없는 섹션에서 그것이 그대로 빈 상자로 남았다.
  *
  * 🔴 섹션 **설명**도 그리지 않는다. 같은 조사에서 전 섹션이 비어 있었고, 2열 hgroup의 오른쪽 칸이
  *    항상 빈 채로 폭만 차지했다. Figma의 Section Heading도 제목 하나뿐이다.
@@ -51,6 +54,8 @@ export function GuidelineSection({
 						</div>
 					</div>
 				</ContentFrame>
+
+				{section.blocks?.length ? <GuidelineBlocks blocks={section.blocks} /> : null}
 
 				{/*
 				 * Page 목록 — Figma의 Article 스택. 앞 Page의 면 끝에서 다음 Page의 제목까지

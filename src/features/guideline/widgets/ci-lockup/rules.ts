@@ -206,7 +206,17 @@ export type Tier = (typeof TIERS)[number]
  * 🔴 **첫 줄이 항상 `Hyundai`인 것은 아니다** — 영문에 Hyundai가 없는 회사가 있어서 줄 배분을 데이터가
  *    직접 명시한다. 로직으로 나누면 그 회사에서 틀린다.
  */
-export type Subsidiary = { ko: string; en: readonly [string] | readonly [string, string] }
+export type Subsidiary = {
+	ko: string
+	en: readonly [string] | readonly [string, string]
+	/**
+	 * 실존 계열사가 아니라 **조판 실험용 자리표시**. 이름을 무난하게 두기로 했으므로(사용자 지정
+	 * 2026-08-21) 화면만 보고는 실존과 구별되지 않는다 — 그래서 플래그로 가른다.
+	 * 🔴 자회사 히어로는 이 항목을 **회전에서 뺀다**(`ci-lockup-hero/view.tsx`). 실존 18개 사이에
+	 *    섞이면 구별할 길이 없고, 해외지사 히어로에서는 반대로 이것이 고정 자리다.
+	 */
+	placeholder?: boolean
+}
 
 /**
  * 🔴 **기억으로 고치지 말 것.** 18개 전부 각 회사 공식 사이트·HD현대 그룹 영문 페이지에서 확인한 값이고
@@ -239,6 +249,16 @@ export const SUBSIDIARIES: readonly Subsidiary[] = [
 	{ ko: '하이드로젠', en: ['Hydrogen'] },
 	{ ko: '건설기계', en: ['Construction', 'Equipment'] },
 	{ ko: '한국조선해양', en: ['Korea Shipbuilding &', 'Offshore Engineering'] },
+
+	/*
+	 * 🔑 **자리표시 계열사**(사용자 지정 2026-08-21). 실존 계열사 이름을 쓰면 그 조합이 승인된 CI
+	 *    표기로 오해된다. 일반명사(`SUBSIDIARY`·`AFFILIATE`)도 후보였지만 그것은 모회사 관점의
+	 *    분류어라 락업 안에서 자기소개가 되지 않아, **무난한 업종어**로 정했다.
+	 * 🔴 그 선택의 대가는 「실존과 구별이 안 된다」다 — `placeholder` 플래그가 그 구별을 코드에 남긴다.
+	 * 🔴 **목록 맨 끝이다.** `SUBSIDIARIES[0]`은 정본 도판 값(현대중공업)이고 매니페스트 기본값이라
+	 *    앞에 끼우면 모든 판의 초기 계열사가 바뀐다.
+	 */
+	{ ko: '현대테크놀로지', en: ['Hyundai', 'Technology'], placeholder: true },
 ]
 
 /**
@@ -248,9 +268,14 @@ export const SUBSIDIARIES: readonly Subsidiary[] = [
  * 🔴 **18개 전부 실제 거점이다**(2026-08-18 조사: 계열사 8곳의 공식 글로벌 네트워크·사업장 페이지,
  *    법인 등기, 그룹 ESG 뉴스룸). 지어낸 값을 넣지 말 것 — 이 목록이 화면에 나가면 정본으로 오해된다.
  *
- * 🔑 `business`가 하나뿐인 이유: 공식 출처에서 **실제 표기로 확인되는 기능 라벨은 `R&D CENTER`뿐**이고
- *    나머지는 조사 분류값(생산·판매·서비스)이라 그대로 렌더하면 그것이 곧 발명이 된다. 그리고 대부분의
- *    지역은 한 곳에 여러 계열사의 기능이 섞여 있어 하나로 못 고른다(예: DUBAI = 5사).
+ * 🔑 **`business`는 그 거점의 실제 이름이 기능 라벨을 품을 때만 붙인다**(2026-08-21 재조사).
+ *    정본 표기체계는 `HD+계열사명+지역명+세부사업명`이지만(B.3 p26·28·30), 기능을 내가 분류해 붙이면
+ *    그것이 곧 발명이 된다. 그래서 기준은 하나다 — **법인·센터 이름에 그 말이 들어 있는가.**
+ *    예: `HD HYUNDAI EUROPE R&D CENTER GmbH`는 이름 자체가 그렇고, `DUBAI`는 5개 계열사의 기능이
+ *    섞여 있어 하나로 못 고른다.
+ *
+ * 🔑 **한 지역이 두 꼴로 다 나올 수 있다** — 정본 p26이 `EUROPE`와 `EUROPE R&D CENTER`를 같은
+ *    페이지에 나란히 싣는다(가로형A 「지역명」/「지역명·사업명」). 그래서 같은 region이 두 항목으로 있다.
  *
  * 도시·국가가 섞인 것은 원본이 그렇다 — 한 나라에 거점이 흩어져 있으면 국가로, 한 도시에 몰려 있으면
  * 도시로 적었다. 락업에서 줄이 넘치지 않게 2~3 단어 안으로 줄인 결과이기도 하다.
@@ -260,22 +285,46 @@ export type OverseasBranch = { region: string; business?: string }
 export const OVERSEAS_BRANCHES: readonly OverseasBranch[] = [
 	// 🔴 도판(p35)에 나온 유일한 값이고 실존 법인이다 —
 	//    HD Hyundai Europe Research and Development Center GmbH (뒤셀도르프, HD한국조선해양)
+	// ── 지역명 + 세부사업명 — 거점 **이름 자체**에 기능 라벨이 들어 있는 곳만 ──
+	// 🔴 도판(p35)에 인쇄된 유일한 값이고 실존 법인이다 —
+	//    HD HYUNDAI EUROPE R&D CENTER GmbH (뒤셀도르프 HRB 100284, HD한국조선해양)
 	{ region: 'EUROPE', business: 'R&D CENTER' },
+	{ region: 'INDIA', business: 'R&D CENTER' }, // 건설기계 India R&D Center (푸네) — 공장·PDC와 별 거점
+	{ region: 'CHINA', business: 'R&D CENTER' }, // 건설기계 China R&D Center (장쑤)
+	{ region: 'SWITZERLAND', business: 'R&D CENTER' }, // HD Hyundai Electric Switzerland Ltd. (취리히, 2017)
+	// Hyundai Technologies Center Hungary Ltd. (부다페스트) — 이름이 곧 `TECHNOLOGIES CENTER`다
+	{ region: 'HUNGARY', business: 'TECHNOLOGIES CENTER' },
+	/*
+	 * 🔑 아래 넷은 **우리가 정한 값**(사용자 지정 2026-08-21). 정본 도판이 예시를 둘밖에 안 실어서
+	 *    조판 케이스가 부족했다 — 짧은 사업명(`SHIPYARD`)부터 두 단어까지 폭을 훑는다.
+	 * 🔴 실제 거점의 승인된 표기가 아니다. 지역은 실제 거점 그대로 두고 사업명만 정했다 —
+	 *    지역명까지 지어내면 화면에 남은 값이 승인 문제와 무관하게 그냥 오류로 읽힌다.
+	 */
+	{ region: 'SINGAPORE', business: 'SERVICE CENTER' },
+	{ region: 'HOUSTON', business: 'TRAINING CENTER' },
+	{ region: 'VIETNAM', business: 'SHIPYARD' },
+	{ region: 'ATLANTA', business: 'PARTS CENTER' },
+
+	// ── 지역명만 — 기능 라벨 없이 지역으로만 불리는 곳 ──
+	// 🔑 앞 다섯 줄은 HD현대중공업 공식 해외지사 목록 그대로다(hd-hhi.com Contact Us).
+	//    그 페이지는 기능어를 하나도 쓰지 않고 지역으로만 적는다 — 「지역명」 꼴의 근거다.
+	{ region: 'EUROPE' }, // 🔑 p26 첫 도판이 인쇄한 값. 같은 지역이 두 꼴로 다 나온다
 	{ region: 'LONDON' }, // 중공업·일렉트릭·오일뱅크 런던지사
-	{ region: 'GERMANY' }, // 일렉트릭 Eschborn · 건설기계 Mannheim · 로보틱스 Munich · 마린솔루션 Hamburg
 	{ region: 'ATHENS' }, // 중공업 아테네지사 · 마린솔루션 아테네지점
 	{ region: 'OSLO' }, // 중공업 오슬로지사 (건설기계 Elnesvågen 공장 병합)
 	{ region: 'SINGAPORE' }, // 중공업·마린솔루션·오일뱅크·건설기계 + HD Hyundai Asia Holdings
 	{ region: 'TOKYO' }, // 중공업 도쿄지사 · 마린솔루션 도쿄지점 (일렉트릭 오사카지사 병합)
+	{ region: 'HOUSTON' }, // 중공업·오일뱅크 휴스턴지사 · 마린솔루션 Americas
+	{ region: 'NEW JERSEY' }, // 중공업 뉴저지지사 — 공식 목록에 있는데 빠져 있었다
+	{ region: 'PANAMA' }, // 중공업 파나마지사 · 마린솔루션 파나마지점
+	{ region: 'DUBAI' }, // 중공업·일렉트릭·오일뱅크·마린솔루션·건설기계 5사
+	{ region: 'GERMANY' }, // 일렉트릭 Eschborn · 건설기계 Mannheim · 로보틱스 Munich · 마린솔루션 Hamburg
 	{ region: 'CHINA' }, // 창저우·옌타이·톈진·양중 공장, 상하이·베이징 판매·지주
 	{ region: 'VIETNAM' }, // HD현대베트남조선(닌호아) · 에코비나(둥꾸엇), 하노이·호치민 지사
-	{ region: 'INDIA' }, // 건설기계 Pune 공장·R&D센터·PDC, 인프라코어 Chennai
+	{ region: 'INDIA' }, // 건설기계 Pune 공장·PDC, 인프라코어 Chennai
 	{ region: 'PHILIPPINES' }, // HD Hyundai Heavy Industries Philippines (수빅베이 조선소)
-	{ region: 'DUBAI' }, // 중공업·일렉트릭·오일뱅크·마린솔루션·건설기계 5사
 	{ region: 'SAUDI ARABIA' }, // 일렉트릭 Arabia L.L.C. + 리야드지사
-	{ region: 'HOUSTON' }, // 중공업·오일뱅크 휴스턴지사 · 마린솔루션 Americas
 	{ region: 'ATLANTA' }, // 일렉트릭 America · 로보틱스 USA · 건설기계 North America (GA)
-	{ region: 'PANAMA' }, // 중공업 파나마지사 · 마린솔루션 파나마지점
 	{ region: 'BRAZIL' }, // 건설기계 Itatiaia 공장 · South America 판매
 	{ region: 'SOUTH AFRICA' }, // 건설기계 남아공지사(요하네스버그)
 ]

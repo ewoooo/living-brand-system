@@ -10,6 +10,7 @@ import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
 import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
 import { controllerEntryFor } from '@/features/guideline/controllers/registry'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
+import { CiLockupHeroWidget } from '@/features/guideline/widgets/ci-lockup-hero/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
 import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
@@ -82,6 +83,8 @@ function renderWidget(child: Child): ReactNode {
 					}}
 				/>
 			)
+		case 'ciLockupHeroWidget':
+			return <CiLockupHeroWidget source={child.source} h={child.h} />
 		case 'iconGridWidget':
 			return <IconGridWidget />
 		case 'stemClearSpaceWidget':

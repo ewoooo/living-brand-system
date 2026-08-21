@@ -581,6 +581,7 @@ export interface LayoutBlock {
     | (
         | ImageLeaf
         | CiLockupWidget
+        | CiLockupHeroWidget
         | ClearspaceOverlayWidget
         | ClearspaceViewerWidget
         | DoDontWidget
@@ -658,6 +659,7 @@ export interface CiLockupWidget {
         | '하이드로젠'
         | '건설기계'
         | '한국조선해양'
+        | '현대테크놀로지'
       )
     | null;
   /**
@@ -670,21 +672,31 @@ export interface CiLockupWidget {
   branch?:
     | (
         | 'EUROPE R&D CENTER'
+        | 'INDIA R&D CENTER'
+        | 'CHINA R&D CENTER'
+        | 'SWITZERLAND R&D CENTER'
+        | 'HUNGARY TECHNOLOGIES CENTER'
+        | 'SINGAPORE SERVICE CENTER'
+        | 'HOUSTON TRAINING CENTER'
+        | 'VIETNAM SHIPYARD'
+        | 'ATLANTA PARTS CENTER'
+        | 'EUROPE'
         | 'LONDON'
-        | 'GERMANY'
         | 'ATHENS'
         | 'OSLO'
         | 'SINGAPORE'
         | 'TOKYO'
+        | 'HOUSTON'
+        | 'NEW JERSEY'
+        | 'PANAMA'
+        | 'DUBAI'
+        | 'GERMANY'
         | 'CHINA'
         | 'VIETNAM'
         | 'INDIA'
         | 'PHILIPPINES'
-        | 'DUBAI'
         | 'SAUDI ARABIA'
-        | 'HOUSTON'
         | 'ATLANTA'
-        | 'PANAMA'
         | 'BRAZIL'
         | 'SOUTH AFRICA'
       )
@@ -738,6 +750,23 @@ export interface CiLockupWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'ciLockupWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CiLockupHeroWidget".
+ */
+export interface CiLockupHeroWidget {
+  /**
+   * 무엇이 도는가. 자회사명은 국문, 해외지사 지역명은 영문입니다.
+   */
+  source?: ('subsidiary' | 'branch') | null;
+  /**
+   * 심볼 높이(px). 락업의 모든 치수가 이 값의 배수입니다(60~240).
+   */
+  h?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'ciLockupHeroWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2457,6 +2486,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
     | {
         image?: T | ImageLeafSelect<T>;
         ciLockupWidget?: T | CiLockupWidgetSelect<T>;
+        ciLockupHeroWidget?: T | CiLockupHeroWidgetSelect<T>;
         clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
         clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
         doDontWidget?: T | DoDontWidgetSelect<T>;
@@ -2507,6 +2537,16 @@ export interface CiLockupWidgetSelect<T extends boolean = true> {
   measured?: T;
   heightControl?: T;
   hiddenControls?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CiLockupHeroWidget_select".
+ */
+export interface CiLockupHeroWidgetSelect<T extends boolean = true> {
+  source?: T;
+  h?: T;
   id?: T;
   blockName?: T;
 }
