@@ -3277,7 +3277,7 @@
 					"children": [
 						{
 							"source": "branch",
-							"h": 120,
+							"h": 140,
 							"blockType": "ciLockupHeroWidget"
 						}
 					],
