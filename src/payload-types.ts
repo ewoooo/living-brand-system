@@ -659,6 +659,8 @@ export interface CiLockupWidget {
         | '하이드로젠'
         | '건설기계'
         | '한국조선해양'
+        | '현대법인'
+        | '현대계열사'
       )
     | null;
   /**
@@ -675,6 +677,10 @@ export interface CiLockupWidget {
         | 'CHINA R&D CENTER'
         | 'SWITZERLAND R&D CENTER'
         | 'HUNGARY TECHNOLOGIES CENTER'
+        | 'SINGAPORE SERVICE CENTER'
+        | 'HOUSTON TRAINING CENTER'
+        | 'VIETNAM SHIPYARD'
+        | 'ATLANTA PARTS CENTER'
         | 'EUROPE'
         | 'LONDON'
         | 'ATHENS'

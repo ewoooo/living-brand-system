@@ -23,6 +23,9 @@ const CYCLE_MS = 2200
 /** 🔑 축 목록은 매니페스트에서 파생한다 — 축이 늘면 여기 고정 목록이 저절로 따라온다. */
 const ALL_AXES = CI_LOCKUP_CONTROLS.map((control) => control.id)
 
+/** 해외지사 히어로가 계열사 자리에 세우는 일반명사. 목록 맨 끝의 자리표시 항목이다. */
+const PLACEHOLDER_SUBSIDIARY = SUBSIDIARIES[SUBSIDIARIES.length - 1]
+
 export type CiLockupHeroSource = 'subsidiary' | 'branch'
 
 export function CiLockupHeroView({
@@ -54,8 +57,10 @@ export function CiLockupHeroView({
 				hiddenControls: ALL_AXES,
 				h,
 				// 🔴 해외지사 락업도 자회사명을 함께 쓴다(`rules.ts`의 `overseasLockups`) — 켜 둔다.
+				//    🔑 그 자리에는 **자리표시 계열사**를 세운다(사용자 지정 2026-08-21) — 도는 것은
+				//    지역명이고, 계열사 자리에 실존 이름을 세우면 그 조합이 승인된 것처럼 읽힌다.
 				subsidiaryOn: true,
-				subsidiary: overseas ? SUBSIDIARIES[0].ko : name,
+				subsidiary: overseas ? PLACEHOLDER_SUBSIDIARY.ko : name,
 				branchOn: overseas,
 				branch: overseas ? name : branchLabel(OVERSEAS_BRANCHES[0]),
 				// 국문 가로형A만 `HD`와 회사명이 한 줄로 붙는다 — 히어로가 필요한 것이 그 한 줄이다.

@@ -239,6 +239,16 @@ export const SUBSIDIARIES: readonly Subsidiary[] = [
 	{ ko: '하이드로젠', en: ['Hydrogen'] },
 	{ ko: '건설기계', en: ['Construction', 'Equipment'] },
 	{ ko: '한국조선해양', en: ['Korea Shipbuilding &', 'Offshore Engineering'] },
+
+	/*
+	 * 🔑 **자리표시 계열사**(사용자 지정 2026-08-21). 실존 계열사 이름을 쓰면 정본 CI 표기로
+	 *    오해되고, 그럴듯한 가짜 이름을 지으면 「새로 생긴 계열사」로 읽힌다. 그래서 일반명사로 둔다 —
+	 *    영문이 자연스럽게 읽히는 것이 조건이었고(`HD HYUNDAI COMPANY`), 국문은 그 대응어다.
+	 * 🔴 **목록 맨 끝이다.** `SUBSIDIARIES[0]`은 정본 도판 값(현대중공업)이고 매니페스트 기본값이라
+	 *    앞에 끼우면 모든 판의 초기 계열사가 바뀐다.
+	 */
+	{ ko: '현대법인', en: ['Hyundai', 'Company'] },
+	{ ko: '현대계열사', en: ['Hyundai', 'Subsidiary'] },
 ]
 
 /**
@@ -274,6 +284,16 @@ export const OVERSEAS_BRANCHES: readonly OverseasBranch[] = [
 	{ region: 'SWITZERLAND', business: 'R&D CENTER' }, // HD Hyundai Electric Switzerland Ltd. (취리히, 2017)
 	// Hyundai Technologies Center Hungary Ltd. (부다페스트) — 이름이 곧 `TECHNOLOGIES CENTER`다
 	{ region: 'HUNGARY', business: 'TECHNOLOGIES CENTER' },
+	/*
+	 * 🔑 아래 넷은 **우리가 정한 값**(사용자 지정 2026-08-21). 정본 도판이 예시를 둘밖에 안 실어서
+	 *    조판 케이스가 부족했다 — 짧은 사업명(`SHIPYARD`)부터 두 단어까지 폭을 훑는다.
+	 * 🔴 실제 거점의 승인된 표기가 아니다. 지역은 실제 거점 그대로 두고 사업명만 정했다 —
+	 *    지역명까지 지어내면 화면에 남은 값이 승인 문제와 무관하게 그냥 오류로 읽힌다.
+	 */
+	{ region: 'SINGAPORE', business: 'SERVICE CENTER' },
+	{ region: 'HOUSTON', business: 'TRAINING CENTER' },
+	{ region: 'VIETNAM', business: 'SHIPYARD' },
+	{ region: 'ATLANTA', business: 'PARTS CENTER' },
 
 	// ── 지역명만 — 기능 라벨 없이 지역으로만 불리는 곳 ──
 	// 🔑 앞 다섯 줄은 HD현대중공업 공식 해외지사 목록 그대로다(hd-hhi.com Contact Us).

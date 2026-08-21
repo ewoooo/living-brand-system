@@ -84,6 +84,7 @@ import * as migration_20260820_050919_ci_sections_stage_snapshot_merge from './2
 import * as migration_20260820_062347_add_vertical_sweep_fluted_glass_runtimes from './20260820_062347_add_vertical_sweep_fluted_glass_runtimes';
 import * as migration_20260821_015321_ci_lockup_hero_widget from './20260821_015321_ci_lockup_hero_widget';
 import * as migration_20260821_021545_overseas_branch_list from './20260821_021545_overseas_branch_list';
+import * as migration_20260821_023619_placeholder_subsidiary_and_branch_labels from './20260821_023619_placeholder_subsidiary_and_branch_labels';
 
 export const migrations = [
   {
@@ -514,6 +515,11 @@ export const migrations = [
   {
     up: migration_20260821_021545_overseas_branch_list.up,
     down: migration_20260821_021545_overseas_branch_list.down,
-    name: '20260821_021545_overseas_branch_list'
+    name: '20260821_021545_overseas_branch_list',
+  },
+  {
+    up: migration_20260821_023619_placeholder_subsidiary_and_branch_labels.up,
+    down: migration_20260821_023619_placeholder_subsidiary_and_branch_labels.down,
+    name: '20260821_023619_placeholder_subsidiary_and_branch_labels'
   },
 ];
