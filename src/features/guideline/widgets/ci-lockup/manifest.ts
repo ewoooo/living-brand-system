@@ -54,6 +54,9 @@ export const FORM = {
 	kind: 'select',
 	label: '꼴',
 	defaultValue: 'horizontal',
+	// 🔑 꼴은 정본이 **세트로** 제시하는 축이라 몇 가지인지가 곧 정보다 — 드롭다운에 접어 두지 않는다.
+	//    계층이 목록을 좁히므로(`controllers/registry.ts`) 알약에 실제로 뜨는 것은 2~3개다.
+	variant: 'segmented',
 	options: [
 		{ value: 'horizontal', label: '가로형' },
 		{ value: 'horizontalA', label: '가로형A' },

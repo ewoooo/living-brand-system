@@ -210,6 +210,24 @@ function ControllerControl({
 			if (!disabled && (readonly || definition.options.length <= 1)) {
 				return <ReadonlyRow label={definition.label} value={selectedLabel} />
 			}
+			// 🔑 선택지를 펼쳐 두는 축은 segmented다 — 드롭다운은 누르기 전까지 무엇이 있는지 숨긴다.
+			//    값이 비어 있을 수 없으므로(항상 하나가 켜져 있다) 첫 선택지로 떨군다.
+			if (definition.variant === 'segmented') {
+				return (
+					<Controller.Row label={definition.label} disabled={disabled}>
+						<Controller.Segmented
+							aria-label={definition.label}
+							options={definition.options}
+							value={
+								selected && definition.options.some((o) => o.value === selected)
+									? selected
+									: (definition.defaultValue ?? definition.options[0].value)
+							}
+							onChange={onChange}
+						/>
+					</Controller.Row>
+				)
+			}
 			return (
 				<Controller.Row label={definition.label} disabled={disabled}>
 					<Controller.Select

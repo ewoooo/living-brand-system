@@ -240,6 +240,25 @@ describe('parseStudioControllerConfig', () => {
 		expect(parseStudioControllerConfig(config)).toBe(config)
 	})
 
+	it('select variant는 list·segmented만 받는다', () => {
+		const select = {
+			id: 'ratio',
+			kind: 'select' as const,
+			label: 'Ratio',
+			defaultValue: '1:1',
+			options: [
+				{ value: '1:1', label: 'Square' },
+				{ value: '16:9', label: 'Wide' },
+			],
+		}
+		expect(
+			parseStudioControllerConfig(configWith({ ...select, variant: 'segmented' })),
+		).toEqual(configWith({ ...select, variant: 'segmented' }))
+		expect(() =>
+			parseStudioControllerConfig(configWith({ ...select, variant: 'dropdown' })),
+		).toThrow('variant')
+	})
+
 	it('공통 Runtime Artifact parser가 unknown kind를 거부한다', () => {
 		expect(() =>
 			parseStudioControllerConfig({

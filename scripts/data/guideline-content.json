@@ -238,7 +238,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -264,7 +263,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -290,7 +288,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -316,7 +313,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -342,7 +338,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -368,7 +363,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -555,7 +549,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형",
+					"title": "색상 변형 – 국문",
 					"description": {
 						"root": {
 							"type": "root",
@@ -621,7 +615,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -647,7 +640,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -673,7 +665,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -682,7 +673,68 @@
 								"measured"
 							],
 							"blockType": "ciLockupWidget"
-						},
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "padded",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 3,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형 – 영문",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "CI는 아래 3가지 방식으로 표현할 수 있습니다. Full Color 기본형, White 로고타입, 단색 CI 분리형.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								},
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Full Color 기본형은 흰색 혹은 밝은색 배경에 사용합니다. White 로고타입은 Trust Blue 혹은 어두운 배경색 위에 사용합니다. 단색 분리형은 충분한 색상 대비가 발생하지 않거나, 사인물 혹은 특수효과가 필요한 경우에 사용합니다.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
+					"children": [
 						{
 							"h": 70,
 							"subsidiaryOn": true,
@@ -699,7 +751,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -725,7 +776,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -751,7 +801,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -1229,7 +1278,7 @@
 					"rules": []
 				},
 				{
-					"width": "padded",
+					"width": "full",
 					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 3,
@@ -1287,7 +1336,82 @@
 					},
 					"children": [
 						{
-							"h": 70,
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "LONDON",
+							"form": "horizontalB",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "LONDON",
+							"form": "horizontalB",
+							"language": "en",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "LONDON",
+							"form": "horizontalB",
+							"language": "en",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 60,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": true,
@@ -1302,17 +1426,17 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
+								"branch",
 								"clearSpace",
 								"measured"
 							],
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 70,
+							"h": 60,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": true,
@@ -1327,17 +1451,17 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
+								"branch",
 								"clearSpace",
 								"measured"
 							],
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 70,
+							"h": 60,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": true,
@@ -1352,10 +1476,10 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
+								"branch",
 								"clearSpace",
 								"measured"
 							],
@@ -1538,7 +1662,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형",
+					"title": "색상 변형 – 국문",
 					"description": {
 						"root": {
 							"type": "root",
@@ -1589,7 +1713,7 @@
 					},
 					"children": [
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -1604,7 +1728,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -1615,7 +1738,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -1630,7 +1753,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -1641,7 +1763,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -1656,7 +1778,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -1665,9 +1786,70 @@
 								"measured"
 							],
 							"blockType": "ciLockupWidget"
-						},
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "padded",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 3,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형 – 영문",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "CI는 아래 3가지 방식으로 표현할 수 있습니다. Full Color 기본형, White 로고타입, 단색 CI 분리형.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								},
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Full Color 기본형은 흰색 혹은 밝은색 배경에 사용합니다. White 로고타입은 Trust Blue 혹은 어두운 배경색 위에 사용합니다. 단색 분리형은 충분한 색상 대비가 발생하지 않거나, 사인물 혹은 특수효과가 필요한 경우에 사용합니다.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
+					"children": [
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -1682,7 +1864,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -1693,7 +1874,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -1708,7 +1889,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -1719,7 +1899,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -1734,7 +1914,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -2314,7 +2493,7 @@
 					"width": "padded",
 					"backgroundTone": "solid",
 					"arrangement": "featuredSide",
-					"columns": 2,
+					"columns": 3,
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
@@ -2543,7 +2722,7 @@
 					"rules": []
 				},
 				{
-					"width": "padded",
+					"width": "full",
 					"backgroundTone": "solid",
 					"arrangement": "grid",
 					"columns": 3,
@@ -2601,7 +2780,82 @@
 					},
 					"children": [
 						{
-							"h": 70,
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "LONDON",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "fullColor",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "LONDON",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "whiteWordmark",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 60,
+							"subsidiaryOn": true,
+							"subsidiary": "현대중공업",
+							"branchOn": true,
+							"branch": "LONDON",
+							"form": "vertical",
+							"language": "en",
+							"colorType": "mono",
+							"mono": "BLACK",
+							"clearSpace": "off",
+							"measured": false,
+							"heightControl": false,
+							"hiddenControls": [
+								"subsidiaryOn",
+								"branchOn",
+								"language",
+								"colorType",
+								"mono",
+								"branch",
+								"clearSpace",
+								"measured"
+							],
+							"blockType": "ciLockupWidget"
+						},
+						{
+							"h": 60,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": true,
@@ -2616,17 +2870,17 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
+								"branch",
 								"clearSpace",
 								"measured"
 							],
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 70,
+							"h": 60,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": true,
@@ -2641,17 +2895,17 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
+								"branch",
 								"clearSpace",
 								"measured"
 							],
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 70,
+							"h": 60,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": true,
@@ -2666,10 +2920,10 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
+								"branch",
 								"clearSpace",
 								"measured"
 							],
@@ -2852,7 +3106,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형",
+					"title": "색상 변형 – 국문",
 					"description": {
 						"root": {
 							"type": "root",
@@ -2903,7 +3157,7 @@
 					},
 					"children": [
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -2918,7 +3172,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -2929,7 +3182,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -2944,7 +3197,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -2955,7 +3207,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -2970,7 +3222,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -2979,9 +3230,70 @@
 								"measured"
 							],
 							"blockType": "ciLockupWidget"
-						},
+						}
+					],
+					"rules": []
+				},
+				{
+					"width": "padded",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 3,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "색상 변형 – 영문",
+					"description": {
+						"root": {
+							"type": "root",
+							"format": "",
+							"indent": 0,
+							"version": 1,
+							"children": [
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "CI는 아래 3가지 방식으로 표현할 수 있습니다. Full Color 기본형, White 로고타입, 단색 CI 분리형.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								},
+								{
+									"type": "paragraph",
+									"format": "",
+									"indent": 0,
+									"version": 1,
+									"children": [
+										{
+											"mode": "normal",
+											"text": "Full Color 기본형은 흰색 혹은 밝은색 배경에 사용합니다. White 로고타입은 Trust Blue 혹은 어두운 배경색 위에 사용합니다. 단색 분리형은 충분한 색상 대비가 발생하지 않거나, 사인물 혹은 특수효과가 필요한 경우에 사용합니다.",
+											"type": "text",
+											"style": "",
+											"detail": 0,
+											"format": 0,
+											"version": 1
+										}
+									],
+									"textStyle": "",
+									"textFormat": 0
+								}
+							]
+						}
+					},
+					"children": [
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -2996,7 +3308,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -3007,7 +3318,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -3022,7 +3333,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -3033,7 +3343,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -3048,7 +3358,6 @@
 							"hiddenControls": [
 								"subsidiaryOn",
 								"branchOn",
-								"form",
 								"language",
 								"colorType",
 								"mono",
@@ -3620,7 +3929,7 @@
 					"width": "padded",
 					"backgroundTone": "solid",
 					"arrangement": "featured",
-					"columns": 2,
+					"columns": 3,
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",

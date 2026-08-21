@@ -85,6 +85,13 @@ export type ControllerControlDefinition =
 			defaultValue: string | null
 			options: readonly ControllerOption[]
 			placeholder?: string
+			/**
+			 * 선택지를 어떻게 내놓는가. 기본 `list`는 드롭다운이라 **누르기 전까지 무엇이 있는지 모른다**.
+			 * `segmented`는 선택지를 한 줄에 다 펴 놓고 배경 pill만 미끄러진다 — 선택지가 몇 개인지가
+			 * 곧 정보인 축(꼴처럼 정본이 세트로 제시하는 것)에 쓴다. 선택지가 많으면 폭을 먹으므로
+			 * 목록형이 기본이다.
+			 */
+			variant?: 'list' | 'segmented'
 	  })
 	| (ControllerControlBase & {
 			kind: 'color'
@@ -145,6 +152,10 @@ const STUDIO_KINDS: readonly StudioKind[] = ['template', 'image', 'graphic']
 const AVAILABILITIES: readonly ControllerAvailability[] = ['enabled', 'readonly', 'disabled']
 const COLOR_PATTERN = /^#[0-9a-f]{6}$/i
 const CONTROL_BASE_KEYS = ['id', 'kind', 'label', 'defaultValue', 'availability'] as const
+type SelectVariant = NonNullable<
+	Extract<ControllerControlDefinition, { kind: 'select' }>['variant']
+>
+const SELECT_VARIANTS: readonly SelectVariant[] = ['list', 'segmented']
 
 /** unknown Admin/Payload 입력에서 공통 envelope와 Controller Definition v1을 검증한다. */
 export function parseStudioControllerConfig(input: unknown): StudioControllerConfig {
@@ -462,7 +473,11 @@ function validateControl(value: unknown, path: string) {
 			}
 			return
 		case 'select': {
-			assertOnlyKeys(control, [...CONTROL_BASE_KEYS, 'options', 'placeholder'], path)
+			assertOnlyKeys(
+				control,
+				[...CONTROL_BASE_KEYS, 'options', 'placeholder', 'variant'],
+				path,
+			)
 			assertNullableString(control.defaultValue, `${path}.defaultValue`)
 			if (!Array.isArray(control.options) || control.options.length === 0) {
 				invalid(`${path}.options`, '하나 이상의 선택지가 필요합니다.')
@@ -484,6 +499,12 @@ function validateControl(value: unknown, path: string) {
 			}
 			if (control.placeholder !== undefined && typeof control.placeholder !== 'string') {
 				invalid(`${path}.placeholder`, '문자열이어야 합니다.')
+			}
+			if (
+				control.variant !== undefined &&
+				!SELECT_VARIANTS.includes(control.variant as SelectVariant)
+			) {
+				invalid(`${path}.variant`, '지원하지 않는 값입니다.')
 			}
 			return
 		}
