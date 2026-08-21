@@ -103,7 +103,7 @@
 				{
 					"width": "full",
 					"background": {
-						"color": "#E9E9E9"
+						"color": "#FFFFFF"
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
@@ -111,7 +111,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "치수와 여백",
+					"title": "",
 					"children": [
 						{
 							"h": 80,
@@ -172,7 +172,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형",
+					"title": "",
 					"description": {
 						"root": {
 							"type": "root",
@@ -480,7 +480,7 @@
 				{
 					"width": "full",
 					"background": {
-						"color": "#E9E9E9"
+						"color": "#FFFFFF"
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
@@ -488,7 +488,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "치수와 여백",
+					"title": "",
 					"children": [
 						{
 							"h": 90,
@@ -549,7 +549,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형 – 국문",
+					"title": "",
 					"description": {
 						"root": {
 							"type": "root",
@@ -685,7 +685,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형 – 영문",
+					"title": "",
 					"description": {
 						"root": {
 							"type": "root",
@@ -1241,7 +1241,7 @@
 				{
 					"width": "full",
 					"background": {
-						"color": "#E9E9E9"
+						"color": "#FFFFFF"
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
@@ -1249,7 +1249,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "치수와 여백",
+					"title": "",
 					"children": [
 						{
 							"h": 100,
@@ -1285,7 +1285,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형",
+					"title": "",
 					"description": {
 						"root": {
 							"type": "root",
@@ -1593,7 +1593,7 @@
 				{
 					"width": "full",
 					"background": {
-						"color": "#E9E9E9"
+						"color": "#FFFFFF"
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
@@ -1601,7 +1601,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "치수와 여백",
+					"title": "",
 					"children": [
 						{
 							"h": 100,
@@ -1662,7 +1662,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형 – 국문",
+					"title": "",
 					"description": {
 						"root": {
 							"type": "root",
@@ -1798,7 +1798,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형 – 영문",
+					"title": "",
 					"description": {
 						"root": {
 							"type": "root",
@@ -2374,7 +2374,7 @@
 				{
 					"width": "full",
 					"background": {
-						"color": "#E9E9E9"
+						"color": "#FFFFFF"
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
@@ -2382,7 +2382,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "치수와 여백",
+					"title": "",
 					"children": [
 						{
 							"h": 100,
@@ -2445,7 +2445,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형",
+					"title": "",
 					"children": [
 						{
 							"h": 100,
@@ -2633,7 +2633,7 @@
 				{
 					"width": "full",
 					"background": {
-						"color": "#E9E9E9"
+						"color": "#FFFFFF"
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
@@ -2641,7 +2641,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "치수와 여백",
+					"title": "",
 					"children": [
 						{
 							"h": 100,
@@ -2677,7 +2677,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형",
+					"title": "",
 					"description": {
 						"root": {
 							"type": "root",
@@ -2985,7 +2985,7 @@
 				{
 					"width": "full",
 					"background": {
-						"color": "#E9E9E9"
+						"color": "#FFFFFF"
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
@@ -2993,7 +2993,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "치수와 여백",
+					"title": "",
 					"children": [
 						{
 							"h": 100,
@@ -3054,7 +3054,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형 – 국문",
+					"title": "",
 					"description": {
 						"root": {
 							"type": "root",
@@ -3190,7 +3190,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형 – 영문",
+					"title": "",
 					"description": {
 						"root": {
 							"type": "root",
@@ -3758,7 +3758,7 @@
 				{
 					"width": "full",
 					"background": {
-						"color": "#E9E9E9"
+						"color": "#FFFFFF"
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
@@ -3766,7 +3766,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "치수와 여백",
+					"title": "",
 					"children": [
 						{
 							"h": 90,
@@ -3829,7 +3829,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형",
+					"title": "",
 					"children": [
 						{
 							"h": 70,
@@ -4334,7 +4334,7 @@
 				{
 					"width": "full",
 					"background": {
-						"color": "#E9E9E9"
+						"color": "#FFFFFF"
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
@@ -4342,7 +4342,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "치수와 여백",
+					"title": "",
 					"children": [
 						{
 							"h": 100,
@@ -4405,7 +4405,7 @@
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
-					"title": "색상 변형",
+					"title": "",
 					"children": [
 						{
 							"h": 100,
