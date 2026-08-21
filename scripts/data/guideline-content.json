@@ -2289,7 +2289,26 @@
 			"description": null,
 			"headerImage": null,
 			"rules": [],
-			"blocks": []
+			"blocks": [
+				{
+					"width": "full",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "",
+					"children": [
+						{
+							"source": "subsidiary",
+							"h": 160,
+							"blockType": "ciLockupHeroWidget"
+						}
+					],
+					"rules": []
+				}
+			]
 		},
 		{
 			"slug": "ci-ko",
@@ -3663,7 +3682,26 @@
 			"description": null,
 			"headerImage": null,
 			"rules": [],
-			"blocks": []
+			"blocks": [
+				{
+					"width": "full",
+					"backgroundTone": "solid",
+					"arrangement": "grid",
+					"columns": 1,
+					"gap": "default",
+					"aspectRatio": "1:1",
+					"blockType": "block",
+					"title": "",
+					"children": [
+						{
+							"source": "branch",
+							"h": 160,
+							"blockType": "ciLockupHeroWidget"
+						}
+					],
+					"rules": []
+				}
+			]
 		},
 		{
 			"slug": "ci-en",
