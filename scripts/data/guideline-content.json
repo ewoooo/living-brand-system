@@ -2378,58 +2378,6 @@
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
-					"columns": 1,
-					"gap": "default",
-					"aspectRatio": "1:1",
-					"blockType": "block",
-					"title": "",
-					"children": [
-						{
-							"horizontalLogo": {
-								"file": "ko-horizontal-default-logoSpace.svg"
-							},
-							"horizontalGrid": {
-								"file": "ko-horizontal-default-clearSpace.svg"
-							},
-							"horizontalMinHeightPx": 60,
-							"verticalLogo": {
-								"file": "ko-vertical-default-logoSpace.svg"
-							},
-							"verticalGrid": {
-								"file": "ko-vertical-default-clearSpace.svg"
-							},
-							"verticalMinHeightPx": 120,
-							"blockType": "clearspaceViewerWidget"
-						}
-					],
-					"rules": []
-				},
-				{
-					"width": "padded",
-					"backgroundTone": "solid",
-					"arrangement": "grid",
-					"columns": 1,
-					"gap": "default",
-					"aspectRatio": "1:1",
-					"blockType": "block",
-					"title": "색상 변형",
-					"children": [
-						{
-							"logo": {
-								"file": "ko-horizontal-default.svg"
-							},
-							"blockType": "logoColorVariantWidget"
-						}
-					],
-					"rules": []
-				},
-				{
-					"width": "full",
-					"background": {
-						"color": "#E9E9E9"
-					},
-					"backgroundTone": "solid",
-					"arrangement": "grid",
 					"columns": 2,
 					"gap": "default",
 					"aspectRatio": "1:1",
@@ -2492,7 +2440,7 @@
 				{
 					"width": "padded",
 					"backgroundTone": "solid",
-					"arrangement": "featuredSide",
+					"arrangement": "grid",
 					"columns": 3,
 					"gap": "default",
 					"aspectRatio": "1:1",
@@ -3814,58 +3762,6 @@
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
-					"columns": 1,
-					"gap": "default",
-					"aspectRatio": "1:1",
-					"blockType": "block",
-					"title": "",
-					"children": [
-						{
-							"horizontalLogo": {
-								"file": "en-horizontal-default-logoSpace.svg"
-							},
-							"horizontalGrid": {
-								"file": "en-horizontal-default-clearSpace.svg"
-							},
-							"horizontalMinHeightPx": 60,
-							"verticalLogo": {
-								"file": "en-vertical-default-logoSpace.svg"
-							},
-							"verticalGrid": {
-								"file": "en-vertical-default-clearSpace.svg"
-							},
-							"verticalMinHeightPx": 120,
-							"blockType": "clearspaceViewerWidget"
-						}
-					],
-					"rules": []
-				},
-				{
-					"width": "padded",
-					"backgroundTone": "solid",
-					"arrangement": "grid",
-					"columns": 1,
-					"gap": "default",
-					"aspectRatio": "1:1",
-					"blockType": "block",
-					"title": "색상 변형",
-					"children": [
-						{
-							"logo": {
-								"file": "en-horizontal-default.svg"
-							},
-							"blockType": "logoColorVariantWidget"
-						}
-					],
-					"rules": []
-				},
-				{
-					"width": "full",
-					"background": {
-						"color": "#E9E9E9"
-					},
-					"backgroundTone": "solid",
-					"arrangement": "grid",
 					"columns": 2,
 					"gap": "default",
 					"aspectRatio": "1:1",
@@ -3928,7 +3824,7 @@
 				{
 					"width": "padded",
 					"backgroundTone": "solid",
-					"arrangement": "featured",
+					"arrangement": "grid",
 					"columns": 3,
 					"gap": "default",
 					"aspectRatio": "1:1",
@@ -3936,7 +3832,7 @@
 					"title": "색상 변형",
 					"children": [
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": false,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -3962,7 +3858,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": false,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -3988,7 +3884,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 80,
+							"h": 70,
 							"subsidiaryOn": false,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -4435,58 +4331,6 @@
 			"headerImage": null,
 			"rules": [],
 			"blocks": [
-				{
-					"width": "full",
-					"background": {
-						"color": "#E9E9E9"
-					},
-					"backgroundTone": "solid",
-					"arrangement": "grid",
-					"columns": 1,
-					"gap": "default",
-					"aspectRatio": "1:1",
-					"blockType": "block",
-					"title": "",
-					"children": [
-						{
-							"horizontalLogo": {
-								"file": "hd-horizontal-default-logoSpace.svg"
-							},
-							"horizontalGrid": {
-								"file": "hd-horizontal-default-clearSpace.svg"
-							},
-							"horizontalMinHeightPx": 60,
-							"verticalLogo": {
-								"file": "hd-vertical-default-logoSpace.svg"
-							},
-							"verticalGrid": {
-								"file": "hd-vertical-default-clearSpace.svg"
-							},
-							"verticalMinHeightPx": 120,
-							"blockType": "clearspaceViewerWidget"
-						}
-					],
-					"rules": []
-				},
-				{
-					"width": "padded",
-					"backgroundTone": "solid",
-					"arrangement": "grid",
-					"columns": 1,
-					"gap": "default",
-					"aspectRatio": "1:1",
-					"blockType": "block",
-					"title": "색상 변형",
-					"children": [
-						{
-							"logo": {
-								"file": "hd-horizontal-default.svg"
-							},
-							"blockType": "logoColorVariantWidget"
-						}
-					],
-					"rules": []
-				},
 				{
 					"width": "full",
 					"background": {
