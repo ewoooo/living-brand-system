@@ -382,7 +382,7 @@
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
-					"columns": 1,
+					"columns": 2,
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
@@ -1347,14 +1347,14 @@
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
-					"columns": 1,
+					"columns": 2,
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
 					"title": "",
 					"children": [
 						{
-							"h": 100,
+							"h": 90,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -1378,7 +1378,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 100,
+							"h": 90,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -2636,14 +2636,14 @@
 					},
 					"backgroundTone": "solid",
 					"arrangement": "grid",
-					"columns": 1,
+					"columns": 2,
 					"gap": "default",
 					"aspectRatio": "1:1",
 					"blockType": "block",
 					"title": "",
 					"children": [
 						{
-							"h": 100,
+							"h": 90,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
@@ -2667,7 +2667,7 @@
 							"blockType": "ciLockupWidget"
 						},
 						{
-							"h": 100,
+							"h": 90,
 							"subsidiaryOn": true,
 							"subsidiary": "현대중공업",
 							"branchOn": false,
