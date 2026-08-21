@@ -17,8 +17,15 @@ import { CiLockupView } from '../ci-lockup/view'
  *    ponytail: 멈춤 버튼은 두지 않았다. 필요해지면 축 하나(`paused`)와 버튼 하나다.
  */
 
-/** 이름이 바뀌는 간격(ms). ponytail: 상수 하나 — 조율이 필요해지면 admin 필드로 올린다. */
-const CYCLE_MS = 1400
+/**
+ * 이름이 바뀌는 간격(ms) — 자회사·해외지사 히어로가 **같은 상수**를 쓴다.
+ *
+ * 🔴 `MORPH_MS`(420)보다 짧다. 그래서 락업이 자리를 잡기 전에 다음 이름이 오고, 판이 계속 미끄러지는
+ *    티커처럼 읽힌다 — 의도한 것이다(사용자 지정 2026-08-21, 초당 3개). 「덜컥 멈췄다 가는」 느낌이
+ *    필요해지면 이 값을 420 이상으로 올린다.
+ * ponytail: 상수 하나 — 축으로 열어야 할 만큼 자주 바뀌면 admin 필드로 올린다.
+ */
+const CYCLE_MS = 333
 
 /** 🔑 축 목록은 매니페스트에서 파생한다 — 축이 늘면 여기 고정 목록이 저절로 따라온다. */
 const ALL_AXES = CI_LOCKUP_CONTROLS.map((control) => control.id)
