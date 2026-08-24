@@ -125,7 +125,8 @@ export type TemplateStudioValue = {
 		updateFeature: (slotId: string, controlId: string, value: ControllerControlValue) => void
 		selectProfile: (slotId: string, profileId: number) => void
 		selectSampleImage: (slotId: string, option: SampleImageOption) => void
-		generate: (slotId: string) => Promise<void>
+		/** `prompt`를 주면 세션 상태 대신 그 값으로 생성한다 — 챗이 얹은 패치를 같은 tick에 태우는 통로. */
+		generate: (slotId: string, prompt?: string) => Promise<void>
 	}
 	vectors: {
 		slots: readonly TemplateVectorSlot[]

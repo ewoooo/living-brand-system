@@ -132,10 +132,15 @@ export function getAgentTools() {
 		}),
 		prepareTemplateImage: tool({
 			description:
-				'Prepare a chat attachment from a published template and slot values. Only open slots can be changed.',
+				'Fill a published template with values and return a chat attachment the user can apply in the studio. ' +
+				'Each values entry targets one slot by the slotId returned from findTemplatesForRequest: ' +
+				'use text for a slot of type "text", and imagePrompt (one sentence describing what the image shows) ' +
+				'for a slot of type "image" — that prompt generates the image when the user applies the attachment. ' +
+				'Slots the template author locked are not listed and cannot be changed.',
 			inputSchema: z.object({
 				templateId: z.number().int().positive(),
-				values: z.record(z.string(), templateSlotValueSchema),
+				// 🔴 record가 아니라 배열이다 — asSchema가 record의 값 스키마를 지워 모델이 칸의 모양을 못 본다.
+				values: z.array(templateSlotValueSchema).max(30),
 			}),
 			contextSchema: guidelineToolContextSchema,
 			execute: ({ templateId, values }, { context }) =>
@@ -146,7 +151,10 @@ export function getAgentTools() {
 				value: {
 					templateId: output.templateId,
 					name: output.name,
-					filledSlots: Object.keys(output.values),
+					filledSlots: [
+						...Object.keys(output.patch.text ?? {}),
+						...Object.keys(output.patch.images ?? {}),
+					],
 				},
 			}),
 		}),

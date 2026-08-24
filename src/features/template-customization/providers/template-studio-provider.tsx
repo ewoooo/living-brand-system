@@ -148,9 +148,15 @@ function useTemplateImageSession(
 	const update = useCallback(
 		(slotId: string, patch: TemplateImageSlotPatch) =>
 			setStates((current) =>
-				updateTemplateImageSlot(current, slotId, patch, contracts[slotId] ?? []),
+				// 🔴 잠긴 슬롯을 여기서 막는다. 지금까지 이미지 슬롯의 readonly를 집행하는 코드는
+				//    사이드바 컴포넌트의 prop뿐이었다 — 챗 저작은 사이드바를 우회하므로(그게 목적이다)
+				//    모든 호출자가 지나는 이 자리에 둔다. 대조: vectors.setColor·layers.setVisible은
+				//    이미 슬롯 정책을 본다.
+				imageSlots.find((slot) => slot.id === slotId)?.access === 'editable'
+					? updateTemplateImageSlot(current, slotId, patch, contracts[slotId] ?? [])
+					: current,
 			),
-		[contracts],
+		[contracts, imageSlots],
 	)
 	const updateFeature = useCallback(
 		(slotId: string, controlId: string, next: ControllerControlValue) => {
@@ -207,12 +213,17 @@ function useTemplateImageSession(
 		[],
 	)
 	const generate = useCallback(
-		async (slotId: string) => {
+		/**
+		 * 🔑 `promptOverride`가 있는 이유: 챗이 얹은 패치를 **같은 tick에** 생성까지 태우려면
+		 *    `states` 클로저가 아직 옛 프롬프트를 보고 있다. 렌더 타이밍에 기대는 대신 값을 인자로
+		 *    받아 그 문제를 없앤다. 사이드바 호출부는 인자를 주지 않아 영향이 없다.
+		 */
+		async (slotId: string, promptOverride?: string) => {
 			const state = states[slotId]
 			const contract = contracts[slotId]?.find(
 				(candidate) => candidate.config.id === state?.profileId,
 			)
-			const prompt = state?.prompt ?? ''
+			const prompt = promptOverride ?? state?.prompt ?? ''
 			if (!state || state.generating || !contract || !validPrompt(prompt, contract)) return
 			const requestProfileId = contract.config.id
 			updateState(slotId, { generating: true, error: null })

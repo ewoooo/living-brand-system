@@ -62,7 +62,7 @@ TIFF는 원본 가로·세로 픽셀을 리샘플링하지 않고 PPI 메타데�
 | --- | --- | --- |
 | [Page](../surfaces/page.md) | 구현 | `/studio/template` → 첫 사용 가능 템플릿 → 카테고리별 드롭다운 선택 → TemplateGenerator. 발행된 canonical HTML 템플릿만 읽고 비로그인 공개 읽기 |
 | [Page](../surfaces/page.md) — Graphic | 구현 | Studio의 `Graphic` 메뉴 → `/studio/generate/graphic` → Effective Controller·P5 또는 WebGL Canvas → Runtime Artifact 기반 공통 Export |
-| [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `findTemplatesForRequest` + `prepareTemplateImage`(슬롯 검증 후 첨부 PNG) |
+| [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `findTemplatesForRequest` + `prepareTemplateImage`(열린 슬롯만 검증·클램프 후 첨부 PNG). 첨부의 「스튜디오에 적용」이 편집 패치를 스튜디오 세션에 얹고, 이미지 슬롯은 그 프롬프트로 생성까지 실행한다 |
 | [REST](../surfaces/rest.md) | 부분 | 인쇄 변환 `POST /api/templates/{templateId}/exports/{format}`(`format`: `pdf`·`tiff`), import 어댑터 `POST /api/templates/import-figma-html`. 모두 산출물 레코드를 저장하지 않음 |
 | Slack | 계획 | — |
 

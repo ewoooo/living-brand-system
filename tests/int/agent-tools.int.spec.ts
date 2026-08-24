@@ -328,11 +328,11 @@ describe('agent tools', () => {
 		const result = await tools.prepareTemplateImage.execute?.(
 			{
 				templateId: 4,
-				values: {
-					department: { text: 'HX팀' },
-					name: { text: '홍길동입니다' },
-					fixed: { text: 'changed' },
-				},
+				values: [
+					{ slotId: 'department', text: 'HX팀' },
+					{ slotId: 'name', text: '홍길동입니다' },
+					{ slotId: 'fixed', text: 'changed' },
+				],
 			},
 			{ context: { user: { id: 1 } } } as never,
 		)
@@ -341,10 +341,8 @@ describe('agent tools', () => {
 			name: 'Business card',
 			templateId: 4,
 			type: 'template-image',
-			values: {
-				department: { text: 'HX팀' },
-				name: { text: '홍길동입니' },
-			},
+			// 🔑 패치의 키는 원시 nodeId다(컨트롤 id의 `text:` 접두가 아니다). `fixed`는 열린 슬롯이 아니라 탈락한다.
+			patch: { text: { department: 'HX팀', name: '홍길동입니' } },
 		})
 	})
 
@@ -379,7 +377,7 @@ describe('agent tools', () => {
 		const tools = getAgentTools()
 
 		await expect(
-			tools.prepareTemplateImage.execute?.({ templateId: 99, values: {} }, {
+			tools.prepareTemplateImage.execute?.({ templateId: 99, values: [] }, {
 				context: { user: { id: 1 } },
 			} as never),
 		).rejects.toThrow('Template is not available.')
@@ -391,7 +389,7 @@ describe('agent tools', () => {
 		} as never)
 
 		await expect(
-			tools.prepareTemplateImage.execute?.({ templateId: 99, values: {} }, {
+			tools.prepareTemplateImage.execute?.({ templateId: 99, values: [] }, {
 				context: { user: { id: 1 } },
 			} as never),
 		).rejects.toThrow('Template is not available.')

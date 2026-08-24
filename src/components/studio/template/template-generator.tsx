@@ -86,6 +86,9 @@ function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
  *    (사이드바·캔버스가 서로를 모르는 것과 같은 이유다).
  * 🔴 `templateId`가 다르면 집어 가지 않는다. 챗이 A 템플릿용 편집안을 만들고 사용자가 B 스튜디오를
  *    열어도 B가 그것을 먹으면 안 된다 — 슬롯 id가 우연히 겹치면 조용히 엉뚱한 값이 들어간다.
+ * 🔑 이미지 슬롯의 프롬프트는 **여기서 곧바로 생성까지 태운다** — 사용자가 사이드바를 만지지 않는
+ *    것이 이 기능의 목적이라, 프롬프트만 장전하고 멈추면 세 축(제목·본문·이미지) 중 하나가 정확히
+ *    사이드바로 되돌아간다. 🔴 유료 호출이므로 패치가 담은 슬롯만 돈다.
  */
 function useTemplateAuthoringPatch(
 	templateId: number,
@@ -95,6 +98,10 @@ function useTemplateAuthoringPatch(
 	useEffect(() => {
 		if (!pending || pending.templateId !== templateId) return
 		applyTemplateSessionPatch(session, pending.patch)
+		for (const [slotId, image] of Object.entries(pending.patch.images ?? {})) {
+			// 프롬프트를 인자로 넘긴다 — 같은 tick이라 세션 상태에는 아직 반영되지 않았다.
+			if (image.prompt) void session.images.generate(slotId, image.prompt)
+		}
 		// 🔑 얹은 즉시 비운다 — 남겨 두면 사용자가 손으로 고친 값을 리렌더마다 되돌린다.
 		clear(pending.id)
 	}, [clear, pending, session, templateId])

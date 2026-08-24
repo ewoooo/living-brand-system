@@ -15,6 +15,7 @@ import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphi
 import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
+import type { TemplateSessionPatch } from '@/features/template-customization/domain/template-session-patch'
 import {
 	deriveTemplateStudioConfig,
 	type PublishedHtmlTemplate,
@@ -166,10 +167,16 @@ function FeatureMutationProbe() {
 }
 
 /** 챗 자리를 대신해 편집안을 통로에 밀어 넣는다 — 실제 챗은 이 `send`를 부른다. */
-function AuthoringProbe({ templateId, text }: { templateId: number; text: string }) {
+function AuthoringProbe({
+	templateId,
+	patch,
+}: {
+	templateId: number
+	patch: TemplateSessionPatch
+}) {
 	const { send } = useTemplateAuthoringHandoff()
 	return (
-		<button type="button" onClick={() => send({ templateId, patch: { text: { t1: text } } })}>
+		<button type="button" onClick={() => send({ templateId, patch })}>
 			send patch
 		</button>
 	)
@@ -635,7 +642,7 @@ describe('TemplateGenerator', () => {
 	it('챗이 보낸 편집안이 캔버스까지 반영된다 — 두 트리를 잇는 유일한 통로다', () => {
 		const { container } = render(
 			<TemplateAuthoringHandoffProvider>
-				<AuthoringProbe templateId={1} text="바뀐 제목" />
+				<AuthoringProbe templateId={1} patch={{ text: { t1: '바뀐 제목' } }} />
 				<TemplateGenerator
 					categoryTitle="카드"
 					template={{
@@ -653,10 +660,40 @@ describe('TemplateGenerator', () => {
 		expect(canvas()?.textContent).toContain('바뀐 제목')
 	})
 
+	it('🔴 이미지 슬롯 프롬프트는 사이드바를 거치지 않고 곧바로 생성까지 돈다', () => {
+		mocks.requestImageGeneration.mockResolvedValue({
+			generatedImages: [{ id: 9, url: '/api/generated-images/file/x.png' }],
+		})
+		render(
+			<TemplateAuthoringHandoffProvider>
+				<AuthoringProbe
+					templateId={1}
+					patch={{ images: { '1:1': { prompt: '컨테이너선 라인아트' } } }}
+				/>
+				<TemplateGenerator
+					categoryTitle="카드"
+					template={{
+						...template,
+						html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+						nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+					}}
+				/>
+			</TemplateAuthoringHandoffProvider>,
+		)
+		expect(mocks.requestImageGeneration).not.toHaveBeenCalled()
+
+		fireEvent.click(screen.getByRole('button', { name: 'send patch' }))
+
+		// 🔑 프롬프트를 인자로 넘기므로 세션 상태 반영을 기다리지 않고 같은 tick에 돈다.
+		expect(mocks.requestImageGeneration).toHaveBeenCalledWith(
+			expect.objectContaining({ prompt: '컨테이너선 라인아트', profileId: 7 }),
+		)
+	})
+
 	it('🔴 다른 템플릿용 편집안은 집어 가지 않는다 — 슬롯 id가 겹치면 조용히 엉뚱한 값이 든다', () => {
 		const { container } = render(
 			<TemplateAuthoringHandoffProvider>
-				<AuthoringProbe templateId={999} text="다른 템플릿" />
+				<AuthoringProbe templateId={999} patch={{ text: { t1: '다른 템플릿' } }} />
 				<TemplateGenerator
 					categoryTitle="카드"
 					template={{
