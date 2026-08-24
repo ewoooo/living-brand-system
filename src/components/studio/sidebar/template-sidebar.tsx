@@ -28,6 +28,7 @@ import {
 	type StudioOutputFormat,
 } from '@/features/studio-export/export-contract'
 import type { TemplateExportView } from '@/features/studio-export/hooks/use-template-export'
+import type { TemplateFocusTarget } from '@/features/template-customization/contexts/template-studio-context'
 import {
 	findTemplateControl,
 	findTemplateControlGroup,
@@ -40,12 +41,20 @@ const FORMAT_LABELS = new Map(
 )
 
 /**
+ * 노드에서 오지 않는 섹션의 식별자. 🔴 Figma 노드 id는 `82:11` 꼴이라 이 값과 겹치지 않는다.
+ * 배경은 노드가 아니라 도화지를 집으므로 `kind: 'canvas'`다.
+ */
+const TEXT_SECTION_ID = 'section:text'
+const BACKGROUND_SECTION_ID = 'section:background'
+
+/**
  * 템플릿 스튜디오의 사이드바(컨트롤러 패널) — 캔버스를 모른다.
  * 무엇을 그릴지는 편집 계약(config)만 보고 결정하고(원시 nodeConfigs 참조 금지),
  * 세션 값은 컨텍스트의 text/images 그룹으로만 읽고 쓴다.
  */
 export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }) {
-	const { navigation, config, text, images, vectors, layers, background } = useTemplateStudio()
+	const { navigation, config, text, images, vectors, layers, background, focus } =
+		useTemplateStudio()
 	const {
 		text: textSlots,
 		image: imageSlots,
@@ -166,6 +175,12 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 				{textSlots.length > 0 && textGroup && (
 					<ControllerGroupRenderer
 						definition={textGroup}
+						section={sectionProps(focus, {
+							sectionId: TEXT_SECTION_ID,
+							kind: 'nodes',
+							// 섹션 헤더를 누르면 이 섹션이 다루는 텍스트 상자를 **전부** 집는다.
+							nodeIds: textSlots.map((slot) => slot.id),
+						})}
 						presentation={config.controllerPresentation?.groups.find(
 							({ groupId }) => groupId === textGroup.id,
 						)}
@@ -174,7 +189,15 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 							const definition = findTemplateControl(config, slot.controlId)
 							if (definition?.kind !== 'text') return null
 							return (
-								<div key={slot.id} className="flex flex-col gap-1">
+								<div
+									key={slot.id}
+									className="flex flex-col gap-1"
+									{...rowFocusProps(focus, {
+										sectionId: TEXT_SECTION_ID,
+										kind: 'nodes',
+										nodeIds: [slot.id],
+									})}
+								>
 									<LayerVisibilityControl
 										label={slot.label}
 										visible={layers.visibility[slot.id] ?? true}
@@ -215,7 +238,12 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 					const contracts = images.contracts[slot.id] ?? []
 					if (!state) return null
 					return (
-						<Controller.Group key={slot.id} title={sectionTitle} collapsible>
+						<Controller.Group
+							key={slot.id}
+							title={sectionTitle}
+							collapsible
+							{...sectionProps(focus, slotTarget(slot.id))}
+						>
 							<LayerVisibilityControl
 								label={slot.label}
 								visible={layers.visibility[slot.id] ?? true}
@@ -241,6 +269,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 									images.selectSampleImage(slot.id, option)
 								}
 								onGenerate={() => images.generate(slot.id)}
+								section={subsectionProps(focus, slotTarget(slot.id))}
 							/>
 							{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 섹션이다. 대상 슬롯에 종속되므로
 						    슬롯 그룹 안에 두고 함께 접는다. 생성 전에는 닫힌 채 잠긴다 — compose가 배정된
@@ -250,6 +279,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 									title={`${sectionTitle} Transform`}
 									collapsible
 									attached
+									{...subsectionProps(focus, slotTarget(slot.id))}
 									disabled={slot.access === 'readonly' || !state?.image}
 								>
 									<ImageTransformControl
@@ -275,7 +305,12 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 				{vectors.slots.map((slot) => {
 					const color = vectors.colors[slot.id]
 					return (
-						<Controller.Group key={slot.id} title={slot.label} collapsible>
+						<Controller.Group
+							key={slot.id}
+							title={slot.label}
+							collapsible
+							{...sectionProps(focus, slotTarget(slot.id))}
+						>
 							<LayerVisibilityControl
 								label={slot.label}
 								visible={layers.visibility[slot.id] ?? true}
@@ -297,6 +332,10 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 					backgroundTypeControl?.kind === 'select' &&
 					backgroundColorControl?.kind === 'color' && (
 						<BackgroundSection
+							section={sectionProps(focus, {
+								sectionId: BACKGROUND_SECTION_ID,
+								kind: 'canvas',
+							})}
 							groupDefinition={backgroundGroup}
 							groupPresentation={config.controllerPresentation?.groups.find(
 								({ groupId }) => groupId === backgroundGroup.id,
@@ -348,6 +387,68 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 		</Controller.Browser.Root>
 	)
 }
+
+/**
+ * 슬롯 하나를 「지금 만지는 것」으로 캔버스에 알리는 핸들러.
+ *
+ * 🔑 그룹 래퍼에 capture로 단다 — 안쪽 컨트롤이 몇 개든(Transform 하위 그룹까지) 한 자리에서
+ *    잡히고, 컨트롤마다 배선을 더할 필요가 없다.
+ * ponytail: 포커스만 본다. hover도 켜면 「마우스는 나갔지만 포커스는 남아 있다」를 가르는 조건이
+ *   필요해지고(활성 요소 포함 검사) 얻는 것은 발견성뿐이다 — 필요해지면 `onPointerEnter`와
+ *   `contains(document.activeElement)` 가드 두 줄이다.
+ */
+/**
+ * 섹션 하나(또는 그 안의 한 행)를 「지금 만지는 것」으로 알리는 배선.
+ *
+ * 🔑 **네 섹션이 모두 같은 함수를 쓴다.** 전에는 슬롯 하나를 가리키는 배선이라 Text(슬롯 여럿)와
+ *    Background(노드 없음)에서 성립하지 않았다 — 그래서 `TemplateFocusTarget`이 섹션 식별자와
+ *    집을 대상을 따로 갖는다.
+ * 🔑 `onActivate`를 주는 것 자체가 「chevron만 접기 트리거」 모드를 켠다(`Controller.Group`의 계약).
+ * 🔑 그룹과 그 안의 행이 같은 배선을 겹쳐 달아도 된다 — capture는 조상→대상 순이라 행의 좁은
+ *    대상이 그룹의 넓은 대상을 덮어쓴다(Text 섹션이 그 구조다).
+ * 🔴 놓는 것은 **내 섹션일 때만** — 다른 섹션으로 곧장 옮겨 가면 새 focus가 먼저 들어온다.
+ */
+function sectionProps(
+	focus: ReturnType<typeof useTemplateStudio>['focus'],
+	target: TemplateFocusTarget,
+) {
+	return {
+		active: focus.target?.sectionId === target.sectionId,
+		onActivate: () => focus.set(target),
+		...rowFocusProps(focus, target),
+	}
+}
+
+/**
+ * 섹션 **안의 한 행**용 배선. 🔴 행은 `Controller.Group`이 아니라 맨 `div`이므로 `active`·
+ * `onActivate`를 주면 그대로 DOM 속성이 되어 React가 경고한다(2026-08-24 실측). 포커스만 준다.
+ */
+function rowFocusProps(
+	focus: ReturnType<typeof useTemplateStudio>['focus'],
+	target: TemplateFocusTarget,
+) {
+	return {
+		onFocusCapture: () => focus.set(target),
+		onBlurCapture: () => {
+			if (focus.target?.sectionId === target.sectionId) focus.set(null)
+		},
+	}
+}
+
+/** 하위 섹션(Profile Settings·Transform)은 면을 두 겹 칠하지 않는다 — 규칙만 물려받는다. */
+function subsectionProps(
+	focus: ReturnType<typeof useTemplateStudio>['focus'],
+	target: TemplateFocusTarget,
+) {
+	return { onActivate: () => focus.set(target) }
+}
+
+/** 슬롯 하나가 자기 노드를 집는 흔한 경우. */
+const slotTarget = (slotId: string): TemplateFocusTarget => ({
+	sectionId: slotId,
+	kind: 'nodes',
+	nodeIds: [slotId],
+})
 
 function LayerVisibilityControl({
 	label,

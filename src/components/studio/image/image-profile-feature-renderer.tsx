@@ -1,6 +1,7 @@
 'use client'
 
 import { Controller } from '@/components/shared/controller'
+import type { ControllerGroupSectionProps } from '@/components/shared/controller/group'
 import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
@@ -32,6 +33,13 @@ type ImageProfileFeatureRendererProps = {
 	bindings?: ControllerRuntimeBindings
 	onChange: (controlId: string, value: ControllerControlValue) => void
 	camera?: ImageProfileCameraRuntime
+	/**
+	 * 프로파일 그룹을 하위 섹션으로 그린다 — Template처럼 **다른 그룹 안에서** 부를 때 준다.
+	 * 🔴 기본값(false)은 Image 스튜디오의 최상위 호출이다. 거기서는 구분선이 맞다.
+	 */
+	attached?: boolean
+	/** 하위 섹션도 「chevron만 토글」 규칙을 따르게 한다 — 한 패널 안에서 규칙이 갈리면 안 된다. */
+	section?: ControllerGroupSectionProps
 }
 
 /** Image feature type을 bespoke UI 또는 참조된 공통 Controller control로 단일 dispatch한다. */
@@ -41,6 +49,8 @@ export function ImageProfileFeatureRenderer({
 	bindings,
 	onChange,
 	camera,
+	attached = false,
+	section,
 }: ImageProfileFeatureRendererProps) {
 	return config.image.features.map((feature) => {
 		switch (feature.type) {
@@ -52,6 +62,8 @@ export function ImageProfileFeatureRenderer({
 						feature={feature}
 						values={values}
 						bindings={bindings}
+						attached={attached}
+						section={section}
 						onChange={onChange}
 					/>
 				)
@@ -75,6 +87,8 @@ function ColorAdjustmentFeature({
 	values,
 	bindings,
 	onChange,
+	attached = false,
+	section,
 }: Omit<ImageProfileFeatureRendererProps, 'camera'> & {
 	feature: Extract<ImageStudioFeature, { type: 'color-adjustment' }>
 }) {
@@ -99,6 +113,8 @@ function ColorAdjustmentFeature({
 			<ControllerGroupRenderer
 				key={`${feature.type}:${group.id}`}
 				definition={group}
+				attached={attached}
+				section={section}
 				presentation={config.controllerPresentation?.groups.find(
 					({ groupId }) => groupId === group.id,
 				)}

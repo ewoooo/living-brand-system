@@ -83,6 +83,23 @@ export type TemplateBackgroundPatch = Partial<
 	Pick<TemplateBackgroundState, 'imageMode' | 'prompt' | 'dimmer' | 'dimmerOpacity'>
 >
 
+/**
+ * 활성 섹션이 캔버스에서 무엇을 집는가.
+ *
+ * 🔑 **「활성 섹션」과 「집을 대상」을 나눈 이유**는 둘의 개수가 다르기 때문이다. 섹션은 하나인데
+ *    Text 섹션은 텍스트 슬롯을 여럿 담고, Background 섹션은 노드를 하나도 담지 않는다. 대상을
+ *    슬롯 하나로 고정했을 때 그 두 섹션에서 강조가 성립하지 않았다(2026-08-24).
+ * 🔴 **배경의 주소는 노드가 아니라 도화지 자체다** — `composeTemplateHtml`의 `canvasBackground`가
+ *    이미 그 경계를 갖는다(노드 오버라이드가 아니라 루트 프레임에 얹는다). 여기서도 같게 가른다.
+ *
+ * `sectionId`는 사이드바 면이 자기가 켜졌는지 아는 값이다 — 섹션당 하나이고, 그 섹션 안의 한 행만
+ * 만질 때도 같은 값이 온다(그때는 `nodeIds`만 좁아진다).
+ */
+export type TemplateFocusTarget = { sectionId: string } & (
+	| { kind: 'nodes'; nodeIds: readonly string[] }
+	| { kind: 'canvas' }
+)
+
 export type TemplateStudioValue = {
 	navigation: {
 		/** 현재 템플릿이 속한 카테고리 이름 — 식별 카드의 부제다. 목록 없이도 알아야 해서 서버가 함께 내린다. */
@@ -134,6 +151,21 @@ export type TemplateStudioValue = {
 		selectGraphicConfig: (configId: string) => void
 		updateGraphic: (controlId: string, value: ControllerControlValue) => void
 		generate: () => Promise<void>
+	}
+	/**
+	 * 사이드바에서 지금 만지는 섹션과, 캔버스가 집어 보여 줄 대상.
+	 * 🔑 사이드바와 캔버스는 서로를 모르므로 이 컨텍스트가 유일한 연결이다.
+	 * 🔴 편집 세션이 아니라 이 화면의 표현 상태다 — 내보내는 HTML에 흔적을 남기지 않는다.
+	 */
+	focus: {
+		target: TemplateFocusTarget | null
+		set: (target: TemplateFocusTarget | null) => void
+		/**
+		 * 강조에 쓰는 브랜드 색(hex). 값의 정본은 `brand-colors` 컬렉션이고 서버가 이름으로 찾아
+		 * 내린다 — 코드에 hex를 박지 않는다(`docs/09` §4의 색-데이터 예외).
+		 * 🔴 못 찾으면 null이고 캔버스가 토큰으로 폴백한다.
+		 */
+		color: string | null
 	}
 	canvas: {
 		html: string

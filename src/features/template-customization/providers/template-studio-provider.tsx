@@ -24,6 +24,7 @@ import {
 	type TemplateAssignedImage,
 	type TemplateBackgroundPatch,
 	type TemplateBackgroundState,
+	type TemplateFocusTarget,
 	type TemplateImageSlotPatch,
 	type TemplateImageSlotState,
 	TemplateStudioContext,
@@ -452,11 +453,14 @@ export function TemplateStudioProvider({
 	config,
 	template,
 	categoryTitle,
+	highlightColor = null,
 	children,
 }: {
 	config: TemplateStudioConfig
 	template: PublishedTemplateView
 	categoryTitle: string | null
+	/** 강조 색 — 서버가 `brand-colors`에서 찾아 내린다. 없으면 캔버스가 토큰으로 폴백한다. */
+	highlightColor?: string | null
 	children: ReactNode
 }) {
 	// 교체 후보 목록은 자산 브라우저가 열릴 때 가져온다 — 페이지는 현재 카테고리 이름 하나만 싣는다.
@@ -466,6 +470,12 @@ export function TemplateStudioProvider({
 	const navigation = useMemo<TemplateStudioValue['navigation']>(
 		() => ({ categoryTitle, browse: templateBrowse }),
 		[categoryTitle, templateBrowse],
+	)
+	// 사이드바가 만지는 섹션. 편집 값이 아니라 표현 상태이므로 compose에도 export에도 안 들어간다.
+	const [focusTarget, setFocusTarget] = useState<TemplateFocusTarget | null>(null)
+	const focus = useMemo<TemplateStudioValue['focus']>(
+		() => ({ target: focusTarget, set: setFocusTarget, color: highlightColor }),
+		[focusTarget, highlightColor],
 	)
 	const previewRef = useRef<HTMLDivElement>(null)
 	const graphicFrameRef = useRef<(() => string) | null>(null)
@@ -587,6 +597,7 @@ export function TemplateStudioProvider({
 			vectors,
 			layers,
 			background,
+			focus,
 			canvas: {
 				html: composedHtml,
 				artifact,
@@ -605,6 +616,7 @@ export function TemplateStudioProvider({
 			sampleImages,
 			config,
 			controllerValues,
+			focus,
 			images,
 			layers,
 			navigation,

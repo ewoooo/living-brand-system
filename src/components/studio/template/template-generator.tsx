@@ -16,6 +16,11 @@ type TemplateGeneratorProps = {
 	/** 식별 카드의 부제 — 교체 후보 목록은 자산 브라우저가 열릴 때 따로 가져온다. */
 	categoryTitle: string | null
 	template: PublishedTemplateView
+	/**
+	 * 편집 중인 슬롯을 집어 보여 줄 때 쓰는 브랜드 색 — 값의 정본은 `brand-colors` 컬렉션이다.
+	 * 🔑 없어도 스튜디오는 열린다(캔버스가 토큰으로 폴백한다) — 그래서 optional이다.
+	 */
+	highlightColor?: string | null
 }
 
 /**
@@ -26,9 +31,19 @@ type TemplateGeneratorProps = {
  * 사이드바(컨트롤러)와 캔버스(작업 공간)는 서로를 모른다 — 편집 세션 상태는
  * TemplateStudioProvider(features)가 단일 소유하고 둘 다 컨텍스트로만 소통한다.
  */
-export function TemplateGenerator({ config, categoryTitle, template }: TemplateGeneratorProps) {
+export function TemplateGenerator({
+	config,
+	categoryTitle,
+	template,
+	highlightColor = null,
+}: TemplateGeneratorProps) {
 	return (
-		<TemplateStudioProvider config={config} template={template} categoryTitle={categoryTitle}>
+		<TemplateStudioProvider
+			config={config}
+			template={template}
+			categoryTitle={categoryTitle}
+			highlightColor={highlightColor}
+		>
 			<TemplateWorkspace template={template} />
 		</TemplateStudioProvider>
 	)

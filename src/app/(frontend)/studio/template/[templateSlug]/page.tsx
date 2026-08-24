@@ -38,6 +38,7 @@ export default async function CreateTemplatePage({
 					)?.title ?? null
 				}
 				template={studio.template}
+				highlightColor={studio.highlightColor}
 			/>
 		</StudioWorkspacePage>
 	)
