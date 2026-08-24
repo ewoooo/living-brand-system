@@ -4,7 +4,8 @@ import { clampSlotBox, slotHighlightStyle } from './slot-highlight'
 const CANVAS = { width: 1920, height: 1080 }
 /** 총배율 0.287(실측값)로 놓인 캔버스 — 화면 폭 551px. */
 const ROOT = { left: 565, top: 552, width: 551, height: 310 }
-const HD_BLUE = '#003087'
+/** CI 심볼의 중간초록 — 서비스가 `brand-colors`에서 이름으로 찾아 내리는 값이다. */
+const HD_GREEN = '#00AF41'
 
 /** 캔버스 좌표를 ROOT 기준 화면 사각형으로 되돌린다 — 테스트가 배율 산수를 두 번 적지 않게. */
 function onScreen(box: { left: number; top: number; width: number; height: number }) {
@@ -86,31 +87,31 @@ describe('clampSlotBox', () => {
 
 describe('slotHighlightStyle', () => {
 	it('테두리는 진하게, 면은 같은 색의 반투명으로 낸다', () => {
-		const style = slotHighlightStyle(1, HD_BLUE)
-		expect(style.border).toContain(`solid ${HD_BLUE}`)
-		expect(style.backgroundColor).toBe(`color-mix(in srgb, ${HD_BLUE} 18%, transparent)`)
+		const style = slotHighlightStyle(1, HD_GREEN)
+		expect(style.border).toContain(`solid ${HD_GREEN}`)
+		expect(style.backgroundColor).toBe(`color-mix(in srgb, ${HD_GREEN} 18%, transparent)`)
 	})
 
 	it('총배율의 두 번째 몫(--preview-scale)을 CSS에 남긴다 — 한쪽만 보정하면 선이 절반이 된다', () => {
-		expect(slotHighlightStyle(0.5, HD_BLUE).border).toBe(
-			'max(1px, calc(2 * calc(1px / (0.5 * var(--preview-scale, 1))))) solid #003087',
+		expect(slotHighlightStyle(0.5, HD_GREEN).border).toBe(
+			'max(1px, calc(2 * calc(1px / (0.5 * var(--preview-scale, 1))))) solid #00AF41',
 		)
 	})
 
 	it('측정 전(scale 0)에도 유효한 배율을 낸다', () => {
-		expect(slotHighlightStyle(0, HD_BLUE).border).toContain('(1 * var(--preview-scale, 1))')
+		expect(slotHighlightStyle(0, HD_GREEN).border).toContain('(1 * var(--preview-scale, 1))')
 	})
 
 	it('레이아웃을 건드리지 않고 클릭을 가로채지 않는다', () => {
-		const style = slotHighlightStyle(1, HD_BLUE)
+		const style = slotHighlightStyle(1, HD_GREEN)
 		expect(style.position).toBe('absolute')
 		expect(style.boxSizing).toBe('border-box')
 		expect(style.pointerEvents).toBe('none')
 	})
 
 	it('도화지 전체를 집을 때는 면을 깔지 않는다 — 구별할 형제가 없다', () => {
-		expect(slotHighlightStyle(1, HD_BLUE, false).backgroundColor).toBeUndefined()
-		expect(slotHighlightStyle(1, HD_BLUE, false).border).toContain(`solid ${HD_BLUE}`)
+		expect(slotHighlightStyle(1, HD_GREEN, false).backgroundColor).toBeUndefined()
+		expect(slotHighlightStyle(1, HD_GREEN, false).border).toContain(`solid ${HD_GREEN}`)
 	})
 
 	it('색을 못 받으면 브랜드 주입을 받는 토큰으로 폴백한다', () => {
