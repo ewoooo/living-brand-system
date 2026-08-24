@@ -62,7 +62,9 @@ export function TemplateCanvas() {
 					} as CSSProperties
 				}
 			>
-				{focus.slotId && <style>{slotHighlightCss(focus.slotId, scale)}</style>}
+				{focus.slotId && (
+					<style>{slotHighlightCss(focus.slotId, scale, focus.color)}</style>
+				)}
 				<div
 					className="relative"
 					style={{

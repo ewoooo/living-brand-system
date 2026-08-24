@@ -145,6 +145,12 @@ export type TemplateStudioValue = {
 	focus: {
 		slotId: string | null
 		set: (slotId: string | null) => void
+		/**
+		 * 강조에 쓰는 브랜드 색(hex). 값의 정본은 `brand-colors` 컬렉션이고 서버가 이름으로 찾아
+		 * 내린다 — 코드에 hex를 박지 않는다(`docs/09` §4의 색-데이터 예외).
+		 * 🔴 못 찾으면 null이고 캔버스가 토큰으로 폴백한다.
+		 */
+		color: string | null
 	}
 	canvas: {
 		html: string
