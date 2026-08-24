@@ -38,28 +38,35 @@ export function TemplateCanvas() {
 		(candidate) => candidate.id === background.state.graphicConfigId,
 	)
 
-	const slotId = focus.slotId
-	const [highlight, setHighlight] = useState<SlotHighlightBox | null>(null)
+	const target = focus.target
+	const [highlights, setHighlights] = useState<readonly SlotHighlightBox[]>([])
 	// biome-ignore lint/correctness/useExhaustiveDependencies: canvas.html은 본문이 읽는 값이 아니라 **재측정 방아쇠**다 — 그 문자열이 바뀌면 subtree가 통째로 갈려 슬롯의 사각형이 달라진다(정적 분석이 볼 수 없는 의존이다)
 	useLayoutEffect(() => {
 		const root = canvas.previewRef.current
-		if (!root || !slotId) {
-			setHighlight(null)
+		if (!root || !target) {
+			setHighlights([])
 			return
 		}
+		// 🔴 배경은 노드가 아니라 도화지를 집는다 — 잴 것이 없고 캔버스 상자가 곧 답이다.
+		if (target.kind === 'canvas') {
+			setHighlights([{ left: 0, top: 0, width, height }])
+			return
+		}
+		const rootRect = root.getBoundingClientRect()
 		// 🔑 nodeId에 콜론이 섞여 선택자를 조립하지 않는다 — compose와 같은 규칙(순회 후 정확 일치).
-		const slot = Array.from(root.querySelectorAll('[data-node-id]')).find(
-			(node) => node.getAttribute('data-node-id') === slotId,
+		const nodes = Array.from(root.querySelectorAll('[data-node-id]'))
+		setHighlights(
+			target.nodeIds.flatMap((nodeId) => {
+				const node = nodes.find(
+					(candidate) => candidate.getAttribute('data-node-id') === nodeId,
+				)
+				const box = node
+					? clampSlotBox(node.getBoundingClientRect(), rootRect, { width, height })
+					: null
+				return box ? [box] : []
+			}),
 		)
-		setHighlight(
-			slot
-				? clampSlotBox(slot.getBoundingClientRect(), root.getBoundingClientRect(), {
-						width,
-						height,
-					})
-				: null,
-		)
-	}, [canvas.html, canvas.previewRef, height, slotId, width])
+	}, [canvas.html, canvas.previewRef, height, target, width])
 
 	useEffect(() => {
 		const stage = stageRef.current
@@ -114,13 +121,23 @@ export function TemplateCanvas() {
 						dangerouslySetInnerHTML={{ __html: canvas.html }}
 					/>
 					{/* 🔴 주입된 HTML의 **형제**다 — 루트 프레임 안에 두면 캔버스를 넘는 슬롯의 강조가
-					    그 프레임의 overflow:hidden에 잘린다(`slot-highlight.ts`가 이유를 갖는다). */}
-					{highlight && (
+					    그 프레임의 overflow:hidden에 잘린다(`slot-highlight.ts`가 이유를 갖는다).
+					    🔑 여러 개인 이유: Text 섹션은 텍스트 상자를 전부 집는다. */}
+					{highlights.map((box) => (
 						<div
+							key={`${box.left}:${box.top}:${box.width}:${box.height}`}
 							data-slot="template-slot-highlight"
-							style={{ ...slotHighlightStyle(scale, focus.color), ...highlight }}
+							style={{
+								// 도화지 전체를 집을 때는 면을 깔지 않는다 — 가릴 것과 구별할 것이 없다.
+								...slotHighlightStyle(
+									scale,
+									focus.color,
+									target?.kind !== 'canvas',
+								),
+								...box,
+							}}
 						/>
-					)}
+					))}
 				</div>
 			</div>
 			<ControllerBar placement="canvas">

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { Controller } from '@/components/shared/controller'
+import type { ControllerGroupSectionProps } from '@/components/shared/controller/group'
 import { FieldError } from '@/components/ui/field'
 import type {
 	ControllerControlDefinition,
@@ -79,7 +80,7 @@ export function ControllerGroupRenderer({
 	children,
 	first = false,
 	attached = false,
-	onActivate,
+	section,
 }: {
 	definition: ControllerGroupDefinition
 	presentation?: ControllerGroupPresentation
@@ -91,8 +92,8 @@ export function ControllerGroupRenderer({
 	 *    그래서 이 값은 접히는 갈래에만 넘긴다.
 	 */
 	attached?: boolean
-	/** 주면 chevron만 접기 트리거가 되고 나머지 클릭은 여기로 온다 — `Controller.Group`이 계약을 갖는다. */
-	onActivate?: () => void
+	/** 섹션 활성화 배선 — `Controller.Group`에 그대로 얹힌다(계약은 그쪽이 갖는다). */
+	section?: ControllerGroupSectionProps
 }) {
 	return (presentation?.collapsible ?? true) ? (
 		<Controller.Group
@@ -100,7 +101,7 @@ export function ControllerGroupRenderer({
 			collapsible
 			defaultOpen={presentation?.defaultOpen ?? true}
 			attached={attached}
-			onActivate={onActivate}
+			{...section}
 			className={first ? 'border-t-0' : undefined}
 		>
 			{children}
@@ -109,6 +110,7 @@ export function ControllerGroupRenderer({
 		<Controller.Group
 			title={definition.title}
 			collapsible={false}
+			{...section}
 			className={first ? 'border-t-0' : undefined}
 		>
 			{children}

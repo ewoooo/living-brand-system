@@ -1,6 +1,7 @@
 'use client'
 
 import { Controller } from '@/components/shared/controller'
+import type { ControllerGroupSectionProps } from '@/components/shared/controller/group'
 import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
@@ -38,7 +39,7 @@ type ImageProfileFeatureRendererProps = {
 	 */
 	attached?: boolean
 	/** 하위 섹션도 「chevron만 토글」 규칙을 따르게 한다 — 한 패널 안에서 규칙이 갈리면 안 된다. */
-	onActivate?: () => void
+	section?: ControllerGroupSectionProps
 }
 
 /** Image feature type을 bespoke UI 또는 참조된 공통 Controller control로 단일 dispatch한다. */
@@ -49,7 +50,7 @@ export function ImageProfileFeatureRenderer({
 	onChange,
 	camera,
 	attached = false,
-	onActivate,
+	section,
 }: ImageProfileFeatureRendererProps) {
 	return config.image.features.map((feature) => {
 		switch (feature.type) {
@@ -62,7 +63,7 @@ export function ImageProfileFeatureRenderer({
 						values={values}
 						bindings={bindings}
 						attached={attached}
-						onActivate={onActivate}
+						section={section}
 						onChange={onChange}
 					/>
 				)
@@ -87,7 +88,7 @@ function ColorAdjustmentFeature({
 	bindings,
 	onChange,
 	attached = false,
-	onActivate,
+	section,
 }: Omit<ImageProfileFeatureRendererProps, 'camera'> & {
 	feature: Extract<ImageStudioFeature, { type: 'color-adjustment' }>
 }) {
@@ -113,7 +114,7 @@ function ColorAdjustmentFeature({
 				key={`${feature.type}:${group.id}`}
 				definition={group}
 				attached={attached}
-				onActivate={onActivate}
+				section={section}
 				presentation={config.controllerPresentation?.groups.find(
 					({ groupId }) => groupId === group.id,
 				)}

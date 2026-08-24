@@ -70,7 +70,11 @@ function cssColor(color: string | null | undefined): string {
  * 🔴 그 배율의 transform은 `lg:`에서만 걸리는데 변수는 항상 있다 — 좁은 화면에서는 선이 그만큼
  *    두꺼워진다. 스튜디오는 데스크톱 편집기라 그쪽을 감수한다(브레이크포인트를 코드로 복제하지 않는다).
  */
-export function slotHighlightStyle(scale: number, color?: string | null): CSSProperties {
+export function slotHighlightStyle(
+	scale: number,
+	color?: string | null,
+	filled = true,
+): CSSProperties {
 	// scale이 0이나 음수로 오는 순간(측정 전 첫 프레임) 배율이 무의미해진다 — 1로 떨어뜨린다.
 	const fit = scale > 0 ? scale : 1
 	const unit = `calc(1px / (${fit} * var(--preview-scale, 1)))`
@@ -82,6 +86,12 @@ export function slotHighlightStyle(scale: number, color?: string | null): CSSPro
 		boxSizing: 'border-box',
 		pointerEvents: 'none',
 		border: `${width} solid ${ink}`,
-		backgroundColor: `color-mix(in srgb, ${ink} ${FILL_ALPHA}, transparent)`,
+		/*
+		 * 🔑 면은 **여럿 중 하나를 가리킬 때** 뜻이 있다. 도화지 전체를 집는 경우(Background 섹션)는
+		 *    구별할 형제가 없고 전면을 덮으면 콘텐츠만 탁해지므로 테두리만 남긴다.
+		 */
+		...(filled
+			? { backgroundColor: `color-mix(in srgb, ${ink} ${FILL_ALPHA}, transparent)` }
+			: {}),
 	}
 }

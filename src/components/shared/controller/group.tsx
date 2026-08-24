@@ -7,6 +7,19 @@ import * as React from 'react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
 
+/**
+ * 섹션 활성화 배선 한 묶음. 정의 기반 렌더러(`ControllerGroupRenderer`)가 이것을 그대로 얹으므로
+ * 프롭을 하나씩 늘리지 않는다.
+ */
+export type ControllerGroupSectionProps = {
+	/** 이 섹션이 지금 만지는 대상임을 면으로 표시한다. */
+	active?: boolean
+	/** 🔴 주면 chevron만 접기 트리거가 되고 나머지 클릭은 여기로 온다. */
+	onActivate?: () => void
+	onFocusCapture?: React.FocusEventHandler
+	onBlurCapture?: React.FocusEventHandler
+}
+
 type ControllerGroupProps =
 	| (Omit<React.ComponentProps<'section'>, 'title'> & {
 			title: string
@@ -20,6 +33,10 @@ type ControllerGroupProps =
 			defaultOpen?: never
 			disabled?: never
 			attached?: never
+			/** 접히지 않는 그룹에도 활성 표시는 붙는다 — 접힘 정책과 무관한 축이다. */
+			active?: boolean
+			/** chevron이 없으므로 트리거를 가를 것이 없다 — 섹션 클릭이 그대로 여기로 온다. */
+			onActivate?: () => void
 	  })
 	| (Omit<
 			React.ComponentProps<typeof Collapsible>,
@@ -56,14 +73,30 @@ export function ControllerGroup(props: ControllerGroupProps) {
 		title,
 		collapsible: _collapsible,
 		trailing,
+		active,
+		onActivate,
 		className,
 		children,
 		...sectionProps
 	} = props
 	return (
+		/*
+		 * 🔴 a11y 두 규칙을 억제한다 — 이 클릭은 **동작이 아니라 「지금 이 섹션을 만진다」는 표시**이고,
+		 *    키보드 경로가 따로 있다: 섹션 안 컨트롤로 탭하면 `onFocusCapture`가 같은 일을 한다.
+		 *    role을 주면 이 컨테이너가 버튼처럼 읽혀 안쪽 컨트롤의 의미를 가린다.
+		 */
+		// biome-ignore lint/a11y/noStaticElementInteractions: 위 주석 — 키보드 경로는 onFocusCapture다
+		// biome-ignore lint/a11y/useKeyWithClickEvents: 위 주석 — 키보드 경로는 onFocusCapture다
 		<section
 			data-slot="controller-group"
-			className={cn('flex shrink-0 flex-col gap-1 pb-3', className)}
+			data-active={active || undefined}
+			onClick={onActivate}
+			className={cn(
+				'group/controller-group flex shrink-0 flex-col gap-1 pb-3',
+				// 활성 면은 패널 폭 전체로 번진다 — 접히는 갈래와 같은 규칙이다.
+				'data-[active]:-mx-4 data-[active]:bg-primary/5 data-[active]:px-4',
+				className,
+			)}
 			{...sectionProps}
 		>
 			<header className="flex h-9 shrink-0 items-center justify-between gap-2 pt-1">

@@ -2,6 +2,7 @@
 
 import { ChevronDown } from '@carbon/icons-react'
 import { Controller } from '@/components/shared/controller'
+import type { ControllerGroupSectionProps } from '@/components/shared/controller/group'
 import { ControllerControlRenderer } from '@/components/shared/controller-renderer'
 import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
 import { Button } from '@/components/ui/button'
@@ -27,7 +28,7 @@ type ImageSlotInputProps = {
 	onSelectSampleImage: (option: SampleImageOption) => void
 	onGenerate: () => void
 	/** 하위 프로파일 섹션도 「chevron만 토글」 규칙을 따르게 한다 — 슬롯 그룹이 그 규칙을 켠다. */
-	onActivate?: () => void
+	section?: ControllerGroupSectionProps
 }
 
 /**
@@ -45,7 +46,7 @@ export function ImageSlotInput({
 	onImageModeChange,
 	onSelectSampleImage,
 	onGenerate,
-	onActivate,
+	section,
 }: ImageSlotInputProps) {
 	const selected = contracts.find((contract) => contract.config.id === value.profileId)
 	const invalidPrompt = selected
@@ -203,7 +204,7 @@ export function ImageSlotInput({
 										: undefined
 								}
 								attached
-								onActivate={onActivate}
+								section={section}
 								onChange={onFeatureChange}
 							/>
 						)}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Controller } from '@/components/shared/controller'
+import type { ControllerGroupSectionProps } from '@/components/shared/controller/group'
 import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
@@ -33,6 +34,8 @@ import {
 import { SampleImagePicker } from './sample-image-picker'
 
 type BackgroundSectionProps = {
+	/** 섹션 활성화 배선 — `Controller.Group`이 계약을 갖는다. */
+	section?: ControllerGroupSectionProps
 	groupDefinition: ControllerGroupDefinition
 	groupPresentation?: ControllerGroupPresentation
 	/** Template의 공통 Controller Definition — availability와 options를 그대로 소비한다. */
@@ -71,6 +74,7 @@ type BackgroundSectionProps = {
  * 경로가 없는 배경 이미지 feature 색 행·Image Transform만 잠가 스테이징한다.
  */
 export function BackgroundSection({
+	section,
 	groupDefinition,
 	groupPresentation,
 	typeDefinition,
@@ -104,7 +108,11 @@ export function BackgroundSection({
 		? !acceptsImagePromptExecution(imageContract.prompt, value.prompt)
 		: true
 	return (
-		<ControllerGroupRenderer definition={groupDefinition} presentation={groupPresentation}>
+		<ControllerGroupRenderer
+			definition={groupDefinition}
+			presentation={groupPresentation}
+			section={section}
+		>
 			<ControllerControlRenderer
 				definition={typeDefinition}
 				value={type}

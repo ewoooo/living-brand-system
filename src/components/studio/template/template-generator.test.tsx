@@ -618,6 +618,59 @@ describe('TemplateGenerator', () => {
 		).toBe(2)
 	})
 
+	it('섹션은 노드 개수와 무관하게 눌러서 활성화된다 — Text는 슬롯 여럿, Background는 노드 없음', () => {
+		const { container } = render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html: '<p data-node-id="t1">TITLE</p><p data-node-id="t2">YEARS</p>',
+					nodeConfigs: {
+						t1: { input: { label: 'Title' } },
+						t2: { input: { label: 'Years' } },
+					},
+				}}
+			/>,
+		)
+		const groups = () =>
+			Array.from(container.querySelectorAll('[data-slot="controller-group"]'))
+		const named = (title: string) =>
+			groups().find((group) => group.querySelector('span')?.textContent?.trim() === title)
+
+		expect(named('Text')).not.toHaveAttribute('data-active')
+		expect(named('Background')).not.toHaveAttribute('data-active')
+
+		// 🔴 전에는 이 둘이 활성화되지 않았다 — 대상이 슬롯 하나로 고정돼 있었다.
+		const textTitle = named('Text')?.querySelector('span')
+		fireEvent.click(textTitle as Element)
+		expect(named('Text')).toHaveAttribute('data-active', 'true')
+		expect(named('Background')).not.toHaveAttribute('data-active')
+
+		fireEvent.click(named('Background')?.querySelector('span') as Element)
+		expect(named('Background')).toHaveAttribute('data-active', 'true')
+		expect(named('Text')).not.toHaveAttribute('data-active')
+	})
+
+	it('Background 섹션은 노드가 아니라 도화지를 집고, 면 없이 테두리만 그린다', () => {
+		const { container } = render(<TemplateGenerator categoryTitle="카드" template={template} />)
+		const groups = Array.from(container.querySelectorAll('[data-slot="controller-group"]'))
+		const background = groups.find(
+			(group) => group.querySelector('span')?.textContent?.trim() === 'Background',
+		)
+		fireEvent.click(background?.querySelector('span') as Element)
+
+		const overlays = container.querySelectorAll<HTMLElement>(
+			'[data-slot="template-slot-highlight"]',
+		)
+		expect(overlays).toHaveLength(1)
+		// 캔버스 상자 그대로 — 잴 것이 없다(노드가 아니므로 getBoundingClientRect를 안 쓴다).
+		expect(overlays[0].style.width).toBe('400px')
+		expect(overlays[0].style.height).toBe('300px')
+		// 🔑 도화지 전체를 집을 때는 구별할 형제가 없다 — 면을 깔면 콘텐츠만 탁해진다.
+		expect(overlays[0].style.backgroundColor).toBe('')
+		expect(overlays[0].style.border).toContain('solid')
+	})
+
 	it('사용자 Line Color가 이미지 교체 시 colorize의 line을 갈아끼운다', async () => {
 		mocks.requestImageGeneration.mockResolvedValue({
 			generatedImages: [{ id: 5, url: '/api/generated-images/file/bg.png' }],

@@ -24,6 +24,7 @@ import {
 	type TemplateAssignedImage,
 	type TemplateBackgroundPatch,
 	type TemplateBackgroundState,
+	type TemplateFocusTarget,
 	type TemplateImageSlotPatch,
 	type TemplateImageSlotState,
 	TemplateStudioContext,
@@ -470,11 +471,11 @@ export function TemplateStudioProvider({
 		() => ({ categoryTitle, browse: templateBrowse }),
 		[categoryTitle, templateBrowse],
 	)
-	// 사이드바가 만지는 슬롯. 편집 값이 아니라 표현 상태이므로 compose에도 export에도 안 들어간다.
-	const [focusedSlotId, setFocusedSlotId] = useState<string | null>(null)
+	// 사이드바가 만지는 섹션. 편집 값이 아니라 표현 상태이므로 compose에도 export에도 안 들어간다.
+	const [focusTarget, setFocusTarget] = useState<TemplateFocusTarget | null>(null)
 	const focus = useMemo<TemplateStudioValue['focus']>(
-		() => ({ slotId: focusedSlotId, set: setFocusedSlotId, color: highlightColor }),
-		[focusedSlotId, highlightColor],
+		() => ({ target: focusTarget, set: setFocusTarget, color: highlightColor }),
+		[focusTarget, highlightColor],
 	)
 	const previewRef = useRef<HTMLDivElement>(null)
 	const graphicFrameRef = useRef<(() => string) | null>(null)

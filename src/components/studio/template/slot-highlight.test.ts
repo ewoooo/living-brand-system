@@ -108,6 +108,11 @@ describe('slotHighlightStyle', () => {
 		expect(style.pointerEvents).toBe('none')
 	})
 
+	it('도화지 전체를 집을 때는 면을 깔지 않는다 — 구별할 형제가 없다', () => {
+		expect(slotHighlightStyle(1, HD_BLUE, false).backgroundColor).toBeUndefined()
+		expect(slotHighlightStyle(1, HD_BLUE, false).border).toContain(`solid ${HD_BLUE}`)
+	})
+
 	it('색을 못 받으면 브랜드 주입을 받는 토큰으로 폴백한다', () => {
 		for (const missing of [null, undefined, '']) {
 			const style = slotHighlightStyle(1, missing)
