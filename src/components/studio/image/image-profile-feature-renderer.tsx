@@ -32,6 +32,11 @@ type ImageProfileFeatureRendererProps = {
 	bindings?: ControllerRuntimeBindings
 	onChange: (controlId: string, value: ControllerControlValue) => void
 	camera?: ImageProfileCameraRuntime
+	/**
+	 * 프로파일 그룹을 하위 섹션으로 그린다 — Template처럼 **다른 그룹 안에서** 부를 때 준다.
+	 * 🔴 기본값(false)은 Image 스튜디오의 최상위 호출이다. 거기서는 구분선이 맞다.
+	 */
+	attached?: boolean
 }
 
 /** Image feature type을 bespoke UI 또는 참조된 공통 Controller control로 단일 dispatch한다. */
@@ -41,6 +46,7 @@ export function ImageProfileFeatureRenderer({
 	bindings,
 	onChange,
 	camera,
+	attached = false,
 }: ImageProfileFeatureRendererProps) {
 	return config.image.features.map((feature) => {
 		switch (feature.type) {
@@ -52,6 +58,7 @@ export function ImageProfileFeatureRenderer({
 						feature={feature}
 						values={values}
 						bindings={bindings}
+						attached={attached}
 						onChange={onChange}
 					/>
 				)
@@ -75,6 +82,7 @@ function ColorAdjustmentFeature({
 	values,
 	bindings,
 	onChange,
+	attached = false,
 }: Omit<ImageProfileFeatureRendererProps, 'camera'> & {
 	feature: Extract<ImageStudioFeature, { type: 'color-adjustment' }>
 }) {
@@ -99,6 +107,7 @@ function ColorAdjustmentFeature({
 			<ControllerGroupRenderer
 				key={`${feature.type}:${group.id}`}
 				definition={group}
+				attached={attached}
 				presentation={config.controllerPresentation?.groups.find(
 					({ groupId }) => groupId === group.id,
 				)}

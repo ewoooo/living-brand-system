@@ -78,17 +78,25 @@ export function ControllerGroupRenderer({
 	presentation,
 	children,
 	first = false,
+	attached = false,
 }: {
 	definition: ControllerGroupDefinition
 	presentation?: ControllerGroupPresentation
 	children: ReactNode
 	first?: boolean
+	/**
+	 * 앞 컨트롤을 소유하는 그룹의 하위 섹션으로 그린다 — 구분선을 걷고 여백만 둔다.
+	 * 🔴 접히지 않는 그룹은 애초에 구분선이 없다(`Controller.Group`의 non-collapsible 갈래) —
+	 *    그래서 이 값은 접히는 갈래에만 넘긴다.
+	 */
+	attached?: boolean
 }) {
 	return (presentation?.collapsible ?? true) ? (
 		<Controller.Group
 			title={definition.title}
 			collapsible
 			defaultOpen={presentation?.defaultOpen ?? true}
+			attached={attached}
 			className={first ? 'border-t-0' : undefined}
 		>
 			{children}

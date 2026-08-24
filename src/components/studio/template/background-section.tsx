@@ -172,12 +172,7 @@ export function BackgroundSection({
 								</Controller.Row>
 								{imageContract && (
 									<>
-										<ImageProfileFeatureRenderer
-											config={imageContract.config}
-											values={value.featureValues}
-											bindings={featureBindings}
-											onChange={onFeatureChange}
-										/>
+										{/* 🔴 맨몸 행이 접히는 그룹보다 앞에 온다 — 이미지 슬롯과 같은 이유다. */}
 										<ControllerControlRenderer
 											definition={imageContract.prompt}
 											value={value.prompt}
@@ -190,6 +185,13 @@ export function BackgroundSection({
 											definition={imageContract.ratio}
 											value={imageContract.ratio.defaultValue}
 											onChange={() => {}}
+										/>
+										<ImageProfileFeatureRenderer
+											config={imageContract.config}
+											values={value.featureValues}
+											bindings={featureBindings}
+											attached
+											onChange={onFeatureChange}
 										/>
 									</>
 								)}
