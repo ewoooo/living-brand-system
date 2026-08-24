@@ -33,26 +33,23 @@ describe('slotHighlightCss', () => {
 		expect(css).toContain('var(--primary-foreground)')
 	})
 
-	it('축소 렌더에서 선이 사라지지 않게 두께와 팔 길이를 scale로 나눈다', () => {
+	it('총배율의 두 번째 몫(--preview-scale)을 CSS에 남긴다 — 보정을 한쪽만 하면 선이 절반이 된다', () => {
 		const css = slotHighlightCss('n', 0.5)
-		expect(css).toContain('border:4px solid')
-		expect(css).toContain('min(28px, 30%)')
+		expect(css).toContain('calc(1px / (0.5 * var(--preview-scale, 1)))')
 	})
 
-	it('확대 렌더에서도 하한을 지킨다', () => {
-		const css = slotHighlightCss('n', 4)
-		expect(css).toContain('border:1px solid')
-		expect(css).toContain('min(6px, 30%)')
+	it('두께와 팔 길이를 그 단위로만 잰다 — 생 px을 박지 않는다', () => {
+		const css = slotHighlightCss('n', 0.5)
+		expect(css).toContain('border:max(1px, calc(2 * var(--slot-bracket-unit))) solid')
+		expect(css).toContain('min(calc(14 * var(--slot-bracket-unit)), 30%)')
 	})
 
-	it('측정 전(scale 0)에도 유효한 값을 낸다', () => {
-		const css = slotHighlightCss('n', 0)
-		expect(css).toContain('border:2px solid')
-		expect(css).toContain('min(14px, 30%)')
+	it('측정 전(scale 0)에도 유효한 배율을 낸다', () => {
+		expect(slotHighlightCss('n', 0)).toContain('calc(1px / (1 * var(--preview-scale, 1)))')
 	})
 
 	it('팔이 요소 절반을 넘어 브래킷이 이어지는 것을 30%로 막는다', () => {
-		expect(slotHighlightCss('n', 0.1)).toContain('30%)')
+		expect(slotHighlightCss('n', 0.1)).toContain(', 30%)')
 	})
 
 	it('따옴표를 이스케이프해 선택자를 깨지 않는다', () => {
