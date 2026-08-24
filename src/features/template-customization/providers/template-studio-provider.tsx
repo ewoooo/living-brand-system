@@ -467,6 +467,12 @@ export function TemplateStudioProvider({
 		() => ({ categoryTitle, browse: templateBrowse }),
 		[categoryTitle, templateBrowse],
 	)
+	// 사이드바가 만지는 슬롯. 편집 값이 아니라 표현 상태이므로 compose에도 export에도 안 들어간다.
+	const [focusedSlotId, setFocusedSlotId] = useState<string | null>(null)
+	const focus = useMemo<TemplateStudioValue['focus']>(
+		() => ({ slotId: focusedSlotId, set: setFocusedSlotId }),
+		[focusedSlotId],
+	)
 	const previewRef = useRef<HTMLDivElement>(null)
 	const graphicFrameRef = useRef<(() => string) | null>(null)
 	const registerGraphicFrame = useCallback((capture: (() => string) | null) => {
@@ -587,6 +593,7 @@ export function TemplateStudioProvider({
 			vectors,
 			layers,
 			background,
+			focus,
 			canvas: {
 				html: composedHtml,
 				artifact,
@@ -605,6 +612,7 @@ export function TemplateStudioProvider({
 			sampleImages,
 			config,
 			controllerValues,
+			focus,
 			images,
 			layers,
 			navigation,

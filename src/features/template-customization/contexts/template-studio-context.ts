@@ -135,6 +135,17 @@ export type TemplateStudioValue = {
 		updateGraphic: (controlId: string, value: ControllerControlValue) => void
 		generate: () => Promise<void>
 	}
+	/**
+	 * 사이드바에서 지금 만지는 슬롯 — 캔버스가 그 요소를 집어 보여 준다.
+	 * 🔑 사이드바와 캔버스는 서로를 모르므로 이 컨텍스트가 유일한 연결이다. 값은 nodeId와 같다
+	 *    (`deriveTemplateStudioConfig`가 슬롯 id에 nodeId를 그대로 쓴다) — 캔버스는 이 문자열로
+	 *    `data-node-id`를 바로 찾는다.
+	 * 🔴 편집 세션이 아니라 이 화면의 표현 상태다 — 내보내는 HTML에 흔적을 남기지 않는다.
+	 */
+	focus: {
+		slotId: string | null
+		set: (slotId: string | null) => void
+	}
 	canvas: {
 		html: string
 		artifact: () => TemplateRasterArtifact

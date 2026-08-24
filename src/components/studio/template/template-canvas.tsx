@@ -7,6 +7,7 @@ import {
 	DEFAULT_PREVIEW_SIZE,
 	PreviewSizeControl,
 } from '@/components/studio/shared/preview-size-control'
+import { slotHighlightCss } from '@/components/studio/template/slot-highlight-css'
 import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
@@ -23,7 +24,7 @@ import type { ControllerValues } from '@/modules/studio-controller/controller-de
  * CORS 로드를 깨뜨린다. 임포트 HTML은 스크립트 없는 inline-style이다.
  */
 export function TemplateCanvas() {
-	const { config, canvas, background } = useTemplateStudio()
+	const { config, canvas, background, focus } = useTemplateStudio()
 	const { width, height } = config.template.exportOption.canvas
 	const stageRef = useRef<HTMLDivElement>(null)
 	const [preview, setPreview] = useState({ width, height })
@@ -61,6 +62,7 @@ export function TemplateCanvas() {
 					} as CSSProperties
 				}
 			>
+				{focus.slotId && <style>{slotHighlightCss(focus.slotId, scale)}</style>}
 				<div
 					className="relative"
 					style={{

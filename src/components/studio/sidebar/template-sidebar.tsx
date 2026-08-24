@@ -45,7 +45,8 @@ const FORMAT_LABELS = new Map(
  * 세션 값은 컨텍스트의 text/images 그룹으로만 읽고 쓴다.
  */
 export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }) {
-	const { navigation, config, text, images, vectors, layers, background } = useTemplateStudio()
+	const { navigation, config, text, images, vectors, layers, background, focus } =
+		useTemplateStudio()
 	const {
 		text: textSlots,
 		image: imageSlots,
@@ -174,7 +175,11 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 							const definition = findTemplateControl(config, slot.controlId)
 							if (definition?.kind !== 'text') return null
 							return (
-								<div key={slot.id} className="flex flex-col gap-1">
+								<div
+									key={slot.id}
+									className="flex flex-col gap-1"
+									{...slotFocusProps(focus, slot.id)}
+								>
 									<LayerVisibilityControl
 										label={slot.label}
 										visible={layers.visibility[slot.id] ?? true}
@@ -215,7 +220,12 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 					const contracts = images.contracts[slot.id] ?? []
 					if (!state) return null
 					return (
-						<Controller.Group key={slot.id} title={sectionTitle} collapsible>
+						<Controller.Group
+							key={slot.id}
+							title={sectionTitle}
+							collapsible
+							{...slotFocusProps(focus, slot.id)}
+						>
 							<LayerVisibilityControl
 								label={slot.label}
 								visible={layers.visibility[slot.id] ?? true}
@@ -275,7 +285,12 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 				{vectors.slots.map((slot) => {
 					const color = vectors.colors[slot.id]
 					return (
-						<Controller.Group key={slot.id} title={slot.label} collapsible>
+						<Controller.Group
+							key={slot.id}
+							title={slot.label}
+							collapsible
+							{...slotFocusProps(focus, slot.id)}
+						>
 							<LayerVisibilityControl
 								label={slot.label}
 								visible={layers.visibility[slot.id] ?? true}
@@ -347,6 +362,25 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 			</StudioSidebar>
 		</Controller.Browser.Root>
 	)
+}
+
+/**
+ * 슬롯 하나를 「지금 만지는 것」으로 캔버스에 알리는 핸들러.
+ *
+ * 🔑 그룹 래퍼에 capture로 단다 — 안쪽 컨트롤이 몇 개든(Transform 하위 그룹까지) 한 자리에서
+ *    잡히고, 컨트롤마다 배선을 더할 필요가 없다.
+ * ponytail: 포커스만 본다. hover도 켜면 「마우스는 나갔지만 포커스는 남아 있다」를 가르는 조건이
+ *   필요해지고(활성 요소 포함 검사) 얻는 것은 발견성뿐이다 — 필요해지면 `onPointerEnter`와
+ *   `contains(document.activeElement)` 가드 두 줄이다.
+ */
+function slotFocusProps(focus: ReturnType<typeof useTemplateStudio>['focus'], slotId: string) {
+	return {
+		onFocusCapture: () => focus.set(slotId),
+		// 🔴 내 것일 때만 놓는다 — 다른 슬롯으로 곧장 옮겨 가면 새 focus가 먼저 들어온다.
+		onBlurCapture: () => {
+			if (focus.slotId === slotId) focus.set(null)
+		},
+	}
 }
 
 function LayerVisibilityControl({
