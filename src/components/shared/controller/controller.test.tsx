@@ -54,6 +54,64 @@ describe('Controller.Group', () => {
 		await waitFor(() => expect(content).toHaveStyle({ height: '0px', opacity: '0' }))
 	})
 
+	it('onActivate가 없으면 헤더 전체가 토글한다 — 이 컴포넌트를 쓰는 나머지 화면의 기본', () => {
+		render(
+			<Controller.Group title="Sec">
+				<div>내용물</div>
+			</Controller.Group>,
+		)
+		// 제목 자체가 트리거의 접근 가능한 이름이다 = 헤더 전체가 버튼이다.
+		expect(screen.getByRole('button', { name: 'Sec' })).toHaveClass('w-full')
+		expect(screen.queryByRole('button', { name: 'Sec 섹션 접고 펴기' })).toBeNull()
+	})
+
+	it('onActivate를 주면 chevron만 토글하고 헤더의 나머지는 섹션을 활성화한다', async () => {
+		const onActivate = vi.fn()
+		const { container } = render(
+			<Controller.Group title="Sec" onActivate={onActivate}>
+				<div>내용물</div>
+			</Controller.Group>,
+		)
+		const toggle = screen.getByRole('button', { name: 'Sec 섹션 접고 펴기' })
+		const content = container.querySelector('[data-slot="controller-group-content"]')
+
+		// 제목을 눌러도 접히지 않는다 — 활성화만 된다.
+		fireEvent.click(screen.getByText('Sec'))
+		expect(onActivate).toHaveBeenCalledTimes(1)
+		expect(toggle).toHaveAttribute('aria-expanded', 'true')
+
+		// 본문을 눌러도 활성화된다 — 섹션 안 아무 곳이나.
+		fireEvent.click(screen.getByText('내용물'))
+		expect(onActivate).toHaveBeenCalledTimes(2)
+
+		// chevron은 접기만 한다 — 활성화로 새지 않는다(stopPropagation).
+		fireEvent.click(toggle)
+		expect(onActivate).toHaveBeenCalledTimes(2)
+		expect(toggle).toHaveAttribute('aria-expanded', 'false')
+		await waitFor(() => expect(content).toHaveStyle({ height: '0px', opacity: '0' }))
+	})
+
+	it('활성 섹션은 패널 폭 전체로 번지는 면을 갖는다 — 경계가 읽히게', () => {
+		const { container, rerender } = render(
+			<Controller.Group title="Sec" onActivate={() => {}}>
+				<div>내용물</div>
+			</Controller.Group>,
+		)
+		const group = () => container.querySelector('[data-slot="controller-group"]')
+		expect(group()).not.toHaveAttribute('data-active')
+
+		rerender(
+			<Controller.Group title="Sec" active onActivate={() => {}}>
+				<div>내용물</div>
+			</Controller.Group>,
+		)
+		expect(group()).toHaveAttribute('data-active', 'true')
+		// Content의 px-4를 상쇄해 좌우 끝까지 닿는다.
+		expect(group()).toHaveClass('data-[active]:-mx-4', 'data-[active]:px-4')
+		// 🔴 hover가 bg-muted이므로 활성은 primary로만 칠한다(docs/09 §5).
+		expect(group()).toHaveClass('data-[active]:bg-primary/5')
+	})
+
 	it('잠금 중에도 사용자의 접힘 상태를 보존한다 — 풀려도 닫힌 채 남는다', async () => {
 		const { container, rerender } = render(
 			<Controller.Group title="Sec">

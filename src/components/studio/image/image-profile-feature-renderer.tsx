@@ -37,6 +37,8 @@ type ImageProfileFeatureRendererProps = {
 	 * 🔴 기본값(false)은 Image 스튜디오의 최상위 호출이다. 거기서는 구분선이 맞다.
 	 */
 	attached?: boolean
+	/** 하위 섹션도 「chevron만 토글」 규칙을 따르게 한다 — 한 패널 안에서 규칙이 갈리면 안 된다. */
+	onActivate?: () => void
 }
 
 /** Image feature type을 bespoke UI 또는 참조된 공통 Controller control로 단일 dispatch한다. */
@@ -47,6 +49,7 @@ export function ImageProfileFeatureRenderer({
 	onChange,
 	camera,
 	attached = false,
+	onActivate,
 }: ImageProfileFeatureRendererProps) {
 	return config.image.features.map((feature) => {
 		switch (feature.type) {
@@ -59,6 +62,7 @@ export function ImageProfileFeatureRenderer({
 						values={values}
 						bindings={bindings}
 						attached={attached}
+						onActivate={onActivate}
 						onChange={onChange}
 					/>
 				)
@@ -83,6 +87,7 @@ function ColorAdjustmentFeature({
 	bindings,
 	onChange,
 	attached = false,
+	onActivate,
 }: Omit<ImageProfileFeatureRendererProps, 'camera'> & {
 	feature: Extract<ImageStudioFeature, { type: 'color-adjustment' }>
 }) {
@@ -108,6 +113,7 @@ function ColorAdjustmentFeature({
 				key={`${feature.type}:${group.id}`}
 				definition={group}
 				attached={attached}
+				onActivate={onActivate}
 				presentation={config.controllerPresentation?.groups.find(
 					({ groupId }) => groupId === group.id,
 				)}

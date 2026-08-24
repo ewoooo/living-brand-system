@@ -26,6 +26,8 @@ type ImageSlotInputProps = {
 	onImageModeChange: (mode: 'preset' | 'generate') => void
 	onSelectSampleImage: (option: SampleImageOption) => void
 	onGenerate: () => void
+	/** 하위 프로파일 섹션도 「chevron만 토글」 규칙을 따르게 한다 — 슬롯 그룹이 그 규칙을 켠다. */
+	onActivate?: () => void
 }
 
 /**
@@ -43,6 +45,7 @@ export function ImageSlotInput({
 	onImageModeChange,
 	onSelectSampleImage,
 	onGenerate,
+	onActivate,
 }: ImageSlotInputProps) {
 	const selected = contracts.find((contract) => contract.config.id === value.profileId)
 	const invalidPrompt = selected
@@ -200,6 +203,7 @@ export function ImageSlotInput({
 										: undefined
 								}
 								attached
+								onActivate={onActivate}
 								onChange={onFeatureChange}
 							/>
 						)}

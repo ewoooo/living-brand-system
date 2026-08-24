@@ -225,6 +225,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 							title={sectionTitle}
 							collapsible
 							{...slotFocusProps(focus, slot.id)}
+							{...slotSectionProps(focus, slot.id)}
 						>
 							<LayerVisibilityControl
 								label={slot.label}
@@ -251,6 +252,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 									images.selectSampleImage(slot.id, option)
 								}
 								onGenerate={() => images.generate(slot.id)}
+								onActivate={() => focus.set(slot.id)}
 							/>
 							{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 섹션이다. 대상 슬롯에 종속되므로
 						    슬롯 그룹 안에 두고 함께 접는다. 생성 전에는 닫힌 채 잠긴다 — compose가 배정된
@@ -260,6 +262,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 									title={`${sectionTitle} Transform`}
 									collapsible
 									attached
+									onActivate={() => focus.set(slot.id)}
 									disabled={slot.access === 'readonly' || !state?.image}
 								>
 									<ImageTransformControl
@@ -290,6 +293,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 							title={slot.label}
 							collapsible
 							{...slotFocusProps(focus, slot.id)}
+							{...slotSectionProps(focus, slot.id)}
 						>
 							<LayerVisibilityControl
 								label={slot.label}
@@ -381,6 +385,18 @@ function slotFocusProps(focus: ReturnType<typeof useTemplateStudio>['focus'], sl
 			if (focus.slotId === slotId) focus.set(null)
 		},
 	}
+}
+
+/**
+ * 슬롯 섹션의 활성 표시와 활성화 클릭.
+ *
+ * 🔑 `onActivate`를 주는 것 자체가 「chevron만 접기 트리거」 모드를 켠다(`Controller.Group`의 계약).
+ *    그래서 섹션 안 아무 곳을 눌러도 그 섹션이 켜지고, 접기는 화살표에서만 일어난다.
+ * 🔴 하위 섹션(Profile Settings·Transform)에는 `active`를 주지 않는다 — 면을 두 겹 칠하면 경계가
+ *    오히려 흐려진다. 대신 `onActivate`만 줘서 한 패널 안에서 토글 규칙이 갈리지 않게 한다.
+ */
+function slotSectionProps(focus: ReturnType<typeof useTemplateStudio>['focus'], slotId: string) {
+	return { active: focus.slotId === slotId, onActivate: () => focus.set(slotId) }
 }
 
 function LayerVisibilityControl({

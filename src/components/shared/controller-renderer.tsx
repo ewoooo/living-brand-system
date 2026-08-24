@@ -79,6 +79,7 @@ export function ControllerGroupRenderer({
 	children,
 	first = false,
 	attached = false,
+	onActivate,
 }: {
 	definition: ControllerGroupDefinition
 	presentation?: ControllerGroupPresentation
@@ -90,6 +91,8 @@ export function ControllerGroupRenderer({
 	 *    그래서 이 값은 접히는 갈래에만 넘긴다.
 	 */
 	attached?: boolean
+	/** 주면 chevron만 접기 트리거가 되고 나머지 클릭은 여기로 온다 — `Controller.Group`이 계약을 갖는다. */
+	onActivate?: () => void
 }) {
 	return (presentation?.collapsible ?? true) ? (
 		<Controller.Group
@@ -97,6 +100,7 @@ export function ControllerGroupRenderer({
 			collapsible
 			defaultOpen={presentation?.defaultOpen ?? true}
 			attached={attached}
+			onActivate={onActivate}
 			className={first ? 'border-t-0' : undefined}
 		>
 			{children}
