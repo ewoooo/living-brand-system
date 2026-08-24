@@ -1,13 +1,17 @@
 'use client'
 
-import { type CSSProperties, useEffect, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ControllerBar } from '@/components/shared/controller'
 import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
 import {
 	DEFAULT_PREVIEW_SIZE,
 	PreviewSizeControl,
 } from '@/components/studio/shared/preview-size-control'
-import { slotHighlightCss } from '@/components/studio/template/slot-highlight-css'
+import {
+	clampSlotBox,
+	type SlotHighlightBox,
+	slotHighlightStyle,
+} from '@/components/studio/template/slot-highlight'
 import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
@@ -33,6 +37,29 @@ export function TemplateCanvas() {
 	const graphicConfig = config.template.graphicConfigs.find(
 		(candidate) => candidate.id === background.state.graphicConfigId,
 	)
+
+	const slotId = focus.slotId
+	const [highlight, setHighlight] = useState<SlotHighlightBox | null>(null)
+	// biome-ignore lint/correctness/useExhaustiveDependencies: canvas.html은 본문이 읽는 값이 아니라 **재측정 방아쇠**다 — 그 문자열이 바뀌면 subtree가 통째로 갈려 슬롯의 사각형이 달라진다(정적 분석이 볼 수 없는 의존이다)
+	useLayoutEffect(() => {
+		const root = canvas.previewRef.current
+		if (!root || !slotId) {
+			setHighlight(null)
+			return
+		}
+		// 🔑 nodeId에 콜론이 섞여 선택자를 조립하지 않는다 — compose와 같은 규칙(순회 후 정확 일치).
+		const slot = Array.from(root.querySelectorAll('[data-node-id]')).find(
+			(node) => node.getAttribute('data-node-id') === slotId,
+		)
+		setHighlight(
+			slot
+				? clampSlotBox(slot.getBoundingClientRect(), root.getBoundingClientRect(), {
+						width,
+						height,
+					})
+				: null,
+		)
+	}, [canvas.html, canvas.previewRef, height, slotId, width])
 
 	useEffect(() => {
 		const stage = stageRef.current
@@ -62,9 +89,6 @@ export function TemplateCanvas() {
 					} as CSSProperties
 				}
 			>
-				{focus.slotId && (
-					<style>{slotHighlightCss(focus.slotId, scale, focus.color)}</style>
-				)}
 				<div
 					className="relative"
 					style={{
@@ -89,6 +113,14 @@ export function TemplateCanvas() {
 						// biome-ignore lint/security/noDangerouslySetInnerHtml: 서버 컨버터가 만든 inline-style HTML(스크립트 없음) — 어드민 캔버스와 동일 렌더
 						dangerouslySetInnerHTML={{ __html: canvas.html }}
 					/>
+					{/* 🔴 주입된 HTML의 **형제**다 — 루트 프레임 안에 두면 캔버스를 넘는 슬롯의 강조가
+					    그 프레임의 overflow:hidden에 잘린다(`slot-highlight.ts`가 이유를 갖는다). */}
+					{highlight && (
+						<div
+							data-slot="template-slot-highlight"
+							style={{ ...slotHighlightStyle(scale, focus.color), ...highlight }}
+						/>
+					)}
 				</div>
 			</div>
 			<ControllerBar placement="canvas">
