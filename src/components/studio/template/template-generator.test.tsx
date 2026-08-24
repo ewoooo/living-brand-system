@@ -20,6 +20,10 @@ import {
 	type PublishedHtmlTemplate,
 } from '@/features/template-customization/domain/template-studio-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
+import {
+	TemplateAuthoringHandoffProvider,
+	useTemplateAuthoringHandoff,
+} from '@/features/template-customization/providers/template-authoring-handoff'
 import { TemplateStudioProvider } from '@/features/template-customization/providers/template-studio-provider'
 import type { TemplateRasterArtifactProducer } from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
@@ -158,6 +162,16 @@ function FeatureMutationProbe() {
 				background feature
 			</button>
 		</>
+	)
+}
+
+/** 챗 자리를 대신해 편집안을 통로에 밀어 넣는다 — 실제 챗은 이 `send`를 부른다. */
+function AuthoringProbe({ templateId, text }: { templateId: number; text: string }) {
+	const { send } = useTemplateAuthoringHandoff()
+	return (
+		<button type="button" onClick={() => send({ templateId, patch: { text: { t1: text } } })}>
+			send patch
+		</button>
 	)
 }
 
@@ -616,6 +630,47 @@ describe('TemplateGenerator', () => {
 		expect(
 			preview?.querySelectorAll('p[style*="rgb(255, 0, 0)"], p[style*="#ff0000"]').length,
 		).toBe(2)
+	})
+
+	it('챗이 보낸 편집안이 캔버스까지 반영된다 — 두 트리를 잇는 유일한 통로다', () => {
+		const { container } = render(
+			<TemplateAuthoringHandoffProvider>
+				<AuthoringProbe templateId={1} text="바뀐 제목" />
+				<TemplateGenerator
+					categoryTitle="카드"
+					template={{
+						...template,
+						html: '<p data-node-id="t1">TITLE</p>',
+						nodeConfigs: { t1: { input: { label: 'Title' } } },
+					}}
+				/>
+			</TemplateAuthoringHandoffProvider>,
+		)
+		const canvas = () => container.querySelector('[data-slot="studio-workspace-canvas"]')
+		expect(canvas()?.textContent).toContain('TITLE')
+
+		fireEvent.click(screen.getByRole('button', { name: 'send patch' }))
+		expect(canvas()?.textContent).toContain('바뀐 제목')
+	})
+
+	it('🔴 다른 템플릿용 편집안은 집어 가지 않는다 — 슬롯 id가 겹치면 조용히 엉뚱한 값이 든다', () => {
+		const { container } = render(
+			<TemplateAuthoringHandoffProvider>
+				<AuthoringProbe templateId={999} text="다른 템플릿" />
+				<TemplateGenerator
+					categoryTitle="카드"
+					template={{
+						...template,
+						html: '<p data-node-id="t1">TITLE</p>',
+						nodeConfigs: { t1: { input: { label: 'Title' } } },
+					}}
+				/>
+			</TemplateAuthoringHandoffProvider>,
+		)
+		fireEvent.click(screen.getByRole('button', { name: 'send patch' }))
+		const canvas = container.querySelector('[data-slot="studio-workspace-canvas"]')
+		expect(canvas?.textContent).toContain('TITLE')
+		expect(canvas?.textContent).not.toContain('다른 템플릿')
 	})
 
 	it('섹션은 노드 개수와 무관하게 눌러서 활성화된다 — Text는 슬롯 여럿, Background는 노드 없음', () => {

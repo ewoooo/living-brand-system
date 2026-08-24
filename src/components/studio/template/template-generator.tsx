@@ -1,13 +1,16 @@
 'use client'
 
+import { useEffect } from 'react'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { TemplateSidebar } from '@/components/studio/sidebar/template-sidebar'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
+import { applyTemplateSessionPatch } from '@/features/template-customization/domain/apply-template-session-patch'
 import type {
 	PublishedTemplateView,
 	TemplateStudioConfig,
 } from '@/features/template-customization/domain/template-studio-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
+import { useTemplateAuthoringHandoff } from '@/features/template-customization/providers/template-authoring-handoff'
 import { TemplateStudioProvider } from '@/features/template-customization/providers/template-studio-provider'
 import { TemplateCanvas } from './template-canvas'
 
@@ -50,7 +53,9 @@ export function TemplateGenerator({
 }
 
 function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
-	const { canvas, config, execution } = useTemplateStudio()
+	const session = useTemplateStudio()
+	const { canvas, config, execution } = session
+	useTemplateAuthoringPatch(template.id, session)
 	const exporting = useTemplateExport({
 		artifact: canvas.artifact,
 		videoArtifact: canvas.videoArtifact,
@@ -72,4 +77,25 @@ function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
 			<TemplateCanvas />
 		</StudioWorkspace>
 	)
+}
+
+/**
+ * 챗이 만든 편집안을 이 스튜디오에 얹는다.
+ *
+ * 🔑 소비를 **provider가 아니라 이 조립 지점**에서 한다 — 세션 provider는 챗을 몰라야 한다
+ *    (사이드바·캔버스가 서로를 모르는 것과 같은 이유다).
+ * 🔴 `templateId`가 다르면 집어 가지 않는다. 챗이 A 템플릿용 편집안을 만들고 사용자가 B 스튜디오를
+ *    열어도 B가 그것을 먹으면 안 된다 — 슬롯 id가 우연히 겹치면 조용히 엉뚱한 값이 들어간다.
+ */
+function useTemplateAuthoringPatch(
+	templateId: number,
+	session: ReturnType<typeof useTemplateStudio>,
+) {
+	const { pending, clear } = useTemplateAuthoringHandoff()
+	useEffect(() => {
+		if (!pending || pending.templateId !== templateId) return
+		applyTemplateSessionPatch(session, pending.patch)
+		// 🔑 얹은 즉시 비운다 — 남겨 두면 사용자가 손으로 고친 값을 리렌더마다 되돌린다.
+		clear(pending.id)
+	}, [clear, pending, session, templateId])
 }
