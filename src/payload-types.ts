@@ -1468,6 +1468,7 @@ export interface GraphicProfile {
    */
   runtime:
     | 'forward-straight'
+    | 'key-visual-pattern'
     | 'linear-fluted-glass'
     | 'radial-fluted-glass'
     | 'sweep-fluted-glass'

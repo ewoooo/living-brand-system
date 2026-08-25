@@ -86,6 +86,7 @@ import * as migration_20260821_015321_ci_lockup_hero_widget from './20260821_015
 import * as migration_20260821_021545_overseas_branch_list from './20260821_021545_overseas_branch_list';
 import * as migration_20260821_023619_placeholder_subsidiary_and_branch_labels from './20260821_023619_placeholder_subsidiary_and_branch_labels';
 import * as migration_20260821_025042_placeholder_subsidiary_technology from './20260821_025042_placeholder_subsidiary_technology';
+import * as migration_20260825_100439_key_visual_pattern_runtime from './20260825_100439_key_visual_pattern_runtime';
 
 export const migrations = [
   {
@@ -526,6 +527,11 @@ export const migrations = [
   {
     up: migration_20260821_025042_placeholder_subsidiary_technology.up,
     down: migration_20260821_025042_placeholder_subsidiary_technology.down,
-    name: '20260821_025042_placeholder_subsidiary_technology'
+    name: '20260821_025042_placeholder_subsidiary_technology',
+  },
+  {
+    up: migration_20260825_100439_key_visual_pattern_runtime.up,
+    down: migration_20260825_100439_key_visual_pattern_runtime.down,
+    name: '20260825_100439_key_visual_pattern_runtime'
   },
 ];
