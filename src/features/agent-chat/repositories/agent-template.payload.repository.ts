@@ -5,6 +5,7 @@ import type { Template } from '@/payload-types'
 
 export type AgentTemplateDocument = Pick<
 	Template,
+	| 'category'
 	| 'description'
 	| 'exportPolicy'
 	| 'height'
@@ -46,6 +47,8 @@ function publishedTemplateQuery(user: unknown) {
 			// 스튜디오 라우트가 `/studio/template/[templateSlug]`뿐이라 챗이 「적용」으로 보낼 주소를 만들 때 필요하다.
 			slug: true,
 			description: true,
+			// 모델이 「어느 템플릿이 이 요청에 맞나」를 고르는 근거 — depth:1이라 제목까지 채워진다.
+			category: true,
 			html: true,
 			overrides: true,
 			width: true,

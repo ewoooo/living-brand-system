@@ -75,6 +75,11 @@ export async function findTemplatesForRequest(user: unknown, query?: string) {
 						id: template.id,
 						name: template.name,
 						description: template.description || '',
+						// 🔑 모델이 템플릿을 고르는 근거다. 이름만으로는 같은 크기의 두 템플릿을
+						//    구별할 수 없고(1920×1080이 둘), 「세로로 긴 것」 같은 요청에 답할 수 없다.
+						category: templateCategoryTitle(template),
+						size: { width: template.width, height: template.height },
+						orientation: templateOrientation(template),
 						slots,
 					}
 				: null
@@ -83,7 +88,12 @@ export async function findTemplatesForRequest(user: unknown, query?: string) {
 
 	const matches = normalizedQuery
 		? summaries.filter((template) =>
-				[template.name, template.description, ...template.slots.map((slot) => slot.label)]
+				[
+					template.name,
+					template.description,
+					template.category ?? '',
+					...template.slots.map((slot) => slot.label),
+				]
 					.join(' ')
 					.toLowerCase()
 					.includes(normalizedQuery),
@@ -142,6 +152,28 @@ export async function prepareTemplateImage(
 			values,
 		),
 	}
+}
+
+/** 관계 필드는 depth에 따라 id이거나 객체다 — 제목이 있을 때만 싣는다. */
+function templateCategoryTitle(template: AgentTemplateDocument): string | undefined {
+	const category = template.category
+	return typeof category === 'object' && category !== null && 'title' in category
+		? ((category as { title?: string }).title ?? undefined)
+		: undefined
+}
+
+/**
+ * 🔑 비율을 기약분수로 주지 않는다 — 630×891 같은 값은 70:99가 되어 사람도 모델도 못 읽는다.
+ *    「가로가 긴가 세로가 긴가」가 템플릿 선택에서 실제로 쓰이는 축이고, 정확한 비율이 필요하면
+ *    모델이 size로 직접 계산한다.
+ */
+function templateOrientation(
+	template: AgentTemplateDocument,
+): 'landscape' | 'portrait' | 'square' | undefined {
+	const { width, height } = template
+	if (!width || !height) return undefined
+	if (width === height) return 'square'
+	return width > height ? 'landscape' : 'portrait'
 }
 
 /**

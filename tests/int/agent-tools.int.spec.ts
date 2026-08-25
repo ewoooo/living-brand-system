@@ -372,6 +372,35 @@ describe('agent tools', () => {
 		])
 	})
 
+	it('요약에 템플릿 선택 근거를 싣는다 — 이름만으로는 같은 크기의 둘을 구별할 수 없다', async () => {
+		vi.spyOn(agentTemplateRepository, 'listAgentTemplates').mockResolvedValue([
+			{
+				id: 6,
+				name: 'Poster',
+				description: null,
+				category: { id: 2, title: 'Editorial' },
+				...htmlTemplate({ t: { input: {} } }, textNode({ id: 't' })),
+				width: 630,
+				height: 891,
+			},
+		] as never)
+		const tools = getAgentTools()
+
+		const result = await tools.findTemplatesForRequest.execute?.({}, {
+			context: { user: { id: 1 } },
+		} as never)
+
+		expect(result).toEqual([
+			expect.objectContaining({
+				id: 6,
+				category: 'Editorial',
+				size: { width: 630, height: 891 },
+				// 🔑 기약분수(70:99)는 사람도 모델도 못 읽는다 — 실제로 쓰이는 축만 준다.
+				orientation: 'portrait',
+			}),
+		])
+	})
+
 	it('throws when the template is missing', async () => {
 		vi.spyOn(agentTemplateRepository, 'findAgentTemplate').mockResolvedValue(null as never)
 		const tools = getAgentTools()
