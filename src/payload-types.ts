@@ -2107,7 +2107,7 @@ export interface PayloadMcpApiKey {
      */
     searchGuidelines?: boolean | null;
     /**
-     * Find or list published production templates and their open text slots.
+     * Find or list published production templates and their open slots.
      */
     findTemplates?: boolean | null;
     /**

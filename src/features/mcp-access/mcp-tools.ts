@@ -101,7 +101,7 @@ export const customMcpTools = [
 	),
 	mcpTextTool(
 		'findTemplates',
-		'Find or list published production templates and their open text slots.',
+		'Find or list published production templates and their open slots.',
 		{ query: z.string().trim().min(1).max(120).optional() },
 		(args, req) => findTemplatesForRequest(user(req), args.query),
 	),
