@@ -30,9 +30,16 @@ export function ControllerColorRow({
 	disabled,
 	className,
 }: ControllerColorRowProps) {
+	// 팔레트는 라디오 묶음이라 자동 배선(첫 스와치)을 쓸 수 없다 — 라벨 클릭이 첫 색 선택이 된다.
+	const paletteId = useId()
 	return (
 		// 라벨 클릭이 피커를 연다 — Row의 자동 배선이 label과 스와치 input을 잇는다.
-		<ControllerRow label={label} disabled={disabled} className={className}>
+		<ControllerRow
+			label={label}
+			htmlFor={values?.length ? paletteId : undefined}
+			disabled={disabled}
+			className={className}
+		>
 			<span className="flex shrink-0 items-center gap-2">
 				{!isEmpty && onReset && (
 					<button
@@ -49,6 +56,7 @@ export function ControllerColorRow({
 				</span>
 				{values?.length ? (
 					<ColorPalette
+						label={label}
 						value={value}
 						values={values}
 						onChange={onChange}
@@ -72,22 +80,28 @@ export function ControllerColorRow({
  * `input[type=color]`은 목록 밖 색을 막을 수 없어 계약이 좁혀진 control에는 쓸 수 없다.
  */
 function ColorPalette({
+	label,
 	value,
 	values,
 	onChange,
 	isEmpty,
 }: Required<Pick<ControllerColorRowProps, 'value' | 'values'>> &
-	Pick<ControllerColorRowProps, 'onChange' | 'isEmpty'>) {
+	Pick<ControllerColorRowProps, 'label' | 'onChange' | 'isEmpty'>) {
 	const row = useRowControl()
 	const groupName = useId()
 	const selected = isEmpty ? null : value.toLowerCase()
 	return (
-		<span className="flex items-center gap-1">
-			{values.map((candidate, index) => (
+		// 행 라벨이 가리키는 것은 묶음이다 — span은 label 대상이 아니라 클릭이 값을 바꾸지 않고,
+		// 묶음의 이름은 radiogroup의 aria-label이 준다.
+		<span
+			id={row?.controlId}
+			role="radiogroup"
+			aria-label={label}
+			className="flex items-center gap-1"
+		>
+			{values.map((candidate) => (
 				<input
 					key={candidate}
-					// 행 라벨이 가리키는 것은 첫 스와치다 — 라벨 클릭이 팔레트로 포커스를 옮긴다.
-					id={index === 0 ? row?.controlId : undefined}
 					type="radio"
 					name={groupName}
 					aria-label={candidate}

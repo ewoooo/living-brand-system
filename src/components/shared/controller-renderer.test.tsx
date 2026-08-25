@@ -155,4 +155,42 @@ describe('ControllerRenderer', () => {
 		expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
 		expect(screen.getByRole('alert')).toHaveTextContent('최대 길이를 초과했습니다.')
 	})
+
+	it('선택지가 전부 색을 가지면 variant보다 칩 그리드가 앞선다', () => {
+		// 이 분기가 뒤집히면 색 축이 조용히 드롭다운으로, 평범한 축이 칩으로 그려진다.
+		const colorway = {
+			id: 'colorway',
+			kind: 'select' as const,
+			label: '컬러',
+			defaultValue: 'dark',
+			variant: 'segmented' as const,
+			options: [
+				{ value: 'white', label: '화이트 · 연그린', colors: ['#FFFFFF', '#DCF5D2'] },
+				{ value: 'dark', label: '다크그린 · 그린', colors: ['#00280A', '#007332'] },
+			],
+		}
+		const onChange = vi.fn()
+		render(<ControllerControlRenderer definition={colorway} value="dark" onChange={onChange} />)
+
+		// 칩은 네이티브 radio input이고 segmented는 button이라 요소로 갈린다.
+		expect(screen.getByRole('radio', { name: '다크그린 · 그린' })).toBeChecked()
+		expect(document.querySelectorAll('input[type="radio"]')).toHaveLength(2)
+		expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+
+		cleanup()
+		// 하나라도 색이 없으면 그 control의 variant가 정한 표현으로 떨어진다.
+		render(
+			<ControllerControlRenderer
+				definition={{
+					...colorway,
+					options: [colorway.options[0], { value: 'dark', label: '다크그린 · 그린' }],
+				}}
+				value="dark"
+				onChange={onChange}
+			/>,
+		)
+
+		expect(document.querySelectorAll('input[type="radio"]')).toHaveLength(0)
+		expect(screen.getAllByRole('radio')).toHaveLength(2)
+	})
 })

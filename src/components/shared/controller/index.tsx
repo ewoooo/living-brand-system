@@ -5,6 +5,7 @@ import { ControllerBrowser } from './browser'
 import { ControllerCameraControl } from './camera-control'
 import { ControllerCard } from './card'
 import { ControllerChips } from './chips'
+import { ControllerColorChips } from './color-chips'
 import { ControllerColorRow } from './color-row'
 import { ControllerField } from './field'
 import { ControllerGroup } from './group'
@@ -51,6 +52,7 @@ export const Controller = {
 	Item: ControllerItem,
 	Segmented: ControllerSegmented,
 	TabPanel: ControllerTabPanel,
+	ColorChips: ControllerColorChips,
 	ColorRow: ControllerColorRow,
 	Select: ControllerSelect,
 	Input: ControllerInput,
@@ -75,6 +77,7 @@ export {
 	ControllerCameraControl,
 	ControllerCard,
 	ControllerChips,
+	ControllerColorChips,
 	ControllerColorRow,
 	ControllerContent,
 	ControllerField,

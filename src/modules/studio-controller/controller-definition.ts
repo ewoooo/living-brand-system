@@ -56,6 +56,12 @@ export type StudioControllerConfig<
 export type ControllerOption<Value extends string = string> = {
 	value: Value
 	label: string
+	/**
+	 * 이 선택지가 곧 색 조합일 때의 실제 색(#rrggbb). 🔴 새 kind도 새 variant도 만들지 않는다 —
+	 * `variant`는 선택지의 **성격**이고 이것은 선택지의 **내용**이다.
+	 * 한 control의 선택지는 전부 갖거나 전부 없어야 한다 — 섞이면 색 칩과 글자 목록이 반쪽으로 그려진다.
+	 */
+	colors?: readonly string[]
 }
 
 type ControllerControlBase = {
@@ -483,16 +489,26 @@ function validateControl(value: unknown, path: string) {
 				invalid(`${path}.options`, '하나 이상의 선택지가 필요합니다.')
 			}
 			const optionValues = new Set<string>()
+			let colorOptionCount = 0
 			for (const [optionIndex, optionValue] of control.options.entries()) {
 				const optionPath = `${path}.options[${optionIndex}]`
 				const option = asRecord(optionValue, optionPath)
-				assertOnlyKeys(option, ['value', 'label'], optionPath)
+				assertOnlyKeys(option, ['value', 'label', 'colors'], optionPath)
 				assertNonEmptyString(option.value, `${optionPath}.value`)
 				assertNonEmptyString(option.label, `${optionPath}.label`)
+				// 색 조합 선택지 — 형식·중복 규칙은 color control의 팔레트와 같은 것을 쓴다.
+				if (option.colors !== undefined) {
+					assertColorValues(option.colors, `${optionPath}.colors`)
+					colorOptionCount += 1
+				}
 				if (optionValues.has(option.value)) {
 					invalid(`${optionPath}.value`, `중복되었습니다: ${option.value}`)
 				}
 				optionValues.add(option.value)
+			}
+			// 부분 선언은 막는다 — 일부만 색이면 칩 그리드도 목록도 되지 못하고 반쪽으로 그려진다.
+			if (colorOptionCount > 0 && colorOptionCount < control.options.length) {
+				invalid(`${path}.options`, 'colors는 모든 선택지에 있거나 없어야 합니다.')
 			}
 			if (control.defaultValue !== null && !optionValues.has(control.defaultValue)) {
 				invalid(`${path}.defaultValue`, 'options에 포함되어야 합니다.')
@@ -711,6 +727,7 @@ function applyControlRestriction(
 		case 'text':
 			if (
 				restriction.optionValues ||
+				restriction.colorValues ||
 				restriction.min !== undefined ||
 				restriction.max !== undefined
 			) {
@@ -738,6 +755,7 @@ function applyControlRestriction(
 		case 'select': {
 			if (
 				restriction.maxLength ||
+				restriction.colorValues ||
 				restriction.min !== undefined ||
 				restriction.max !== undefined
 			) {
@@ -766,7 +784,7 @@ function applyControlRestriction(
 			break
 		}
 		case 'range': {
-			if (restriction.maxLength || restriction.optionValues) {
+			if (restriction.maxLength || restriction.optionValues || restriction.colorValues) {
 				throw new Error(`range control에 지원하지 않는 restriction입니다: ${base.id}`)
 			}
 			const min = restriction.min ?? base.min
@@ -787,6 +805,7 @@ function applyControlRestriction(
 			if (
 				restriction.maxLength ||
 				restriction.optionValues ||
+				restriction.colorValues ||
 				restriction.min !== undefined ||
 				restriction.max !== undefined
 			) {
@@ -833,6 +852,7 @@ function applyControlRestriction(
 			if (
 				restriction.maxLength ||
 				restriction.optionValues ||
+				restriction.colorValues ||
 				restriction.min !== undefined ||
 				restriction.max !== undefined
 			) {

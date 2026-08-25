@@ -546,6 +546,48 @@ describe('Controller.Status', () => {
 	})
 })
 
+describe('Controller 색 선택 라디오 묶음', () => {
+	afterEach(cleanup)
+
+	const COLORWAYS = [
+		{ value: 'white', label: '화이트 · 연그린', colors: ['#FFFFFF', '#DCF5D2'] },
+		{ value: 'dark', label: '다크그린 · 그린', colors: ['#00280A', '#007332'] },
+	]
+
+	it('ColorChips: 라벨 클릭이 값을 바꾸지 않고, 묶음이 라벨로 읽힌다', () => {
+		const onChange = vi.fn()
+		render(
+			<Controller.ColorChips
+				label="컬러"
+				options={COLORWAYS}
+				value="dark"
+				onChange={onChange}
+			/>,
+		)
+		// 🔴 라벨이 첫 칩을 가리키면 클릭이 포커스가 아니라 '첫 조합 선택'이 된다.
+		fireEvent.click(screen.getByText('컬러'))
+		expect(onChange).not.toHaveBeenCalled()
+		// 스크린리더가 "무엇의 라디오인지"를 말할 수 있어야 한다.
+		expect(screen.getByRole('radiogroup', { name: '컬러' })).toBeInTheDocument()
+		expect(screen.getByRole('radio', { name: '다크그린 · 그린' })).toBeChecked()
+	})
+
+	it('ColorPalette: 라벨 클릭이 값을 바꾸지 않고, 묶음이 라벨로 읽힌다', () => {
+		const onChange = vi.fn()
+		render(
+			<Controller.ColorRow
+				label="선 색"
+				value="#00af41"
+				values={['#ff0000', '#00af41']}
+				onChange={onChange}
+			/>,
+		)
+		fireEvent.click(screen.getByText('선 색'))
+		expect(onChange).not.toHaveBeenCalled()
+		expect(screen.getByRole('radiogroup', { name: '선 색' })).toBeInTheDocument()
+	})
+})
+
 describe('Controller.ListRow', () => {
 	afterEach(cleanup)
 
