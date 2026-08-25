@@ -26,6 +26,27 @@ import { createTemplateRasterArtifact } from '@/features/template-customization/
 import { getStudioTemplateRoute } from '@/lib/routes'
 import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 
+/**
+ * 아직 생성되지 않은 이미지 슬롯을 미리보기에서 **비워 보이게** 만드는 CSS.
+ *
+ * 🔴 첨부 미리보기는 텍스트만 합성한다 — 이미지는 「스튜디오에 적용」 시점에 생성되므로 준비 단계엔
+ *    없다. 그래서 그 자리에 **템플릿의 저작 이미지가 그대로 남아** 있고, 썸네일에서 면적을 가장 많이
+ *    차지하는 것이 그것이라 값이 바뀌었는데도 "그대로네"로 읽힌다(2026-08-25 사용자 지적).
+ * 🔑 준비 단계에 실제로 생성하지 않는다 — 챗이 수 초 멈추고, 적용하지 않을 이미지에 비용이 나간다.
+ *    대신 그 자리가 **채워질 자리임**을 표시해 미리보기가 최종이라고 말하지 않게 한다.
+ * 🔑 프롬프트를 받은 슬롯만 흐려진다. 사용자가 이미지를 요청하지 않았으면 저작 이미지가 그대로 맞다.
+ */
+function pendingImageSlotCss(nodeIds: readonly string[]): string {
+	if (nodeIds.length === 0) return ''
+	const selector = nodeIds
+		.map(
+			(nodeId) =>
+				`[data-slot="attachment-media"] [data-node-id="${nodeId.replace(/["\\]/g, '\\$&')}"]`,
+		)
+		.join(',')
+	return `${selector}{filter:grayscale(1) opacity(0.2)}`
+}
+
 const PREVIEW_WIDTH = 280
 
 type AgentChatTemplateAttachmentProps = {
@@ -36,6 +57,7 @@ type AgentChatTemplateAttachmentProps = {
 export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAttachmentProps) {
 	const { send } = useTemplateAuthoringHandoff()
 	const filledText = attachment.patch.text ?? {}
+	const pendingImages = Object.entries(attachment.patch.images ?? {})
 	const composedHtml = useMemo(
 		() =>
 			composeTemplateHtml(
@@ -81,6 +103,15 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 		<TemplateAttachmentFrame
 			name={attachment.name}
 			description={`${attachment.output.formats.map((format) => format.toUpperCase()).join(' · ')} 출력`}
+			// 미리보기가 최종이 아니라는 것과, 그 자리에 무엇이 들어갈지를 함께 말한다.
+			pendingNote={
+				pendingImages.length > 0
+					? `이미지는 적용할 때 생성됩니다 — ${pendingImages
+							.map(([, image]) => image.prompt)
+							.filter(Boolean)
+							.join(' / ')}`
+					: undefined
+			}
 			isExporting={output.busy}
 			exportError={output.error}
 			onExport={output.canExportFormat('png') ? () => output.runFormat('png') : undefined}
@@ -99,6 +130,9 @@ export function AgentChatTemplateAttachment({ attachment }: AgentChatTemplateAtt
 					: () => send({ templateId: attachment.templateId, patch: attachment.patch })
 			}
 		>
+			{pendingImages.length > 0 && (
+				<style>{pendingImageSlotCss(pendingImages.map(([nodeId]) => nodeId))}</style>
+			)}
 			<ScaledMedia contentWidth={attachment.width}>
 				{(scale) => (
 					<div
@@ -134,10 +168,13 @@ function TemplateAttachmentFrame({
 	onExportTiff,
 	applyHref,
 	onApply,
+	pendingNote,
 	children,
 }: {
 	name: string
 	description?: string
+	/** 미리보기가 아직 담지 못한 것 — 없으면 표시하지 않는다. */
+	pendingNote?: string
 	isExporting: boolean
 	exportError: string | null
 	onExport?: () => void
@@ -160,6 +197,11 @@ function TemplateAttachmentFrame({
 			<AttachmentContent className="w-full px-1 pt-2">
 				<AttachmentTitle>{name}</AttachmentTitle>
 				<AttachmentDescription>{description}</AttachmentDescription>
+				{pendingNote && (
+					<Typography size="xs" tone="muted" className="pt-0.5">
+						{pendingNote}
+					</Typography>
+				)}
 			</AttachmentContent>
 			{applyHref && onApply && (
 				/*
