@@ -11,6 +11,8 @@ import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-pro
 import { ImageProfilePicker } from '@/components/studio/image/image-profile-picker'
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import { PrintControls, VideoControls } from '@/components/studio/shared/output-controls'
+import { PreviewRefreshSlot } from '@/components/studio/shared/preview-refresh-slot'
+import type { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
@@ -35,7 +37,13 @@ import {
  * 세션 값은 컨텍스트의 prompt/generation/camera 그룹으로만 읽고 쓴다.
  * 디자인 SSOT: Figma HD_LBS_UI section 16:9137 "Image Usecase".
  */
-export function ImageSidebar({ download }: { download: ImageExportView }) {
+export function ImageSidebar({
+	download,
+	preview,
+}: {
+	download: ImageExportView
+	preview: ReturnType<typeof useProfilePreview>
+}) {
 	const { config, profiles, controls, generation, camera } = useImageStudio()
 	const { batch, ratio, resolution } = getImageStudioControls(config)
 	const generationControlIds = new Set<string>([
@@ -58,20 +66,24 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 		<Controller.Browser.Root>
 			<StudioSidebar
 				header={
-					<Controller.AssetCard
-						title={config.name}
-						buttonLabel="Change"
-						aria-label="프로파일 변경"
-						tabs={['Image Profiles']}
-						previewImage={config.previewImage}
-						empty={browseEmptyMessage(
-							profiles.browse.status,
-							(profiles.browse.data?.length ?? 0) > 1,
-							'교체할 다른 이미지 프로파일이 없습니다.',
-						)}
-					>
-						<ImageProfilePicker />
-					</Controller.AssetCard>
+					<PreviewRefreshSlot error={preview.error}>
+						<Controller.AssetCard
+							title={config.name}
+							buttonLabel="Change"
+							aria-label="프로파일 변경"
+							tabs={['Image Profiles']}
+							previewImage={preview.image ?? config.previewImage}
+							onRefreshPreview={preview.canRefresh ? preview.refresh : undefined}
+							refreshingPreview={preview.refreshing}
+							empty={browseEmptyMessage(
+								profiles.browse.status,
+								(profiles.browse.data?.length ?? 0) > 1,
+								'교체할 다른 이미지 프로파일이 없습니다.',
+							)}
+						>
+							<ImageProfilePicker />
+						</Controller.AssetCard>
+					</PreviewRefreshSlot>
 				}
 				footer={
 					<>

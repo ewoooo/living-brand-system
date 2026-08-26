@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
+import { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { TemplateSidebar } from '@/components/studio/sidebar/template-sidebar'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import { applyTemplateSessionPatch } from '@/features/template-customization/domain/apply-template-session-patch'
@@ -72,8 +73,18 @@ function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
 		},
 	})
 
+	// 크기는 화면 뷰포트가 아니라 템플릿이 선언한 export 캔버스 규격을 쓴다 — 템플릿은 지면 크기가
+	// 계약이라 미리보기도 그 비율이어야 한다.
+	const preview = useProfilePreview({
+		studio: 'template',
+		profileId: config.id,
+		artifact: canvas.artifact,
+		viewport: config.template.exportOption.canvas,
+		onUpdated: session.navigation.browse.reload,
+	})
+
 	return (
-		<StudioWorkspace sidebar={<TemplateSidebar exporting={exporting} />}>
+		<StudioWorkspace sidebar={<TemplateSidebar exporting={exporting} preview={preview} />}>
 			<TemplateCanvas />
 		</StudioWorkspace>
 	)

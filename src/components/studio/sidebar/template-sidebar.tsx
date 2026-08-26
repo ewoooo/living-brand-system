@@ -13,6 +13,8 @@ import {
 	ScaleControls,
 	VideoControls,
 } from '@/components/studio/shared/output-controls'
+import { PreviewRefreshSlot } from '@/components/studio/shared/preview-refresh-slot'
+import type { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { BackgroundSection } from '@/components/studio/template/background-section'
 import { ImageSlotInput } from '@/components/studio/template/image-slot-input'
@@ -52,7 +54,13 @@ const BACKGROUND_SECTION_ID = 'section:background'
  * 무엇을 그릴지는 편집 계약(config)만 보고 결정하고(원시 nodeConfigs 참조 금지),
  * 세션 값은 컨텍스트의 text/images 그룹으로만 읽고 쓴다.
  */
-export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }) {
+export function TemplateSidebar({
+	exporting,
+	preview,
+}: {
+	exporting: TemplateExportView
+	preview: ReturnType<typeof useProfilePreview>
+}) {
 	const { navigation, config, text, images, vectors, layers, background, focus } =
 		useTemplateStudio()
 	const {
@@ -93,22 +101,26 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 		<Controller.Browser.Root>
 			<StudioSidebar
 				header={
-					<Controller.AssetCard
-						title={config.name}
-						subtitle={navigation.categoryTitle ?? undefined}
-						buttonLabel="Change"
-						aria-label="템플릿 변경"
-						tabs={['Templates']}
-						previewImage={config.previewImage}
-						empty={browseEmptyMessage(
-							navigation.browse.status,
-							templateCount > 1,
-							'교체할 다른 템플릿이 없습니다.',
-						)}
-						className="min-h-32 items-start"
-					>
-						<TemplateProfilePicker />
-					</Controller.AssetCard>
+					<PreviewRefreshSlot error={preview.error}>
+						<Controller.AssetCard
+							title={config.name}
+							subtitle={navigation.categoryTitle ?? undefined}
+							buttonLabel="Change"
+							aria-label="템플릿 변경"
+							tabs={['Templates']}
+							previewImage={preview.image ?? config.previewImage}
+							onRefreshPreview={preview.canRefresh ? preview.refresh : undefined}
+							refreshingPreview={preview.refreshing}
+							empty={browseEmptyMessage(
+								navigation.browse.status,
+								templateCount > 1,
+								'교체할 다른 템플릿이 없습니다.',
+							)}
+							className="min-h-32 items-start"
+						>
+							<TemplateProfilePicker />
+						</Controller.AssetCard>
+					</PreviewRefreshSlot>
 				}
 				footer={
 					<>

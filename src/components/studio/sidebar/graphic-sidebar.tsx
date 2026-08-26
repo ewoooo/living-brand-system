@@ -10,13 +10,21 @@ import {
 	SizingControls,
 	VideoControls,
 } from '@/components/studio/shared/output-controls'
+import { PreviewRefreshSlot } from '@/components/studio/shared/preview-refresh-slot'
+import type { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 import type { GraphicExportView } from '@/features/studio-export/hooks/use-graphic-export'
 
 /** Definition을 Controller primitive로 투영한다. 캔버스와 런타임 구현은 모른다. */
-export function GraphicSidebar({ output }: { output: GraphicExportView }) {
+export function GraphicSidebar({
+	output,
+	preview,
+}: {
+	output: GraphicExportView
+	preview: ReturnType<typeof useProfilePreview>
+}) {
 	const { config, profiles, controls } = useGraphicStudio()
 	const format = output.draft?.format
 	const video = format === 'mp4' ? config.output.video?.mp4 : undefined
@@ -80,22 +88,26 @@ export function GraphicSidebar({ output }: { output: GraphicExportView }) {
 		<Controller.Browser.Root>
 			<StudioSidebar
 				header={
-					<Controller.AssetCard
-						title={config.name}
-						subtitle={`${config.type.toUpperCase()} Graphic`}
-						buttonLabel="Change"
-						aria-label="그래픽 변경"
-						tabs={['Graphic Profiles']}
-						previewImage={config.previewImage}
-						empty={browseEmptyMessage(
-							profiles.browse.status,
-							(profiles.browse.data?.length ?? 0) > 1,
-							'교체할 다른 그래픽 프로파일이 없습니다.',
-						)}
-						className="min-h-32 items-start"
-					>
-						<GraphicProfilePicker />
-					</Controller.AssetCard>
+					<PreviewRefreshSlot error={preview.error}>
+						<Controller.AssetCard
+							title={config.name}
+							subtitle={`${config.type.toUpperCase()} Graphic`}
+							buttonLabel="Change"
+							aria-label="그래픽 변경"
+							tabs={['Graphic Profiles']}
+							previewImage={preview.image ?? config.previewImage}
+							onRefreshPreview={preview.canRefresh ? preview.refresh : undefined}
+							refreshingPreview={preview.refreshing}
+							empty={browseEmptyMessage(
+								profiles.browse.status,
+								(profiles.browse.data?.length ?? 0) > 1,
+								'교체할 다른 그래픽 프로파일이 없습니다.',
+							)}
+							className="min-h-32 items-start"
+						>
+							<GraphicProfilePicker />
+						</Controller.AssetCard>
+					</PreviewRefreshSlot>
 				}
 				footer={footer}
 			>
