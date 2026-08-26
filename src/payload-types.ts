@@ -233,7 +233,7 @@ export interface GuidelineChapter {
   createdAt: string;
 }
 /**
- * 챕터에 속한 가이드라인 토픽입니다. 본문의 꼭지는 섹션 블록입니다.
+ * 챕터에 속한 가이드라인 문서입니다. 본문의 꼭지는 섹션 블록입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-documents".
