@@ -1,6 +1,12 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { SizingControls } from './output-controls'
+import {
+	CUSTOM_ARTBOARD,
+	listArtboardOptions,
+	matchArtboard,
+	presetSizeInPx,
+	SizingControls,
+} from './output-controls'
 
 /** 300dpi 기준 mm→px. 디자이너 원본과 같은 상수(`dpi / 25.4`)다. */
 const PX_PER_MM = 300 / 25.4
@@ -73,5 +79,57 @@ describe('SizingControls 단위 전환', () => {
 		fireEvent.blur(widthInput(), { target: { value: '170' } })
 
 		expect(onChange).not.toHaveBeenCalled()
+	})
+})
+
+describe('대지 프리셋', () => {
+	// 🔴 Controller.Select는 radix라 목록이 portal에 있고 열기 전에는 없다. 그래서 위젯을 흔드는
+	//    대신 순수 로직을 직접 검증한다 — 프리셋별 dpi·매칭·필터가 버그가 사는 자리다.
+
+	it('mm 규격은 그 프리셋의 dpi로 px을 만든다', () => {
+		// A size는 300dpi → 210mm = 2480px
+		expect(presetSizeInPx('a')).toEqual({ width: 2480, height: 3508 })
+		// 🔴 배너는 **72dpi**다. 300으로 환산하면 7087px가 되어 4배 이상 틀어진다.
+		expect(presetSizeInPx('banner')).toEqual({ width: 1701, height: 5102 })
+	})
+
+	it('px 규격은 선언값을 그대로 쓴다', () => {
+		expect(presetSizeInPx('square')).toEqual({ width: 1080, height: 1080 })
+		expect(presetSizeInPx('wide')).toEqual({ width: 1920, height: 1080 })
+	})
+
+	it('현재 크기와 같은 프리셋을 찾고, 없으면 직접 입력이다', () => {
+		expect(matchArtboard({ width: 1920, height: 1080 })).toBe('wide')
+		expect(matchArtboard({ width: 2480, height: 3508 })).toBe('a')
+		expect(matchArtboard({ width: 1103, height: 1246 })).toBe(CUSTOM_ARTBOARD)
+		expect(matchArtboard({ width: null, height: null })).toBe(CUSTOM_ARTBOARD)
+	})
+
+	it('한도를 넘는 규격은 목록에서 빠진다', () => {
+		const options = listArtboardOptions({
+			maxWidth: 1920,
+			maxHeight: 1080,
+			current: 'square',
+		})
+
+		expect(options.map((option) => option.value)).toEqual(['square', 'wide'])
+	})
+
+	it('직접 입력 상태에서만 그 항목을 목록에 싣는다', () => {
+		expect(listArtboardOptions({ current: 'square' }).map((o) => o.value)).not.toContain(
+			CUSTOM_ARTBOARD,
+		)
+		expect(listArtboardOptions({ current: CUSTOM_ARTBOARD }).map((o) => o.value)).toContain(
+			CUSTOM_ARTBOARD,
+		)
+	})
+
+	it('mm 표시는 선택된 프리셋의 dpi를 따른다', () => {
+		// 🔴 300dpi로 고정하면 배너에서 600mm이 아니라 144mm로 보인다.
+		render(<SizingControls value={{ width: 1701, height: 5102 }} onChange={vi.fn()} />)
+
+		fireEvent.click(unitRadio('mm'))
+
+		expect(widthInput()).toHaveValue(600)
 	})
 })
