@@ -1,44 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-	hasGuidelineDocumentSlugConflict,
-	listEditableGuidelineDocuments,
-	listGuidelineChapterOptions,
-} from './guideline-document.payload.repository'
+import { hasGuidelineDocumentSlugConflict } from './guideline-document.payload.repository'
 
 describe('guideline-document Payload repository', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-	})
-
-	it('Admin 목록 조회를 표시 필드와 chapter ID로 정규화한다', async () => {
-		const find = vi.fn().mockResolvedValue({
-			docs: [
-				{
-					id: 3,
-					title: '토픽',
-					chapter: { id: 2 },
-					displayOrder: 1,
-					_status: 'draft',
-					blocks: [{ blockType: 'ignored' }],
-				},
-			],
-		})
-		const payload = { find } as never
-
-		await expect(listEditableGuidelineDocuments(payload, { user: null })).resolves.toEqual([
-			{ id: 3, title: '토픽', chapter: 2, displayOrder: 1, _status: 'draft' },
-		])
-	})
-
-	it('챕터 이름표를 표시 순서대로 읽는다', async () => {
-		const find = vi.fn().mockResolvedValue({
-			docs: [{ id: 1, title: 'Brand Elements', slug: 'brand-elements', displayOrder: 0 }],
-		})
-
-		await expect(
-			listGuidelineChapterOptions({ find } as never, { user: null }),
-		).resolves.toEqual([{ id: 1, title: 'Brand Elements' }])
-		expect(find).toHaveBeenCalledWith(expect.objectContaining({ sort: 'displayOrder' }))
 	})
 
 	// 🔴 slug는 챕터 안에서만 고유하다 — 다른 챕터에 같은 slug가 있어도 충돌이 아니다.
@@ -58,6 +23,25 @@ describe('guideline-document Payload repository', () => {
 						{ id: { not_equals: 7 } },
 					],
 				},
+			}),
+		)
+	})
+
+	// 챕터가 비어 있는 초안도 충돌 검사를 통과해야 한다 — required 검증은 초안에서 건너뛴다.
+	it('챕터가 없으면 챕터 없는 문서끼리만 비교한다', async () => {
+		const find = vi.fn().mockResolvedValue({ docs: [] })
+		const req = { locale: 'ko', payload: { find }, user: null } as never
+
+		await expect(
+			hasGuidelineDocumentSlugConflict(req, {
+				slug: 'draft',
+				chapterId: null,
+				currentId: null,
+			}),
+		).resolves.toBe(false)
+		expect(find).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: { and: [{ slug: { equals: 'draft' } }, { chapter: { exists: false } }] },
 			}),
 		)
 	})
