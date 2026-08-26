@@ -32,8 +32,7 @@ describe('MCP guideline Payload repository', () => {
 					rules: [],
 					blocks: [],
 					displayOrder: 2,
-					parent: 3,
-					breadcrumbs: [{ doc: 7, url: '/guideline/logo' }],
+					chapter: 3,
 					ignoredPersistenceField: 'do not expose',
 				},
 			],
@@ -51,8 +50,7 @@ describe('MCP guideline Payload repository', () => {
 				rules: [],
 				blocks: [],
 				displayOrder: 2,
-				parent: 3,
-				breadcrumbs: [{ doc: 7, url: '/guideline/logo' }],
+				chapter: 3,
 			},
 		])
 		expect(find).toHaveBeenCalledWith(

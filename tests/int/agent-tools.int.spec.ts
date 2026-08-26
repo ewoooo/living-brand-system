@@ -69,8 +69,7 @@ describe('agent tools', () => {
 				{
 					collection: 'guideline-documents',
 					id: '7',
-					level: 3,
-					parentId: '2',
+					chapterId: '2',
 					title: 'Narrative',
 				},
 			])
@@ -85,8 +84,7 @@ describe('agent tools', () => {
 			{
 				collection: 'guideline-documents',
 				id: '7',
-				level: 3,
-				parentId: '2',
+				chapterId: '2',
 				title: 'Narrative',
 			},
 		])

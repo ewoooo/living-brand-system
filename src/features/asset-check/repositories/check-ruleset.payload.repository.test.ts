@@ -19,7 +19,7 @@ describe('getCheckSourceDocuments', () => {
 						title: 'Brand',
 						slug: 'brand',
 						displayOrder: 1,
-						breadcrumbs: [],
+						chapter: null,
 						blocks: [],
 						rules: [],
 					},
@@ -36,7 +36,7 @@ describe('getCheckSourceDocuments', () => {
 				title: 'Brand',
 				slug: 'brand',
 				displayOrder: 1,
-				breadcrumbDocumentIds: [],
+				chapter: null,
 				checks: [],
 			},
 		])
@@ -80,7 +80,7 @@ describe('getCheckSourceDocuments', () => {
 						title: 'Primary Logo',
 						slug: 'primary-logo',
 						displayOrder: 3,
-						breadcrumbs: [{ doc: { id: 10 } }, { doc: 20 }, { doc: { id: 30 } }],
+						chapter: null,
 						rules: [],
 						blocks: [
 							{
@@ -114,7 +114,6 @@ describe('getCheckSourceDocuments', () => {
 
 		expect(documents[0]).toMatchObject({
 			id: 30,
-			breadcrumbDocumentIds: [10, 20, 30],
 			checks: [
 				{
 					rule: {
@@ -156,7 +155,7 @@ describe('getCheckSourceDocuments', () => {
 					title: 'Primary Logo',
 					slug: 'primary-logo',
 					displayOrder: 3,
-					breadcrumbs: [{ doc: null }, { doc: 20 }],
+					chapter: { title: 'Brand', slug: 'brand', displayOrder: 2 },
 					checks: [],
 					blocks: [],
 				},
@@ -166,6 +165,6 @@ describe('getCheckSourceDocuments', () => {
 
 		const { documents } = await getCheckSourceDocuments()
 
-		expect(documents[0]?.breadcrumbDocumentIds).toEqual([-1, 20])
+		expect(documents[0]?.chapter).toEqual({ title: 'Brand', slug: 'brand', displayOrder: 2 })
 	})
 })

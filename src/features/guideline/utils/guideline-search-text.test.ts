@@ -11,11 +11,7 @@ describe('buildGuidelineSearchText', () => {
 			id: 55,
 			title: 'Brand Model',
 			slug: 'brand-model',
-			breadcrumbs: [
-				{ label: 'Design Elements' },
-				{ label: 'Photography' },
-				{ label: 'Brand Model' },
-			],
+			chapter: { title: 'Design Elements' },
 			description: lexical('자연스러운 피부 질감과 모델 촬영 기준'),
 			blocks: [
 				{
@@ -32,7 +28,7 @@ describe('buildGuidelineSearchText', () => {
 			{ key: 'imagery-misuse', title: 'Imagery Misuse' },
 		])
 
-		expect(searchText).toContain('Design Elements Photography Brand Model')
+		expect(searchText).toContain('Design Elements')
 		expect(searchText).toContain('자연스러운 피부 질감과 모델 촬영 기준')
 		expect(searchText).toContain('과도한 피부 보정을 피합니다.')
 		expect(searchText).toContain('imagery-misuse Imagery Misuse')

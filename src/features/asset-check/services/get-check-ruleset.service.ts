@@ -15,7 +15,6 @@ import type { GuidelineCheckSource } from '@/features/guideline/checks/collect-g
  */
 export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 	const { documents } = await getCheckSourceDocuments()
-	const byId = new Map(documents.map((document) => [document.id, document]))
 	// 🔴 배치 단위는 문서가 아니라 **꼭지**다. 2026-08-26 이관으로 꼭지가 문서에서 블록이 되면서
 	//    한 토픽의 Check가 전부 한 덩어리로 뭉쳤고, 검수 화면의 딥링크가 토픽까지만 갔다.
 	//    근거가 지목하는 꼭지(`source.section`)로 다시 가른다. 꼭지가 없는 것은 문서 자신의 rule이다.
@@ -27,7 +26,7 @@ export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 				// 🔴 꼭지의 slug 자리에 앵커를 넣는다 — `toGuidelineHref`가 slug와 topicSlug가
 				//    다를 때 `#앵커`를 붙이므로, 문서 자신의 rule은 앵커 없이 토픽으로 남는다.
 				slug: section?.anchor ?? document.slug,
-				...toCheckPlacement(document, byId),
+				...toCheckPlacement(document),
 				checks: checks.map(toRuntimeCheck),
 			},
 		})),
@@ -226,23 +225,18 @@ function mergeCheckPlacements(placements: RuntimeCheck[]): RuntimeCheck {
 	}
 }
 
-function toCheckPlacement(
-	document: CheckRulesetSourceDocument,
-	documents: Map<number, CheckRulesetSourceDocument>,
-) {
-	const chapter = documents.get(document.breadcrumbDocumentIds[0] ?? -1) ?? document
-	const topic = documents.get(document.breadcrumbDocumentIds[1] ?? -1) ?? chapter
-	const topicSlug = topic.slug
-	const chapterSlug = chapter.slug
+// 🔴 문서 자신이 토픽이다(2026-08-26). 계층이 사라져 breadcrumb으로 조상을 되짚을 필요가 없다.
+function toCheckPlacement(document: CheckRulesetSourceDocument) {
+	const chapter = document.chapter
 
 	return {
-		groupTitle: topic.title,
-		groupSlug: topicSlug,
-		chapterTitle: chapter.title,
-		chapterSlug,
-		chapterOrder: chapter.displayOrder,
-		topicTitle: topic.title,
-		topicSlug,
-		topicOrder: topic.displayOrder,
+		groupTitle: document.title,
+		groupSlug: document.slug,
+		chapterTitle: chapter?.title ?? document.title,
+		chapterSlug: chapter?.slug ?? document.slug,
+		chapterOrder: chapter?.displayOrder ?? -1,
+		topicTitle: document.title,
+		topicSlug: document.slug,
+		topicOrder: document.displayOrder,
 	}
 }

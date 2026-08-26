@@ -1,27 +1,36 @@
 import { describe, expect, it } from 'vitest'
-import { buildGuidelineDocumentTree } from './guideline-document-tree'
+import { groupGuidelineTopicsByChapter } from './guideline-document-tree'
 
-describe('buildGuidelineDocumentTree', () => {
-	it('groups documents by parent and sorts siblings by display order', () => {
-		const tree = buildGuidelineDocumentTree([
-			{ id: 4, title: '두 번째 페이지', parent: 2, displayOrder: 2, _status: 'draft' },
-			{ id: 1, title: '장', parent: null, displayOrder: 0, _status: 'published' },
-			{ id: 3, title: '첫 번째 페이지', parent: 2, displayOrder: 1, _status: 'published' },
-			{ id: 2, title: '토픽', parent: 1, displayOrder: 0, _status: 'published' },
-		])
+const chapters = [
+	{ id: 1, title: 'Brand Strategy' },
+	{ id: 2, title: 'Brand Elements' },
+]
 
-		expect(tree.map(({ id }) => id)).toEqual([1])
-		expect(tree[0]?.children.map(({ id }) => id)).toEqual([2])
-		expect(tree[0]?.children[0]?.children.map(({ id }) => id)).toEqual([3, 4])
+describe('groupGuidelineTopicsByChapter', () => {
+	it('groups topics by chapter and sorts them by display order', () => {
+		const groups = groupGuidelineTopicsByChapter(
+			[
+				{ id: 12, title: 'Color', chapter: 2, displayOrder: 2, _status: 'draft' },
+				{ id: 10, title: 'Purpose', chapter: 1, displayOrder: 0, _status: 'published' },
+				{ id: 11, title: 'CI', chapter: { id: 2 }, displayOrder: 1, _status: 'published' },
+			],
+			chapters,
+		)
+
+		expect(groups.map(({ title }) => title)).toEqual(['Brand Strategy', 'Brand Elements'])
+		expect(groups[0]?.topics.map(({ id }) => id)).toEqual([10])
+		expect(groups[1]?.topics.map(({ id }) => id)).toEqual([11, 12])
 	})
 
-	// 초안은 required 검증을 건너뛰어 title이 비어 있을 수 있다 — 정렬이 터지면 admin 리스트가 죽는다.
-	it('sorts documents whose title is empty (draft saved without one)', () => {
-		const tree = buildGuidelineDocumentTree([
-			{ id: 2, title: null, parent: null, displayOrder: 0, _status: 'draft' },
-			{ id: 1, title: '장', parent: null, displayOrder: 0, _status: 'published' },
-		])
+	// 초안은 required 검증을 건너뛰어 chapter·title이 비어 있을 수 있다 —
+	// 목록에서 사라지면 고칠 방법이 없어진다.
+	it('keeps topics whose chapter is missing in a trailing group', () => {
+		const groups = groupGuidelineTopicsByChapter(
+			[{ id: 20, title: null, chapter: null, displayOrder: 0, _status: 'draft' }],
+			chapters,
+		)
 
-		expect(tree.map(({ id }) => id)).toEqual([2, 1])
+		expect(groups.at(-1)).toMatchObject({ id: null, title: '챕터 없음' })
+		expect(groups.at(-1)?.topics.map(({ id }) => id)).toEqual([20])
 	})
 })

@@ -19,26 +19,18 @@ export interface GuidelineMetadataData {
 	primaryHex: string | null
 }
 
-export interface GuidelineNavigationDocumentData {
-	description: string | null
-	href: string | null
+export interface GuidelineChapterData {
+	displayOrder: number
 	id: number
-	parentId: number | null
-	sections: { anchor: string; title: string }[]
 	slug: string
 	title: string
 }
 
-export interface GuidelineChapterData {
+export interface GuidelineNavigationTopicData {
+	chapterId: number | null
 	description: string | null
 	id: number
-	label: string | null
-	title: string
-}
-
-export interface GuidelineTopicSummaryData {
-	description: string | null
-	id: number
+	sections: { anchor: string; title: string }[]
 	slug: string
 	title: string
 }
@@ -85,8 +77,29 @@ export async function findGuidelineMetadataGlobal(): Promise<GuidelineMetadataDa
 	}
 }
 
-export async function listPublishedGuidelineNavigationDocuments(): Promise<
-	GuidelineNavigationDocumentData[]
+/** 목차의 그룹. 챕터는 자기 화면이 없으므로 제목·slug·순서만 읽는다. */
+export async function listGuidelineChapters(): Promise<GuidelineChapterData[]> {
+	const payload = await getPayload({ config })
+	const chapters = await payload.find({
+		collection: 'guideline-chapters',
+		depth: 0,
+		fallbackLocale: FALLBACK_LOCALE,
+		limit: 100,
+		locale: LOCALE,
+		sort: 'displayOrder',
+		select: { title: true, slug: true, displayOrder: true },
+	})
+
+	return chapters.docs.map((chapter) => ({
+		displayOrder: chapter.displayOrder,
+		id: chapter.id,
+		slug: chapter.slug,
+		title: chapter.title,
+	}))
+}
+
+export async function listPublishedGuidelineNavigationTopics(): Promise<
+	GuidelineNavigationTopicData[]
 > {
 	const payload = await getPayload({ config })
 	const documents = await payload.find({
@@ -102,8 +115,7 @@ export async function listPublishedGuidelineNavigationDocuments(): Promise<
 			slug: true,
 			description: true,
 			displayOrder: true,
-			parent: true,
-			breadcrumbs: true,
+			chapter: true,
 			// 🔴 꼭지 목차는 `section` 블록에서 나온다. blockType별로 골라 담으면 나머지 블록
 			//    테이블(blk·img·위젯 20종)은 조인 자체가 일어나지 않는다
 			//    (`@payloadcms/drizzle` find/traverseFields.js — 목록에 없는 블록은 빈 select로 접힌다).
@@ -112,10 +124,9 @@ export async function listPublishedGuidelineNavigationDocuments(): Promise<
 	})
 
 	return documents.docs.map((document) => ({
+		chapterId: relationshipId(document.chapter),
 		description: extractTextFromLexical(document.description) || null,
-		href: document.breadcrumbs?.at(-1)?.url || null,
 		id: document.id,
-		parentId: relationshipId(document.parent),
 		sections: (document.blocks ?? []).flatMap((block) =>
 			block.blockType === 'section' && block.anchor
 				? [{ anchor: block.anchor, title: block.title }]
@@ -126,34 +137,24 @@ export async function listPublishedGuidelineNavigationDocuments(): Promise<
 	}))
 }
 
-export async function findPublishedChapterBySlug(
-	chapterSlug: string,
-): Promise<GuidelineChapterData | null> {
+export async function findChapterBySlug(chapterSlug: string): Promise<GuidelineChapterData | null> {
 	const payload = await getPayload({ config })
 	const chapters = await payload.find({
-		collection: 'guideline-documents',
+		collection: 'guideline-chapters',
 		depth: 0,
-		draft: false,
 		fallbackLocale: FALLBACK_LOCALE,
 		limit: 1,
 		locale: LOCALE,
-		where: {
-			and: [{ slug: { equals: chapterSlug } }, { parent: { exists: false } }],
-		},
-		select: {
-			title: true,
-			label: true,
-			slug: true,
-			description: true,
-		},
+		where: { slug: { equals: chapterSlug } },
+		select: { title: true, slug: true, displayOrder: true },
 	})
 
 	const chapter = chapters.docs[0]
 	return chapter
 		? {
-				description: extractTextFromLexical(chapter.description) || null,
+				displayOrder: chapter.displayOrder,
 				id: chapter.id,
-				label: chapter.label || null,
+				slug: chapter.slug,
 				title: chapter.title,
 			}
 		: null
@@ -174,7 +175,7 @@ export async function findPublishedTopicBySlug(
 		limit: 1,
 		locale: LOCALE,
 		where: {
-			and: [{ slug: { equals: topicSlug } }, { parent: { equals: chapterId } }],
+			and: [{ slug: { equals: topicSlug } }, { chapter: { equals: chapterId } }],
 		},
 		select: {
 			title: true,
@@ -197,41 +198,7 @@ export async function findPublishedTopicBySlug(
 		: null
 }
 
-export async function listPublishedTopicsByChapter(
-	chapterId: number,
-): Promise<GuidelineTopicSummaryData[]> {
-	const topics = await listPublishedChildren(chapterId, {
-		title: true,
-		slug: true,
-		description: true,
-	})
-
-	return topics.map((topic) => ({
-		description: extractTextFromLexical(topic.description) || null,
-		id: topic.id,
-		slug: topic.slug,
-		title: topic.title,
-	}))
-}
-
-async function listPublishedChildren(parentId: number, select: Record<string, true>) {
-	const payload = await getPayload({ config })
-	const children = await payload.find({
-		collection: 'guideline-documents',
-		depth: 0,
-		draft: false,
-		fallbackLocale: FALLBACK_LOCALE,
-		limit: 100,
-		locale: LOCALE,
-		sort: 'displayOrder',
-		where: { parent: { equals: parentId } },
-		select,
-	})
-
-	return children.docs
-}
-
-function relationshipId(value: GuidelineDocument['parent']): number | null {
+function relationshipId(value: GuidelineDocument['chapter']): number | null {
 	if (typeof value === 'number') return value
 	return value?.id ?? null
 }

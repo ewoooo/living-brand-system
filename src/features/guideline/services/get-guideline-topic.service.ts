@@ -1,5 +1,5 @@
 import {
-	findPublishedChapterBySlug,
+	findChapterBySlug,
 	findPublishedTopicBySlug,
 	type GuidelineBlocks,
 	type GuidelineHeaderImage,
@@ -21,7 +21,7 @@ export async function getGuidelineTopic(
 	chapterSlug: string,
 	topicSlug: string,
 ): Promise<GetGuidelineTopicOutput | null> {
-	const chapter = await findPublishedChapterBySlug(chapterSlug)
+	const chapter = await findChapterBySlug(chapterSlug)
 
 	if (!chapter) {
 		return null

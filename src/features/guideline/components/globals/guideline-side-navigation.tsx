@@ -34,14 +34,16 @@ export function GuidelineSideNavigation({
 			<Sidebar.Content>
 				<Sidebar.Group>
 					{chapters.map((chapter) => {
-						const chapterCurrent = pathname === chapter.href
+						// 🔴 챕터는 자기 화면이 없다(2026-08-26). 분류일 뿐이라 인덱스로 보낸다 —
+						//    인덱스가 전 챕터의 카드와 토픽 칩을 이미 그린다.
+						const chapterCurrent = pathname === '/guideline'
 
 						return (
 							<Sidebar.Item
 								key={chapter.id}
 								current={chapterCurrent}
 								depth={0}
-								href={chapter.href}
+								href="/guideline"
 								label={chapter.title}
 								tone={chapterCurrent ? 'emphasized' : 'subtle'}
 							>

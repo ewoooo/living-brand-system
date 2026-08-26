@@ -68,6 +68,7 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    'guideline-chapters': GuidelineChapter;
     'guideline-documents': GuidelineDocument;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
@@ -98,11 +99,15 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
+    'guideline-chapters': {
+      topics: 'guideline-documents';
+    };
     'template-categories': {
       templates: 'templates';
     };
   };
   collectionsSelect: {
+    'guideline-chapters': GuidelineChaptersSelect<false> | GuidelineChaptersSelect<true>;
     'guideline-documents': GuidelineDocumentsSelect<false> | GuidelineDocumentsSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
@@ -199,7 +204,36 @@ export interface PayloadMcpApiKeyAuthOperations {
   };
 }
 /**
- * 계층형 가이드라인 문서입니다.
+ * 토픽을 묶는 분류입니다. 챕터 자체는 화면을 갖지 않습니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guideline-chapters".
+ */
+export interface GuidelineChapter {
+  id: number;
+  /**
+   * 사이드바와 인덱스 카드의 제목으로 표시됩니다.
+   */
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  topics?: {
+    docs?: (number | GuidelineDocument)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * 숫자가 낮을수록 목차에서 먼저 표시됩니다.
+   */
+  displayOrder: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * 챕터에 속한 가이드라인 토픽입니다. 본문의 꼭지는 섹션 블록입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-documents".
@@ -207,9 +241,9 @@ export interface PayloadMcpApiKeyAuthOperations {
 export interface GuidelineDocument {
   id: number;
   /**
-   * 상위 문서가 없으면 챕터, 챕터 아래는 토픽이 됩니다. 토픽 본문의 꼭지는 섹션 블록입니다.
+   * 이 토픽이 속한 챕터입니다. URL의 첫 조각이 됩니다.
    */
-  parent?: (number | null) | GuidelineDocument;
+  chapter: number | GuidelineChapter;
   title: string;
   /**
    * 제목 위에 표시할 선택 라벨입니다.
@@ -259,14 +293,6 @@ export interface GuidelineDocument {
    * 숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.
    */
   displayOrder: number;
-  breadcrumbs?:
-    | {
-        doc?: (number | null) | GuidelineDocument;
-        url?: string | null;
-        label?: string | null;
-        id?: string | null;
-      }[]
-    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -2241,7 +2267,7 @@ export interface PayloadMcpApiKey {
   description?: string | null;
   'payload-mcp-tool'?: {
     /**
-     * Find published guideline documents with localized content, hierarchy, blocks, and applied rules.
+     * Find published guideline topics with localized content, chapter, blocks, and applied rules.
      */
     findGuidelineDocuments?: boolean | null;
     /**
@@ -2401,6 +2427,10 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
+        relationTo: 'guideline-chapters';
+        value: number | GuidelineChapter;
+      } | null)
+    | ({
         relationTo: 'guideline-documents';
         value: number | GuidelineDocument;
       } | null)
@@ -2546,10 +2576,23 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guideline-chapters_select".
+ */
+export interface GuidelineChaptersSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  topics?: T;
+  displayOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-documents_select".
  */
 export interface GuidelineDocumentsSelect<T extends boolean = true> {
-  parent?: T;
+  chapter?: T;
   title?: T;
   label?: T;
   generateSlug?: T;
@@ -2568,14 +2611,6 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
       };
   rules?: T;
   displayOrder?: T;
-  breadcrumbs?:
-    | T
-    | {
-        doc?: T;
-        url?: T;
-        label?: T;
-        id?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

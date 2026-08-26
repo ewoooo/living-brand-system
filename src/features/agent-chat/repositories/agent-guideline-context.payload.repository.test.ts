@@ -17,15 +17,14 @@ describe('listGuidelineDocuments', () => {
 				{
 					id: 7,
 					title: 'Primary Logo',
-					parent: { id: 2 },
-					breadcrumbs: [{}, {}, {}],
+					chapter: { id: 2 },
 				},
 			],
 		})
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 
 		await expect(listGuidelineDocuments({ id: 1 })).resolves.toEqual([
-			{ id: 7, level: 3, parentId: 2, title: 'Primary Logo' },
+			{ chapterId: 2, id: 7, title: 'Primary Logo' },
 		])
 
 		expect(find).toHaveBeenCalledWith(
@@ -89,7 +88,7 @@ describe('guideline search candidates', () => {
 })
 
 describe('findAgentGuidelineDocument', () => {
-	it('Payload breadcrumb와 child 본문을 Agent DTO로 변환한다', async () => {
+	it('Payload 챕터 관계를 Agent DTO로 변환한다', async () => {
 		const findByID = vi.fn().mockResolvedValue({
 			id: 2,
 			title: 'Logo',
@@ -98,7 +97,6 @@ describe('findAgentGuidelineDocument', () => {
 			headerImage: null,
 			blocks: [],
 			checks: [],
-			breadcrumbs: [{ doc: 1, label: 'Brand', url: '/guideline/brand' }],
 			_status: 'published',
 		})
 		const find = vi.fn().mockResolvedValue({
@@ -112,9 +110,7 @@ describe('findAgentGuidelineDocument', () => {
 			document: {
 				id: 2,
 				descriptionText: '',
-				breadcrumbs: [{ label: 'Brand', url: '/guideline/brand' }],
 			},
-			children: [{ id: 3, title: 'Primary', slug: 'primary', descriptionText: '' }],
 		})
 	})
 })

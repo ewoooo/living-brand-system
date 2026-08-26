@@ -72,14 +72,9 @@ const user = (req: PayloadRequest) => {
 export const customMcpTools = [
 	mcpTextTool(
 		'findGuidelineDocuments',
-		'Find published guideline documents with localized content, hierarchy, blocks, and applied rules.',
-		{
-			...mcpListParameters,
-			level: z.number().int().min(1).max(2).optional(),
-		},
-		// level은 스키마가 1~2 정수로 검증하므로 리터럴 유니온으로 좁혀도 안전하다.
-		(args, req) =>
-			findMcpGuidelineDocuments(req, { ...args, level: args.level as 1 | 2 | undefined }),
+		'Find published guideline topics with localized content, chapter, blocks, and applied rules.',
+		mcpListParameters,
+		(args, req) => findMcpGuidelineDocuments(req, args),
 	),
 	mcpTextTool(
 		'findChecks',
