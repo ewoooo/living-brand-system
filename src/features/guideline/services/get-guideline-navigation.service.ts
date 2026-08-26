@@ -1,7 +1,9 @@
 import { cache } from 'react'
 import {
-	type GuidelineNavigationDocumentData,
-	listPublishedGuidelineNavigationDocuments,
+	type GuidelineChapterData,
+	type GuidelineNavigationTopicData,
+	listGuidelineChapters,
+	listPublishedGuidelineNavigationTopics,
 } from '../repositories/guideline-view.payload.repository'
 import {
 	type GetGuidelineMetadataOutput,
@@ -14,11 +16,10 @@ export interface GetGuidelineNavigationOutput {
 	chapters: {
 		id: number
 		title: string
-		description: string | null
-		href: string
 		topics: {
 			id: number
 			title: string
+			description: string | null
 			href: string
 			sections: {
 				anchor: string
@@ -30,51 +31,54 @@ export interface GetGuidelineNavigationOutput {
 }
 
 /**
- * Creator UI 사이드바는 발행된 가이드라인의 목차 정보만 읽는다(장 → 토픽 → 꼭지).
- * 본문 렌더링은 chapter/topic service가 담당한다.
+ * Creator UI 사이드바와 인덱스는 발행된 가이드라인의 목차 정보만 읽는다(챕터 → 토픽 → 꼭지).
+ * 본문 렌더링은 topic service가 담당한다.
  * Payload 조회는 guideline-view repository가 소유한다.
  */
 export const getGuidelineNavigation = cache(async (): Promise<GetGuidelineNavigationOutput> => {
-	const [metadata, documents] = await Promise.all([
+	const [metadata, chapters, topics] = await Promise.all([
 		getGuidelineMetadata(),
-		listPublishedGuidelineNavigationDocuments(),
+		listGuidelineChapters(),
+		listPublishedGuidelineNavigationTopics(),
 	])
 
 	return {
 		metadata,
 		title: metadata.documentTitle,
-		chapters: buildGuidelineNavigationChapters(documents),
+		chapters: buildGuidelineNavigationChapters(chapters, topics),
 	}
 })
 
 /**
- * published 문서 목록을 장→토픽→꼭지 네비게이션 트리로 조립하는 순수 함수. 외부 I/O 없음
+ * 챕터와 토픽을 목차 트리로 조립하는 순수 함수. 외부 I/O 없음
  * (Payload 조회는 guideline-view repository 소유). 단위 테스트 재사용을 위해 export한다.
+ *
+ * 🔴 URL은 여기서 만든다. 2026-08-26까지는 nested-docs가 breadcrumb에 심어 준 것을 읽었는데,
+ *    챕터가 별도 컬렉션이 되면서 계층이 사라졌다. 조각이 둘뿐이라 조립이 더 싸다.
+ * 🔴 **챕터는 링크를 갖지 않는다.** 자기 화면이 없다 — 사이드바는 `/guideline`으로 보낸다.
  */
-export function buildGuidelineNavigationChapters(documents: GuidelineNavigationDocumentData[]) {
-	const children = new Map<number | null, GuidelineNavigationDocumentData[]>()
-	for (const document of documents) {
-		children.set(document.parentId, [...(children.get(document.parentId) ?? []), document])
-	}
-
-	return (children.get(null) ?? []).map((chapter) => ({
+export function buildGuidelineNavigationChapters(
+	chapters: GuidelineChapterData[],
+	topics: GuidelineNavigationTopicData[],
+) {
+	return chapters.map((chapter) => ({
 		id: chapter.id,
 		title: chapter.title,
-		description: chapter.description,
-		href: breadcrumbURL(chapter),
-		topics: (children.get(chapter.id) ?? []).map((topic) => ({
-			id: topic.id,
-			title: topic.title,
-			href: breadcrumbURL(topic),
-			sections: topic.sections.map((section) => ({
-				anchor: section.anchor,
-				title: section.title,
-				href: `${breadcrumbURL(topic)}#${section.anchor}`,
-			})),
-		})),
+		topics: topics
+			.filter((topic) => topic.chapterId === chapter.id)
+			.map((topic) => {
+				const href = `/guideline/${chapter.slug}/${topic.slug}`
+				return {
+					id: topic.id,
+					title: topic.title,
+					description: topic.description,
+					href,
+					sections: topic.sections.map((section) => ({
+						anchor: section.anchor,
+						title: section.title,
+						href: `${href}#${section.anchor}`,
+					})),
+				}
+			}),
 	}))
-}
-
-function breadcrumbURL(document: GuidelineNavigationDocumentData) {
-	return document.href || `/guideline/${document.slug}`
 }

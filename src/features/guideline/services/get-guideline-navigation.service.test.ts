@@ -2,43 +2,37 @@ import { describe, expect, it, vi } from 'vitest'
 import { buildGuidelineNavigationChapters } from './get-guideline-navigation.service'
 
 vi.mock('../repositories/guideline-view.payload.repository', () => ({
-	listPublishedGuidelineNavigationDocuments: vi.fn(),
+	listGuidelineChapters: vi.fn(),
+	listPublishedGuidelineNavigationTopics: vi.fn(),
 }))
 vi.mock('./get-guideline-metadata.service', () => ({ getGuidelineMetadata: vi.fn() }))
 
 describe('buildGuidelineNavigationChapters', () => {
-	it('장·토픽 문서와 토픽의 꼭지 블록으로 목차와 앵커 URL을 만든다', () => {
-		const navigation = buildGuidelineNavigationChapters([
-			{
-				id: 1,
-				title: 'Brand',
-				slug: 'brand',
-				description: 'Brand foundation',
-				parentId: null,
-				href: '/guideline/brand',
-				sections: [],
-			},
-			{
-				id: 2,
-				title: 'Logo',
-				slug: 'logo',
-				description: null,
-				parentId: 1,
-				href: '/guideline/brand/logo',
-				sections: [{ anchor: 'primary-logo', title: 'Primary Logo' }],
-			},
-		])
+	// 🔴 URL은 breadcrumb이 아니라 챕터 slug + 토픽 slug로 조립한다(2026-08-26).
+	it('챕터별로 토픽을 묶고 앵커 URL을 만든다', () => {
+		const navigation = buildGuidelineNavigationChapters(
+			[{ id: 1, title: 'Brand', slug: 'brand', displayOrder: 0 }],
+			[
+				{
+					chapterId: 1,
+					description: null,
+					id: 2,
+					sections: [{ anchor: 'primary-logo', title: 'Primary Logo' }],
+					slug: 'logo',
+					title: 'Logo',
+				},
+			],
+		)
 
 		expect(navigation).toEqual([
 			{
 				id: 1,
 				title: 'Brand',
-				description: 'Brand foundation',
-				href: '/guideline/brand',
 				topics: [
 					{
 						id: 2,
 						title: 'Logo',
+						description: null,
 						href: '/guideline/brand/logo',
 						sections: [
 							{
@@ -51,5 +45,24 @@ describe('buildGuidelineNavigationChapters', () => {
 				],
 			},
 		])
+	})
+
+	// chapter는 required지만 초안은 그 검증을 건너뛴다 — 짝 없는 토픽이 트리를 깨면 안 된다.
+	it('어느 챕터에도 속하지 않은 토픽은 목차에 넣지 않는다', () => {
+		const navigation = buildGuidelineNavigationChapters(
+			[{ id: 1, title: 'Brand', slug: 'brand', displayOrder: 0 }],
+			[
+				{
+					chapterId: null,
+					description: null,
+					id: 9,
+					sections: [],
+					slug: 'orphan',
+					title: 'Orphan',
+				},
+			],
+		)
+
+		expect(navigation[0]?.topics).toEqual([])
 	})
 })

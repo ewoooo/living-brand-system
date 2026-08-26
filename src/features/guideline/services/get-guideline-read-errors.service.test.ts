@@ -1,30 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+	findChapterBySlug,
 	findGuidelineMetadataGlobal,
-	findPublishedChapterBySlug,
 	findPublishedTopicBySlug,
-	listPublishedGuidelineNavigationDocuments,
-	listPublishedTopicsByChapter,
+	listGuidelineChapters,
+	listPublishedGuidelineNavigationTopics,
 } from '../repositories/guideline-view.payload.repository'
-import { getGuidelineChapter } from './get-guideline-chapter.service'
 import { getGuidelineMetadata } from './get-guideline-metadata.service'
 import { getGuidelineNavigation } from './get-guideline-navigation.service'
 import { getGuidelineTopic } from './get-guideline-topic.service'
 
 vi.mock('../repositories/guideline-view.payload.repository', () => ({
+	findChapterBySlug: vi.fn(),
 	findGuidelineMetadataGlobal: vi.fn(),
-	findPublishedChapterBySlug: vi.fn(),
 	findPublishedTopicBySlug: vi.fn(),
-	listPublishedGuidelineNavigationDocuments: vi.fn(),
-	listPublishedTopicsByChapter: vi.fn(),
+	listGuidelineChapters: vi.fn(),
+	listPublishedGuidelineNavigationTopics: vi.fn(),
 }))
 
-const chapter = {
-	id: 1,
-	title: 'Brand',
-	label: null,
-	description: null,
-}
+const chapter = { id: 1, title: 'Brand', slug: 'brand', displayOrder: 0 }
 
 describe('guideline read service failures', () => {
 	beforeEach(() => {
@@ -37,21 +31,16 @@ describe('guideline read service failures', () => {
 			primaryHex: null,
 			primaryDarkHex: null,
 		})
-		vi.mocked(listPublishedGuidelineNavigationDocuments).mockResolvedValue([])
+		vi.mocked(listGuidelineChapters).mockResolvedValue([])
+		vi.mocked(listPublishedGuidelineNavigationTopics).mockResolvedValue([])
 	})
 
-	it('chapter 미존재는 null이고 하위 목록 조회 실패는 전파한다', async () => {
-		vi.mocked(findPublishedChapterBySlug).mockResolvedValueOnce(null as never)
-		await expect(getGuidelineChapter('missing')).resolves.toBeNull()
+	it('챕터 미존재는 null이고 토픽 조회 실패는 전파한다', async () => {
+		vi.mocked(findChapterBySlug).mockResolvedValueOnce(null)
+		await expect(getGuidelineTopic('missing', 'logo')).resolves.toBeNull()
 
-		vi.mocked(findPublishedChapterBySlug).mockResolvedValueOnce(chapter as never)
-		vi.mocked(listPublishedTopicsByChapter).mockRejectedValueOnce(new Error('db down'))
-		await expect(getGuidelineChapter('brand')).rejects.toThrow('db down')
-	})
-
-	it('topic 미존재는 null이고 본문 조회 실패는 전파한다', async () => {
-		vi.mocked(findPublishedChapterBySlug).mockResolvedValue(chapter as never)
-		vi.mocked(findPublishedTopicBySlug).mockResolvedValueOnce(null as never)
+		vi.mocked(findChapterBySlug).mockResolvedValue(chapter)
+		vi.mocked(findPublishedTopicBySlug).mockResolvedValueOnce(null)
 		await expect(getGuidelineTopic('brand', 'missing')).resolves.toBeNull()
 
 		vi.mocked(findPublishedTopicBySlug).mockRejectedValueOnce(new Error('db down'))
@@ -64,15 +53,13 @@ describe('guideline read service failures', () => {
 		await expect(getGuidelineMetadata()).rejects.toThrow('db down')
 	})
 
-	it('빈 문서 목록은 빈 navigation이고 조회 실패는 전파한다', async () => {
+	it('빈 목록은 빈 navigation이고 조회 실패는 전파한다', async () => {
 		await expect(getGuidelineNavigation()).resolves.toMatchObject({
 			title: 'Guideline',
 			chapters: [],
 		})
 
-		vi.mocked(listPublishedGuidelineNavigationDocuments).mockRejectedValueOnce(
-			new Error('db down'),
-		)
+		vi.mocked(listGuidelineChapters).mockRejectedValueOnce(new Error('db down'))
 		await expect(getGuidelineNavigation()).rejects.toThrow('db down')
 	})
 })

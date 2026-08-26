@@ -3,7 +3,6 @@ import { fileURLToPath } from 'node:url'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { type MCPAccessSettings, mcpPlugin } from '@payloadcms/plugin-mcp'
-import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
 import { searchPlugin } from '@payloadcms/plugin-search'
 import { EXPERIMENTAL_TableFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -30,6 +29,7 @@ import { CheckScenarios } from './collections/CheckScenarios'
 import { CheckSessions } from './collections/CheckSessions'
 import { GeneratedImages } from './collections/GeneratedImages'
 import { GraphicProfiles } from './collections/GraphicProfiles'
+import { GuidelineChapters } from './collections/GuidelineChapters'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
 import { ImageProfiles } from './collections/ImageProfiles'
 import { RuleCheckers } from './collections/RuleCheckers'
@@ -74,6 +74,7 @@ const BetterEditorSettings: GlobalConfig = {
  * Payload에 등록하는 컬렉션 전부. 업로드 저장 대상을 여기서 파생하므로 순서가 곧 등록 순서다.
  */
 const collections = [
+	GuidelineChapters,
 	GuidelineDocuments,
 	BrandLogos,
 	BrandColors,
@@ -170,11 +171,6 @@ export default buildConfig({
 	}),
 	sharp,
 	plugins: [
-		nestedDocsPlugin({
-			collections: ['guideline-documents'],
-			generateLabel: (_, doc) => String(doc.title),
-			generateURL: (docs) => `/guideline/${docs.map((doc) => String(doc.slug)).join('/')}`,
-		}),
 		mcpPlugin({
 			overrideAuth: async (
 				req: PayloadRequest,

@@ -69,7 +69,7 @@ function document(
 		title: `Document ${id}`,
 		slug: `document-${id}`,
 		displayOrder: id,
-		breadcrumbDocumentIds: [],
+		chapter: null,
 		checks,
 		...overrides,
 	}
@@ -157,16 +157,19 @@ describe('getCheckRuleset', () => {
 	// 🔴 배치 단위는 문서가 아니라 꼭지다. 2026-08-26 이관으로 3단계 문서가 section 블록이 됐고,
 	//    한 토픽의 Check가 전부 한 덩어리로 뭉치지 않도록 근거가 지목하는 꼭지로 다시 가른다.
 	it('꼭지별로 배치를 가르고 지면 순서를 적용하며 요청된 Check key 순서를 보존한다', async () => {
-		const chapter = document(10, [], { title: 'Chapter', displayOrder: 2 })
 		const topic = document(
 			20,
 			[
 				source('check.second', {}, { anchor: 'second', title: 'Second', order: 1 }),
 				source('check.first', {}, { anchor: 'first', title: 'First', order: 0 }),
 			],
-			{ title: 'Topic', displayOrder: 3, breadcrumbDocumentIds: [10, 20] },
+			{
+				title: 'Topic',
+				displayOrder: 3,
+				chapter: { title: 'Chapter', slug: 'chapter', displayOrder: 2 },
+			},
 		)
-		vi.mocked(getCheckSourceDocuments).mockResolvedValue({ documents: [topic, chapter] })
+		vi.mocked(getCheckSourceDocuments).mockResolvedValue({ documents: [topic] })
 
 		const sections = await getCheckRuleset()
 		const selected = await getRuntimeChecks(['check.second', 'check.first'])
@@ -182,14 +185,13 @@ describe('getCheckRuleset', () => {
 	})
 
 	it('꼭지 없는 문서 자신의 rule은 토픽 단위로 남는다', async () => {
-		const chapter = document(10, [], { title: 'Chapter', displayOrder: 1 })
 		const topic = document(20, [source('check.doc')], {
 			title: 'Topic',
 			slug: 'topic',
 			displayOrder: 2,
-			breadcrumbDocumentIds: [10, 20],
+			chapter: { title: 'Chapter', slug: 'chapter', displayOrder: 1 },
 		})
-		vi.mocked(getCheckSourceDocuments).mockResolvedValue({ documents: [topic, chapter] })
+		vi.mocked(getCheckSourceDocuments).mockResolvedValue({ documents: [topic] })
 
 		const sections = await getCheckRuleset()
 

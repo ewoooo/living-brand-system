@@ -28,9 +28,8 @@ export async function listAgentGuidelineDocuments(user: unknown) {
 	const documents = await listGuidelineDocuments(user)
 	return documents.map((document) => ({
 		collection: 'guideline-documents' as const,
+		chapterId: document.chapterId?.toString() ?? null,
 		id: String(document.id),
-		level: document.level,
-		parentId: document.parentId?.toString() ?? null,
 		title: document.title,
 	}))
 }
@@ -97,14 +96,6 @@ export async function readAgentGuidelineDocument(
 		},
 		checks,
 		content: limitContent(formatGuidelineDocument(result, checks)),
-		...(result.children.length
-			? {
-					relatedDocuments: result.children.map((child) => ({
-						id: String(child.id),
-						title: child.title,
-					})),
-				}
-			: {}),
 	}
 }
 
@@ -113,21 +104,15 @@ function formatGuidelineDocument(
 	checks: { key: string; title: string }[],
 ): string {
 	const document = result.document
-	const breadcrumbs = document.breadcrumbs ?? []
-	const parentTitle = breadcrumbs.length > 1 ? breadcrumbs.at(-2)?.label : null
-	const kind =
-		breadcrumbs.length === 1 ? 'Chapter' : breadcrumbs.length === 2 ? 'Section' : 'Page'
-	const childSummaries = result.children.map((child) =>
-		compact([child.title, child.descriptionText]).join('\n'),
-	)
 	const formattedChecks = checks.map((check) => `- ${check.key}: ${check.title}`)
 
+	// 🔴 문서는 전부 토픽이다(2026-08-26). 깊이로 종류를 가르던 분기가 사라졌고, 꼭지는
+	//    본문 블록이라 `formatBlockForAgent`가 이미 담는다.
 	return compact([
-		parentTitle ? `Parent: ${parentTitle}` : null,
-		`${kind}: ${document.title}`,
+		document.chapterTitle ? `Chapter: ${document.chapterTitle}` : null,
+		`Topic: ${document.title}`,
 		document.descriptionText,
 		...(document.blocks?.map(formatBlockForAgent).filter(Boolean) ?? []),
-		...childSummaries,
 		formattedChecks.length ? `Checks:\n${formattedChecks.join('\n')}` : null,
 	]).join('\n\n')
 }
@@ -152,12 +137,7 @@ function titleMatchCount(title: string, terms: string[]): number {
 }
 
 function documentHref(document: AgentGuidelineDocument['document']): string | null {
-	const breadcrumbs = document.breadcrumbs ?? []
-	if (breadcrumbs.length === 3) {
-		const sectionURL = breadcrumbs[1]?.url
-		return sectionURL ? `${sectionURL}#${document.slug}` : null
-	}
-	return breadcrumbs.at(-1)?.url ?? null
+	return document.chapterSlug ? `/guideline/${document.chapterSlug}/${document.slug}` : null
 }
 
 function limitContent(value: string): string {

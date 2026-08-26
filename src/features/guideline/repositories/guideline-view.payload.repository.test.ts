@@ -1,16 +1,16 @@
 import { getPayload } from 'payload'
 import { describe, expect, it, vi } from 'vitest'
 import {
+	findChapterBySlug,
 	findGuidelineMetadataGlobal,
-	findPublishedChapterBySlug,
 	findPublishedTopicBySlug,
-	listPublishedGuidelineNavigationDocuments,
+	listPublishedGuidelineNavigationTopics,
 } from './guideline-view.payload.repository'
 
 vi.mock('@payload-config', () => ({ default: {} }))
 vi.mock('payload', () => ({ getPayload: vi.fn() }))
 
-describe('listPublishedGuidelineNavigationDocuments', () => {
+describe('listPublishedGuidelineNavigationTopics', () => {
 	it('global 관계 문서를 plain metadata DTO로 변환한다', async () => {
 		const findGlobal = vi.fn().mockResolvedValue({
 			companyName: 'Company',
@@ -36,7 +36,7 @@ describe('listPublishedGuidelineNavigationDocuments', () => {
 		const find = vi.fn().mockResolvedValue({ docs: [] })
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 
-		await listPublishedGuidelineNavigationDocuments()
+		await listPublishedGuidelineNavigationTopics()
 
 		expect(find).toHaveBeenCalledTimes(1)
 		expect(find).toHaveBeenCalledWith(
@@ -50,18 +50,18 @@ describe('listPublishedGuidelineNavigationDocuments', () => {
 		expect(find.mock.calls[0]?.[0]).not.toHaveProperty('where')
 	})
 
-	it('chapter와 topic을 canonical slug와 부모 범위로 조회한다', async () => {
+	it('chapter와 topic을 canonical slug와 챕터 범위로 조회한다', async () => {
 		const find = vi.fn().mockResolvedValue({ docs: [] })
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 
-		await findPublishedChapterBySlug('brand')
+		await findChapterBySlug('brand')
 		await findPublishedTopicBySlug(1, 'logo')
 
 		expect(find.mock.calls[0]?.[0].where).toEqual({
-			and: [{ slug: { equals: 'brand' } }, { parent: { exists: false } }],
+			slug: { equals: 'brand' },
 		})
 		expect(find.mock.calls[1]?.[0].where).toEqual({
-			and: [{ slug: { equals: 'logo' } }, { parent: { equals: 1 } }],
+			and: [{ slug: { equals: 'logo' } }, { chapter: { equals: 1 } }],
 		})
 	})
 
@@ -73,19 +73,17 @@ describe('listPublishedGuidelineNavigationDocuments', () => {
 					title: 'Basics',
 					slug: 'basics',
 					description: null,
-					parent: { id: 1, title: 'Brand' },
-					breadcrumbs: [{ doc: 1, url: '/guideline/brand/basics' }],
+					chapter: { id: 1, title: 'Brand' },
 				},
 			],
 		})
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 
-		await expect(listPublishedGuidelineNavigationDocuments()).resolves.toEqual([
+		await expect(listPublishedGuidelineNavigationTopics()).resolves.toEqual([
 			{
+				chapterId: 1,
 				description: null,
-				href: '/guideline/brand/basics',
 				id: 2,
-				parentId: 1,
 				sections: [],
 				slug: 'basics',
 				title: 'Basics',
