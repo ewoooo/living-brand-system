@@ -47,6 +47,5 @@ export async function getGuidelineTopicPreview(
 		title: document.title,
 		headerImage: document.headerImage,
 		blocks: document.blocks,
-		description: document.descriptionText,
 	}
 }

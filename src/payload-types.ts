@@ -255,35 +255,9 @@ export interface GuidelineDocument {
   generateSlug?: boolean | null;
   slug: string;
   /**
-   * 문서 제목 아래에 표시할 선택 설명입니다.
-   */
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
    * 문서 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
-  /**
-   * 문서 전체(제목·본문·블록)를 덮는 배경색입니다. 비우면 기본.
-   */
-  background?: (number | null) | BrandColor;
-  /**
-   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
-   */
-  backgroundTone?: ('solid' | 'tint') | null;
   blocks?: (ContentColumnsBlock | CalloutBlock | LayoutBlock | SectionBlock)[] | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
@@ -330,50 +304,6 @@ export interface ApplicationImage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brand-colors".
- */
-export interface BrandColor {
-  id: number;
-  name: string;
-  hex: string;
-  /**
-   * PMS 표기입니다. 예: 705C, Warm Red C
-   */
-  pantone?: string | null;
-  /**
-   * 인쇄 CMYK 표기입니다. 예: C 0 M 100 Y 90 K 0
-   */
-  cmyk?: string | null;
-  /**
-   * 이 배경 위에 CI 기본형(Full Color)을 쓸 수 있는지 여부입니다.
-   */
-  allowsFullColorLogo?: boolean | null;
-  /**
-   * 이 배경 위에 CI WHITE 워드마크를 쓸 수 있는지 여부입니다.
-   */
-  allowsWhiteWordmark?: boolean | null;
-  /**
-   * 이 배경 위에 올리는 CI 단색분리형의 색입니다. 단색형은 모든 배경에서 쓸 수 있고 색만 갈립니다.
-   */
-  monoLogoFill?: ('black' | 'white') | null;
-  /**
-   * 팔레트 색상군입니다. 예: red, yellow, neutral
-   */
-  colorGroup?: string | null;
-  /**
-   * Light(1)~Dark(5) 명도 단계입니다. 톤 스펙트럼이 없는 컬러는 비워둡니다.
-   */
-  tone?: number | null;
-  /**
-   * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
-   */
-  isMain?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ContentColumnsBlock".
  */
 export interface ContentColumnsBlock {
@@ -417,6 +347,50 @@ export interface ContentColumnsBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'contentColumns';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brand-colors".
+ */
+export interface BrandColor {
+  id: number;
+  name: string;
+  hex: string;
+  /**
+   * PMS 표기입니다. 예: 705C, Warm Red C
+   */
+  pantone?: string | null;
+  /**
+   * 인쇄 CMYK 표기입니다. 예: C 0 M 100 Y 90 K 0
+   */
+  cmyk?: string | null;
+  /**
+   * 이 배경 위에 CI 기본형(Full Color)을 쓸 수 있는지 여부입니다.
+   */
+  allowsFullColorLogo?: boolean | null;
+  /**
+   * 이 배경 위에 CI WHITE 워드마크를 쓸 수 있는지 여부입니다.
+   */
+  allowsWhiteWordmark?: boolean | null;
+  /**
+   * 이 배경 위에 올리는 CI 단색분리형의 색입니다. 단색형은 모든 배경에서 쓸 수 있고 색만 갈립니다.
+   */
+  monoLogoFill?: ('black' | 'white') | null;
+  /**
+   * 팔레트 색상군입니다. 예: red, yellow, neutral
+   */
+  colorGroup?: string | null;
+  /**
+   * Light(1)~Dark(5) 명도 단계입니다. 톤 스펙트럼이 없는 컬러는 비워둡니다.
+   */
+  tone?: number | null;
+  /**
+   * Main Color 팔레트에 포함되는 컬러인지 여부입니다.
+   */
+  isMain?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * 문서와 블록이 참조해 적용하는 검수 규칙 정의입니다.
@@ -566,10 +540,6 @@ export interface LayoutBlock {
     };
     [k: string]: unknown;
   } | null;
-  /**
-   * 컨테이너 폭입니다. 중간폭=max-w, 전체폭=main 전체.
-   */
-  width?: ('padded' | 'full') | null;
   /**
    * 블록 전체(전체 폭) 배경색입니다. 비우면 기본.
    */
@@ -1273,10 +1243,6 @@ export interface SubLayoutBlock {
     [k: string]: unknown;
   } | null;
   /**
-   * 컨테이너 폭입니다. 중간폭=max-w, 전체폭=main 전체.
-   */
-  width?: ('padded' | 'full') | null;
-  /**
    * 블록 전체(전체 폭) 배경색입니다. 비우면 기본.
    */
   background?: (number | null) | BrandColor;
@@ -1348,9 +1314,9 @@ export interface SubLayoutBlock {
  */
 export interface SectionBlock {
   /**
-   * 이 꼭지의 URL 앵커입니다(예: key-layout). 토픽 안에서 유일해야 합니다.
+   * 이 꼭지의 URL 앵커입니다(예: key-layout). 비우면 제목에서 자동 생성합니다. 토픽 안에서 유일해야 합니다.
    */
-  anchor: string;
+  anchor?: string | null;
   /**
    * 목차에 표시되는 꼭지 제목입니다.
    */
@@ -2597,10 +2563,7 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
   label?: T;
   generateSlug?: T;
   slug?: T;
-  description?: T;
   headerImage?: T;
-  background?: T;
-  backgroundTone?: T;
   blocks?:
     | T
     | {
@@ -2659,7 +2622,6 @@ export interface CalloutBlockSelect<T extends boolean = true> {
 export interface LayoutBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
-  width?: T;
   background?: T;
   backgroundTone?: T;
   innerBackground?: T;
@@ -2948,7 +2910,6 @@ export interface TypeSpecimenWidgetSelect<T extends boolean = true> {
 export interface SubLayoutBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
-  width?: T;
   background?: T;
   backgroundTone?: T;
   innerBackground?: T;

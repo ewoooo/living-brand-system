@@ -24,7 +24,7 @@ import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 import { backgroundToneField, baseBlockFields } from '../shared/fields'
 
 // 꼭지(section) 바로 하위의 레이아웃 컨테이너. widget/image(leaf)들을 품고
-// 배치(width·arrangement·columns)를 소유한다.
+// 배치(arrangement·columns)를 소유한다. 폭은 갖지 않는다 — 프레임 폭은 항상 중간폭이다.
 // 🔴 rules는 컨테이너(Block)에만 = provenance 불변식(collectGuidelineCheckSources가 block.rules를 훑음).
 // dbName 짧게(blk)로 중첩 테이블명 63자 방어. enum은 전역 이름 공유.
 // 제목/본문 네이밍은 image-grid 선례(title=text, description=richText) 따름.
@@ -76,17 +76,6 @@ function layoutFields(children: Block[], childDescription: string): Field[] {
 			type: 'richText',
 			localized: true,
 			admin: { description: '제목 아래에 표시할 선택 본문입니다.' },
-		},
-		{
-			name: 'width',
-			type: 'select',
-			defaultValue: 'padded',
-			enumName: 'enum_block_width',
-			options: [
-				{ label: '중간폭', value: 'padded' },
-				{ label: '전체폭', value: 'full' },
-			],
-			admin: { description: '컨테이너 폭입니다. 중간폭=max-w, 전체폭=main 전체.' },
 		},
 		// 배경색 = block 소관(위젯은 배경 안 가짐). 전체폭 배경 + 자식 레이아웃(arrangement) 배경 별도.
 		{

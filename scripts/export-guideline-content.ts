@@ -52,8 +52,6 @@ const content = {
 		label: doc.label ?? null,
 		chapter: chapterSlug(doc.chapter),
 		order: doc.displayOrder ?? 0,
-		// 문서 본문 설명. 관계 노드가 없는 richText라 그대로 옮긴다.
-		description: doc.description ?? null,
 		headerImage: toPortable(doc.headerImage ?? null),
 		rules: toPortable(doc.rules ?? []),
 		blocks: toPortable(doc.blocks ?? []),

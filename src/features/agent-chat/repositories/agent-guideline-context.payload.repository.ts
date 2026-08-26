@@ -1,15 +1,13 @@
 import config from '@payload-config'
 import { getPayload, type Where } from 'payload'
-import { extractTextFromLexical } from '@/features/guideline/utils/lexical-text'
 import type { GuidelineDocument } from '@/payload-types'
 
 type AgentGuidelineDocumentData = Pick<
 	GuidelineDocument,
-	'id' | 'title' | 'slug' | 'description' | 'headerImage' | 'blocks' | 'rules'
+	'id' | 'title' | 'slug' | 'headerImage' | 'blocks' | 'rules'
 > & {
 	chapterSlug: string | null
 	chapterTitle: string | null
-	descriptionText: string
 }
 
 export interface AgentGuidelineListItem {
@@ -135,7 +133,6 @@ export async function findAgentGuidelineDocument(
 		select: {
 			title: true,
 			slug: true,
-			description: true,
 			headerImage: true,
 			blocks: true,
 			rules: true,
@@ -151,8 +148,6 @@ export async function findAgentGuidelineDocument(
 			id: document.id,
 			title: document.title,
 			slug: document.slug,
-			description: document.description,
-			descriptionText: extractTextFromLexical(document.description),
 			headerImage: document.headerImage,
 			blocks: document.blocks,
 			rules: document.rules,

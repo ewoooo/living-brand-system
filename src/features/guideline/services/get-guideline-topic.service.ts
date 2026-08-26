@@ -9,7 +9,6 @@ export interface GetGuidelineTopicOutput {
 	title: string
 	headerImage: GuidelineHeaderImage
 	blocks: GuidelineBlocks
-	description: string | null
 }
 
 /**
@@ -37,6 +36,5 @@ export async function getGuidelineTopic(
 		title: topic.title,
 		headerImage: topic.headerImage ?? null,
 		blocks: topic.blocks ?? [],
-		description: topic.description,
 	}
 }

@@ -34,7 +34,6 @@ describe('findDraftGuidelineDocumentById', () => {
 		await expect(findDraftGuidelineDocumentById(3, { id: 1 } as never)).resolves.toMatchObject({
 			id: 3,
 			chapterSlug: 'basics',
-			descriptionText: null,
 			displayOrder: -1,
 		})
 	})

@@ -72,7 +72,6 @@ describe('listPublishedGuidelineNavigationTopics', () => {
 					id: 2,
 					title: 'Basics',
 					slug: 'basics',
-					description: null,
 					chapter: { id: 1, title: 'Brand' },
 				},
 			],
@@ -82,7 +81,6 @@ describe('listPublishedGuidelineNavigationTopics', () => {
 		await expect(listPublishedGuidelineNavigationTopics()).resolves.toEqual([
 			{
 				chapterId: 1,
-				description: null,
 				id: 2,
 				sections: [],
 				slug: 'basics',

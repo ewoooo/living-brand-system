@@ -91,6 +91,7 @@ import * as migration_20260826_023316_section_block from './20260826_023316_sect
 import * as migration_20260826_043937_sub_block from './20260826_043937_sub_block';
 import * as migration_20260826_053723_chapter_collection from './20260826_053723_chapter_collection';
 import * as migration_20260826_063726_fix_orphan_versions from './20260826_063726_fix_orphan_versions';
+import * as migration_20260826_064938_topic_surface_and_block_width from './20260826_064938_topic_surface_and_block_width';
 
 export const migrations = [
   {
@@ -556,6 +557,11 @@ export const migrations = [
   {
     up: migration_20260826_063726_fix_orphan_versions.up,
     down: migration_20260826_063726_fix_orphan_versions.down,
-    name: '20260826_063726_fix_orphan_versions'
+    name: '20260826_063726_fix_orphan_versions',
+  },
+  {
+    up: migration_20260826_064938_topic_surface_and_block_width.up,
+    down: migration_20260826_064938_topic_surface_and_block_width.down,
+    name: '20260826_064938_topic_surface_and_block_width'
   },
 ];
