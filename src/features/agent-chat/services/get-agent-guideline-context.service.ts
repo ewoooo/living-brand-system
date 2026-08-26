@@ -111,7 +111,6 @@ function formatGuidelineDocument(
 	return compact([
 		document.chapterTitle ? `Chapter: ${document.chapterTitle}` : null,
 		`Topic: ${document.title}`,
-		document.descriptionText,
 		...(document.blocks?.map(formatBlockForAgent).filter(Boolean) ?? []),
 		formattedChecks.length ? `Checks:\n${formattedChecks.join('\n')}` : null,
 	]).join('\n\n')

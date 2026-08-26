@@ -62,8 +62,6 @@ describe('readAgentGuidelineDocument', () => {
 				id: 7,
 				title: 'Primary Logo',
 				slug: 'primary-logo',
-				description: null,
-				descriptionText: '',
 				blocks: [],
 				rules: [
 					{
@@ -96,8 +94,6 @@ describe('readAgentGuidelineDocument', () => {
 				id: 2,
 				title: 'Brand Core',
 				slug: 'brand-core',
-				description: null,
-				descriptionText: '',
 				rules: [
 					{
 						key: 'brand.core',

@@ -14,8 +14,6 @@ const topic = {
 	title: 'Draft Basics',
 	slug: 'basics',
 	chapterSlug: 'brand-system',
-	description: null,
-	descriptionText: null,
 	headerImage: null,
 	blocks: [],
 	displayOrder: 1,

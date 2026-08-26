@@ -2,12 +2,8 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import { FALLBACK_LOCALE, DEFAULT_LOCALE as LOCALE } from '@/lib/locale'
 import type { GuidelineDocument } from '@/payload-types'
-import { extractTextFromLexical } from '../utils/lexical-text'
 
-export type GuidelineBackground = GuidelineDocument['background']
-export type GuidelineBackgroundTone = GuidelineDocument['backgroundTone']
 export type GuidelineBlocks = GuidelineDocument['blocks']
-export type GuidelineDescription = GuidelineDocument['description']
 export type GuidelineHeaderImage = GuidelineDocument['headerImage']
 
 export interface GuidelineMetadataData {
@@ -28,7 +24,6 @@ export interface GuidelineChapterData {
 
 export interface GuidelineNavigationTopicData {
 	chapterId: number | null
-	description: string | null
 	id: number
 	sections: { anchor: string; title: string }[]
 	slug: string
@@ -37,7 +32,6 @@ export interface GuidelineNavigationTopicData {
 
 export interface GuidelineTopicData {
 	blocks: GuidelineBlocks
-	description: string | null
 	headerImage: GuidelineHeaderImage
 	id: number
 	title: string
@@ -113,7 +107,6 @@ export async function listPublishedGuidelineNavigationTopics(): Promise<
 		select: {
 			title: true,
 			slug: true,
-			description: true,
 			displayOrder: true,
 			chapter: true,
 			// 🔴 꼭지 목차는 `section` 블록에서 나온다. blockType별로 골라 담으면 나머지 블록
@@ -125,7 +118,6 @@ export async function listPublishedGuidelineNavigationTopics(): Promise<
 
 	return documents.docs.map((document) => ({
 		chapterId: relationshipId(document.chapter),
-		description: extractTextFromLexical(document.description) || null,
 		id: document.id,
 		sections: (document.blocks ?? []).flatMap((block) =>
 			block.blockType === 'section' && block.anchor
@@ -180,7 +172,6 @@ export async function findPublishedTopicBySlug(
 		select: {
 			title: true,
 			slug: true,
-			description: true,
 			headerImage: true,
 			blocks: true,
 		},
@@ -190,7 +181,6 @@ export async function findPublishedTopicBySlug(
 	return topic
 		? {
 				blocks: topic.blocks ?? [],
-				description: extractTextFromLexical(topic.description) || null,
 				headerImage: topic.headerImage ?? null,
 				id: topic.id,
 				title: topic.title,

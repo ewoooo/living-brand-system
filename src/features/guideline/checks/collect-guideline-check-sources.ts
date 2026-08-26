@@ -98,7 +98,8 @@ function flattenBlocks(
 		if (block.blockType !== 'section') return [{ block, section: null }]
 
 		const section: GuidelineCheckSection = {
-			anchor: block.anchor,
+			// 앵커는 저장 시 제목에서 자동으로 채워지지만(section/schema.ts) 타입은 선택이다.
+			anchor: block.anchor ?? '',
 			title: block.title,
 			order,
 		}

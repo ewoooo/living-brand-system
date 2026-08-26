@@ -1,7 +1,10 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import type { GuidelineDescription as GuidelineDescriptionData } from '../../repositories/guideline-view.payload.repository'
+import type { LayoutBlock } from '@/payload-types'
 import { GuidelineDescriptionFallback } from '../guideline-content-fallbacks'
 import type { GuidelineVariant } from './guideline-variant'
+
+// 설명은 블록·꼭지가 갖는다 — 토픽 문서의 설명은 2026-08-26에 제거했다.
+type GuidelineDescriptionData = LayoutBlock['description']
 
 type Description = NonNullable<GuidelineDescriptionData> | string
 

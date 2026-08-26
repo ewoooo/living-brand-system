@@ -6,15 +6,7 @@ import { findPublishedUnifiedGuidelineCheckDocuments } from './published-guideli
 
 export type McpGuidelineDocument = Pick<
 	GuidelineDocument,
-	| 'id'
-	| 'title'
-	| 'slug'
-	| 'description'
-	| 'headerImage'
-	| 'rules'
-	| 'blocks'
-	| 'displayOrder'
-	| 'chapter'
+	'id' | 'title' | 'slug' | 'headerImage' | 'rules' | 'blocks' | 'displayOrder' | 'chapter'
 >
 
 export interface McpGuidelineCheck {
@@ -45,7 +37,6 @@ export async function listPublishedMcpGuidelineDocuments(
 		select: {
 			title: true,
 			slug: true,
-			description: true,
 			headerImage: true,
 			rules: true,
 			blocks: true,
@@ -58,7 +49,6 @@ export async function listPublishedMcpGuidelineDocuments(
 		id: document.id,
 		title: document.title,
 		slug: document.slug,
-		description: document.description,
 		headerImage: document.headerImage,
 		rules: document.rules,
 		blocks: document.blocks,

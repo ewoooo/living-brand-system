@@ -1,7 +1,6 @@
 import type { GuidelineDocument } from '@/payload-types'
 import { formatBlockForAgent } from '../blocks/runtime/project-guideline-block'
 import { compact } from './block-text'
-import { extractTextFromLexical } from './lexical-text'
 
 export interface GuidelineSearchRuleSummary {
 	key: string
@@ -18,7 +17,6 @@ export function buildGuidelineSearchText(
 		document.label,
 		document.slug,
 		typeof document.chapter === 'object' && document.chapter ? document.chapter.title : null,
-		extractTextFromLexical(document.description),
 		...(document.blocks?.map(formatBlockForAgent) ?? []),
 		...rules.map(({ key, title }) => `${key} ${title}`),
 	]).join('\n')

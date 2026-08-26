@@ -29,10 +29,9 @@ describe('buildCheckSourceSnapshot', () => {
 		})
 	})
 
-	it('Page 전체 snapshot은 설명과 모든 block을 합치고 이미지 ID를 중복 제거한다', () => {
+	it('Page 전체 snapshot은 모든 block을 합치고 이미지 ID를 중복 제거한다', () => {
 		const page = {
 			title: 'Logo usage',
-			description: lexical('Approved applications'),
 			blocks: [
 				{ id: 'one', blockType: 'contentColumns', columns: [{ image: 8 }] },
 				{
@@ -47,7 +46,6 @@ describe('buildCheckSourceSnapshot', () => {
 
 		expect(snapshot?.evidence).toEqual({
 			type: 'document',
-			description: 'Approved applications',
 			blocks: [
 				{ type: 'contentColumns', columns: [{ heading: undefined, body: undefined }] },
 				{
@@ -69,7 +67,6 @@ describe('buildCheckSourceSnapshot', () => {
 	it('Topic 전체 snapshot은 header image와 자체 block만 포함한다', () => {
 		const topic = {
 			title: 'Brand Core',
-			description: lexical('Foundation'),
 			headerImage: { id: 3, name: 'Core', alt: 'Core visual' },
 			blocks: [
 				{ id: 'note', blockType: 'callout', kind: 'must', title: 'Main colors', items: [] },
@@ -79,7 +76,6 @@ describe('buildCheckSourceSnapshot', () => {
 		expect(buildCheckSourceSnapshot(topic)).toEqual({
 			evidence: {
 				type: 'document',
-				description: 'Foundation',
 				blocks: [{ type: 'callout', kind: 'must', title: 'Main colors', items: [] }],
 			},
 			referenceAssets: [{ id: 3, role: 'context' }],
@@ -103,7 +99,6 @@ describe('buildCheckSourceSnapshot', () => {
 		]
 		const legacy = {
 			title: 'Primary Logo',
-			description: lexical('Approved usage'),
 			blocks,
 			rules,
 		} as unknown as GuidelineDocument

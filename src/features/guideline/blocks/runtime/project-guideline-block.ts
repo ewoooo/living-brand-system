@@ -8,6 +8,8 @@ export type CheckEvidence =
 	| CheckBlockEvidence
 	| {
 			type: 'document'
+			// 🔴 새로 만들지 않는다(토픽 설명은 2026-08-26에 제거). 동결된 CheckSession
+			//    rulesetSnapshot에 남아 있을 수 있어 읽는 자리만 유지한다.
 			description?: string
 			blocks: CheckBlockEvidence[]
 	  }

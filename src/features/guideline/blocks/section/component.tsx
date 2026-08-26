@@ -33,7 +33,7 @@ export function SectionBlock({ block }: { block: SectionBlockType }) {
 		// 🔴 꼭지의 면은 여기서 칠한다 — Figma(61:3299)의 Article 면은 제목·본문까지 덮는다.
 		//    자식 블록이 자기 면을 갖고 있지만 그것은 배치 영역에서 끊기므로 이 자리를 대신 못 한다.
 		<article
-			id={block.anchor}
+			id={block.anchor ?? undefined}
 			className={cn(
 				'flex flex-col gap-12',
 				surfaceScopeClass(block.background, block.backgroundTone),

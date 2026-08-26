@@ -2,15 +2,10 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import { DEFAULT_LOCALE, FALLBACK_LOCALE } from '@/lib/locale'
 import type { GuidelineDocument, User } from '@/payload-types'
-import { extractTextFromLexical } from '../utils/lexical-text'
 
 export interface DraftGuidelineDocumentData {
-	background: GuidelineDocument['background']
-	backgroundTone: GuidelineDocument['backgroundTone']
 	blocks: GuidelineDocument['blocks']
 	chapterSlug: string | null
-	description: GuidelineDocument['description']
-	descriptionText: string | null
 	displayOrder: number
 	headerImage: GuidelineDocument['headerImage']
 	id: number
@@ -43,13 +38,9 @@ export async function findDraftGuidelineDocumentById(
 
 function toDraftGuidelineDocument(document: GuidelineDocument): DraftGuidelineDocumentData {
 	return {
-		background: document.background ?? null,
-		backgroundTone: document.backgroundTone ?? null,
 		blocks: document.blocks ?? [],
 		chapterSlug:
 			typeof document.chapter === 'object' && document.chapter ? document.chapter.slug : null,
-		description: document.description || null,
-		descriptionText: extractTextFromLexical(document.description) || null,
 		displayOrder: typeof document.displayOrder === 'number' ? document.displayOrder : -1,
 		headerImage: document.headerImage ?? null,
 		id: document.id,

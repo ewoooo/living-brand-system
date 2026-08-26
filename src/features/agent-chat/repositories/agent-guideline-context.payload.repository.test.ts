@@ -93,14 +93,13 @@ describe('findAgentGuidelineDocument', () => {
 			id: 2,
 			title: 'Logo',
 			slug: 'logo',
-			description: null,
 			headerImage: null,
 			blocks: [],
 			checks: [],
 			_status: 'published',
 		})
 		const find = vi.fn().mockResolvedValue({
-			docs: [{ id: 3, title: 'Primary', slug: 'primary', description: null }],
+			docs: [{ id: 3, title: 'Primary', slug: 'primary' }],
 		})
 		vi.mocked(getPayload).mockResolvedValue({ find, findByID } as never)
 
@@ -109,7 +108,7 @@ describe('findAgentGuidelineDocument', () => {
 		).resolves.toMatchObject({
 			document: {
 				id: 2,
-				descriptionText: '',
+				title: 'Logo',
 			},
 		})
 	})

@@ -1,5 +1,5 @@
 import { type CollectionConfig, slugField } from 'payload'
-import { backgroundToneField, guidelineRulesField } from '@/features/guideline/blocks/shared/fields'
+import { guidelineRulesField } from '@/features/guideline/blocks/shared/fields'
 import { guidelineBlocks } from '@/features/guideline/catalog/schema.generated'
 import { validateGuidelineDocumentSlug } from '@/features/guideline/checks/validate-guideline-document-slug'
 import { managerManagedAccess } from '@/lib/auth'
@@ -22,6 +22,9 @@ export const GuidelineDocuments: CollectionConfig = {
 		group: '가이드라인',
 		useAsTitle: 'title',
 		description: '챕터에 속한 가이드라인 토픽입니다. 본문의 꼭지는 섹션 블록입니다.',
+		// 🔴 토픽은 설명·면(배경색·톤)을 갖지 않는다(2026-08-26 제거). 설명은 전 토픽에서 값이 하나도
+		//    없었고 토픽 화면이 그리지도 않았다. 면은 꼭지(section 블록) 전용이다 — 문서 레벨 면은
+		//    렌더 어디에서도 읽히지 않는 채 어드민 사이드바만 차지하고 있었다.
 		components: {
 			edit: {
 				PublishButton:
@@ -90,14 +93,6 @@ export const GuidelineDocuments: CollectionConfig = {
 			},
 		}),
 		{
-			name: 'description',
-			type: 'richText',
-			localized: true,
-			admin: {
-				description: '문서 제목 아래에 표시할 선택 설명입니다.',
-			},
-		},
-		{
 			name: 'headerImage',
 			type: 'upload',
 			relationTo: 'application-images',
@@ -106,18 +101,6 @@ export const GuidelineDocuments: CollectionConfig = {
 				description: '문서 헤더에 표시할 선택 이미지입니다.',
 			},
 		},
-		// 🔴 문서(Page)의 면은 블록의 면과 다른 것을 덮는다 — 제목·본문까지 한 덩어리로 감싼다
-		//    (Figma 61:3299의 Article). 블록 면은 배치 영역에서 끊기므로 이것을 대신할 수 없다.
-		{
-			name: 'background',
-			type: 'relationship',
-			relationTo: 'brand-colors',
-			admin: {
-				position: 'sidebar',
-				description: '문서 전체(제목·본문·블록)를 덮는 배경색입니다. 비우면 기본.',
-			},
-		},
-		backgroundToneField({ sidebar: true }),
 		{
 			name: 'blocks',
 			type: 'blocks',

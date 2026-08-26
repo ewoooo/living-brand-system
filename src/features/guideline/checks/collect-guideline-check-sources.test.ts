@@ -13,7 +13,6 @@ describe('collectGuidelineCheckSources', () => {
 		const page = {
 			id: 12,
 			title: 'Logo usage',
-			description: null,
 			rules: [{ id: 1, key: 'logo.page', title: 'Page Rule', checker: 1 }],
 			blocks: [
 				{
@@ -50,7 +49,6 @@ describe('collectGuidelineCheckSources', () => {
 		const page = {
 			id: 12,
 			title: 'Logo usage',
-			description: null,
 			rules: [41, { id: 1, key: 'logo.page', title: 'Page Rule', checker: 1 }],
 			blocks: [],
 		} as unknown as GuidelineDocument

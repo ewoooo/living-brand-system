@@ -33,7 +33,7 @@ import type { GuidelineDocument } from '@/payload-types'
 import { IMAGE_RATIO_CLASS_NAMES, type ImageRatio } from '@/types/image-ratio'
 import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
 
-// 레이아웃 컨테이너: 프레임/폭(width)·배치(arrangement·columns)를 소유하고 자식 leaf를 dispatch 렌더한다.
+// 레이아웃 컨테이너: 프레임·배치(arrangement·columns)를 소유하고 자식 leaf를 dispatch 렌더한다.
 // leaf = Image(정적) | Widget(인터랙티브) 형제. top-level renderer.generated엔 leaf가 없어 여기서 직접 매핑.
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type LayoutBlockType = Extract<GuidelineBlock, { blockType: 'block' }>
@@ -321,6 +321,7 @@ function splitControls(children: NonNullable<LayoutBlockType['children']>) {
  *
  * 🔴 하위 블록은 프레임을 갖지 않는다. 이미 부모 블록의 배치 셀 안이라 면과 폭 결정권이
  *    바깥에 있다(docs/11 §4). 프레임을 또 두면 셀 안에서 폭이 한 번 더 좁아진다.
+ * 🔴 프레임 폭은 중간폭 고정이다 — 블록별 `width`(중간폭/전체폭) 선택은 2026-08-26에 걷어냈다.
  */
 function LayoutSurface({
 	block,
@@ -384,7 +385,7 @@ function LayoutSurface({
 
 	return (
 		<GuidelineBlockFrame
-			layout={block.width ?? 'padded'}
+			layout="padded"
 			className={surfaceScopeClass(block.background, block.backgroundTone)}
 			style={surfaceStyle(block.background, block.backgroundTone)}
 		>

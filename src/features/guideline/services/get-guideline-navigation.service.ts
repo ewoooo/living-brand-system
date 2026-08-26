@@ -19,7 +19,6 @@ export interface GetGuidelineNavigationOutput {
 		topics: {
 			id: number
 			title: string
-			description: string | null
 			href: string
 			sections: {
 				anchor: string
@@ -71,7 +70,6 @@ export function buildGuidelineNavigationChapters(
 				return {
 					id: topic.id,
 					title: topic.title,
-					description: topic.description,
 					href,
 					sections: topic.sections.map((section) => ({
 						anchor: section.anchor,
