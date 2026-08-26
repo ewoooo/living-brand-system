@@ -207,7 +207,7 @@ export interface PayloadMcpApiKeyAuthOperations {
 export interface GuidelineDocument {
   id: number;
   /**
-   * 상위 문서가 없으면 챕터, 챕터 아래는 토픽, 토픽 아래는 페이지가 됩니다.
+   * 상위 문서가 없으면 챕터, 챕터 아래는 토픽이 됩니다. 토픽 본문의 꼭지는 섹션 블록입니다.
    */
   parent?: (number | null) | GuidelineDocument;
   title: string;
@@ -250,7 +250,7 @@ export interface GuidelineDocument {
    * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
    */
   backgroundTone?: ('solid' | 'tint') | null;
-  blocks?: (ContentColumnsBlock | CalloutBlock | LayoutBlock)[] | null;
+  blocks?: (ContentColumnsBlock | CalloutBlock | LayoutBlock | SectionBlock)[] | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
    */
@@ -1217,6 +1217,57 @@ export interface TypeSpecimenWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'typeSpecimenWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionBlock".
+ */
+export interface SectionBlock {
+  /**
+   * 이 꼭지의 URL 앵커입니다(예: key-layout). 토픽 안에서 유일해야 합니다.
+   */
+  anchor: string;
+  /**
+   * 목차에 표시되는 꼭지 제목입니다.
+   */
+  title: string;
+  /**
+   * 제목 아래에 표시할 선택 설명입니다.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 꼭지 전체(제목·본문·블록)를 덮는 배경색입니다. 비우면 기본.
+   */
+  background?: (number | null) | BrandColor;
+  /**
+   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
+   */
+  backgroundTone?: ('solid' | 'tint') | null;
+  /**
+   * 이 꼭지가 품는 레이아웃 블록들입니다.
+   */
+  blocks?: LayoutBlock[] | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'section';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2415,6 +2466,7 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         contentColumns?: T | ContentColumnsBlockSelect<T>;
         callout?: T | CalloutBlockSelect<T>;
         block?: T | LayoutBlockSelect<T>;
+        section?: T | SectionBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
@@ -2752,6 +2804,25 @@ export interface TypeWeightWidgetSelect<T extends boolean = true> {
  * via the `definition` "TypeSpecimenWidget_select".
  */
 export interface TypeSpecimenWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionBlock_select".
+ */
+export interface SectionBlockSelect<T extends boolean = true> {
+  anchor?: T;
+  title?: T;
+  description?: T;
+  background?: T;
+  backgroundTone?: T;
+  blocks?:
+    | T
+    | {
+        block?: T | LayoutBlockSelect<T>;
+      };
+  rules?: T;
   id?: T;
   blockName?: T;
 }

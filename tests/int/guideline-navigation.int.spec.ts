@@ -19,6 +19,7 @@ vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', (
 			description: null,
 			parentId: null,
 			href: '/guideline/basics',
+			sections: [],
 		},
 		{
 			id: 10,
@@ -27,6 +28,10 @@ vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', (
 			description: null,
 			parentId: 1,
 			href: '/guideline/basics/logo',
+			sections: [
+				{ anchor: 'primary-logo', title: 'Primary Logo' },
+				{ anchor: 'clear-space', title: 'Clear Space' },
+			],
 		},
 		{
 			id: 11,
@@ -35,36 +40,13 @@ vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', (
 			description: null,
 			parentId: 1,
 			href: '/guideline/basics/the-name',
-		},
-		{
-			id: 100,
-			title: 'Primary Logo',
-			slug: 'primary-logo',
-			description: null,
-			parentId: 10,
-			href: null,
-		},
-		{
-			id: 101,
-			title: 'Clear Space',
-			slug: 'clear-space',
-			description: null,
-			parentId: 10,
-			href: null,
-		},
-		{
-			id: 102,
-			title: 'The Name',
-			slug: 'the-name',
-			description: null,
-			parentId: 11,
-			href: null,
+			sections: [{ anchor: 'the-name', title: 'The Name' }],
 		},
 	]),
 }))
 
 describe('getGuidelineNavigation', () => {
-	it('builds chapter, topic, and page navigation', async () => {
+	it('builds chapter, topic, and section navigation', async () => {
 		await expect(getGuidelineNavigation()).resolves.toMatchObject({
 			chapters: [
 				{
@@ -74,7 +56,7 @@ describe('getGuidelineNavigation', () => {
 						{
 							title: 'Logo',
 							href: '/guideline/basics/logo',
-							pages: [
+							sections: [
 								{
 									title: 'Primary Logo',
 									href: '/guideline/basics/logo#primary-logo',
@@ -88,7 +70,7 @@ describe('getGuidelineNavigation', () => {
 						{
 							title: 'The Name',
 							href: '/guideline/basics/the-name',
-							pages: [
+							sections: [
 								{
 									title: 'The Name',
 									href: '/guideline/basics/the-name#the-name',

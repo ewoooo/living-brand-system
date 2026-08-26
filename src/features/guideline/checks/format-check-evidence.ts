@@ -31,6 +31,12 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 				evidence.title ?? calloutKindLabel[evidence.kind],
 				...evidence.items.map((item) => `- ${item}`),
 			]).join('\n')
+		case 'section':
+			return compact([
+				evidence.title,
+				evidence.description,
+				...evidence.blocks.map(formatCheckEvidence),
+			]).join('\n\n')
 		case 'block':
 			return `leaf ${evidence.childCount}개를 담은 블록`
 	}

@@ -11,7 +11,7 @@ export interface FindMcpGuidelineListInput {
 }
 
 export interface FindMcpGuidelineDocumentsInput extends FindMcpGuidelineListInput {
-	level?: 1 | 2 | 3
+	level?: 1 | 2
 }
 
 type McpGuidelineReadContext = Parameters<typeof listPublishedMcpGuidelineDocuments>[0]
@@ -28,7 +28,7 @@ export async function findMcpGuidelineDocuments(
 	const filteredDocuments = input.level
 		? documents.filter((document) => document.breadcrumbs?.length === input.level)
 		: documents
-	const limit = input.limit ?? (input.level === 3 ? 20 : 100)
+	const limit = input.limit ?? 100
 	const page = input.page ?? 1
 	const totalPages = Math.ceil(filteredDocuments.length / limit)
 

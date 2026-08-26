@@ -20,9 +20,9 @@ describe('validateGuidelineDocumentDepth', () => {
 		listDescendantPaths.mockResolvedValue([])
 	})
 
-	it('장 아래 토픽과 페이지까지 허용한다', async () => {
-		const data = { parent: 2 }
-		listAncestorIds.mockResolvedValue([1, 2])
+	it('챕터 아래 토픽까지 허용한다', async () => {
+		const data = { parent: 1 }
+		listAncestorIds.mockResolvedValue([1])
 
 		await expect(
 			validateGuidelineDocumentDepth({
@@ -34,21 +34,19 @@ describe('validateGuidelineDocumentDepth', () => {
 		).resolves.toBe(data)
 	})
 
-	it('페이지 아래에 네 번째 단계를 만들지 못하게 한다', async () => {
-		listAncestorIds.mockResolvedValue([1, 2, 3])
+	it('토픽 아래에 세 번째 단계를 만들지 못하게 한다', async () => {
+		listAncestorIds.mockResolvedValue([1, 2])
 
 		await expect(
 			validateGuidelineDocumentDepth({
 				collection: { slug: 'guideline-documents' },
-				data: { parent: 3 },
+				data: { parent: 2 },
 				operation: 'create',
 				req: {},
 			} as never),
 		).rejects.toMatchObject({
 			data: {
-				errors: [
-					{ message: '가이드라인 문서는 장·토픽·페이지 3단계까지만 만들 수 있습니다.' },
-				],
+				errors: [{ message: '가이드라인 문서는 챕터·토픽 2단계까지만 만들 수 있습니다.' }],
 			},
 		})
 	})
@@ -88,9 +86,7 @@ describe('validateGuidelineDocumentDepth', () => {
 			} as never),
 		).rejects.toMatchObject({
 			data: {
-				errors: [
-					{ message: '가이드라인 문서는 장·토픽·페이지 3단계까지만 만들 수 있습니다.' },
-				],
+				errors: [{ message: '가이드라인 문서는 챕터·토픽 2단계까지만 만들 수 있습니다.' }],
 			},
 		})
 	})

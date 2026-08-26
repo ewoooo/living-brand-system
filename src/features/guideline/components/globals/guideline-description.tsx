@@ -25,7 +25,7 @@ export function GuidelineDescription({
 			 *    14개 토픽 전수 조사에서 값이 하나도 없었다).
 			 *    다시 그려야 하면 **호출부부터** 살려야 한다 — 여기 분기만 되살리면 아무 일도 안 난다.
 			 */}
-			{variant === 'page' && <PageDescription description={description} />}
+			{variant === 'section' && <SectionDescription description={description} />}
 			{variant === 'block' && <BlockDescription description={description} />}
 		</section>
 	)
@@ -43,7 +43,7 @@ function ChapterDescription({ description }: { description: Description }) {
 	)
 }
 
-function PageDescription({ description }: { description: Description }) {
+function SectionDescription({ description }: { description: Description }) {
 	return (
 		<DescriptionContent
 			description={description}

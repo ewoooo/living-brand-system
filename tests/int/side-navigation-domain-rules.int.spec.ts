@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { getGuidelineTopicPages } from '@/features/guideline/components/globals/guideline-topic-pages'
+import { getGuidelineTopicSections } from '@/features/guideline/components/globals/guideline-topic-sections'
 
 describe('side navigation domain composition', () => {
-	it('folds guideline topics with one same-title page', () => {
+	it('folds guideline topics with one same-title section', () => {
 		expect(
-			getGuidelineTopicPages({
+			getGuidelineTopicSections({
 				id: 10,
 				title: 'The Name',
 				href: '/guideline/brand-strategy/the-name',
-				pages: [
+				sections: [
 					{
-						id: 100,
+						anchor: 'the-name',
 						title: 'The Name',
 						href: '/guideline/brand-strategy/the-name#the-name',
 					},

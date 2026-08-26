@@ -4,13 +4,13 @@ import { usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/global/sidebar/sidebar'
 import { CopyPageLink } from '@/components/shared/copy-page-link'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
-import { scrollToGuidelinePage, useActivePageSlug } from './guideline-page-navigation'
-import { getGuidelineTopicPages } from './guideline-topic-pages'
+import { scrollToGuidelineSection, useActiveSectionAnchor } from './guideline-section-navigation'
+import { getGuidelineTopicSections } from './guideline-topic-sections'
 
 /**
- * 좌측 가이드라인 탐색 — chapter → topic → 현재 topic의 page 앵커를 표시한다.
+ * 좌측 가이드라인 탐색 — chapter → topic → 현재 topic의 꼭지 앵커를 표시한다.
  * 🔴 **이것이 유일한 목차다.** 우측에 따로 있던 "On this page"는 2026-08-18에 지웠다 —
- *    같은 page 앵커를 같은 scroll-spy(`guideline-page-navigation`)로 두 곳에 그리고 있었다.
+ *    같은 앵커를 같은 scroll-spy(`guideline-section-navigation`)로 두 곳에 그리고 있었다.
  */
 export function GuidelineSideNavigation({
 	chapters,
@@ -21,8 +21,8 @@ export function GuidelineSideNavigation({
 	const currentTopic = chapters
 		.flatMap((chapter) => chapter.topics)
 		.find((topic) => pathname === topic.href || pathname.startsWith(`${topic.href}/`))
-	const currentPages = currentTopic ? getGuidelineTopicPages(currentTopic) : []
-	const activeSlug = useActivePageSlug(currentPages.map((page) => page.href.split('#')[1] ?? ''))
+	const currentSections = currentTopic ? getGuidelineTopicSections(currentTopic) : []
+	const activeAnchor = useActiveSectionAnchor(currentSections.map((section) => section.anchor))
 
 	return (
 		<Sidebar.Root
@@ -50,44 +50,43 @@ export function GuidelineSideNavigation({
 										const topicActive =
 											pathname === topic.href ||
 											pathname.startsWith(`${topic.href}/`)
-										const pages = getGuidelineTopicPages(topic)
+										const sections = getGuidelineTopicSections(topic)
 
 										return (
 											<Sidebar.Item
 												key={topic.id}
-												current={topicActive && !activeSlug}
+												current={topicActive && !activeAnchor}
 												depth={1}
 												href={topic.href}
 												label={topic.title}
 												tone={topicActive ? 'emphasized' : 'subtle'}
 											>
-												{topicActive && pages.length > 0 && (
+												{topicActive && sections.length > 0 && (
 													<Sidebar.Children>
-														{pages.map((page) => {
-															const slug =
-																page.href.split('#')[1] ?? ''
-															const pageCurrent = slug === activeSlug
+														{sections.map((section) => {
+															const sectionCurrent =
+																section.anchor === activeAnchor
 
 															return (
 																<Sidebar.Item
-																	key={page.id}
+																	key={section.anchor}
 																	aria-current={
-																		pageCurrent
+																		sectionCurrent
 																			? 'location'
 																			: undefined
 																	}
-																	current={pageCurrent}
+																	current={sectionCurrent}
 																	depth={2}
-																	href={page.href}
-																	label={page.title}
+																	href={section.href}
+																	label={section.title}
 																	onClick={(event) =>
-																		scrollToGuidelinePage(
+																		scrollToGuidelineSection(
 																			event,
-																			slug,
+																			section.anchor,
 																		)
 																	}
 																	tone={
-																		pageCurrent
+																		sectionCurrent
 																			? 'emphasized'
 																			: 'subtle'
 																	}

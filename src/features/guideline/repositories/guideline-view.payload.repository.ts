@@ -24,6 +24,7 @@ export interface GuidelineNavigationDocumentData {
 	href: string | null
 	id: number
 	parentId: number | null
+	sections: { anchor: string; title: string }[]
 	slug: string
 	title: string
 }
@@ -47,17 +48,6 @@ export interface GuidelineTopicData {
 	description: string | null
 	headerImage: GuidelineHeaderImage
 	id: number
-	title: string
-}
-
-export interface GuidelinePageData {
-	background: GuidelineBackground
-	backgroundTone: GuidelineBackgroundTone
-	blocks: GuidelineBlocks
-	description: GuidelineDescription
-	displayOrder: number
-	id: number
-	slug: string
 	title: string
 }
 
@@ -114,6 +104,10 @@ export async function listPublishedGuidelineNavigationDocuments(): Promise<
 			displayOrder: true,
 			parent: true,
 			breadcrumbs: true,
+			// 🔴 꼭지 목차는 `section` 블록에서 나온다. blockType별로 골라 담으면 나머지 블록
+			//    테이블(blk·img·위젯 20종)은 조인 자체가 일어나지 않는다
+			//    (`@payloadcms/drizzle` find/traverseFields.js — 목록에 없는 블록은 빈 select로 접힌다).
+			blocks: { section: { anchor: true, title: true } },
 		},
 	})
 
@@ -122,6 +116,11 @@ export async function listPublishedGuidelineNavigationDocuments(): Promise<
 		href: document.breadcrumbs?.at(-1)?.url || null,
 		id: document.id,
 		parentId: relationshipId(document.parent),
+		sections: (document.blocks ?? []).flatMap((block) =>
+			block.blockType === 'section' && block.anchor
+				? [{ anchor: block.anchor, title: block.title }]
+				: [],
+		),
 		slug: document.slug,
 		title: document.title,
 	}))
@@ -165,6 +164,8 @@ export async function findPublishedTopicBySlug(
 	topicSlug: string,
 ): Promise<GuidelineTopicData | null> {
 	const payload = await getPayload({ config })
+	// depth 1: 꼭지(section) 블록이 품은 이미지(application-images)·색상(brand-colors) 관계를
+	// populate해야 렌더된다. 꼭지 자신의 면(background)도 같은 depth로 hex까지 채워진다.
 	const topics = await payload.find({
 		collection: 'guideline-documents',
 		depth: 1,
@@ -213,40 +214,11 @@ export async function listPublishedTopicsByChapter(
 	}))
 }
 
-export async function listPublishedPagesByTopic(topicId: number): Promise<GuidelinePageData[]> {
-	// depth 1: 페이지 blocks의 이미지(application-images)·색상(brand-colors) 관계를 populate해야 렌더된다.
-	// 페이지 자신의 면(background)도 같은 depth로 hex까지 채워진다.
-	const pages = await listPublishedChildren(
-		topicId,
-		{
-			title: true,
-			slug: true,
-			description: true,
-			displayOrder: true,
-			background: true,
-			backgroundTone: true,
-			blocks: true,
-		},
-		1,
-	)
-
-	return pages.map((page) => ({
-		background: page.background ?? null,
-		backgroundTone: page.backgroundTone ?? null,
-		blocks: page.blocks ?? [],
-		description: page.description || null,
-		displayOrder: typeof page.displayOrder === 'number' ? page.displayOrder : -1,
-		id: page.id,
-		slug: page.slug,
-		title: page.title,
-	}))
-}
-
-async function listPublishedChildren(parentId: number, select: Record<string, true>, depth = 0) {
+async function listPublishedChildren(parentId: number, select: Record<string, true>) {
 	const payload = await getPayload({ config })
 	const children = await payload.find({
 		collection: 'guideline-documents',
-		depth,
+		depth: 0,
 		draft: false,
 		fallbackLocale: FALLBACK_LOCALE,
 		limit: 100,

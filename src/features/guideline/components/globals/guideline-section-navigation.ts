@@ -1,7 +1,7 @@
 import { type MouseEvent, useEffect, useState } from 'react'
 
 /** 중첩 스크롤 컨테이너를 직접 움직인다(브라우저 기본 #앵커는 부모 프레임을 스크롤함). */
-export function scrollToGuidelinePage(event: MouseEvent, slug: string) {
+export function scrollToGuidelineSection(event: MouseEvent, slug: string) {
 	const el = document.getElementById(slug)
 	const root = el?.closest<HTMLElement>('[data-slot="section-scroll-container"]')
 	if (!el || !root) return
@@ -14,8 +14,8 @@ export function scrollToGuidelinePage(event: MouseEvent, slug: string) {
 	history.replaceState(null, '', `#${slug}`)
 }
 
-/** 토픽 스크롤 기준선을 넘어선 마지막 page slug를 반환한다. */
-export function useActivePageSlug(slugs: string[]): string | null {
+/** 토픽 스크롤 기준선을 넘어선 마지막 꼭지 앵커를 반환한다. */
+export function useActiveSectionAnchor(slugs: string[]): string | null {
 	const [active, setActive] = useState<string | null>(null)
 	const key = slugs.join('|')
 

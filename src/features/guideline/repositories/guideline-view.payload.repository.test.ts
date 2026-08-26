@@ -86,6 +86,7 @@ describe('listPublishedGuidelineNavigationDocuments', () => {
 				href: '/guideline/brand/basics',
 				id: 2,
 				parentId: 1,
+				sections: [],
 				slug: 'basics',
 				title: 'Basics',
 			},
