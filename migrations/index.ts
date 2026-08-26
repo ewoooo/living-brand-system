@@ -90,6 +90,7 @@ import * as migration_20260825_100439_key_visual_pattern_runtime from './2026082
 import * as migration_20260826_023316_section_block from './20260826_023316_section_block';
 import * as migration_20260826_043937_sub_block from './20260826_043937_sub_block';
 import * as migration_20260826_053723_chapter_collection from './20260826_053723_chapter_collection';
+import * as migration_20260826_063726_fix_orphan_versions from './20260826_063726_fix_orphan_versions';
 
 export const migrations = [
   {
@@ -550,6 +551,11 @@ export const migrations = [
   {
     up: migration_20260826_053723_chapter_collection.up,
     down: migration_20260826_053723_chapter_collection.down,
-    name: '20260826_053723_chapter_collection'
+    name: '20260826_053723_chapter_collection',
+  },
+  {
+    up: migration_20260826_063726_fix_orphan_versions.up,
+    down: migration_20260826_063726_fix_orphan_versions.down,
+    name: '20260826_063726_fix_orphan_versions'
   },
 ];
