@@ -232,7 +232,7 @@ type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
 | --- | --- | --- | --- |
 | text | `string \| null` | `maxLength`(카운터 `n/max`로 표시), `multiline` | `Controller.Row`+`Controller.Input` / `Controller.Field`+`Controller.Textarea` |
 | toggle | `boolean` | — | `Controller.Segmented` (On/Off) |
-| select | `string \| null` | `options[]`, `variant`(`list` 기본 / `segmented`) | `Controller.Row`+`Controller.Select`, `segmented`면 `Controller.Segmented` |
+| select | `string \| null` | `options[]`(선택지별 `colors[]`), `variant`(`list` 기본 / `segmented`) | `Controller.Row`+`Controller.Select`, `segmented`면 `Controller.Segmented`, 선택지가 전부 색이면 `Controller.ColorChips` |
 | color | `#rrggbb \| null` | — | `Controller.ColorRow` |
 | range | `number` | `min`/`max`/`step`, 표기 포맷 | `Controller.Range` (채움 폭=값) |
 | pad | `{ x, y }` (-1~1) | `aspectRatio`(Wide/Portrait/Square) | `Controller.Pad` |
@@ -240,6 +240,8 @@ type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
 | asset | 자산 참조 `\| null` | 소스(브랜드 이미지 등) | `Controller.AssetCard`(카드 + 열기 버튼), 패널은 `Controller.Browser` |
 
 `select`의 `variant`는 **표현이 아니라 선택지 성격**을 말합니다. 기본 `list`는 드롭다운이라 누르기 전까지 무엇이 있는지 보이지 않고, `segmented`는 선택지를 한 줄에 펴 놓습니다 — 정본이 **세트로** 제시해 몇 가지인지가 곧 정보인 축에만 씁니다(CI 락업의 「꼴」이 첫 소비자). 선택지가 많으면 폭을 먹으므로 목록형이 기본입니다.
+
+선택지 자체가 **색 조합**인 축은 새 kind나 새 variant를 만들지 않고 `options[].colors`(#rrggbb 목록)에 그 색을 싣습니다 — `variant`는 선택지의 **성격**이고 `colors`는 선택지의 **내용**이라 표현은 렌더러가 정합니다. 전 선택지가 `colors`를 가지면 `variant`를 덮고 `Controller.ColorChips`(라벨 아래 3열 칩 그리드)로 그립니다. 하나라도 없으면 `variant`가 정한 표현(`segmented`면 세그먼트, 아니면 목록)으로 떨어집니다(Key Visual Pattern의 컬러웨이가 첫 소비자, hex가 `style`로 흐르는 근거는 `docs/09` §4의 색-데이터 예외).
 
 현재 공용 `ControllerControlDefinition`은 데이터만으로 바로 그릴 수 있는 `text`·`toggle`·`select`·`color`·`range`·`pad`를 제공합니다. `orbit`은 도메인 프리뷰 슬롯이 필요하고 `asset`은 대응 primitive가 아직 없어 화면 컴포지션에 남깁니다. 두 종류는 실제 공용 renderer가 생길 때 Definition에 합류합니다.
 

@@ -224,6 +224,20 @@ function ControllerControl({
 			if (!disabled && (readonly || definition.options.length <= 1)) {
 				return <ReadonlyRow label={definition.label} value={selectedLabel} />
 			}
+			// 🔑 선택지 전부가 색 조합이면 칩 그리드다 — 여기서는 라벨이 아니라 **색이 정보**라서
+			//    목록도 pill도 무엇을 고르는지 보여주지 못한다. 계약이 부분 선언을 막지만,
+			//    검증을 거치지 않은 정의도 화면이 죽지 않게 every로 판정한다(섞이면 목록으로 떨어진다).
+			if (definition.options.every((option) => option.colors?.length)) {
+				return (
+					<Controller.ColorChips
+						label={definition.label}
+						options={definition.options}
+						value={selected}
+						disabled={disabled}
+						onChange={onChange}
+					/>
+				)
+			}
 			// 🔑 선택지를 펼쳐 두는 축은 segmented다 — 드롭다운은 누르기 전까지 무엇이 있는지 숨긴다.
 			//    값이 비어 있을 수 없으므로(항상 하나가 켜져 있다) 첫 선택지로 떨군다.
 			if (definition.variant === 'segmented') {

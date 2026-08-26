@@ -8,6 +8,8 @@ import type { GraphicRuntimeId } from './manifest.generated'
 export const graphicRuntimeCatalog = {
 	'forward-straight': () =>
 		import('../forward-straight/runtime.client').then((module) => module.default),
+	'key-visual-pattern': () =>
+		import('../key-visual-pattern/runtime.client').then((module) => module.default),
 	'linear-fluted-glass': () =>
 		import('../linear-fluted-glass/runtime.client').then((module) => module.default),
 	'radial-fluted-glass': () =>

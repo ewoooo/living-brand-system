@@ -259,6 +259,56 @@ describe('parseStudioControllerConfig', () => {
 		).toThrow('variant')
 	})
 
+	// 선택지가 곧 색 조합일 때만 색 칩으로 그려진다 — 반쪽으로 그려질 여지를 계약이 먼저 막는다.
+	it('select 선택지의 색 조합은 전 선택지가 함께 갖거나 함께 없어야 한다', () => {
+		const colorway = {
+			id: 'colorway',
+			kind: 'select' as const,
+			label: 'Colorway',
+			variant: 'list' as const,
+			defaultValue: 'darkGreenGreen',
+			options: [
+				{
+					value: 'darkGreenGreen',
+					label: '다크그린 · 그린',
+					colors: ['#00280a', '#007332'],
+				},
+				{ value: 'navyBlue', label: '네이비 · 블루', colors: ['#000a32', '#003087'] },
+			],
+		}
+		expect(parseStudioControllerConfig(configWith(colorway))).toEqual(configWith(colorway))
+		expect(() =>
+			parseStudioControllerConfig(
+				configWith({
+					...colorway,
+					options: [colorway.options[0], { value: 'navyBlue', label: '네이비 · 블루' }],
+				}),
+			),
+		).toThrow('colors는 모든 선택지에')
+		expect(() =>
+			parseStudioControllerConfig(
+				configWith({
+					...colorway,
+					options: [
+						{
+							value: 'darkGreenGreen',
+							label: '다크그린 · 그린',
+							colors: ['#00280a', 'green'],
+						},
+					],
+				}),
+			),
+		).toThrow('#rrggbb')
+		expect(() =>
+			parseStudioControllerConfig(
+				configWith({
+					...colorway,
+					options: [{ value: 'darkGreenGreen', label: '다크그린 · 그린', colors: [] }],
+				}),
+			),
+		).toThrow('하나 이상의 색')
+	})
+
 	it('공통 Runtime Artifact parser가 unknown kind를 거부한다', () => {
 		expect(() =>
 			parseStudioControllerConfig({
@@ -507,6 +557,50 @@ describe('Payload Controller projection과 Override 적용', () => {
 		expect(acceptsControllerExecutionValue(control, '#0000ff')).toBe(false)
 	})
 
+	it('색 조합 선택지를 좁혀도 남은 선택지의 색은 살아남는다', () => {
+		const base = [
+			{
+				id: 'graphic',
+				title: 'Graphic',
+				controls: [
+					{
+						id: 'colorway',
+						kind: 'select' as const,
+						label: '컬러',
+						variant: 'list' as const,
+						defaultValue: 'darkGreenGreen',
+						options: [
+							{
+								value: 'darkGreenGreen',
+								label: '다크그린 · 그린',
+								colors: ['#00280a', '#007332'],
+							},
+							{
+								value: 'navyBlue',
+								label: '네이비 · 블루',
+								colors: ['#000a32', '#003087'],
+							},
+						],
+					},
+				],
+			},
+		] satisfies readonly ControllerGroupDefinition[]
+		const narrowed = applyControllerRestrictions(
+			base,
+			projectPayloadControllerRestrictions({
+				controls: [
+					{ controlId: 'colorway', defaultValue: 'navyBlue', optionValues: ['navyBlue'] },
+				],
+			}),
+		)
+		const control = narrowed[0]?.controls[0]
+		if (control?.kind !== 'select') throw new Error('select control이 필요합니다.')
+
+		expect(control.options).toEqual([
+			{ value: 'navyBlue', label: '네이비 · 블루', colors: ['#000a32', '#003087'] },
+		])
+	})
+
 	it('팔레트를 이미 가진 색 control을 넓히려 하면 거부한다', () => {
 		const base = [
 			{
@@ -531,6 +625,56 @@ describe('Payload Controller projection과 Override 적용', () => {
 				}),
 			),
 		).toThrow('colorValues가 기본 계약을 확장합니다')
+	})
+
+	it('색을 갖지 않는 kind에 colorValues를 주면 거부한다', () => {
+		// colorValues는 color control의 팔레트를 좁히는 축이다. select가 options에 colors를 갖게 된
+		// 뒤로는 컬러웨이를 좁히려는 사람이 optionValues 대신 이것을 집을 수 있어, 조용히 무시되면
+		// Admin은 좁혔다고 믿는데 발행된 계약은 그대로다.
+		const base = [
+			{
+				id: 'graphic',
+				title: 'Graphic',
+				controls: [
+					{
+						id: 'colorway',
+						kind: 'select' as const,
+						label: '컬러',
+						defaultValue: 'navyBlue',
+						options: [
+							{
+								value: 'navyBlue',
+								label: '네이비 · 블루',
+								colors: ['#000a32', '#003087'],
+							},
+						],
+					},
+					{
+						id: 'variableWeight',
+						kind: 'toggle' as const,
+						label: '가변 두께',
+						defaultValue: true,
+					},
+					{
+						id: 'origin',
+						kind: 'pad' as const,
+						label: '기준점',
+						defaultValue: { x: 0, y: 0 },
+					},
+				],
+			},
+		] satisfies readonly ControllerGroupDefinition[]
+
+		for (const controlId of ['colorway', 'variableWeight', 'origin']) {
+			expect(() =>
+				applyControllerRestrictions(
+					base,
+					projectPayloadControllerRestrictions({
+						controls: [{ controlId, colorValues: ['#000a32'] }],
+					}),
+				),
+			).toThrow('지원하지 않는 restriction입니다')
+		}
 	})
 })
 
