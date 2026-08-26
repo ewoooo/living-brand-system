@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react'
 import { GraphicCanvas } from '@/components/studio/graphic/graphic-canvas'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
+import { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { GraphicSidebar } from '@/components/studio/sidebar/graphic-sidebar'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
@@ -24,7 +25,7 @@ export function GraphicGenerator({ config }: GraphicGeneratorProps) {
 }
 
 function GraphicWorkspace() {
-	const { config, controls } = useGraphicStudio()
+	const { config, controls, profiles } = useGraphicStudio()
 	const [browserState, setBrowserState] = useState<{
 		profileId: string
 		artifacts: GraphicRuntime['artifacts']
@@ -48,9 +49,17 @@ function GraphicWorkspace() {
 		values: controls.values,
 		viewport: browser?.viewport ?? null,
 	})
+	// 캔버스가 mount된 뒤에야 Artifact가 생기므로 상태는 Artifact를 쥔 이 자리가 소유한다.
+	const preview = useProfilePreview({
+		studio: 'graphic',
+		profileId: config.id,
+		artifact: browser?.artifacts.raster ?? null,
+		viewport: browser?.viewport ?? null,
+		onUpdated: profiles.browse.reload,
+	})
 
 	return (
-		<StudioWorkspace sidebar={<GraphicSidebar output={output} />}>
+		<StudioWorkspace sidebar={<GraphicSidebar output={output} preview={preview} />}>
 			<GraphicCanvas output={output} registerArtifacts={registerArtifacts} />
 		</StudioWorkspace>
 	)

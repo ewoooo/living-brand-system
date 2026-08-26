@@ -222,7 +222,18 @@ function TemplateOutputProbe() {
 }
 
 function TemplateSidebarTestBridge() {
-	return <TemplateSidebar exporting={useTestTemplateExport()} />
+	return (
+		<TemplateSidebar
+			exporting={useTestTemplateExport()}
+			preview={{
+				canRefresh: false,
+				refreshing: false,
+				error: null,
+				image: undefined,
+				refresh: () => {},
+			}}
+		/>
+	)
 }
 
 function useTestTemplateExport() {
