@@ -1,4 +1,4 @@
-import type { Block } from 'payload'
+import type { Block, Field } from 'payload'
 import { ImageLeaf } from '@/features/guideline/leaves/image/schema'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/schema'
 import { CiLockupHeroWidget } from '@/features/guideline/widgets/ci-lockup-hero/schema'
@@ -23,16 +23,48 @@ import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/schem
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 import { backgroundToneField, baseBlockFields } from '../shared/fields'
 
-// page 바로 하위의 레이아웃 컨테이너. widget/image(leaf)들을 품고 배치(width·arrangement·columns)를 소유한다.
+// 꼭지(section) 바로 하위의 레이아웃 컨테이너. widget/image(leaf)들을 품고
+// 배치(width·arrangement·columns)를 소유한다.
 // 🔴 rules는 컨테이너(Block)에만 = provenance 불변식(collectGuidelineCheckSources가 block.rules를 훑음).
 // dbName 짧게(blk)로 중첩 테이블명 63자 방어. enum은 전역 이름 공유.
 // 제목/본문 네이밍은 image-grid 선례(title=text, description=richText) 따름.
-export const LayoutBlock: Block = {
-	slug: 'block',
-	dbName: 'blk',
-	interfaceName: 'LayoutBlock',
-	labels: { singular: '블록', plural: '블록' },
-	fields: [
+
+// leaf = Image(정적) | Widget(인터랙티브) 형제 위계. Text/Shape/Link는 추후.
+const LEAVES = [
+	ImageLeaf,
+	CiLockupWidget,
+	CiLockupHeroWidget,
+	ClearspaceOverlayWidget,
+	ClearspaceViewerWidget,
+	DoDontWidget,
+	HdColorPaletteWidget,
+	IconGridWidget,
+	StemClearSpaceWidget,
+	LayoutGridWidget,
+	LayoutGridControlsWidget,
+	LayoutGridOverlayWidget,
+	LogoColorVariantWidget,
+	LogoBgPickerWidget,
+	LogoDisplayWidget,
+	LogoOnBackgroundWidget,
+	TypeHierarchyWidget,
+	TypeLanguageWidget,
+	TypeScrambleWidget,
+	TypeWeightWidget,
+	TypeSpecimenWidget,
+]
+
+/**
+ * 레이아웃 컨테이너의 필드. `block`과 `subBlock`이 이것을 공유한다 — 둘은 자식으로 무엇을
+ * 받을 수 있는지만 다르다.
+ *
+ * 🔴 **자기 참조로 만들지 않는다.** Payload 스키마 생성기가 `rawTables` 등록 **전에**
+ *    `traverseFields`를 부르므로(`@payloadcms/drizzle` build.js), 블록이 자기 자신을 자식으로
+ *    가지면 `blk_2`·`blk_3`… 을 무한히 만들며 스택 오버플로로 죽는다. 깔끔한 에러도 안 난다.
+ *    그래서 깊이를 slug로 고정한다 — block > subBlock > leaf, 여기서 끝이다.
+ */
+function layoutFields(children: Block[], childDescription: string): Field[] {
+	return [
 		{
 			name: 'title',
 			type: 'text',
@@ -124,34 +156,31 @@ export const LayoutBlock: Block = {
 		{
 			name: 'children',
 			type: 'blocks',
-			// leaf = Image(정적) | Widget(인터랙티브) 형제 위계. Text/Shape/Link는 추후.
-			blocks: [
-				ImageLeaf,
-				CiLockupWidget,
-				CiLockupHeroWidget,
-				ClearspaceOverlayWidget,
-				ClearspaceViewerWidget,
-				DoDontWidget,
-				HdColorPaletteWidget,
-				IconGridWidget,
-				StemClearSpaceWidget,
-				LayoutGridWidget,
-				LayoutGridControlsWidget,
-				LayoutGridOverlayWidget,
-				LogoColorVariantWidget,
-				LogoBgPickerWidget,
-				LogoDisplayWidget,
-				LogoOnBackgroundWidget,
-				TypeHierarchyWidget,
-				TypeLanguageWidget,
-				TypeScrambleWidget,
-				TypeWeightWidget,
-				TypeSpecimenWidget,
-			],
-			admin: { description: '이 블록이 품는 leaf(이미지·위젯)들입니다.' },
+			blocks: children,
+			admin: { description: childDescription },
 		},
 		...baseBlockFields(),
-	],
+	]
+}
+
+// 하위 레이아웃 컨테이너. 자식으로 leaf만 받으므로 여기서 중첩이 끝난다.
+export const SubLayoutBlock: Block = {
+	slug: 'subBlock',
+	dbName: 'sbk',
+	interfaceName: 'SubLayoutBlock',
+	labels: { singular: '하위 블록', plural: '하위 블록' },
+	fields: layoutFields(LEAVES, '이 하위 블록이 품는 leaf(이미지·위젯)들입니다.'),
+}
+
+export const LayoutBlock: Block = {
+	slug: 'block',
+	dbName: 'blk',
+	interfaceName: 'LayoutBlock',
+	labels: { singular: '블록', plural: '블록' },
+	fields: layoutFields(
+		[...LEAVES, SubLayoutBlock],
+		'이 블록이 품는 leaf(이미지·위젯)와 하위 블록입니다.',
+	),
 }
 
 export default LayoutBlock

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import BlockComponent from '../blocks/block/component'
 import CalloutComponent from '../blocks/callout/component'
 import ContentColumnsComponent from '../blocks/content-columns/component'
+import SectionComponent from '../blocks/section/component'
 import type { GuidelineBlock } from '../blocks/types'
 
 type RendererMap = {
@@ -16,4 +17,5 @@ export const guidelineBlockRenderers = {
 	contentColumns: (block) => <ContentColumnsComponent block={block} />,
 	callout: (block) => <CalloutComponent block={block} />,
 	block: (block) => <BlockComponent block={block} />,
+	section: (block) => <SectionComponent block={block} />,
 } satisfies RendererMap

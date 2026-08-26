@@ -17,7 +17,7 @@ export function buildGuidelineSearchText(
 		document.title,
 		document.label,
 		document.slug,
-		document.breadcrumbs?.map(({ label }) => label).join(' '),
+		typeof document.chapter === 'object' && document.chapter ? document.chapter.title : null,
 		extractTextFromLexical(document.description),
 		...(document.blocks?.map(formatBlockForAgent) ?? []),
 		...rules.map(({ key, title }) => `${key} ${title}`),

@@ -58,16 +58,16 @@ function HeaderGuidelineSearchDialog({
 					<CommandEmpty>검색 결과가 없습니다.</CommandEmpty>
 					{chapters.map((chapter) => (
 						<CommandGroup heading={chapter.title} key={chapter.id}>
-							{chapter.sections.map((section) => (
+							{chapter.topics.map((topic) => (
 								<CommandItem
-									key={section.id}
-									value={`${chapter.title} ${section.title}`}
+									key={topic.id}
+									value={`${chapter.title} ${topic.title}`}
 									onSelect={() => {
 										onOpenChange(false)
-										router.push(section.href)
+										router.push(topic.href)
 									}}
 								>
-									<span>{section.title}</span>
+									<span>{topic.title}</span>
 								</CommandItem>
 							))}
 						</CommandGroup>

@@ -87,6 +87,10 @@ import * as migration_20260821_021545_overseas_branch_list from './20260821_0215
 import * as migration_20260821_023619_placeholder_subsidiary_and_branch_labels from './20260821_023619_placeholder_subsidiary_and_branch_labels';
 import * as migration_20260821_025042_placeholder_subsidiary_technology from './20260821_025042_placeholder_subsidiary_technology';
 import * as migration_20260825_100439_key_visual_pattern_runtime from './20260825_100439_key_visual_pattern_runtime';
+import * as migration_20260826_023316_section_block from './20260826_023316_section_block';
+import * as migration_20260826_043937_sub_block from './20260826_043937_sub_block';
+import * as migration_20260826_053723_chapter_collection from './20260826_053723_chapter_collection';
+import * as migration_20260826_063726_fix_orphan_versions from './20260826_063726_fix_orphan_versions';
 
 export const migrations = [
   {
@@ -532,6 +536,26 @@ export const migrations = [
   {
     up: migration_20260825_100439_key_visual_pattern_runtime.up,
     down: migration_20260825_100439_key_visual_pattern_runtime.down,
-    name: '20260825_100439_key_visual_pattern_runtime'
+    name: '20260825_100439_key_visual_pattern_runtime',
+  },
+  {
+    up: migration_20260826_023316_section_block.up,
+    down: migration_20260826_023316_section_block.down,
+    name: '20260826_023316_section_block',
+  },
+  {
+    up: migration_20260826_043937_sub_block.up,
+    down: migration_20260826_043937_sub_block.down,
+    name: '20260826_043937_sub_block',
+  },
+  {
+    up: migration_20260826_053723_chapter_collection.up,
+    down: migration_20260826_053723_chapter_collection.down,
+    name: '20260826_053723_chapter_collection',
+  },
+  {
+    up: migration_20260826_063726_fix_orphan_versions.up,
+    down: migration_20260826_063726_fix_orphan_versions.down,
+    name: '20260826_063726_fix_orphan_versions'
   },
 ];

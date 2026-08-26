@@ -1,8 +1,6 @@
-import { createBreadcrumbsField, createParentField } from '@payloadcms/plugin-nested-docs'
 import { type CollectionConfig, slugField } from 'payload'
 import { backgroundToneField, guidelineRulesField } from '@/features/guideline/blocks/shared/fields'
 import { guidelineBlocks } from '@/features/guideline/catalog/schema.generated'
-import { validateGuidelineDocumentDepth } from '@/features/guideline/checks/validate-guideline-document-depth'
 import { validateGuidelineDocumentSlug } from '@/features/guideline/checks/validate-guideline-document-slug'
 import { managerManagedAccess } from '@/lib/auth'
 import { guidelineDraftVersions } from './shared'
@@ -16,9 +14,6 @@ export const GuidelineDocuments: CollectionConfig = {
 	slug: 'guideline-documents',
 	dbName: 'guideline_docs',
 	access: managerManagedAccess,
-	hooks: {
-		beforeValidate: [validateGuidelineDocumentDepth],
-	},
 	labels: {
 		singular: '가이드라인 문서',
 		plural: '가이드라인 문서',
@@ -26,17 +21,16 @@ export const GuidelineDocuments: CollectionConfig = {
 	admin: {
 		group: '가이드라인',
 		useAsTitle: 'title',
-		description: '계층형 가이드라인 문서입니다.',
+		// 표시 순서가 목록의 정렬 기준이므로 열로 내놓는다 — 안 보이면 왜 이 순서인지 알 수 없다.
+		defaultColumns: ['title', 'chapter', 'slug', '_status', 'displayOrder', 'updatedAt'],
+		description: '챕터에 속한 가이드라인 문서입니다. 본문의 꼭지는 섹션 블록입니다.',
+		// 🔴 커스텀 목록 뷰는 폐기했다(2026-08-26). 계층을 재귀 트리로 그리려고 만든 것인데
+		//    챕터가 별도 컬렉션이 되면서 그릴 계층이 없어졌다 — Payload 기본 목록이 열 몇 개로
+		//    같은 것을 보여준다. PublishButton은 남긴다: Better Editor의 유일한 진입점이다.
 		components: {
 			edit: {
 				PublishButton:
 					'/components/admin/guideline-documents/better-editor-publish-button#BetterEditorPublishButton',
-			},
-			views: {
-				list: {
-					Component:
-						'/components/admin/guideline-documents/guideline-document-tree-list#GuidelineDocumentTreeList',
-				},
 			},
 		},
 		livePreview: {
@@ -47,23 +41,19 @@ export const GuidelineDocuments: CollectionConfig = {
 	versions: guidelineDraftVersions,
 	defaultSort: 'displayOrder',
 	fields: [
+		// 🔴 챕터는 별도 컬렉션이다(2026-08-26). 계층을 문서 자기참조로 표현하던 시절에는
+		//    최상위 문서가 곧 챕터였는데, 그 문서가 제목·slug 말고 아무것도 갖지 않아 분류를
+		//    문서로 흉내내고 있었다. 이제 관계 하나로 말한다.
 		{
-			name: 'documentLocation',
-			type: 'ui',
-			admin: {
-				components: {
-					Field: '/components/admin/guideline-documents/guideline-document-location#GuidelineDocumentLocation',
-				},
-			},
-		},
-		createParentField('guideline-documents', {
-			label: '상위 문서',
+			name: 'chapter',
+			type: 'relationship',
+			relationTo: 'guideline-chapters',
+			required: true,
 			admin: {
 				position: 'main',
-				description:
-					'상위 문서가 없으면 챕터, 챕터 아래는 섹션, 섹션 아래는 페이지가 됩니다.',
+				description: '이 토픽이 속한 챕터입니다. URL의 첫 조각이 됩니다.',
 			},
-		}),
+		},
 		{
 			name: 'title',
 			type: 'text',
@@ -145,10 +135,5 @@ export const GuidelineDocuments: CollectionConfig = {
 				description: '숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.',
 			},
 		},
-		createBreadcrumbsField('guideline-documents', {
-			admin: {
-				hidden: true,
-			},
-		}),
 	],
 }

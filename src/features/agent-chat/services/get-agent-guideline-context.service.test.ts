@@ -72,14 +72,9 @@ describe('readAgentGuidelineDocument', () => {
 						tier: 'required',
 					},
 				],
-				parent: 2,
-				breadcrumbs: [
-					{ doc: 1, label: 'Brand', url: '/guideline/brand' },
-					{ doc: 2, label: 'Logo', url: '/guideline/brand/logo' },
-					{ doc: 7, label: 'Primary Logo', url: '/guideline/brand/logo/primary-logo' },
-				],
+				chapterSlug: 'brand',
+				chapterTitle: 'Brand',
 			},
-			children: [],
 		} as never)
 
 		const result = await readAgentGuidelineDocument(
@@ -94,7 +89,7 @@ describe('readAgentGuidelineDocument', () => {
 		expect(result?.content).toContain('Checks:\n- logo.size.minimum: Minimum size')
 	})
 
-	it('Section Check와 하위 문서도 Agent 결과에 포함한다', async () => {
+	it('토픽 Check도 Agent 결과에 포함한다', async () => {
 		vi.mocked(findAgentGuidelineDocument).mockResolvedValue({
 			collection: 'guideline-documents',
 			document: {
@@ -110,12 +105,9 @@ describe('readAgentGuidelineDocument', () => {
 						tier: 'recommended',
 					},
 				],
-				breadcrumbs: [
-					{ doc: 1, label: 'Brand', url: '/guideline/brand' },
-					{ doc: 2, label: 'Brand Core', url: '/guideline/brand/brand-core' },
-				],
+				chapterSlug: 'brand',
+				chapterTitle: 'Brand',
 			},
-			children: [{ id: 7, title: 'Primary Logo', slug: 'primary-logo', description: null }],
 		} as never)
 
 		const result = await readAgentGuidelineDocument(
@@ -127,25 +119,18 @@ describe('readAgentGuidelineDocument', () => {
 		)
 
 		expect(result?.checks).toEqual([{ key: 'brand.core', title: 'Brand core' }])
-		expect(result?.relatedDocuments).toEqual([{ id: '7', title: 'Primary Logo' }])
 	})
 
-	it('통합 문서 목록에 깊이와 부모 ID를 포함한다', async () => {
+	it('토픽 목록에 소속 챕터 ID를 포함한다', async () => {
 		vi.mocked(listGuidelineDocuments).mockResolvedValue([
-			{
-				id: 7,
-				title: 'Primary Logo',
-				parentId: 2,
-				level: 3,
-			},
+			{ id: 7, title: 'Primary Logo', chapterId: 2 },
 		])
 
 		await expect(listAgentGuidelineDocuments({ id: 1 })).resolves.toEqual([
 			{
+				chapterId: '2',
 				collection: 'guideline-documents',
 				id: '7',
-				level: 3,
-				parentId: '2',
 				title: 'Primary Logo',
 			},
 		])

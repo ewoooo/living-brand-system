@@ -154,6 +154,18 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 
 최상위 헤더 계층은 `GuidelineHeader`가 `variant`(`onboard`/`chapter`/`section`/`page`/`block`)로 분기해 소유합니다(`guideline-header.tsx:10-29`). page 헤더는 `GuidelinePageHeading`으로 분리되어 있습니다. 앱 셸의 `main` 랜드마크는 layout이 아니라 각 라우트 본문이 소유합니다(`layout.tsx`).
 
+### 가이드라인 계층 이름은 Figma 정본과 다릅니다
+
+코드는 **챕터 → 토픽 → 섹션**으로 부르고 Figma는 다른 이름을 씁니다. 노드를 대조할 때 한 번 꺾이므로 여기에 적어 둡니다.
+
+| 코드 | Figma 노드 | 무엇 |
+| --- | --- | --- |
+| 챕터 chapter | — | 최상위 문서. 토픽 카드 목록 화면 |
+| 토픽 topic | **Section Heading**(61:3503) | URL을 가진 문서 한 장. 히어로 + 제목 |
+| 섹션 section | **Article**(61:3299·61:3376) | 토픽 본문 안의 꼭지. 문서가 아니라 블록이고 `#앵커`만 가집니다 |
+
+🔴 코드 주석이 인용하는 Figma 노드 id는 그대로 둡니다 — 이름을 코드 어휘로 바꿔 적으면 Figma에서 그 노드를 찾을 수 없게 됩니다.
+
 ## 8. 크로스커팅 참조
 
 이 문서는 아래 경계를 링크만 하고 복제하지 않습니다.

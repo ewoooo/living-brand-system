@@ -3,6 +3,7 @@
 import projectBlock from '../blocks/block/projection'
 import projectCallout from '../blocks/callout/projection'
 import projectContentColumns from '../blocks/content-columns/projection'
+import projectSection from '../blocks/section/projection'
 import type { BlockProjection, GuidelineBlock } from '../blocks/types'
 
 type ProjectionMap = {
@@ -15,6 +16,7 @@ export const guidelineBlockProjectors = {
 	contentColumns: projectContentColumns,
 	callout: projectCallout,
 	block: projectBlock,
+	section: projectSection,
 } satisfies ProjectionMap
 
 type RegisteredProjector = (typeof guidelineBlockProjectors)[GuidelineBlock['blockType']]

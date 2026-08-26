@@ -8,12 +8,22 @@ import type { GuidelineBlock } from '../types'
 type LayoutBlockType = Extract<GuidelineBlock, { blockType: 'block' }>
 
 export function projectBlock(block: LayoutBlockType) {
-	const count = block.children?.length ?? 0
+	const children = block.children ?? []
+	const count = children.length
+	// 🔴 하위 블록도 사람이 쓴 제목·본문을 갖는다. 훑지 않으면 admin에 쓴 글이 검색·챗에
+	//    도달하지 못한다 — 2026-08-10에 같은 이유로 title·description을 버리던 버그가 있었다.
+	const subTexts = children.flatMap((child) =>
+		child.blockType === 'subBlock'
+			? [compact([child.title, extractTextFromLexical(child.description)]).join('\n')]
+			: [],
+	)
+
 	return {
 		text: compact([
 			block.title,
 			extractTextFromLexical(block.description),
 			`leaf ${count}개를 담은 블록`,
+			...subTexts,
 		]).join('\n'),
 		evidence: { type: 'block' as const, childCount: count },
 		referenceAssets: [],

@@ -68,6 +68,7 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    'guideline-chapters': GuidelineChapter;
     'guideline-documents': GuidelineDocument;
     'brand-logos': BrandLogo;
     'brand-colors': BrandColor;
@@ -98,11 +99,15 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
+    'guideline-chapters': {
+      topics: 'guideline-documents';
+    };
     'template-categories': {
       templates: 'templates';
     };
   };
   collectionsSelect: {
+    'guideline-chapters': GuidelineChaptersSelect<false> | GuidelineChaptersSelect<true>;
     'guideline-documents': GuidelineDocumentsSelect<false> | GuidelineDocumentsSelect<true>;
     'brand-logos': BrandLogosSelect<false> | BrandLogosSelect<true>;
     'brand-colors': BrandColorsSelect<false> | BrandColorsSelect<true>;
@@ -199,7 +204,36 @@ export interface PayloadMcpApiKeyAuthOperations {
   };
 }
 /**
- * 계층형 가이드라인 문서입니다.
+ * 토픽을 묶는 분류입니다. 챕터 자체는 화면을 갖지 않습니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guideline-chapters".
+ */
+export interface GuidelineChapter {
+  id: number;
+  /**
+   * 사이드바와 인덱스 카드의 제목으로 표시됩니다.
+   */
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  topics?: {
+    docs?: (number | GuidelineDocument)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * 숫자가 낮을수록 목차에서 먼저 표시됩니다.
+   */
+  displayOrder: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * 챕터에 속한 가이드라인 문서입니다. 본문의 꼭지는 섹션 블록입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-documents".
@@ -207,9 +241,9 @@ export interface PayloadMcpApiKeyAuthOperations {
 export interface GuidelineDocument {
   id: number;
   /**
-   * 상위 문서가 없으면 챕터, 챕터 아래는 섹션, 섹션 아래는 페이지가 됩니다.
+   * 이 토픽이 속한 챕터입니다. URL의 첫 조각이 됩니다.
    */
-  parent?: (number | null) | GuidelineDocument;
+  chapter: number | GuidelineChapter;
   title: string;
   /**
    * 제목 위에 표시할 선택 라벨입니다.
@@ -250,7 +284,7 @@ export interface GuidelineDocument {
    * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
    */
   backgroundTone?: ('solid' | 'tint') | null;
-  blocks?: (ContentColumnsBlock | CalloutBlock | LayoutBlock)[] | null;
+  blocks?: (ContentColumnsBlock | CalloutBlock | LayoutBlock | SectionBlock)[] | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
    */
@@ -259,14 +293,6 @@ export interface GuidelineDocument {
    * 숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.
    */
   displayOrder: number;
-  breadcrumbs?:
-    | {
-        doc?: (number | null) | GuidelineDocument;
-        url?: string | null;
-        label?: string | null;
-        id?: string | null;
-      }[]
-    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -575,7 +601,7 @@ export interface LayoutBlock {
     | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
     | null;
   /**
-   * 이 블록이 품는 leaf(이미지·위젯)들입니다.
+   * 이 블록이 품는 leaf(이미지·위젯)와 하위 블록입니다.
    */
   children?:
     | (
@@ -600,6 +626,7 @@ export interface LayoutBlock {
         | TypeScrambleWidget
         | TypeWeightWidget
         | TypeSpecimenWidget
+        | SubLayoutBlock
       )[]
     | null;
   /**
@@ -730,7 +757,7 @@ export interface CiLockupWidget {
    */
   heightControl?: boolean | null;
   /**
-   * 알약에서 뺄 축. 뺀 축은 위 초기값에 고정됩니다(예: 자회사 섹션에서 해외지사·지사명).
+   * 알약에서 뺄 축. 뺀 축은 위 초기값에 고정됩니다(예: 자회사 토픽에서 해외지사·지사명).
    */
   hiddenControls?:
     | (
@@ -1217,6 +1244,154 @@ export interface TypeSpecimenWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'typeSpecimenWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SubLayoutBlock".
+ */
+export interface SubLayoutBlock {
+  /**
+   * 블록 상단에 표시할 선택 제목입니다.
+   */
+  title?: string | null;
+  /**
+   * 제목 아래에 표시할 선택 본문입니다.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 컨테이너 폭입니다. 중간폭=max-w, 전체폭=main 전체.
+   */
+  width?: ('padded' | 'full') | null;
+  /**
+   * 블록 전체(전체 폭) 배경색입니다. 비우면 기본.
+   */
+  background?: (number | null) | BrandColor;
+  /**
+   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
+   */
+  backgroundTone?: ('solid' | 'tint') | null;
+  /**
+   * 자식 레이아웃(그리드/캐러셀 등) 영역 배경색입니다. 비우면 없음.
+   */
+  innerBackground?: (number | null) | BrandColor;
+  /**
+   * 위젯 배치 방식입니다. 피처드 둘은 첫 자식만 크게 두고 나머지를 남은 칸에 흘립니다 — 윗줄이냐 왼쪽 열이냐만 다릅니다.
+   */
+  arrangement?: ('grid' | 'carousel' | 'featured' | 'featuredSide' | 'masonry') | null;
+  /**
+   * grid 열 수입니다(행은 자식 개수로 자동).
+   */
+  columns?: number | null;
+  /**
+   * 맞붙이면 셀 사이가 1px 선 하나만 남습니다. 셀마다 테두리를 두면 맞닿은 자리가 2px이 되므로 선은 그리드가 그립니다. grid 배치에만 적용됩니다.
+   */
+  gap?: ('default' | 'none') | null;
+  /**
+   * 이미지 셀 비율(모든 이미지 균일). masonry에선 무시하고 원본 비율.
+   */
+  aspectRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
+  /**
+   * 이 하위 블록이 품는 leaf(이미지·위젯)들입니다.
+   */
+  children?:
+    | (
+        | ImageLeaf
+        | CiLockupWidget
+        | CiLockupHeroWidget
+        | ClearspaceOverlayWidget
+        | ClearspaceViewerWidget
+        | DoDontWidget
+        | HdColorPaletteWidget
+        | IconGridWidget
+        | StemClearSpaceWidget
+        | LayoutGridWidget
+        | LayoutGridControlsWidget
+        | LayoutGridOverlayWidget
+        | LogoColorVariantWidget
+        | LogoBgPickerWidget
+        | LogoDisplayWidget
+        | LogoOnBackgroundWidget
+        | TypeHierarchyWidget
+        | TypeLanguageWidget
+        | TypeScrambleWidget
+        | TypeWeightWidget
+        | TypeSpecimenWidget
+      )[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'subBlock';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionBlock".
+ */
+export interface SectionBlock {
+  /**
+   * 이 꼭지의 URL 앵커입니다(예: key-layout). 토픽 안에서 유일해야 합니다.
+   */
+  anchor: string;
+  /**
+   * 목차에 표시되는 꼭지 제목입니다.
+   */
+  title: string;
+  /**
+   * 제목 아래에 표시할 선택 설명입니다.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 꼭지 전체(제목·본문·블록)를 덮는 배경색입니다. 비우면 기본.
+   */
+  background?: (number | null) | BrandColor;
+  /**
+   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
+   */
+  backgroundTone?: ('solid' | 'tint') | null;
+  /**
+   * 이 꼭지가 품는 레이아웃 블록들입니다.
+   */
+  blocks?: LayoutBlock[] | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'section';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2092,7 +2267,7 @@ export interface PayloadMcpApiKey {
   description?: string | null;
   'payload-mcp-tool'?: {
     /**
-     * Find published guideline documents with localized content, hierarchy, blocks, and applied rules.
+     * Find published guideline topics with localized content, chapter, blocks, and applied rules.
      */
     findGuidelineDocuments?: boolean | null;
     /**
@@ -2252,6 +2427,10 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
+        relationTo: 'guideline-chapters';
+        value: number | GuidelineChapter;
+      } | null)
+    | ({
         relationTo: 'guideline-documents';
         value: number | GuidelineDocument;
       } | null)
@@ -2397,10 +2576,23 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guideline-chapters_select".
+ */
+export interface GuidelineChaptersSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  topics?: T;
+  displayOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-documents_select".
  */
 export interface GuidelineDocumentsSelect<T extends boolean = true> {
-  parent?: T;
+  chapter?: T;
   title?: T;
   label?: T;
   generateSlug?: T;
@@ -2415,17 +2607,10 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
         contentColumns?: T | ContentColumnsBlockSelect<T>;
         callout?: T | CalloutBlockSelect<T>;
         block?: T | LayoutBlockSelect<T>;
+        section?: T | SectionBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
-  breadcrumbs?:
-    | T
-    | {
-        doc?: T;
-        url?: T;
-        label?: T;
-        id?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -2506,6 +2691,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
         typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
         typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
+        subBlock?: T | SubLayoutBlockSelect<T>;
       };
   rules?: T;
   id?: T;
@@ -2752,6 +2938,69 @@ export interface TypeWeightWidgetSelect<T extends boolean = true> {
  * via the `definition` "TypeSpecimenWidget_select".
  */
 export interface TypeSpecimenWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SubLayoutBlock_select".
+ */
+export interface SubLayoutBlockSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  width?: T;
+  background?: T;
+  backgroundTone?: T;
+  innerBackground?: T;
+  arrangement?: T;
+  columns?: T;
+  gap?: T;
+  aspectRatio?: T;
+  children?:
+    | T
+    | {
+        image?: T | ImageLeafSelect<T>;
+        ciLockupWidget?: T | CiLockupWidgetSelect<T>;
+        ciLockupHeroWidget?: T | CiLockupHeroWidgetSelect<T>;
+        clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
+        clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
+        doDontWidget?: T | DoDontWidgetSelect<T>;
+        hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
+        iconGridWidget?: T | IconGridWidgetSelect<T>;
+        stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
+        layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
+        layoutGridControlsWidget?: T | LayoutGridControlsWidgetSelect<T>;
+        layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
+        logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
+        logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
+        logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
+        logoOnBgWidget?: T | LogoOnBackgroundWidgetSelect<T>;
+        typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
+        typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
+        typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
+        typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
+        typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
+      };
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionBlock_select".
+ */
+export interface SectionBlockSelect<T extends boolean = true> {
+  anchor?: T;
+  title?: T;
+  description?: T;
+  background?: T;
+  backgroundTone?: T;
+  blocks?:
+    | T
+    | {
+        block?: T | LayoutBlockSelect<T>;
+      };
+  rules?: T;
   id?: T;
   blockName?: T;
 }

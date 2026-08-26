@@ -66,8 +66,8 @@ describe('buildCheckSourceSnapshot', () => {
 		])
 	})
 
-	it('Section 전체 snapshot은 header image와 자체 block만 포함한다', () => {
-		const section = {
+	it('Topic 전체 snapshot은 header image와 자체 block만 포함한다', () => {
+		const topic = {
 			title: 'Brand Core',
 			description: lexical('Foundation'),
 			headerImage: { id: 3, name: 'Core', alt: 'Core visual' },
@@ -76,7 +76,7 @@ describe('buildCheckSourceSnapshot', () => {
 			],
 		} as unknown as GuidelineDocument
 
-		expect(buildCheckSourceSnapshot(section)).toEqual({
+		expect(buildCheckSourceSnapshot(topic)).toEqual({
 			evidence: {
 				type: 'document',
 				description: 'Foundation',

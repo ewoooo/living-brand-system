@@ -99,7 +99,6 @@ describe('custom MCP tools', () => {
 		await getTool('findGuidelineDocuments').handler({ level: 2, locale: 'ko' }, request)
 
 		expect(mocks.findMcpGuidelineDocuments).toHaveBeenCalledWith(request, {
-			level: 2,
 			locale: 'ko',
 		})
 	})

@@ -14,8 +14,7 @@ export type McpGuidelineDocument = Pick<
 	| 'rules'
 	| 'blocks'
 	| 'displayOrder'
-	| 'parent'
-	| 'breadcrumbs'
+	| 'chapter'
 >
 
 export interface McpGuidelineCheck {
@@ -51,8 +50,7 @@ export async function listPublishedMcpGuidelineDocuments(
 			rules: true,
 			blocks: true,
 			displayOrder: true,
-			parent: true,
-			breadcrumbs: true,
+			chapter: true,
 		},
 	})
 
@@ -65,8 +63,7 @@ export async function listPublishedMcpGuidelineDocuments(
 		rules: document.rules,
 		blocks: document.blocks,
 		displayOrder: document.displayOrder,
-		parent: document.parent,
-		breadcrumbs: document.breadcrumbs,
+		chapter: document.chapter,
 	}))
 }
 

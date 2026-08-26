@@ -70,7 +70,7 @@ export const CiLockupWidget: Block = {
 			options: CI_LOCKUP_CONTROL_IDS,
 			admin: {
 				description:
-					'알약에서 뺄 축. 뺀 축은 위 초기값에 고정됩니다(예: 자회사 섹션에서 해외지사·지사명).',
+					'알약에서 뺄 축. 뺀 축은 위 초기값에 고정됩니다(예: 자회사 토픽에서 해외지사·지사명).',
 			},
 		},
 	],

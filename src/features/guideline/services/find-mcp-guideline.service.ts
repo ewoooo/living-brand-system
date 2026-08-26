@@ -10,25 +10,22 @@ export interface FindMcpGuidelineListInput {
 	page?: number
 }
 
-export interface FindMcpGuidelineDocumentsInput extends FindMcpGuidelineListInput {
-	level?: 1 | 2 | 3
-}
-
 type McpGuidelineReadContext = Parameters<typeof listPublishedMcpGuidelineDocuments>[0]
 
 /**
- * MCP 문서 목록의 hierarchy 필터와 페이지 정책을 적용한다.
+ * MCP 문서 목록의 페이지 정책을 적용한다.
  * Payload 조회와 DTO 변환은 mcp-guideline repository가 소유한다.
  */
 export async function findMcpGuidelineDocuments(
 	context: McpGuidelineReadContext,
-	input: FindMcpGuidelineDocumentsInput = {},
+	input: FindMcpGuidelineListInput = {},
 ) {
-	const documents = await listPublishedMcpGuidelineDocuments(context, input.locale ?? 'ko')
-	const filteredDocuments = input.level
-		? documents.filter((document) => document.breadcrumbs?.length === input.level)
-		: documents
-	const limit = input.limit ?? (input.level === 3 ? 20 : 100)
+	// 🔴 level 필터가 없다. 계층이 사라져(2026-08-26) 문서는 전부 토픽이고, 챕터는 별도 컬렉션이다.
+	const filteredDocuments = await listPublishedMcpGuidelineDocuments(
+		context,
+		input.locale ?? 'ko',
+	)
+	const limit = input.limit ?? 100
 	const page = input.page ?? 1
 	const totalPages = Math.ceil(filteredDocuments.length / limit)
 

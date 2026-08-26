@@ -245,14 +245,14 @@ export function TemplateSidebar({
 					</ControllerGroupRenderer>
 				)}
 				{imageSlots.map((slot, index) => {
-					const sectionTitle = imageSlots.length > 1 ? `Image ${index + 1}` : 'Image'
+					const topicTitle = imageSlots.length > 1 ? `Image ${index + 1}` : 'Image'
 					const state = images.states[slot.id]
 					const contracts = images.contracts[slot.id] ?? []
 					if (!state) return null
 					return (
 						<Controller.Group
 							key={slot.id}
-							title={sectionTitle}
+							title={topicTitle}
 							collapsible
 							{...sectionProps(focus, slotTarget(slot.id))}
 						>
@@ -288,7 +288,7 @@ export function TemplateSidebar({
 						    이미지에만 transform을 적용해서다. */}
 							{slot.transform.enabled && (
 								<Controller.Group
-									title={`${sectionTitle} Transform`}
+									title={`${topicTitle} Transform`}
 									collapsible
 									attached
 									{...subsectionProps(focus, slotTarget(slot.id))}
