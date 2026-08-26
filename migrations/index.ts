@@ -88,6 +88,7 @@ import * as migration_20260821_023619_placeholder_subsidiary_and_branch_labels f
 import * as migration_20260821_025042_placeholder_subsidiary_technology from './20260821_025042_placeholder_subsidiary_technology';
 import * as migration_20260825_100439_key_visual_pattern_runtime from './20260825_100439_key_visual_pattern_runtime';
 import * as migration_20260826_023316_section_block from './20260826_023316_section_block';
+import * as migration_20260826_043937_sub_block from './20260826_043937_sub_block';
 
 export const migrations = [
   {
@@ -538,6 +539,11 @@ export const migrations = [
   {
     up: migration_20260826_023316_section_block.up,
     down: migration_20260826_023316_section_block.down,
-    name: '20260826_023316_section_block'
+    name: '20260826_023316_section_block',
+  },
+  {
+    up: migration_20260826_043937_sub_block.up,
+    down: migration_20260826_043937_sub_block.down,
+    name: '20260826_043937_sub_block'
   },
 ];

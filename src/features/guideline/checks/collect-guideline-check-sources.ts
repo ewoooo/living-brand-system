@@ -88,7 +88,7 @@ function toSources(
  * 🔴 내려가지 않으면 자식 블록의 rule이 **조용히 소멸한다.** 2026-08-26에 꼭지가 문서에서 블록이
  *    되면서 rules를 가진 컨테이너가 한 겹 깊어졌다 — docs/11 §4의 provenance 불변식이 그대로
  *    성립하려면 수집도 같이 내려가야 한다.
- * 🔴 재귀가 아니라 한 겹이다. section 안에는 LayoutBlock만 들어가고, 그 블록은 자식으로 leaf만 갖는다.
+ * 🔴 재귀가 아니라 고정 깊이다 — section > block > subBlock에서 끝난다(schema.ts의 layoutFields).
  */
 function flattenBlocks(
 	blocks: GuidelineCheckDocument['blocks'],
@@ -102,9 +102,18 @@ function flattenBlocks(
 			title: block.title,
 			order,
 		}
+		// 🔴 하위 블록(subBlock)까지 내려간다. 컨테이너는 rules를 가질 수 있고, 안 훑으면
+		//    그 rule이 조용히 소멸한다(docs/11 §4 provenance 불변식).
 		return [
 			{ block, section },
-			...(block.blocks ?? []).map((child) => ({ block: child, section })),
+			...(block.blocks ?? []).flatMap((child) => [
+				{ block: child as GuidelineBlock, section },
+				...(child.children ?? []).flatMap((grandChild) =>
+					grandChild.blockType === 'subBlock'
+						? [{ block: grandChild as unknown as GuidelineBlock, section }]
+						: [],
+				),
+			]),
 		]
 	})
 }

@@ -38,6 +38,7 @@ import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type LayoutBlockType = Extract<GuidelineBlock, { blockType: 'block' }>
 type Child = NonNullable<LayoutBlockType['children']>[number]
+type SubLayoutBlockType = Extract<Child, { blockType: 'subBlock' }>
 
 // 위젯은 전부 인스턴스 입력 없이 자족 렌더(brand-*/폰트 스스로 조회).
 function renderWidget(child: Child): ReactNode {
@@ -194,6 +195,9 @@ function renderChild(child: Child, aspectClass: string): ReactNode {
 			</div>
 		)
 	}
+	// 하위 블록은 자기 배치를 갖는 컨테이너다 — 같은 컴포넌트를 다시 부른다.
+	// 🔴 여기서 끝난다. subBlock의 자식은 leaf뿐이라 더 내려가지 않는다(schema.ts의 layoutFields).
+	if (child.blockType === 'subBlock') return <SubLayoutBlock block={child} />
 	return renderWidget(child)
 }
 
@@ -311,8 +315,20 @@ function splitControls(children: NonNullable<LayoutBlockType['children']>) {
 	return { controller, arranged }
 }
 
-export function LayoutBlock({ block }: { block: LayoutBlockType }) {
-	// 톤은 `background`에만 붙는다 — 배치 영역 면(innerBackground)을 옅게 깐 자리가 아직 없다.
+/**
+ * 컨테이너의 몸통 — 배치 영역 면 + 컨트롤러 스코프 + 제목·본문.
+ * `block`과 `subBlock`이 공유한다. 둘의 차이는 **전체폭 프레임을 갖느냐**뿐이다.
+ *
+ * 🔴 하위 블록은 프레임을 갖지 않는다. 이미 부모 블록의 배치 셀 안이라 면과 폭 결정권이
+ *    바깥에 있다(docs/11 §4). 프레임을 또 두면 셀 안에서 폭이 한 번 더 좁아진다.
+ */
+function LayoutSurface({
+	block,
+	framed,
+}: {
+	block: LayoutBlockType | SubLayoutBlockType
+	framed: boolean
+}) {
 	const { controller, arranged } = splitControls(block.children ?? [])
 
 	const arrangedSurface = (
@@ -345,19 +361,45 @@ export function LayoutBlock({ block }: { block: LayoutBlockType }) {
 		arrangedSurface
 	)
 
+	const heading = (
+		<>
+			{block.title ? <GuidelineHeader variant="block" title={block.title} /> : null}
+			{block.description ? (
+				<GuidelineDescription variant="block" description={block.description} />
+			) : null}
+		</>
+	)
+
+	if (!framed) {
+		return (
+			<div
+				className={surfaceScopeClass(block.background, block.backgroundTone)}
+				style={surfaceStyle(block.background, block.backgroundTone)}
+			>
+				{heading}
+				{body}
+			</div>
+		)
+	}
+
 	return (
 		<GuidelineBlockFrame
 			layout={block.width ?? 'padded'}
 			className={surfaceScopeClass(block.background, block.backgroundTone)}
 			style={surfaceStyle(block.background, block.backgroundTone)}
 		>
-			{block.title ? <GuidelineHeader variant="block" title={block.title} /> : null}
-			{block.description ? (
-				<GuidelineDescription variant="block" description={block.description} />
-			) : null}
+			{heading}
 			{body}
 		</GuidelineBlockFrame>
 	)
+}
+
+export function SubLayoutBlock({ block }: { block: SubLayoutBlockType }) {
+	return <LayoutSurface block={block} framed={false} />
+}
+
+export function LayoutBlock({ block }: { block: LayoutBlockType }) {
+	return <LayoutSurface block={block} framed />
 }
 
 export default LayoutBlock

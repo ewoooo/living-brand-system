@@ -575,7 +575,7 @@ export interface LayoutBlock {
     | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
     | null;
   /**
-   * 이 블록이 품는 leaf(이미지·위젯)들입니다.
+   * 이 블록이 품는 leaf(이미지·위젯)와 하위 블록입니다.
    */
   children?:
     | (
@@ -600,6 +600,7 @@ export interface LayoutBlock {
         | TypeScrambleWidget
         | TypeWeightWidget
         | TypeSpecimenWidget
+        | SubLayoutBlock
       )[]
     | null;
   /**
@@ -1217,6 +1218,103 @@ export interface TypeSpecimenWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'typeSpecimenWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SubLayoutBlock".
+ */
+export interface SubLayoutBlock {
+  /**
+   * 블록 상단에 표시할 선택 제목입니다.
+   */
+  title?: string | null;
+  /**
+   * 제목 아래에 표시할 선택 본문입니다.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 컨테이너 폭입니다. 중간폭=max-w, 전체폭=main 전체.
+   */
+  width?: ('padded' | 'full') | null;
+  /**
+   * 블록 전체(전체 폭) 배경색입니다. 비우면 기본.
+   */
+  background?: (number | null) | BrandColor;
+  /**
+   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
+   */
+  backgroundTone?: ('solid' | 'tint') | null;
+  /**
+   * 자식 레이아웃(그리드/캐러셀 등) 영역 배경색입니다. 비우면 없음.
+   */
+  innerBackground?: (number | null) | BrandColor;
+  /**
+   * 위젯 배치 방식입니다. 피처드 둘은 첫 자식만 크게 두고 나머지를 남은 칸에 흘립니다 — 윗줄이냐 왼쪽 열이냐만 다릅니다.
+   */
+  arrangement?: ('grid' | 'carousel' | 'featured' | 'featuredSide' | 'masonry') | null;
+  /**
+   * grid 열 수입니다(행은 자식 개수로 자동).
+   */
+  columns?: number | null;
+  /**
+   * 맞붙이면 셀 사이가 1px 선 하나만 남습니다. 셀마다 테두리를 두면 맞닿은 자리가 2px이 되므로 선은 그리드가 그립니다. grid 배치에만 적용됩니다.
+   */
+  gap?: ('default' | 'none') | null;
+  /**
+   * 이미지 셀 비율(모든 이미지 균일). masonry에선 무시하고 원본 비율.
+   */
+  aspectRatio?:
+    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+    | null;
+  /**
+   * 이 하위 블록이 품는 leaf(이미지·위젯)들입니다.
+   */
+  children?:
+    | (
+        | ImageLeaf
+        | CiLockupWidget
+        | CiLockupHeroWidget
+        | ClearspaceOverlayWidget
+        | ClearspaceViewerWidget
+        | DoDontWidget
+        | HdColorPaletteWidget
+        | IconGridWidget
+        | StemClearSpaceWidget
+        | LayoutGridWidget
+        | LayoutGridControlsWidget
+        | LayoutGridOverlayWidget
+        | LogoColorVariantWidget
+        | LogoBgPickerWidget
+        | LogoDisplayWidget
+        | LogoOnBackgroundWidget
+        | TypeHierarchyWidget
+        | TypeLanguageWidget
+        | TypeScrambleWidget
+        | TypeWeightWidget
+        | TypeSpecimenWidget
+      )[]
+    | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'subBlock';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2558,6 +2656,7 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
         typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
         typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
+        subBlock?: T | SubLayoutBlockSelect<T>;
       };
   rules?: T;
   id?: T;
@@ -2804,6 +2903,50 @@ export interface TypeWeightWidgetSelect<T extends boolean = true> {
  * via the `definition` "TypeSpecimenWidget_select".
  */
 export interface TypeSpecimenWidgetSelect<T extends boolean = true> {
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SubLayoutBlock_select".
+ */
+export interface SubLayoutBlockSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  width?: T;
+  background?: T;
+  backgroundTone?: T;
+  innerBackground?: T;
+  arrangement?: T;
+  columns?: T;
+  gap?: T;
+  aspectRatio?: T;
+  children?:
+    | T
+    | {
+        image?: T | ImageLeafSelect<T>;
+        ciLockupWidget?: T | CiLockupWidgetSelect<T>;
+        ciLockupHeroWidget?: T | CiLockupHeroWidgetSelect<T>;
+        clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
+        clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
+        doDontWidget?: T | DoDontWidgetSelect<T>;
+        hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
+        iconGridWidget?: T | IconGridWidgetSelect<T>;
+        stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
+        layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
+        layoutGridControlsWidget?: T | LayoutGridControlsWidgetSelect<T>;
+        layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
+        logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
+        logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
+        logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
+        logoOnBgWidget?: T | LogoOnBackgroundWidgetSelect<T>;
+        typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
+        typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
+        typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
+        typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
+        typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
+      };
+  rules?: T;
   id?: T;
   blockName?: T;
 }
