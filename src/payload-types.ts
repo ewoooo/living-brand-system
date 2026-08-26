@@ -207,7 +207,7 @@ export interface PayloadMcpApiKeyAuthOperations {
 export interface GuidelineDocument {
   id: number;
   /**
-   * 상위 문서가 없으면 챕터, 챕터 아래는 섹션, 섹션 아래는 페이지가 됩니다.
+   * 상위 문서가 없으면 챕터, 챕터 아래는 토픽, 토픽 아래는 페이지가 됩니다.
    */
   parent?: (number | null) | GuidelineDocument;
   title: string;
@@ -730,7 +730,7 @@ export interface CiLockupWidget {
    */
   heightControl?: boolean | null;
   /**
-   * 알약에서 뺄 축. 뺀 축은 위 초기값에 고정됩니다(예: 자회사 섹션에서 해외지사·지사명).
+   * 알약에서 뺄 축. 뺀 축은 위 초기값에 고정됩니다(예: 자회사 토픽에서 해외지사·지사명).
    */
   hiddenControls?:
     | (

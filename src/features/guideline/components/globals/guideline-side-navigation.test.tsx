@@ -31,7 +31,7 @@ const chapters: GetGuidelineNavigationOutput['chapters'] = [
 		title: 'Guidelines',
 		description: null,
 		href: '/guideline/guidelines',
-		sections: [
+		topics: [
 			{
 				id: 2,
 				title: 'LBS Structure',
@@ -66,7 +66,7 @@ const chapters: GetGuidelineNavigationOutput['chapters'] = [
 ]
 
 describe('GuidelineSideNavigation', () => {
-	it('활성 경로를 chapter → section → page depth로 표시한다', () => {
+	it('활성 경로를 chapter → topic → page depth로 표시한다', () => {
 		const { container } = render(
 			<TooltipProvider>
 				<SidebarProvider>

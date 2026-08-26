@@ -5,7 +5,7 @@ import type { GuidelineVariant } from './guideline-variant'
 // 특정 Payload 컬렉션에 결합하지 않는다 — url/alt/name(색은 hex)만 있으면 무엇이든 렌더한다.
 type ImageValue = { url?: string | null; alt?: string | null; name?: string | null }
 type ColorValue = { hex?: string | null }
-type ImageVariant = Extract<GuidelineVariant, 'section' | 'page' | 'block'>
+type ImageVariant = Extract<GuidelineVariant, 'topic' | 'page' | 'block'>
 type ImageProps = {
 	image: ImageValue
 	alt: string
@@ -59,14 +59,14 @@ export function GuidelineImage({
 
 	return (
 		<>
-			{variant === 'section' && <SectionImage {...imageProps} />}
+			{variant === 'topic' && <TopicImage {...imageProps} />}
 			{variant === 'page' && <PageImage {...imageProps} />}
 			{(variant === 'block' || !variant) && <BlockImage {...imageProps} />}
 		</>
 	)
 }
 
-function SectionImage(props: ImageProps) {
+function TopicImage(props: ImageProps) {
 	return <BlockImage {...props} />
 }
 

@@ -64,13 +64,13 @@ vi.mock('@/features/guideline/repositories/guideline-view.payload.repository', (
 }))
 
 describe('getGuidelineNavigation', () => {
-	it('builds chapter, section, and page navigation', async () => {
+	it('builds chapter, topic, and page navigation', async () => {
 		await expect(getGuidelineNavigation()).resolves.toMatchObject({
 			chapters: [
 				{
 					title: 'Basics',
 					href: '/guideline/basics',
-					sections: [
+					topics: [
 						{
 							title: 'Logo',
 							href: '/guideline/basics/logo',

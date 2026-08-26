@@ -1,4 +1,4 @@
-// Typography 섹션 위젯들이 공유하는 서체 상수. 값의 출처는 브랜드팀 SVG(Artboard 42~49)다.
+// Typography 토픽 위젯들이 공유하는 서체 상수. 값의 출처는 브랜드팀 SVG(Artboard 42~49)다.
 //
 // 🔴 위젯은 폰트에서 잰 수치를 상수로 박지 않는다 — 서체가 바뀌면 theme.css의 @font-face만
 //    갈아 끼우고 위젯은 손대지 않는 상태가 목표다.
@@ -35,7 +35,7 @@ export type TierKey = (typeof TIERS)[number]['key']
 
 /**
  * 언어 × 단계별 행간 규정(%). 원본 Artboard 46(국문)·47(영문)·48(영문 대문자)에서 그대로 옮겼다.
- * 🔴 이 섹션의 요점이 "언어가 바뀌면 행간 규정이 바뀐다"는 것이다 — 눈대중으로 고치지 말 것.
+ * 🔴 이 토픽의 요점이 "언어가 바뀌면 행간 규정이 바뀐다"는 것이다 — 눈대중으로 고치지 말 것.
  */
 export const LEADING: Record<LanguageKey, Record<TierKey, [number, number]>> = {
 	ko: { head: [130, 140], sub: [140, 150], body: [150, 160] },

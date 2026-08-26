@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
 	findGuidelineMetadataGlobal,
 	findPublishedChapterBySlug,
-	findPublishedSectionBySlug,
+	findPublishedTopicBySlug,
 	listPublishedGuidelineNavigationDocuments,
 } from './guideline-view.payload.repository'
 
@@ -50,12 +50,12 @@ describe('listPublishedGuidelineNavigationDocuments', () => {
 		expect(find.mock.calls[0]?.[0]).not.toHaveProperty('where')
 	})
 
-	it('chapter와 section을 canonical slug와 부모 범위로 조회한다', async () => {
+	it('chapter와 topic을 canonical slug와 부모 범위로 조회한다', async () => {
 		const find = vi.fn().mockResolvedValue({ docs: [] })
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 
 		await findPublishedChapterBySlug('brand')
-		await findPublishedSectionBySlug(1, 'logo')
+		await findPublishedTopicBySlug(1, 'logo')
 
 		expect(find.mock.calls[0]?.[0].where).toEqual({
 			and: [{ slug: { equals: 'brand' } }, { parent: { exists: false } }],

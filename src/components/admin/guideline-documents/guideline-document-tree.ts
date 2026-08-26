@@ -14,7 +14,7 @@ export type GuidelineDocumentTreeNode = TreeDocument & {
 const parentId = (parent: TreeDocument['parent']) =>
 	typeof parent === 'object' && parent !== null ? parent.id : parent
 
-const documentTypeLabels = ['챕터', '섹션', '페이지']
+const documentTypeLabels = ['챕터', '토픽', '페이지']
 
 export function guidelineBreadcrumbCount(value: unknown, initialValue: unknown, rowCount: number) {
 	if (Array.isArray(value)) return value.length

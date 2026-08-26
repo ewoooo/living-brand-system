@@ -1,13 +1,13 @@
 import {
 	findPublishedChapterBySlug,
-	listPublishedSectionsByChapter,
+	listPublishedTopicsByChapter,
 } from '../repositories/guideline-view.payload.repository'
 
 export interface GetGuidelineChapterOutput {
 	title: string
 	label: string | null
 	description: string | null
-	sections: {
+	topics: {
 		id: number
 		title: string
 		slug: string
@@ -16,8 +16,8 @@ export interface GetGuidelineChapterOutput {
 }
 
 /**
- * Creator UI 장 랜딩 화면은 발행된 장과 하위 섹션 목록만 읽는다.
- * 섹션 본문 렌더링은 section service가 담당한다.
+ * Creator UI 장 랜딩 화면은 발행된 장과 하위 토픽 목록만 읽는다.
+ * 토픽 본문 렌더링은 topic service가 담당한다.
  * Payload 조회는 guideline-view repository가 소유한다.
  */
 export async function getGuidelineChapter(
@@ -29,17 +29,17 @@ export async function getGuidelineChapter(
 		return null
 	}
 
-	const sections = await listPublishedSectionsByChapter(chapter.id)
+	const topics = await listPublishedTopicsByChapter(chapter.id)
 
 	return {
 		title: chapter.title,
 		label: chapter.label,
 		description: chapter.description,
-		sections: sections.map((section) => ({
-			id: section.id,
-			title: section.title,
-			slug: section.slug,
-			description: section.description,
+		topics: topics.map((topic) => ({
+			id: topic.id,
+			title: topic.title,
+			slug: topic.slug,
+			description: topic.description,
 		})),
 	}
 }

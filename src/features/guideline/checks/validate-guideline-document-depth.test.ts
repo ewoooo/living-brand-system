@@ -20,7 +20,7 @@ describe('validateGuidelineDocumentDepth', () => {
 		listDescendantPaths.mockResolvedValue([])
 	})
 
-	it('장 아래 섹션과 페이지까지 허용한다', async () => {
+	it('장 아래 토픽과 페이지까지 허용한다', async () => {
 		const data = { parent: 2 }
 		listAncestorIds.mockResolvedValue([1, 2])
 
@@ -47,7 +47,7 @@ describe('validateGuidelineDocumentDepth', () => {
 		).rejects.toMatchObject({
 			data: {
 				errors: [
-					{ message: '가이드라인 문서는 장·섹션·페이지 3단계까지만 만들 수 있습니다.' },
+					{ message: '가이드라인 문서는 장·토픽·페이지 3단계까지만 만들 수 있습니다.' },
 				],
 			},
 		})
@@ -89,7 +89,7 @@ describe('validateGuidelineDocumentDepth', () => {
 		).rejects.toMatchObject({
 			data: {
 				errors: [
-					{ message: '가이드라인 문서는 장·섹션·페이지 3단계까지만 만들 수 있습니다.' },
+					{ message: '가이드라인 문서는 장·토픽·페이지 3단계까지만 만들 수 있습니다.' },
 				],
 			},
 		})

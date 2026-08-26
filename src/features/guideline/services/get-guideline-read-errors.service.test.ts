@@ -2,23 +2,23 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
 	findGuidelineMetadataGlobal,
 	findPublishedChapterBySlug,
-	findPublishedSectionBySlug,
+	findPublishedTopicBySlug,
 	listPublishedGuidelineNavigationDocuments,
-	listPublishedPagesBySection,
-	listPublishedSectionsByChapter,
+	listPublishedPagesByTopic,
+	listPublishedTopicsByChapter,
 } from '../repositories/guideline-view.payload.repository'
 import { getGuidelineChapter } from './get-guideline-chapter.service'
 import { getGuidelineMetadata } from './get-guideline-metadata.service'
 import { getGuidelineNavigation } from './get-guideline-navigation.service'
-import { getGuidelineSection } from './get-guideline-section.service'
+import { getGuidelineTopic } from './get-guideline-topic.service'
 
 vi.mock('../repositories/guideline-view.payload.repository', () => ({
 	findGuidelineMetadataGlobal: vi.fn(),
 	findPublishedChapterBySlug: vi.fn(),
-	findPublishedSectionBySlug: vi.fn(),
+	findPublishedTopicBySlug: vi.fn(),
 	listPublishedGuidelineNavigationDocuments: vi.fn(),
-	listPublishedPagesBySection: vi.fn(),
-	listPublishedSectionsByChapter: vi.fn(),
+	listPublishedPagesByTopic: vi.fn(),
+	listPublishedTopicsByChapter: vi.fn(),
 }))
 
 const chapter = {
@@ -28,7 +28,7 @@ const chapter = {
 	description: null,
 }
 
-const section = {
+const topic = {
 	id: 2,
 	title: 'Logo',
 	slug: 'logo',
@@ -56,18 +56,18 @@ describe('guideline read service failures', () => {
 		await expect(getGuidelineChapter('missing')).resolves.toBeNull()
 
 		vi.mocked(findPublishedChapterBySlug).mockResolvedValueOnce(chapter as never)
-		vi.mocked(listPublishedSectionsByChapter).mockRejectedValueOnce(new Error('db down'))
+		vi.mocked(listPublishedTopicsByChapter).mockRejectedValueOnce(new Error('db down'))
 		await expect(getGuidelineChapter('brand')).rejects.toThrow('db down')
 	})
 
-	it('section 미존재는 null이고 하위 페이지 조회 실패는 전파한다', async () => {
+	it('topic 미존재는 null이고 하위 페이지 조회 실패는 전파한다', async () => {
 		vi.mocked(findPublishedChapterBySlug).mockResolvedValue(chapter as never)
-		vi.mocked(findPublishedSectionBySlug).mockResolvedValueOnce(null as never)
-		await expect(getGuidelineSection('brand', 'missing')).resolves.toBeNull()
+		vi.mocked(findPublishedTopicBySlug).mockResolvedValueOnce(null as never)
+		await expect(getGuidelineTopic('brand', 'missing')).resolves.toBeNull()
 
-		vi.mocked(findPublishedSectionBySlug).mockResolvedValueOnce(section as never)
-		vi.mocked(listPublishedPagesBySection).mockRejectedValueOnce(new Error('db down'))
-		await expect(getGuidelineSection('brand', 'logo')).rejects.toThrow('db down')
+		vi.mocked(findPublishedTopicBySlug).mockResolvedValueOnce(topic as never)
+		vi.mocked(listPublishedPagesByTopic).mockRejectedValueOnce(new Error('db down'))
+		await expect(getGuidelineTopic('brand', 'logo')).rejects.toThrow('db down')
 	})
 
 	it('metadata 조회 실패를 가짜 기본값으로 숨기지 않는다', async () => {

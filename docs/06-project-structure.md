@@ -512,7 +512,7 @@ Facade는 기본 구조로 두지 않습니다.
 | 조건 조회 | `find` + 대상 | `findPublishedRule` |
 | 목록 조회 | `list` + 대상 | `listApplicationTypes` |
 | 생성 | `create` + 대상 | `createCheckSession` |
-| 수정 | `update` + 대상 | `updateGuidelineSection` |
+| 수정 | `update` + 대상 | `updateGuidelineTopic` |
 | 삭제 | `delete` + 대상 | `deleteDraftRule` |
 | 권한 확인 | `can` + 동작 | `canPublishGuideline` |
 | 상태 확인 | `is` + 상태 | `isPublished` |

@@ -61,7 +61,7 @@ export const GuidelineDocuments: CollectionConfig = {
 			admin: {
 				position: 'main',
 				description:
-					'상위 문서가 없으면 챕터, 챕터 아래는 섹션, 섹션 아래는 페이지가 됩니다.',
+					'상위 문서가 없으면 챕터, 챕터 아래는 토픽, 토픽 아래는 페이지가 됩니다.',
 			},
 		}),
 		{

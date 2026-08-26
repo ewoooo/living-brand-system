@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { ScrollToPreviewDocument } from './scroll-to-preview-document'
 
 describe('ScrollToPreviewDocument', () => {
-	it('페이지 대상을 iframe 안의 섹션 스크롤 컨테이너 상단으로 이동한다', () => {
+	it('페이지 대상을 iframe 안의 토픽 스크롤 컨테이너 상단으로 이동한다', () => {
 		const scrollContainer = document.createElement('div')
 		const target = document.createElement('article')
 		const scrollTo = vi.fn()

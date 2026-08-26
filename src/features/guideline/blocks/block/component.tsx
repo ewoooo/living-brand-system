@@ -292,7 +292,7 @@ function Arrange({
 // 🔑 **이 렌더러는 어떤 위젯이 컨트롤러인지 모른다.** 레지스트리에 물어볼 뿐이다
 // (`controllers/registry.ts`). 그래서 컨트롤러를 여는 위젯이 늘어도 여기는 안 바뀐다.
 //
-// 값 스코프는 **블록 단위**다: 모듈 스토어로 두면 섹션 라우트가 여러 Page를 한 화면에 렌더할 때
+// 값 스코프는 **블록 단위**다: 모듈 스토어로 두면 토픽 라우트가 여러 Page를 한 화면에 렌더할 때
 // 페이지마다 놓인 컨트롤이 서로 간섭한다. 그래서 컨트롤과 배치를 한 provider로 함께 감싼다 —
 // 하단 바로 가는 것은 DOM뿐이고 React 트리는 이 provider 안에 남는다.
 function splitControls(children: NonNullable<LayoutBlockType['children']>) {

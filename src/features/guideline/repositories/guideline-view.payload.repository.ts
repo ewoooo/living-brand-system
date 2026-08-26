@@ -35,14 +35,14 @@ export interface GuidelineChapterData {
 	title: string
 }
 
-export interface GuidelineSectionSummaryData {
+export interface GuidelineTopicSummaryData {
 	description: string | null
 	id: number
 	slug: string
 	title: string
 }
 
-export interface GuidelineSectionData {
+export interface GuidelineTopicData {
 	blocks: GuidelineBlocks
 	description: string | null
 	headerImage: GuidelineHeaderImage
@@ -160,12 +160,12 @@ export async function findPublishedChapterBySlug(
 		: null
 }
 
-export async function findPublishedSectionBySlug(
+export async function findPublishedTopicBySlug(
 	chapterId: number,
-	sectionSlug: string,
-): Promise<GuidelineSectionData | null> {
+	topicSlug: string,
+): Promise<GuidelineTopicData | null> {
 	const payload = await getPayload({ config })
-	const sections = await payload.find({
+	const topics = await payload.find({
 		collection: 'guideline-documents',
 		depth: 1,
 		draft: false,
@@ -173,7 +173,7 @@ export async function findPublishedSectionBySlug(
 		limit: 1,
 		locale: LOCALE,
 		where: {
-			and: [{ slug: { equals: sectionSlug } }, { parent: { equals: chapterId } }],
+			and: [{ slug: { equals: topicSlug } }, { parent: { equals: chapterId } }],
 		},
 		select: {
 			title: true,
@@ -184,40 +184,40 @@ export async function findPublishedSectionBySlug(
 		},
 	})
 
-	const section = sections.docs[0]
-	return section
+	const topic = topics.docs[0]
+	return topic
 		? {
-				blocks: section.blocks ?? [],
-				description: extractTextFromLexical(section.description) || null,
-				headerImage: section.headerImage ?? null,
-				id: section.id,
-				title: section.title,
+				blocks: topic.blocks ?? [],
+				description: extractTextFromLexical(topic.description) || null,
+				headerImage: topic.headerImage ?? null,
+				id: topic.id,
+				title: topic.title,
 			}
 		: null
 }
 
-export async function listPublishedSectionsByChapter(
+export async function listPublishedTopicsByChapter(
 	chapterId: number,
-): Promise<GuidelineSectionSummaryData[]> {
-	const sections = await listPublishedChildren(chapterId, {
+): Promise<GuidelineTopicSummaryData[]> {
+	const topics = await listPublishedChildren(chapterId, {
 		title: true,
 		slug: true,
 		description: true,
 	})
 
-	return sections.map((section) => ({
-		description: extractTextFromLexical(section.description) || null,
-		id: section.id,
-		slug: section.slug,
-		title: section.title,
+	return topics.map((topic) => ({
+		description: extractTextFromLexical(topic.description) || null,
+		id: topic.id,
+		slug: topic.slug,
+		title: topic.title,
 	}))
 }
 
-export async function listPublishedPagesBySection(sectionId: number): Promise<GuidelinePageData[]> {
+export async function listPublishedPagesByTopic(topicId: number): Promise<GuidelinePageData[]> {
 	// depth 1: 페이지 blocks의 이미지(application-images)·색상(brand-colors) 관계를 populate해야 렌더된다.
 	// 페이지 자신의 면(background)도 같은 depth로 hex까지 채워진다.
 	const pages = await listPublishedChildren(
-		sectionId,
+		topicId,
 		{
 			title: true,
 			slug: true,

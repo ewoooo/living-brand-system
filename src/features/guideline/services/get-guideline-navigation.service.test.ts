@@ -7,7 +7,7 @@ vi.mock('../repositories/guideline-view.payload.repository', () => ({
 vi.mock('./get-guideline-metadata.service', () => ({ getGuidelineMetadata: vi.fn() }))
 
 describe('buildGuidelineNavigationChapters', () => {
-	it('기존 장·섹션·페이지 구조와 같은 목차와 Page anchor URL을 만든다', () => {
+	it('기존 장·토픽·페이지 구조와 같은 목차와 Page anchor URL을 만든다', () => {
 		const navigation = buildGuidelineNavigationChapters([
 			{
 				id: 1,
@@ -41,7 +41,7 @@ describe('buildGuidelineNavigationChapters', () => {
 				title: 'Brand',
 				description: 'Brand foundation',
 				href: '/guideline/brand',
-				sections: [
+				topics: [
 					{
 						id: 2,
 						title: 'Logo',

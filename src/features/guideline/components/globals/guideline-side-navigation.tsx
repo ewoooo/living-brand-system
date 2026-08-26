@@ -5,10 +5,10 @@ import { Sidebar } from '@/components/global/sidebar/sidebar'
 import { CopyPageLink } from '@/components/shared/copy-page-link'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 import { scrollToGuidelinePage, useActivePageSlug } from './guideline-page-navigation'
-import { getGuidelineSectionPages } from './guideline-section-pages'
+import { getGuidelineTopicPages } from './guideline-topic-pages'
 
 /**
- * 좌측 가이드라인 탐색 — chapter → section → 현재 section의 page 앵커를 표시한다.
+ * 좌측 가이드라인 탐색 — chapter → topic → 현재 topic의 page 앵커를 표시한다.
  * 🔴 **이것이 유일한 목차다.** 우측에 따로 있던 "On this page"는 2026-08-18에 지웠다 —
  *    같은 page 앵커를 같은 scroll-spy(`guideline-page-navigation`)로 두 곳에 그리고 있었다.
  */
@@ -18,10 +18,10 @@ export function GuidelineSideNavigation({
 	chapters: GetGuidelineNavigationOutput['chapters']
 }) {
 	const pathname = usePathname()
-	const currentSection = chapters
-		.flatMap((chapter) => chapter.sections)
-		.find((section) => pathname === section.href || pathname.startsWith(`${section.href}/`))
-	const currentPages = currentSection ? getGuidelineSectionPages(currentSection) : []
+	const currentTopic = chapters
+		.flatMap((chapter) => chapter.topics)
+		.find((topic) => pathname === topic.href || pathname.startsWith(`${topic.href}/`))
+	const currentPages = currentTopic ? getGuidelineTopicPages(currentTopic) : []
 	const activeSlug = useActivePageSlug(currentPages.map((page) => page.href.split('#')[1] ?? ''))
 
 	return (
@@ -46,22 +46,22 @@ export function GuidelineSideNavigation({
 								tone={chapterCurrent ? 'emphasized' : 'subtle'}
 							>
 								<Sidebar.Children>
-									{chapter.sections.map((section) => {
-										const sectionActive =
-											pathname === section.href ||
-											pathname.startsWith(`${section.href}/`)
-										const pages = getGuidelineSectionPages(section)
+									{chapter.topics.map((topic) => {
+										const topicActive =
+											pathname === topic.href ||
+											pathname.startsWith(`${topic.href}/`)
+										const pages = getGuidelineTopicPages(topic)
 
 										return (
 											<Sidebar.Item
-												key={section.id}
-												current={sectionActive && !activeSlug}
+												key={topic.id}
+												current={topicActive && !activeSlug}
 												depth={1}
-												href={section.href}
-												label={section.title}
-												tone={sectionActive ? 'emphasized' : 'subtle'}
+												href={topic.href}
+												label={topic.title}
+												tone={topicActive ? 'emphasized' : 'subtle'}
 											>
-												{sectionActive && pages.length > 0 && (
+												{topicActive && pages.length > 0 && (
 													<Sidebar.Children>
 														{pages.map((page) => {
 															const slug =

@@ -8,9 +8,9 @@ export const dynamic = 'force-dynamic'
 export default async function GuidelinePage({
 	params,
 }: {
-	params: Promise<{ chapterSlug: string; sectionSlug: string; pageSlug: string }>
+	params: Promise<{ chapterSlug: string; topicSlug: string; pageSlug: string }>
 }) {
-	const { chapterSlug, sectionSlug, pageSlug } = await params
+	const { chapterSlug, topicSlug, pageSlug } = await params
 
-	redirect(`/guideline/${chapterSlug}/${sectionSlug}#${pageSlug}`)
+	redirect(`/guideline/${chapterSlug}/${topicSlug}#${pageSlug}`)
 }

@@ -1,6 +1,6 @@
 import { ContentFrame } from '@/components/shared/content-frame'
 import { cn } from '@/lib/utils'
-import type { GetGuidelineSectionOutput } from '../../services/get-guideline-section.service'
+import type { GetGuidelineTopicOutput } from '../../services/get-guideline-topic.service'
 import { GuidelineDescription } from '../globals/guideline-description'
 import { GuidelineHeader } from '../globals/guideline-header'
 import { surfaceScopeClass, surfaceStyle } from '../globals/guideline-surface'
@@ -11,7 +11,7 @@ export function GuidelinePage({
 	page,
 	betterEditor = false,
 }: {
-	page: GetGuidelineSectionOutput['pages'][number]
+	page: GetGuidelineTopicOutput['pages'][number]
 	betterEditor?: boolean
 }) {
 	const variant = 'page' satisfies GuidelineVariant

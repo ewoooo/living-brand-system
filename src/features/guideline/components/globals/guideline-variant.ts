@@ -1,1 +1,1 @@
-export type GuidelineVariant = 'onboard' | 'chapter' | 'section' | 'page' | 'block'
+export type GuidelineVariant = 'onboard' | 'chapter' | 'topic' | 'page' | 'block'

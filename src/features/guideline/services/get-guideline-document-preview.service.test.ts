@@ -6,7 +6,7 @@ import {
 import {
 	getGuidelineChapterPreview,
 	getGuidelineDocumentPreviewTarget,
-	getGuidelineSectionPreview,
+	getGuidelineTopicPreview,
 } from './get-guideline-document-preview.service'
 
 vi.mock('../repositories/guideline-preview.payload.repository', () => ({
@@ -17,7 +17,7 @@ vi.mock('../repositories/guideline-preview.payload.repository', () => ({
 describe('guideline document preview', () => {
 	beforeEach(() => vi.resetAllMocks())
 
-	it('발행된 부모가 없는 draft chapter·section·page를 preview한다', async () => {
+	it('발행된 부모가 없는 draft chapter·topic·page를 preview한다', async () => {
 		const chapter = {
 			id: 1,
 			title: 'Draft Brand System',
@@ -27,7 +27,7 @@ describe('guideline document preview', () => {
 			slug: 'brand-system',
 			breadcrumbs: [{ url: '/guideline/brand-system' }],
 		}
-		const section = {
+		const topic = {
 			id: 2,
 			title: 'Draft Basics',
 			slug: 'basics',
@@ -58,11 +58,11 @@ describe('guideline document preview', () => {
 		}
 		vi.mocked(findDraftGuidelineDocumentById).mockImplementation(async (id) => {
 			if (id === 1) return chapter as never
-			if (id === 2) return section as never
+			if (id === 2) return topic as never
 			return page as never
 		})
 		vi.mocked(listDraftGuidelineChildren).mockImplementation(async (id) => {
-			if (id === 1) return [section] as never
+			if (id === 1) return [topic] as never
 			return [page] as never
 		})
 
@@ -73,9 +73,9 @@ describe('guideline document preview', () => {
 
 		await expect(getGuidelineChapterPreview(1, { id: 1 } as never)).resolves.toMatchObject({
 			title: 'Draft Brand System',
-			sections: [{ title: 'Draft Basics', slug: 'basics' }],
+			topics: [{ title: 'Draft Basics', slug: 'basics' }],
 		})
-		await expect(getGuidelineSectionPreview(3, { id: 1 } as never)).resolves.toMatchObject({
+		await expect(getGuidelineTopicPreview(3, { id: 1 } as never)).resolves.toMatchObject({
 			title: 'Draft Basics',
 			pages: [{ title: 'Draft Logo Usage', slug: 'logo-usage' }],
 		})
@@ -97,7 +97,7 @@ describe('guideline document preview', () => {
 		)
 	})
 
-	it('chapter와 section 하위 문서 조회 실패를 null로 숨기지 않는다', async () => {
+	it('chapter와 topic 하위 문서 조회 실패를 null로 숨기지 않는다', async () => {
 		vi.mocked(findDraftGuidelineDocumentById).mockResolvedValueOnce({
 			id: 1,
 			title: 'Brand',
@@ -115,9 +115,9 @@ describe('guideline document preview', () => {
 			slug: 'logo',
 			breadcrumbs: [{ url: '/guideline/brand' }, { url: '/guideline/brand/logo' }],
 		} as never)
-		vi.mocked(listDraftGuidelineChildren).mockRejectedValueOnce(new Error('section db down'))
-		await expect(getGuidelineSectionPreview(2, { id: 1 } as never)).rejects.toThrow(
-			'section db down',
+		vi.mocked(listDraftGuidelineChildren).mockRejectedValueOnce(new Error('topic db down'))
+		await expect(getGuidelineTopicPreview(2, { id: 1 } as never)).rejects.toThrow(
+			'topic db down',
 		)
 	})
 })

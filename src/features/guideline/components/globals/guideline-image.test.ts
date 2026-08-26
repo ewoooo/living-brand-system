@@ -10,7 +10,7 @@ describe('GuidelineImage', () => {
 		expect(screen.getByText('이미지 없음').parentElement).toHaveClass('aspect-video')
 	})
 
-	it.each(['section', 'page'] as const)('%s 이미지를 렌더한다', (variant) => {
+	it.each(['topic', 'page'] as const)('%s 이미지를 렌더한다', (variant) => {
 		render(
 			createElement(GuidelineImage, {
 				variant,

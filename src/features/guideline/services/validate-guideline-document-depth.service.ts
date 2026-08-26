@@ -42,7 +42,7 @@ export async function getGuidelineDocumentDepthViolation({
 }
 
 /**
- * 순환 부모 관계와 장·섹션·페이지 3단계를 넘는 배치를 판정하는 순수 규칙이다.
+ * 순환 부모 관계와 장·토픽·페이지 3단계를 넘는 배치를 판정하는 순수 규칙이다.
  * 외부 I/O는 없으며 호출자가 계층 경로를 제공한다.
  */
 export function findGuidelineDocumentDepthViolation({
@@ -66,7 +66,7 @@ export function findGuidelineDocumentDepthViolation({
 
 	const subtreeLevels = currentId === null ? 1 : getSubtreeLevels(descendantPaths, currentId)
 	if (ancestorIds.length + subtreeLevels > MAX_GUIDELINE_LEVELS) {
-		return '가이드라인 문서는 장·섹션·페이지 3단계까지만 만들 수 있습니다.'
+		return '가이드라인 문서는 장·토픽·페이지 3단계까지만 만들 수 있습니다.'
 	}
 
 	return null

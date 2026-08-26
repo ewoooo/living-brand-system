@@ -5,7 +5,7 @@ import { GuidelineHeader } from '../globals/guideline-header'
 import type { GuidelineVariant } from '../globals/guideline-variant'
 import { GuidelineNavigationGrid } from '../guideline-navigation-grid'
 import { RefreshRouteOnSave } from '../refresh-route-on-save'
-import { getSectionIcon } from '../section-icon'
+import { getTopicIcon } from '../topic-icon'
 
 const variant = 'chapter' satisfies GuidelineVariant
 
@@ -25,12 +25,12 @@ export function GuidelineChapter({
 			<GuidelineDescription variant={variant} description={chapter.description} />
 			<GuidelineNavigationGrid
 				variant="default"
-				items={chapter.sections.map((section) => ({
-					id: section.id,
-					title: section.title,
-					description: section.description,
-					href: `/guideline/${chapterSlug}/${section.slug}`,
-					icon: getSectionIcon(section.slug),
+				items={chapter.topics.map((topic) => ({
+					id: topic.id,
+					title: topic.title,
+					description: topic.description,
+					href: `/guideline/${chapterSlug}/${topic.slug}`,
+					icon: getTopicIcon(topic.slug),
 				}))}
 			/>
 		</ContentFrame>
