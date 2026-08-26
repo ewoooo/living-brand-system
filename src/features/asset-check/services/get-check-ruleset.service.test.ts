@@ -177,7 +177,7 @@ describe('getCheckRuleset', () => {
 		expect(sections.map(({ title }) => title)).toEqual(['First', 'Second'])
 		expect(sections[0]).toMatchObject({
 			chapterTitle: 'Chapter',
-			sectionTitle: 'Section',
+			topicTitle: 'Section',
 		})
 		expect(selected.map(({ key }) => key)).toEqual(['check.second', 'check.first'])
 	})

@@ -24,7 +24,7 @@ import {
 } from '@carbon/icons-react'
 import type { ReactNode } from 'react'
 
-// 섹션 slug → 어울리는 아이콘. 매칭될 때만 렌더된다(미매칭 섹션은 빈 슬롯).
+// 토픽 slug → 어울리는 아이콘. 매칭될 때만 렌더된다(미매칭 토픽은 빈 슬롯).
 const SECTION_ICONS: Record<string, ReactNode> = {
 	instroduction: <Information size={24} />,
 	instruction: <ListChecked size={24} />,
@@ -55,11 +55,11 @@ const SECTION_ICONS: Record<string, ReactNode> = {
 }
 
 /**
- * 챕터 카드와 섹션 이동 버튼이 같은 아이콘을 쓰게 하는 단일 출처.
- * 🔴 navigation 서비스의 section에는 slug가 없고 href만 있다 — 섹션 href의 마지막 조각이 slug이므로
+ * 챕터 카드와 토픽 이동 버튼이 같은 아이콘을 쓰게 하는 단일 출처.
+ * 🔴 navigation 서비스의 topic에는 slug가 없고 href만 있다 — 토픽 href의 마지막 조각이 slug이므로
  * 여기서 한 번만 잘라내고, 호출부는 slug든 href든 그대로 넘긴다.
  */
-export function getSectionIcon(slugOrHref: string): ReactNode {
+export function getTopicIcon(slugOrHref: string): ReactNode {
 	const slug = slugOrHref.split('/').filter(Boolean).pop() ?? ''
 	return SECTION_ICONS[slug]
 }

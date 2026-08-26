@@ -7,7 +7,7 @@ vi.mock('../repositories/guideline-view.payload.repository', () => ({
 vi.mock('./get-guideline-metadata.service', () => ({ getGuidelineMetadata: vi.fn() }))
 
 describe('buildGuidelineNavigationChapters', () => {
-	it('기존 장·섹션·페이지 구조와 같은 목차와 Page anchor URL을 만든다', () => {
+	it('장·토픽 문서와 토픽의 꼭지 블록으로 목차와 앵커 URL을 만든다', () => {
 		const navigation = buildGuidelineNavigationChapters([
 			{
 				id: 1,
@@ -16,6 +16,7 @@ describe('buildGuidelineNavigationChapters', () => {
 				description: 'Brand foundation',
 				parentId: null,
 				href: '/guideline/brand',
+				sections: [],
 			},
 			{
 				id: 2,
@@ -24,14 +25,7 @@ describe('buildGuidelineNavigationChapters', () => {
 				description: null,
 				parentId: 1,
 				href: '/guideline/brand/logo',
-			},
-			{
-				id: 3,
-				title: 'Primary Logo',
-				slug: 'primary-logo',
-				description: null,
-				parentId: 2,
-				href: '/guideline/brand/logo/primary-logo',
+				sections: [{ anchor: 'primary-logo', title: 'Primary Logo' }],
 			},
 		])
 
@@ -41,14 +35,14 @@ describe('buildGuidelineNavigationChapters', () => {
 				title: 'Brand',
 				description: 'Brand foundation',
 				href: '/guideline/brand',
-				sections: [
+				topics: [
 					{
 						id: 2,
 						title: 'Logo',
 						href: '/guideline/brand/logo',
-						pages: [
+						sections: [
 							{
-								id: 3,
+								anchor: 'primary-logo',
 								title: 'Primary Logo',
 								href: '/guideline/brand/logo#primary-logo',
 							},

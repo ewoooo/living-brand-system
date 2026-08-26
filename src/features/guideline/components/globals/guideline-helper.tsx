@@ -53,7 +53,7 @@ export function GuidelineHelperProvider({ children }: { children: ReactNode }) {
 		)
 	}, [])
 
-	// 🔴 root는 뷰포트가 아니라 섹션 스크롤 컨테이너다. 본문이 중첩 스크롤 안에 있어서
+	// 🔴 root는 뷰포트가 아니라 토픽 스크롤 컨테이너다. 본문이 중첩 스크롤 안에 있어서
 	//    root를 비우면 관측 기준이 화면 전체가 되고 교차 판정이 어긋난다.
 	const observe = useCallback(
 		(element: Element) => {

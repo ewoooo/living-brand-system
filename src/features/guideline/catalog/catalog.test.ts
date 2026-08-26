@@ -38,8 +38,8 @@ describe('guideline rules field', () => {
 		expect(guidelineBreadcrumbCount(undefined, [{ url: '/chapter/section' }], 0)).toBe(1)
 		expect(guidelineBreadcrumbCount(undefined, undefined, 3)).toBe(3)
 		expect(guidelineDocumentTypeLabel(1, false, false)).toBe('챕터')
-		expect(guidelineDocumentTypeLabel(2, true, false)).toBe('섹션')
-		expect(guidelineDocumentTypeLabel(3, true, false)).toBe('페이지')
+		expect(guidelineDocumentTypeLabel(2, true, false)).toBe('토픽')
+		expect(guidelineDocumentTypeLabel(3, true, false)).toBe('3단계 문서')
 		expect(guidelineDocumentTypeLabel(2, true, true)).toBe('저장 후 결정')
 	})
 

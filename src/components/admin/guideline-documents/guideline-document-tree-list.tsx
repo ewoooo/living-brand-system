@@ -12,7 +12,7 @@ import {
 	type GuidelineDocumentTreeNode,
 } from './guideline-document-tree'
 
-const depthLabels = ['챕터', '섹션', '페이지']
+const depthLabels = ['챕터', '토픽']
 
 function TreeItems({
 	adminRoute,
@@ -78,7 +78,7 @@ export async function GuidelineDocumentTreeList({
 					<div>
 						<h1 className="m-0">가이드라인 문서</h1>
 						<p className="m-0 text-muted-foreground">
-							장·섹션·페이지를 부모 관계와 표시 순서에 따라 보여줍니다.
+							챕터·토픽을 부모 관계와 표시 순서에 따라 보여줍니다.
 						</p>
 					</div>
 					{hasCreatePermission && (

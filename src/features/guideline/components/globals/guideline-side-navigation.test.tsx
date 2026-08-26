@@ -9,9 +9,9 @@ vi.mock('next/navigation', () => ({
 	usePathname: () => '/guideline/guidelines/lbs-structure',
 }))
 
-vi.mock('./guideline-page-navigation', () => ({
-	scrollToGuidelinePage: vi.fn(),
-	useActivePageSlug: () => 'japanese',
+vi.mock('./guideline-section-navigation', () => ({
+	scrollToGuidelineSection: vi.fn(),
+	useActiveSectionAnchor: () => 'japanese',
 }))
 
 beforeEach(() => {
@@ -31,19 +31,19 @@ const chapters: GetGuidelineNavigationOutput['chapters'] = [
 		title: 'Guidelines',
 		description: null,
 		href: '/guideline/guidelines',
-		sections: [
+		topics: [
 			{
 				id: 2,
 				title: 'LBS Structure',
 				href: '/guideline/guidelines/lbs-structure',
-				pages: [
+				sections: [
 					{
-						id: 3,
+						anchor: 'naming-definition',
 						title: 'Naming definition',
 						href: '/guideline/guidelines/lbs-structure#naming-definition',
 					},
 					{
-						id: 4,
+						anchor: 'japanese',
 						title: 'Japanese',
 						href: '/guideline/guidelines/lbs-structure#japanese',
 					},
@@ -53,9 +53,9 @@ const chapters: GetGuidelineNavigationOutput['chapters'] = [
 				id: 5,
 				title: 'Identity',
 				href: '/guideline/guidelines/identity',
-				pages: [
+				sections: [
 					{
-						id: 6,
+						anchor: 'identity-details',
 						title: 'Identity details',
 						href: '/guideline/guidelines/identity#identity-details',
 					},
@@ -66,7 +66,7 @@ const chapters: GetGuidelineNavigationOutput['chapters'] = [
 ]
 
 describe('GuidelineSideNavigation', () => {
-	it('활성 경로를 chapter → section → page depth로 표시한다', () => {
+	it('활성 경로를 chapter → topic → 꼭지 depth로 표시한다', () => {
 		const { container } = render(
 			<TooltipProvider>
 				<SidebarProvider>

@@ -19,19 +19,21 @@ vi.mock('../repositories/mcp-guideline.payload.repository', () => ({
 describe('MCP guideline read service', () => {
 	beforeEach(() => vi.resetAllMocks())
 
-	it('문서 level 필터와 level 3 기본 페이지 정책을 적용한다', async () => {
-		const pages = Array.from({ length: 21 }, (_, index) => ({
+	it('문서 level 필터와 기본 페이지 정책을 적용한다', async () => {
+		const topics = Array.from({ length: 21 }, (_, index) => ({
 			id: index + 1,
-			breadcrumbs: [{}, {}, {}],
+			breadcrumbs: [{}, {}],
 		}))
 		vi.mocked(listPublishedMcpGuidelineDocuments).mockResolvedValue([
 			{ id: 99, breadcrumbs: [{}] },
-			...pages,
+			...topics,
 		] as never)
 		const context = { user: { id: 1 } } as never
 
-		await expect(findMcpGuidelineDocuments(context, { level: 3 })).resolves.toMatchObject({
-			docs: pages.slice(0, 20),
+		await expect(
+			findMcpGuidelineDocuments(context, { level: 2, limit: 20 }),
+		).resolves.toMatchObject({
+			docs: topics.slice(0, 20),
 			hasNextPage: true,
 			hasPrevPage: false,
 			nextPage: 2,

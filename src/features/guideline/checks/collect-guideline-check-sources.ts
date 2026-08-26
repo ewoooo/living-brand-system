@@ -4,7 +4,7 @@ import {
 	type GuidelineCheckDocument,
 } from '../blocks/runtime/build-check-source-snapshot'
 import { type CheckEvidence, snapshotBlock } from '../blocks/runtime/project-guideline-block'
-import type { CheckReferenceAssetRole } from '../blocks/types'
+import type { CheckReferenceAssetRole, GuidelineBlock } from '../blocks/types'
 import { relationshipId } from '../utils/block-text'
 
 export interface GuidelineCheckSource {
@@ -22,7 +22,7 @@ export function collectGuidelineCheckSources(
 	const assets = collectApplicationImages(document)
 	const documentSnapshot = buildCheckSourceSnapshot(document)
 	const documentSources = toSources(document.rules, document.id, null, documentSnapshot, assets)
-	const blockSources = (document.blocks ?? []).flatMap((block) =>
+	const blockSources = flattenBlocks(document.blocks).flatMap((block) =>
 		toSources(
 			block.rules,
 			document.id,
@@ -63,11 +63,25 @@ function toSources(
 	})
 }
 
+/**
+ * 꼭지(section)가 품은 자식 블록까지 한 줄로 편다.
+ *
+ * 🔴 내려가지 않으면 자식 블록의 rule이 **조용히 소멸한다.** 2026-08-26에 꼭지가 문서에서 블록이
+ *    되면서 rules를 가진 컨테이너가 한 겹 깊어졌다 — docs/11 §4의 provenance 불변식이 그대로
+ *    성립하려면 수집도 같이 내려가야 한다.
+ * 🔴 재귀가 아니라 한 겹이다. section 안에는 LayoutBlock만 들어가고, 그 블록은 자식으로 leaf만 갖는다.
+ */
+function flattenBlocks(blocks: GuidelineCheckDocument['blocks']): GuidelineBlock[] {
+	return (blocks ?? []).flatMap<GuidelineBlock>((block) =>
+		block.blockType === 'section' ? [block, ...(block.blocks ?? [])] : [block],
+	)
+}
+
 function collectApplicationImages(document: GuidelineCheckDocument): Map<number, ApplicationImage> {
 	const values: unknown[] = []
 	if ('headerImage' in document) values.push(document.headerImage)
 
-	for (const block of document.blocks ?? []) {
+	for (const block of flattenBlocks(document.blocks)) {
 		switch (block.blockType) {
 			case 'contentColumns':
 				values.push(...(block.columns ?? []).map((column) => column.image))

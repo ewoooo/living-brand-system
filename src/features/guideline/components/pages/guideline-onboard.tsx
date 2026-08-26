@@ -50,13 +50,13 @@ export function GuidelineOnboard({ navigation }: { navigation: GetGuidelineNavig
 								title={chapter.title}
 							>
 								<ul className={cn('m-0 list-none p-0', layout.list)}>
-									{chapter.sections.map((section) => (
-										<li key={section.href}>
+									{chapter.topics.map((topic) => (
+										<li key={topic.href}>
 											<PanelChip
 												asChild
 												className="no-underline transition-colors hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
 											>
-												<Link href={section.href}>{section.title}</Link>
+												<Link href={topic.href}>{topic.title}</Link>
 											</PanelChip>
 										</li>
 									))}

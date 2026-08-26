@@ -193,7 +193,7 @@ flowchart LR
 | 관계 | 의미 |
 | --- | --- |
 | BrandGuideline -> GuidelineDocument | `BrandGuideline`은 공통 표시 설정만 제공합니다. 문서의 생성·발행·삭제 생명주기를 소유하지 않습니다. |
-| GuidelineDocument -> GuidelineDocument | 장·섹션·페이지 계층은 상위 문서 관계로 연결합니다. 각 문서는 독립 애그리거트입니다. |
+| GuidelineDocument -> GuidelineDocument | 챕터·토픽 계층은 상위 문서 관계로 연결합니다. 각 문서는 독립 애그리거트입니다. 토픽 안의 꼭지는 문서가 아니라 `section` 블록입니다. |
 | GuidelineDocument -> GuidelineBlock | 문서는 Block을 임베디드 엔티티로 소유합니다. Block 식별자는 부모 문서 안에서만 유효합니다. |
 | GuidelineDocument / GuidelineBlock -> Rule | 각 문서 단위는 적용할 Rule을 관계로 선택합니다. Rule 정의는 공유 가능하며 source는 참조하는 쪽의 위치가 결정합니다. |
 | Rule -> RuleChecker | Rule은 실행 유형에 따라 결정론적 options 또는 AI 추가 판단 기준을 선언하고 RuleChecker 실행 계약을 참조합니다. |
@@ -213,7 +213,7 @@ flowchart LR
 
 품질 규칙 관리는 Rule, RuleChecker, CheckScenario의 정의와 생명주기를 소유하는 독립 바운디드 컨텍스트입니다.
 가이드라인 관리는 브랜드 가이드라인, 공식 자원, Official Version을 관리하며 Rule을 배치하고 문서 근거를 제공합니다.
-현재 구현의 편집·발행 애그리거트는 `GuidelineDocument`입니다. 문서 깊이와 상위 문서 관계로 장·섹션·페이지를 표현하며, 각 문서는 독립적으로 초안·발행·버전 생명주기를 가집니다.
+현재 구현의 편집·발행 애그리거트는 `GuidelineDocument`입니다. 문서 깊이와 상위 문서 관계로 챕터·토픽 2단계를 표현하며, 각 문서는 독립적으로 초안·발행·버전 생명주기를 가집니다. 토픽 화면의 꼭지는 본문 블록(`section`)이라 토픽과 발행 단위를 공유합니다.
 `GuidelineBlock`은 `GuidelineDocument`가 소유한 임베디드 엔티티이며 식별자는 부모 문서 안에서만 유효합니다.
 `BrandGuideline`은 회사명, 문서 제목, 테마 같은 단일 공통 설정입니다. 모든 `GuidelineDocument`를 소유하는 루트가 아닙니다.
 
@@ -324,7 +324,7 @@ flowchart LR
 ```
 
 BrandGuideline은 가이드라인 전체에 적용되는 표시 설정을 관리합니다.
-GuidelineDocument는 문서 깊이와 상위 문서 관계로 장·섹션·페이지 구조를 만들며, GuidelineBlock을 임베디드 엔티티로 소유합니다.
+GuidelineDocument는 문서 깊이와 상위 문서 관계로 챕터·토픽 구조를 만들며, GuidelineBlock을 임베디드 엔티티로 소유합니다. 꼭지(`section` 블록)도 그 블록 중 하나입니다.
 GuidelineVersionRef는 발행된 GuidelineDocument revision을 CheckBasis가 참조하기 위해 저장하는 값 객체입니다.
 
 GuidelineDocument는 GuidelineBlock 목록을 소유합니다. GuidelineBlock은 column unit, media showcase처럼 화면에 렌더링되는 최소 콘텐츠 단위입니다.

@@ -31,7 +31,7 @@ export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 		.sort(
 			(a, b) =>
 				a.item.chapterOrder - b.item.chapterOrder ||
-				a.item.sectionOrder - b.item.sectionOrder ||
+				a.item.topicOrder - b.item.topicOrder ||
 				a.documentOrder - b.documentOrder,
 		)
 		.map(({ item }) => item)
@@ -202,18 +202,18 @@ function toCheckPlacement(
 	documents: Map<number, CheckRulesetSourceDocument>,
 ) {
 	const chapter = documents.get(document.breadcrumbDocumentIds[0] ?? -1) ?? document
-	const section = documents.get(document.breadcrumbDocumentIds[1] ?? -1) ?? chapter
-	const sectionSlug = section.slug
+	const topic = documents.get(document.breadcrumbDocumentIds[1] ?? -1) ?? chapter
+	const topicSlug = topic.slug
 	const chapterSlug = chapter.slug
 
 	return {
-		groupTitle: section.title,
-		groupSlug: sectionSlug,
+		groupTitle: topic.title,
+		groupSlug: topicSlug,
 		chapterTitle: chapter.title,
 		chapterSlug,
 		chapterOrder: chapter.displayOrder,
-		sectionTitle: section.title,
-		sectionSlug,
-		sectionOrder: section.displayOrder,
+		topicTitle: topic.title,
+		topicSlug,
+		topicOrder: topic.displayOrder,
 	}
 }

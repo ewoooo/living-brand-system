@@ -1,8 +1,8 @@
 import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
-import { GuidelineSection } from '@/features/guideline/components/pages/guideline-section'
-import { getGuidelineSectionPreview } from '@/features/guideline/services/get-guideline-document-preview.service'
-import { getGuidelineSection } from '@/features/guideline/services/get-guideline-section.service'
+import { GuidelineTopic } from '@/features/guideline/components/pages/guideline-topic'
+import { getGuidelineTopicPreview } from '@/features/guideline/services/get-guideline-document-preview.service'
+import { getGuidelineTopic } from '@/features/guideline/services/get-guideline-topic.service'
 // 🔴 임시(개발용) import — 아래 slug 분기와 함께 지운다.
 import { isManager, isPayloadUser } from '@/lib/auth'
 import { authenticateRequest } from '@/lib/request-auth'
@@ -12,25 +12,25 @@ import { authenticateRequest } from '@/lib/request-auth'
 //    (docs/05 「렌더링 캐시 무효화」).
 export const dynamic = 'force-dynamic'
 
-export default async function GuidelineSectionPage({
+export default async function GuidelineTopicPage({
 	params,
 	searchParams,
 }: {
-	params: Promise<{ chapterSlug: string; sectionSlug: string }>
+	params: Promise<{ chapterSlug: string; topicSlug: string }>
 	searchParams: Promise<{ previewDocument?: string }>
 }) {
-	const { chapterSlug, sectionSlug } = await params
+	const { chapterSlug, topicSlug } = await params
 	const previewDocumentId = Number((await searchParams).previewDocument)
 	const previewSection = await getAuthorizedPreview(previewDocumentId)
-	const section = previewSection ?? (await getGuidelineSection(chapterSlug, sectionSlug))
+	const topic = previewSection ?? (await getGuidelineTopic(chapterSlug, topicSlug))
 
-	if (!section) {
+	if (!topic) {
 		notFound()
 	}
 
 	return (
-		<GuidelineSection
-			section={section}
+		<GuidelineTopic
+			topic={topic}
 			previewDocumentId={previewSection ? previewDocumentId : undefined}
 		/>
 	)
@@ -45,5 +45,5 @@ async function getAuthorizedPreview(documentId: number) {
 
 	if (!isPayloadUser(user) || !isManager(user)) return null
 
-	return getGuidelineSectionPreview(documentId, user)
+	return getGuidelineTopicPreview(documentId, user)
 }

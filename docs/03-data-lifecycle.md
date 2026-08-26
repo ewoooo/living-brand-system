@@ -162,7 +162,7 @@
 ### 4.2 Check
 
 데이터명: Check
-수집 목적: GuidelineSection, GuidelinePage 또는 GuidelineBlock에 적용할 검수 규칙을 선언한다.
+수집 목적: GuidelineTopic, GuidelinePage 또는 GuidelineBlock에 적용할 검수 규칙을 선언한다.
 
 | 단계 | 작성 내용 |
 | --- | --- |

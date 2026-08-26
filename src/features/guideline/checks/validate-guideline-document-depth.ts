@@ -2,7 +2,7 @@ import { type CollectionBeforeValidateHook, ValidationError } from 'payload'
 import { getGuidelineDocumentDepthViolation } from '../services/validate-guideline-document-depth.service'
 import { relationshipId } from '../utils/block-text'
 
-/** Guideline Document의 순환 부모 관계와 장·섹션·페이지보다 깊은 계층을 막는다. */
+/** Guideline Document의 순환 부모 관계와 챕터·토픽보다 깊은 계층을 막는다. */
 export const validateGuidelineDocumentDepth: CollectionBeforeValidateHook = async ({
 	collection,
 	data,

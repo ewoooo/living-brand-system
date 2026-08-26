@@ -6,7 +6,7 @@ import {
 import {
 	getGuidelineChapterPreview,
 	getGuidelineDocumentPreviewTarget,
-	getGuidelineSectionPreview,
+	getGuidelineTopicPreview,
 } from './get-guideline-document-preview.service'
 
 vi.mock('../repositories/guideline-preview.payload.repository', () => ({
@@ -17,7 +17,7 @@ vi.mock('../repositories/guideline-preview.payload.repository', () => ({
 describe('guideline document preview', () => {
 	beforeEach(() => vi.resetAllMocks())
 
-	it('발행된 부모가 없는 draft chapter·section·page를 preview한다', async () => {
+	it('발행된 부모가 없는 draft chapter·topic을 preview한다', async () => {
 		const chapter = {
 			id: 1,
 			title: 'Draft Brand System',
@@ -27,7 +27,7 @@ describe('guideline document preview', () => {
 			slug: 'brand-system',
 			breadcrumbs: [{ url: '/guideline/brand-system' }],
 		}
-		const section = {
+		const topic = {
 			id: 2,
 			title: 'Draft Basics',
 			slug: 'basics',
@@ -41,43 +41,23 @@ describe('guideline document preview', () => {
 				{ url: '/guideline/brand-system/basics' },
 			],
 		}
-		const page = {
-			id: 3,
-			title: 'Draft Logo Usage',
-			slug: 'logo-usage',
-			description: null,
-			descriptionText: null,
-			displayOrder: 1,
-			blocks: [],
-			parentId: 2,
-			breadcrumbs: [
-				{ url: '/guideline/brand-system' },
-				{ url: '/guideline/brand-system/basics' },
-				{ url: '/guideline/brand-system/basics/logo-usage' },
-			],
-		}
-		vi.mocked(findDraftGuidelineDocumentById).mockImplementation(async (id) => {
-			if (id === 1) return chapter as never
-			if (id === 2) return section as never
-			return page as never
-		})
-		vi.mocked(listDraftGuidelineChildren).mockImplementation(async (id) => {
-			if (id === 1) return [section] as never
-			return [page] as never
-		})
+		vi.mocked(findDraftGuidelineDocumentById).mockImplementation(async (id) =>
+			id === 1 ? (chapter as never) : (topic as never),
+		)
+		vi.mocked(listDraftGuidelineChildren).mockResolvedValue([topic] as never)
 
-		const target = await getGuidelineDocumentPreviewTarget(3, { id: 1 } as never)
+		const target = await getGuidelineDocumentPreviewTarget(2, { id: 1 } as never)
 
 		// #앵커 금지: 동일 출처 iframe(Better Editor)에서 앵커가 부모 admin 문서까지 스크롤시킨다.
-		expect(target?.href).toBe('/guideline/brand-system/basics?previewDocument=3')
+		expect(target?.href).toBe('/guideline/brand-system/basics?previewDocument=2')
 
 		await expect(getGuidelineChapterPreview(1, { id: 1 } as never)).resolves.toMatchObject({
 			title: 'Draft Brand System',
-			sections: [{ title: 'Draft Basics', slug: 'basics' }],
+			topics: [{ title: 'Draft Basics', slug: 'basics' }],
 		})
-		await expect(getGuidelineSectionPreview(3, { id: 1 } as never)).resolves.toMatchObject({
+		await expect(getGuidelineTopicPreview(2, { id: 1 } as never)).resolves.toMatchObject({
 			title: 'Draft Basics',
-			pages: [{ title: 'Draft Logo Usage', slug: 'logo-usage' }],
+			blocks: [],
 		})
 	})
 
@@ -97,7 +77,7 @@ describe('guideline document preview', () => {
 		)
 	})
 
-	it('chapter와 section 하위 문서 조회 실패를 null로 숨기지 않는다', async () => {
+	it('chapter 하위 문서 조회 실패를 null로 숨기지 않는다', async () => {
 		vi.mocked(findDraftGuidelineDocumentById).mockResolvedValueOnce({
 			id: 1,
 			title: 'Brand',
@@ -109,15 +89,10 @@ describe('guideline document preview', () => {
 			'chapter db down',
 		)
 
-		vi.mocked(findDraftGuidelineDocumentById).mockResolvedValueOnce({
-			id: 2,
-			title: 'Logo',
-			slug: 'logo',
-			breadcrumbs: [{ url: '/guideline/brand' }, { url: '/guideline/brand/logo' }],
-		} as never)
-		vi.mocked(listDraftGuidelineChildren).mockRejectedValueOnce(new Error('section db down'))
-		await expect(getGuidelineSectionPreview(2, { id: 1 } as never)).rejects.toThrow(
-			'section db down',
+		// 토픽 preview는 하위 문서를 읽지 않는다 — 꼭지가 자기 본문 안의 블록이기 때문이다.
+		vi.mocked(findDraftGuidelineDocumentById).mockRejectedValueOnce(new Error('topic db down'))
+		await expect(getGuidelineTopicPreview(2, { id: 1 } as never)).rejects.toThrow(
+			'topic db down',
 		)
 	})
 })

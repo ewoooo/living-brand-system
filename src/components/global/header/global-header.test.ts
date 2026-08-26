@@ -32,7 +32,7 @@ function renderHeader(updates?: NavigationHeaderUpdates) {
 						description: '브랜드의 기본 원칙',
 						href: '/guideline/foundations',
 						id: 1,
-						sections: [],
+						topics: [],
 						title: 'Foundations',
 					},
 				],

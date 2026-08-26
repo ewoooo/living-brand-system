@@ -11,7 +11,7 @@ const chapter = {
 	title: 'Brand',
 	label: null,
 	description: null,
-	sections: [],
+	topics: [],
 }
 
 describe('GuidelineChapter', () => {
