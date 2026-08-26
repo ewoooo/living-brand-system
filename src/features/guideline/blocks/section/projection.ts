@@ -12,9 +12,14 @@ export function projectSection(block: SectionBlockType) {
 	const description = extractTextFromLexical(block.description)
 
 	return {
-		text: compact([block.title, description, ...children.map((child) => child.text)]).join(
-			'\n',
-		),
+		// 🔴 앵커도 평문에 넣는다. 꼭지가 문서였을 때는 그 문서의 slug가 자기 searchText에 들어가
+		//    검색에 걸렸다 — 블록이 되면서 그 자리가 사라졌다(2026-08-26 이관).
+		text: compact([
+			block.title,
+			block.anchor,
+			description,
+			...children.map((child) => child.text),
+		]).join('\n'),
 		evidence: {
 			type: 'section' as const,
 			anchor: block.anchor,
