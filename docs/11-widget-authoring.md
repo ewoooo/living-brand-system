@@ -51,7 +51,7 @@
 
 | 파일 | 무엇을 등록하나 |
 |---|---|
-`blocks/block/schema.ts` | `children` blocks 배열에 스키마 추가 (CMS 저작용) |
+`blocks/block/schema.ts` | **`LEAVES` 배열**에 스키마 추가 (CMS 저작용). `block`·`subBlock`이 이 배열을 공유하므로 한 곳만 고치면 둘 다 쓸 수 있다 |
 `blocks/block/component.tsx` | 렌더 디스패치에 분기 추가 |
 `components/widgets/gallery.tsx` | `/guideline/widgets` 미리보기 목록 |
 `controllers/registry.ts` | (컨트롤러를 여는 위젯만) `blockType` → 매니페스트 (§4.1) |
@@ -67,6 +67,8 @@
 ## 4. Block과 Widget의 책임
 
 **Block이 소유하는 것** — 전체폭 면(`background`)·배치 영역 면(`innerBackground`)·폭(`width`)·배치(`arrangement`·`columns`·`aspectRatio`)·제목·본문(`title`·`description`)·`rules`. 그리고 자식에게 값 스코프를 제공할 수 있습니다.
+
+중첩은 **블록만** 합니다: `section` > `block` > `subBlock` > leaf. 위젯은 잎이라 다른 위젯을 품지 않습니다 — 위젯 둘을 묶어 그 묶음을 다시 배치하려면 `subBlock`으로 감쌉니다. 🔴 `subBlock`은 전체폭 프레임을 갖지 않습니다(이미 부모의 배치 셀 안이라 폭 결정권이 바깥에 있습니다). 🔴 **자기 참조 블록은 만들 수 없습니다** — Payload 스키마 생성기가 무한 재귀에 빠집니다. 깊이를 늘리려면 slug를 하나 더 만들어 고정합니다.
 
 **Widget이 소유하는 것** — 자기 셀 안의 콘텐츠. **셀 안에서는 `w-full`과 배경색을 자유롭게 씁니다**(판형·스와치·패널의 면은 위젯 콘텐츠입니다). 금지는 Block의 전체폭 면과 폭 결정권을 가져가는 것입니다. 인터랙션 컨트롤의 폭은 위젯이 아니라 컨트롤러 킷이 갖습니다(§4.1).
 
