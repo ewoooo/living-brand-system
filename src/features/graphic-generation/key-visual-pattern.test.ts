@@ -34,6 +34,20 @@ describe('keyVisualPatternRuntimeManifest', () => {
 		).toBe(false)
 	})
 
+	// 두 슬라이더가 서로를 모르므로 「얇은 쪽 > 두꺼운 쪽」을 만들 수 있다 — 만들어지면 램프가 뒤집힌다.
+	it('가장 얇은 라인은 가장 두꺼운 라인을 넘지 못한다', () => {
+		const values = createControllerValues(keyVisualPatternRuntimeManifest.controller.groups)
+		expect(toKeyVisualPatternInput({ ...values, minWeight: 9, maxWeight: 6 })).toMatchObject({
+			minWeight: 6,
+			maxWeight: 6,
+		})
+		// 정상 순서는 그대로 통과한다.
+		expect(toKeyVisualPatternInput({ ...values, minWeight: 3, maxWeight: 6 })).toMatchObject({
+			minWeight: 3,
+			maxWeight: 6,
+		})
+	})
+
 	// 저장된 프로파일 값이 낡아 선택지에서 사라져도 화면은 떠야 한다.
 	it('알 수 없는 선택지는 기본값으로 떨어진다', () => {
 		const values = createControllerValues(keyVisualPatternRuntimeManifest.controller.groups)
