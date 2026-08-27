@@ -1,6 +1,7 @@
 'use client'
 
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
+import { svgAssetToPrimitives } from './svg-asset-to-primitives.client'
 
 /**
  * 레이아웃이 끝난 export stage를 파일 형식과 무관한 Vector Scene으로 옮긴다.
@@ -10,8 +11,9 @@ import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/stu
  * 🔴 좌표는 브라우저 레이아웃에서만 나온다. Figma가 준 HTML은 좌표를 CSS에 갖고 있지만 텍스트 줄바꿈은
  *    렌더해 봐야 알 수 있어서, 노드 스타일을 읽는 방식으로는 줄 단위 위치를 못 만든다.
  *
- * 표현하지 못하는 시각 효과(그라디언트·그림자·블러·마스크)는 버리지 않고 `unsupported`에 담아
- * 돌려준다 — 그 노드만 래스터로 구워 얹는 폴백이 이 목록을 읽는다.
+ * 🔑 SVG 자산(로고·심볼)은 도형으로 펼친다. `img[src$=.svg]`든 CSS 마스크든 마찬가지다 —
+ *    그대로 두면 인쇄물에서 로고만 벡터가 아니게 된다(`svg-asset-to-primitives`).
+ * 표현하지 못하는 시각 효과는 버리지 않고 `unsupported`에 담아 돌려준다.
  */
 export type TemplateVectorSceneResult = {
 	scene: VectorScene
@@ -21,16 +23,14 @@ export type TemplateVectorSceneResult = {
 
 type Box = { x: number; y: number; width: number; height: number }
 
-export function templateDomToVectorScene(
+export async function templateDomToVectorScene(
 	stage: HTMLElement,
 	size: { width: number; height: number },
-): TemplateVectorSceneResult {
+): Promise<TemplateVectorSceneResult> {
 	const origin = stage.getBoundingClientRect()
 	const unsupported: { nodeId: string; reason: string }[] = []
 	const context = { origin, unsupported }
-	const primitives = Array.from(stage.children).flatMap((child) =>
-		child instanceof HTMLElement ? walk(child, context) : [],
-	)
+	const primitives = await walkAll(Array.from(stage.children), context)
 
 	return {
 		scene: {
@@ -46,7 +46,18 @@ export function templateDomToVectorScene(
 
 type WalkContext = { origin: DOMRect; unsupported: { nodeId: string; reason: string }[] }
 
-function walk(element: HTMLElement, context: WalkContext): VectorPrimitive[] {
+async function walkAll(
+	nodes: readonly Element[],
+	context: WalkContext,
+): Promise<VectorPrimitive[]> {
+	const collected: VectorPrimitive[] = []
+	for (const node of nodes) {
+		if (node instanceof HTMLElement) collected.push(...(await walk(node, context)))
+	}
+	return collected
+}
+
+async function walk(element: HTMLElement, context: WalkContext): Promise<VectorPrimitive[]> {
 	const style = getComputedStyle(element)
 	if (style.display === 'none' || style.visibility === 'hidden') return []
 	// 🔴 값이 없을 때를 0으로 읽으면 판 전체가 사라진다 — `Number('')`은 0이다.
@@ -58,18 +69,20 @@ function walk(element: HTMLElement, context: WalkContext): VectorPrimitive[] {
 	if (box.width <= 0 || box.height <= 0) return []
 
 	const nodeId = element.dataset.nodeId ?? element.dataset.name ?? element.tagName.toLowerCase()
-	reportUnsupported(style, nodeId, context)
+
+	// SVG 자산은 마스크째 도형으로 펴진다 — 그때는 마스크를 「못 옮긴 효과」로 세지 않는다.
+	const svgAsset = await svgAssetPrimitives(element, box, style)
+	reportUnsupported(style, nodeId, context, { maskHandled: svgAsset !== null })
 
 	const own =
-		element instanceof HTMLImageElement
+		svgAsset ??
+		(element instanceof HTMLImageElement
 			? imagePrimitives(element, box, style)
 			: element.tagName === 'P'
 				? textPrimitives(element, style, context)
-				: boxPrimitives(box, style)
+				: boxPrimitives(box, style))
 
-	const children = Array.from(element.children).flatMap((child) =>
-		child instanceof HTMLElement ? walk(child, context) : [],
-	)
+	const children = await walkAll(Array.from(element.children), context)
 	const contents = [...own, ...children]
 	if (contents.length === 0) return []
 
@@ -85,18 +98,63 @@ function walk(element: HTMLElement, context: WalkContext): VectorPrimitive[] {
 }
 
 /** 벡터로 못 옮기는 효과를 기록한다. 여기서 버리면 폴백이 무엇을 구워야 할지 알 수 없다. */
-function reportUnsupported(style: CSSStyleDeclaration, nodeId: string, context: WalkContext) {
+function reportUnsupported(
+	style: CSSStyleDeclaration,
+	nodeId: string,
+	context: WalkContext,
+	{ maskHandled }: { maskHandled: boolean },
+) {
 	const effects: [string, boolean][] = [
-		['gradient', style.backgroundImage.includes('gradient')],
-		['box-shadow', style.boxShadow !== 'none' && style.boxShadow !== ''],
-		['filter', style.filter !== 'none' && style.filter !== ''],
-		['backdrop-filter', style.backdropFilter !== 'none' && style.backdropFilter !== ''],
-		['mask', maskUrl(style) !== null],
-		['blend-mode', style.mixBlendMode !== 'normal' && style.mixBlendMode !== ''],
+		['gradient', hasRealGradient(style.backgroundImage)],
+		['box-shadow', isSet(style.boxShadow)],
+		['filter', isSet(style.filter)],
+		['backdrop-filter', isSet(style.backdropFilter)],
+		['mask', !maskHandled && maskUrl(style) !== null],
+		['blend-mode', isSet(style.mixBlendMode, 'normal')],
 	]
 	for (const [reason, hit] of effects) {
 		if (hit) context.unsupported.push({ nodeId, reason })
 	}
+}
+
+/**
+ * SVG 자산이면 도형으로 펼친다. 두 형태가 있다 —
+ * 색을 안 바꾼 로고는 `img[src$=.svg]`, 색을 바꾼 로고는 `div` + `mask-image` + `background-color`다
+ * (`compose-template-html`이 그렇게 심는다).
+ */
+async function svgAssetPrimitives(
+	element: HTMLElement,
+	box: Box,
+	style: CSSStyleDeclaration,
+): Promise<VectorPrimitive[] | null> {
+	if (element instanceof HTMLImageElement) {
+		const source = element.currentSrc || element.src
+		return isSvgUrl(source)
+			? svgAssetToPrimitives(source, box, { fit: fitOf(style.objectFit) })
+			: null
+	}
+	const mask = maskUrl(style)
+	if (!mask || !isSvgUrl(mask)) return null
+	// 마스크는 모양만 쓴다 — 색은 배경색이 정한다. 없으면 검정이 인쇄 기본이다.
+	const tint = solidColor(style.backgroundColor) ?? '#000000'
+	return svgAssetToPrimitives(mask, box, { fit: fitOf(style.maskSize), tint })
+}
+
+function isSvgUrl(value: string): boolean {
+	return /\.svg(\?|#|$)/i.test(value)
+}
+
+/** CSS의 맞춤 값은 여러 이름을 쓰지만 자산 배치에는 두 가지뿐이다. */
+function fitOf(value: string): 'contain' | 'fill' {
+	return value.trim().startsWith('contain') ? 'contain' : 'fill'
+}
+
+/**
+ * CSS 값이 실제로 걸려 있는지. 🔴 값이 없을 때(`undefined`·빈 문자열)를 「걸려 있음」으로 읽으면
+ * 아무 효과도 없는 노드가 전부 폴백으로 빠진다 — `Number('')`이 0인 것과 같은 함정이다.
+ */
+function isSet(value: string | undefined, empty = 'none'): boolean {
+	return Boolean(value) && value !== empty && value !== 'none'
 }
 
 /** CSS mask로 얹힌 벡터 자산의 URL. 로고가 이 형태로 들어온다(compose가 maskImage로 심는다). */
@@ -106,8 +164,32 @@ export function maskUrl(style: CSSStyleDeclaration): string | null {
 	return value.match(/url\(["']?(.*?)["']?\)/)?.[1] ?? null
 }
 
+/**
+ * 🔴 단색인데 그라디언트로 위장한 레이어를 진짜 그라디언트로 세면 안 된다. Figma importer가
+ *    배경 레이어가 여러 겹일 때 SOLID를 `linear-gradient(색,색)`으로 바꿔 넣는다
+ *    (`lower-figma-visuals`의 `solidAsLayer`) — 그걸 잡으면 멀쩡한 단색 배경이 전부 래스터로 간다.
+ */
+export function hasRealGradient(backgroundImage: string): boolean {
+	const gradients = backgroundImage.match(
+		/(?:linear|radial|conic)-gradient\([^()]*(?:\([^()]*\)[^()]*)*\)/g,
+	)
+	return (gradients ?? []).some((gradient) => uniformGradientColor(gradient) === null)
+}
+
+/** 정지점이 모두 같은 색이면 그 색을 돌려준다 — 사실상 단색 칠이다. */
+export function uniformGradientColor(gradient: string): string | null {
+	const colors = gradient.match(/#[0-9a-f]{3,8}|rgba?\([^)]*\)/gi)
+	if (!colors || colors.length < 2) return null
+	const normalized = colors.map((color) => solidColor(color))
+	return normalized.every((color) => color !== null && color === normalized[0])
+		? normalized[0]
+		: null
+}
+
 function boxPrimitives(box: Box, style: CSSStyleDeclaration): VectorPrimitive[] {
-	const fill = solidColor(style.backgroundColor)
+	// 단색 위장 그라디언트가 실제 칠이면 그 색을 배경색보다 우선한다 — 위에 덮이는 레이어다.
+	const layered = firstUniformLayer(style.backgroundImage)
+	const fill = layered ?? solidColor(style.backgroundColor)
 	const border = borderOf(style)
 	if (!fill && !border) return []
 	return [
@@ -119,6 +201,18 @@ function boxPrimitives(box: Box, style: CSSStyleDeclaration): VectorPrimitive[] 
 			...(uniformRadius(style) ? { radius: uniformRadius(style) as number } : {}),
 		},
 	]
+}
+
+/** 여러 배경 레이어 중 맨 위(CSS에서 먼저 오는) 단색 위장 레이어의 색. */
+function firstUniformLayer(backgroundImage: string): string | null {
+	const gradients = backgroundImage.match(
+		/(?:linear|radial|conic)-gradient\([^()]*(?:\([^()]*\)[^()]*)*\)/g,
+	)
+	for (const gradient of gradients ?? []) {
+		const color = uniformGradientColor(gradient)
+		if (color) return color
+	}
+	return null
 }
 
 function imagePrimitives(

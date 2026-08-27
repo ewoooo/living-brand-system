@@ -186,6 +186,12 @@ export type VectorPrimitive =
 			 */
 			x?: number
 			y?: number
+			/**
+			 * 균등 배율. viewBox를 가진 자산(로고 SVG)을 상자에 맞출 때 쓴다.
+			 * 🔴 균등만 둔다 — SVG는 `scale(s)`, PDF는 `drawSvgPath`의 `scale`로 그대로 가고,
+			 *    비균등이면 두 출력의 표현이 갈린다.
+			 */
+			scale?: number
 			fill?: string
 			stroke?: string
 			strokeWidth?: number

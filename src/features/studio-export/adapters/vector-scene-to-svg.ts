@@ -37,7 +37,7 @@ function serialize(primitive: VectorPrimitive, indent: string, path: string): st
 		case 'image':
 			return `${indent}<image x="${fixed(primitive.x)}" y="${fixed(primitive.y)}" width="${fixed(primitive.width)}" height="${fixed(primitive.height)}" href="${attribute(primitive.href)}" preserveAspectRatio="${attribute(primitive.preserveAspectRatio ?? 'none')}"${optional('opacity', primitive.opacity)} />`
 		case 'path':
-			return `${indent}<path d="${attribute(primitive.d)}"${translateOf(primitive.x, primitive.y)}${optionalText('fill', primitive.fill)}${optionalText('stroke', primitive.stroke)}${optional('stroke-width', primitive.strokeWidth)}${optionalText('fill-rule', primitive.fillRule)}${optional('opacity', primitive.opacity)} />`
+			return `${indent}<path d="${attribute(primitive.d)}"${transformOf(primitive.x, primitive.y, primitive.scale)}${optionalText('fill', primitive.fill)}${optionalText('stroke', primitive.stroke)}${optional('stroke-width', primitive.strokeWidth)}${optionalText('fill-rule', primitive.fillRule)}${optional('opacity', primitive.opacity)} />`
 		case 'group':
 			return serializeGroup(primitive, indent, path)
 	}
@@ -66,10 +66,20 @@ function optionalInt(name: string, value: number | undefined): string {
 	return value === undefined ? '' : ` ${name}="${Math.round(value)}"`
 }
 
-/** path의 원점은 평행이동 transform으로 나간다 — 원점이 없으면 속성 자체를 만들지 않는다. */
-function translateOf(x: number | undefined, y: number | undefined): string {
-	if (!x && !y) return ''
-	return ` transform="translate(${fixed(x ?? 0)} ${fixed(y ?? 0)})"`
+/** path의 원점과 배율은 transform 하나로 나간다 — 둘 다 없으면 속성 자체를 만들지 않는다. */
+function transformOf(
+	x: number | undefined,
+	y: number | undefined,
+	scale: number | undefined,
+): string {
+	const moved = Boolean(x || y)
+	const scaled = scale !== undefined && scale !== 1
+	if (!moved && !scaled) return ''
+	const parts = [
+		...(moved ? [`translate(${fixed(x ?? 0)} ${fixed(y ?? 0)})`] : []),
+		...(scaled ? [`scale(${fixed(scale)})`] : []),
+	]
+	return ` transform="${parts.join(' ')}"`
 }
 
 function optional(name: string, value: number | undefined): string {

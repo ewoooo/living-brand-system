@@ -1,6 +1,7 @@
 'use client'
 
 import { toCanvas } from 'html-to-image'
+import { outlineVectorScene } from '@/features/studio-export/adapters/outline-vector-scene.client'
 import type { AuthorizedTemplateAssetCollection } from '@/features/template-core/domain/template-asset-policy'
 import { composeTemplateHtml } from '@/features/template-core/runtime/compose-template-html.client'
 import type { TemplateAssignedImage } from '@/features/template-customization/contexts/template-studio-context'
@@ -25,7 +26,6 @@ import type {
 } from '@/modules/studio-artifact/studio-artifact'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 import type { TemplateNodeConfigMap } from '@/types/template'
-import { outlineVectorScene } from '@/features/studio-export/adapters/outline-vector-scene.client'
 import { withTemplateRasterStage } from './render-template-raster-stage.client'
 import { templateDomToVectorScene } from './template-dom-to-vector-scene.client'
 
