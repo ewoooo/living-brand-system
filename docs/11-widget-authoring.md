@@ -187,7 +187,7 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 
 ## 7. 알려진 결함
 
-- 🔴 **컨테이너 Block의 자식 위젯이 가진 이미지가 AI 검수에 도달하지 못합니다.** `checks/collect-guideline-check-sources.ts`의 이미지 수집 switch에는 `'block'` case가 생겼지만 그 맵은 조회용일 뿐이고, 실제로 어떤 이미지를 참조하는지 지목하는 `blocks/block/projection.ts`의 `projectBlock`이 아직 `referenceAssets: []`를 반환합니다(evidence도 `childCount` 자리표시자입니다). 위젯별 evidence 설계가 끝나야 그 case가 쓰입니다. 그 switch에는 `default: x satisfies never` 가드도 없어, 이미지를 갖는 위젯을 추가할 때 유실이 조용히 일어납니다.
+- ✅ **컨테이너 Block의 자식 위젯 이미지는 AI 검수에 넣지 않습니다 — 결함이 아니라 결정입니다**(2026-08-12). 기계(AI 챗·검색·검수)가 읽는 것은 Block이 소유한 title·description·rule 셋뿐이고, 자식 위젯과 그 이미지는 사람이 보는 표현입니다(§4). 그래서 `blocks/block/projection.ts`의 `projectBlock`은 `referenceAssets: []`를 돌려주고, `checks/collect-guideline-check-sources.ts`도 컨테이너 자식 이미지를 모으지 않습니다. 🔴 **위젯별 projection을 만들어 이 경로를 "복구"하지 마십시오.**
 - 구 flat 블록 18종은 2026-08-10에 삭제됐습니다. 문서에 배치할 수 있는 것은 `block` 컨테이너와 `content-columns`·`callout` 셋뿐이고, 나머지 시각 요소는 전부 컨테이너의 자식 위젯입니다.
 - 🔴 **CI 락업 도판의 치수 라벨이 H를 따라오지 않습니다.** 라벨 글자는 고정 크기(`text-xs`)라 좁은 간격 트랙에서 서로를 지우고(해외지사 가로형A에서 기본 H=100에도 인접 라벨이 겹칩니다), 게이지 라벨의 오프셋도 고정 px이라 H를 낮추면 치수선에 붙고 높이면 멀어집니다. 라벨을 H 배수로 조판하거나 겹칠 때 자리를 옮기는 규칙이 필요합니다(`ci-lockup/diagram.tsx`).
 - 🔴 **CI 락업의 치수 도판에서, 셀 안에 가운데 정렬된 글자·심볼이 셀 폭이 바뀔 때 그 절반만큼 순간이동합니다.** 세로형에서 드러납니다. 도판은 요소의 이동을 FLIP으로 잇는데 기준이 **셀 상자**이고, 상자 안의 내용은 상자 폭에서 파생된 자리에 놓이므로 상자만 되돌려서는 내용이 제자리에 오지 않습니다. 고치려면 잉크를 기준으로 재야 하고, 그러려면 셀을 꽉 채우는 래퍼를 없애 상자가 곧 잉크가 되게 해야 합니다(`ci-lockup/diagram.tsx`).

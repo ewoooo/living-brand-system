@@ -123,29 +123,13 @@ function collectApplicationImages(document: GuidelineCheckDocument): Map<number,
 	const values: unknown[] = []
 	if ('headerImage' in document) values.push(document.headerImage)
 
+	// 🔴 컨테이너 Block의 자식 위젯 이미지는 넣지 않는다 — 검수가 읽는 것은 Block이 소유한
+	//    title·description·rule뿐이고 자식 위젯은 사람이 보는 표현이라는 결정(2026-08-12,
+	//    `blocks/block/projection.ts`가 정본)이다. projectBlock·projectSection이 referenceAssets를
+	//    비워 돌려주므로 여기서 모아 봐야 참조하는 쪽이 없다.
 	for (const { block } of flattenBlocks(document.blocks)) {
-		switch (block.blockType) {
-			case 'contentColumns':
-				values.push(...(block.columns ?? []).map((column) => column.image))
-				break
-			case 'block':
-				// 컨테이너 블록의 자식 위젯이 가진 이미지를 id→이미지 조회 맵에 넣는다.
-				//
-				// 🔴 이것만으로는 AI 검수 커버리지가 복구되지 않는다. 이 맵은 조회용이고, 실제로
-				//    어떤 이미지를 참조하는지 지목하는 건 `blocks/block/projection.ts`의 projectBlock인데
-				//    그게 아직 `referenceAssets: []`를 반환한다(evidence도 childCount 자리표시자다).
-				//    즉 rules를 가진 컨테이너 블록은 지금도 참조 이미지를 못 내보낸다.
-				//    위젯별 evidence 설계가 그 파일에 미뤄져 있고, 그게 끝나야 이 case가 실제로 쓰인다.
-				values.push(
-					...(block.children ?? []).flatMap((child) =>
-						child.blockType === 'doDontWidget'
-							? (child.examples ?? []).map((example) => example.image)
-							: child.blockType === 'image'
-								? [child.image]
-								: [],
-					),
-				)
-				break
+		if (block.blockType === 'contentColumns') {
+			values.push(...(block.columns ?? []).map((column) => column.image))
 		}
 	}
 
