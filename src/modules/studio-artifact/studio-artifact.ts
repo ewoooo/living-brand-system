@@ -178,8 +178,14 @@ export type VectorPrimitive =
 			 * 계약을 다시 넓히지 않는다.
 			 */
 			kind: 'path'
-			/** SVG path `d`. 좌표계는 장면과 같다 — 별도 transform을 전제하지 않는다. */
+			/** SVG path `d`. 좌표는 아래 `x`·`y`를 원점으로 읽는다. */
 			d: string
+			/**
+			 * 이 path의 원점. 자유 transform 문자열 대신 평행이동만 둔다 — SVG는 `translate`,
+			 * PDF는 `drawSvgPath`의 x·y로 그대로 간다. 회전·기울임은 아직 쓰는 곳이 없다.
+			 */
+			x?: number
+			y?: number
 			fill?: string
 			stroke?: string
 			strokeWidth?: number

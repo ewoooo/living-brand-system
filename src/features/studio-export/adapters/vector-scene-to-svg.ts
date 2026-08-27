@@ -37,7 +37,7 @@ function serialize(primitive: VectorPrimitive, indent: string, path: string): st
 		case 'image':
 			return `${indent}<image x="${fixed(primitive.x)}" y="${fixed(primitive.y)}" width="${fixed(primitive.width)}" height="${fixed(primitive.height)}" href="${attribute(primitive.href)}" preserveAspectRatio="${attribute(primitive.preserveAspectRatio ?? 'none')}"${optional('opacity', primitive.opacity)} />`
 		case 'path':
-			return `${indent}<path d="${attribute(primitive.d)}"${optionalText('fill', primitive.fill)}${optionalText('stroke', primitive.stroke)}${optional('stroke-width', primitive.strokeWidth)}${optionalText('fill-rule', primitive.fillRule)}${optional('opacity', primitive.opacity)} />`
+			return `${indent}<path d="${attribute(primitive.d)}"${translateOf(primitive.x, primitive.y)}${optionalText('fill', primitive.fill)}${optionalText('stroke', primitive.stroke)}${optional('stroke-width', primitive.strokeWidth)}${optionalText('fill-rule', primitive.fillRule)}${optional('opacity', primitive.opacity)} />`
 		case 'group':
 			return serializeGroup(primitive, indent, path)
 	}
@@ -64,6 +64,12 @@ function serializeGroup(
 /** font-weight처럼 정수여야 하는 속성 — `700.00`은 일부 뷰어가 무시한다. */
 function optionalInt(name: string, value: number | undefined): string {
 	return value === undefined ? '' : ` ${name}="${Math.round(value)}"`
+}
+
+/** path의 원점은 평행이동 transform으로 나간다 — 원점이 없으면 속성 자체를 만들지 않는다. */
+function translateOf(x: number | undefined, y: number | undefined): string {
+	if (!x && !y) return ''
+	return ` transform="translate(${fixed(x ?? 0)} ${fixed(y ?? 0)})"`
 }
 
 function optional(name: string, value: number | undefined): string {
