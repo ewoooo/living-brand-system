@@ -1,6 +1,7 @@
 'use client'
 
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
+import { type ImageFit, toBakedImageDataUrl } from './image-to-data-url.client'
 import { svgAssetToPrimitives } from './svg-asset-to-primitives.client'
 
 /**
@@ -77,10 +78,13 @@ async function walk(element: HTMLElement, context: WalkContext): Promise<VectorP
 	const own =
 		svgAsset ??
 		(element instanceof HTMLImageElement
-			? imagePrimitives(element, box, style)
+			? await imagePrimitives(element, box, style, context)
 			: element.tagName === 'P'
 				? textPrimitives(element, style, context)
-				: boxPrimitives(box, style))
+				: [
+						...boxPrimitives(box, style),
+						...(await backgroundImagePrimitives(element, box, style, context)),
+					])
 
 	const children = await walkAll(Array.from(element.children), context)
 	const contents = [...own, ...children]
@@ -215,20 +219,82 @@ function firstUniformLayer(backgroundImage: string): string | null {
 	return null
 }
 
-function imagePrimitives(
+async function imagePrimitives(
 	element: HTMLImageElement,
 	box: Box,
 	style: CSSStyleDeclaration,
-): VectorPrimitive[] {
-	if (!element.currentSrc && !element.src) return []
-	return [
-		{
-			kind: 'image',
-			...box,
-			href: element.currentSrc || element.src,
-			preserveAspectRatio: preserveAspectRatioOf(style.objectFit),
-		},
-	]
+	context: WalkContext,
+): Promise<VectorPrimitive[]> {
+	const source = element.currentSrc || element.src
+	return source ? bakedImage(source, box, fitOfCss(style.objectFit), element, context) : []
+}
+
+/**
+ * `div`의 배경 이미지. 🔴 Figma importer는 IMAGE fill을 `img`가 아니라 **`background-image`** 로
+ * 내린다(`createImageFillStyle`) — 이것을 안 보면 판에서 사진이 통째로 빠진다.
+ */
+async function backgroundImagePrimitives(
+	element: HTMLElement,
+	box: Box,
+	style: CSSStyleDeclaration,
+	context: WalkContext,
+): Promise<VectorPrimitive[]> {
+	const source = cssUrl(style.backgroundImage)
+	// 마스크로 얹힌 자산은 SVG 경로가 이미 다뤘고, 여기서 또 그리면 두 번 얹힌다.
+	if (!source || maskUrl(style)) return []
+	return bakedImage(source, box, fitOfCss(style.backgroundSize), element, context)
+}
+
+async function bakedImage(
+	source: string,
+	box: Box,
+	fit: ImageFit,
+	element: HTMLElement,
+	context: WalkContext,
+): Promise<VectorPrimitive[]> {
+	// 조상 프레임이 자르는 만큼만 싣는다 — 클립 경로 대신 비트맵에서 잘라 낸다.
+	const visible = intersect(box, clipBoxOf(element, context.origin))
+	if (!visible || visible.width <= 0 || visible.height <= 0) return []
+	// crop은 **상자 안에서의** 좌표다 — 판 좌표를 그대로 넘기면 엉뚱한 데를 잘라 낸다.
+	const crop = {
+		x: visible.x - box.x,
+		y: visible.y - box.y,
+		width: visible.width,
+		height: visible.height,
+	}
+	const href = await toBakedImageDataUrl(source, box, fit, crop)
+	// 🔑 맞춤은 굽는 쪽이 이미 반영했다 — 여기서 또 비율을 맞추면 두 번 적용된다.
+	return href ? [{ kind: 'image', ...visible, href, preserveAspectRatio: 'none' }] : []
+}
+
+/** 이 요소를 실제로 자르는 가장 가까운 조상의 상자. 아무도 안 자르면 null이다. */
+function clipBoxOf(element: HTMLElement, origin: DOMRect): Box | null {
+	for (let node = element.parentElement; node; node = node.parentElement) {
+		const overflow = getComputedStyle(node).overflow
+		if (overflow && overflow !== 'visible') return toBox(node.getBoundingClientRect(), origin)
+	}
+	return null
+}
+
+function intersect(box: Box, clip: Box | null): Box | null {
+	if (!clip) return box
+	const x = Math.max(box.x, clip.x)
+	const y = Math.max(box.y, clip.y)
+	const right = Math.min(box.x + box.width, clip.x + clip.width)
+	const bottom = Math.min(box.y + box.height, clip.y + clip.height)
+	return right > x && bottom > y ? { x, y, width: right - x, height: bottom - y } : null
+}
+
+/** 첫 번째 `url(...)` 값. 그라디언트 레이어가 섞여 있어도 이미지만 집는다. */
+function cssUrl(value: string): string | null {
+	return value && value !== 'none' ? (value.match(/url\(["']?(.*?)["']?\)/)?.[1] ?? null) : null
+}
+
+function fitOfCss(value: string): ImageFit {
+	const first = value.trim().split(',')[0]?.trim() ?? ''
+	if (first.startsWith('contain')) return 'contain'
+	if (first.startsWith('cover')) return 'cover'
+	return 'fill'
 }
 
 /**
@@ -367,12 +433,6 @@ function uniformRadius(style: CSSStyleDeclaration): number | null {
 	].map((value) => Number.parseFloat(value) || 0)
 	const [first] = corners
 	return first > 0 && corners.every((corner) => corner === first) ? first : null
-}
-
-function preserveAspectRatioOf(objectFit: string): string {
-	if (objectFit === 'contain') return 'xMidYMid meet'
-	if (objectFit === 'cover') return 'xMidYMid slice'
-	return 'none'
 }
 
 function textAnchorOf(textAlign: string): 'start' | 'middle' | 'end' {

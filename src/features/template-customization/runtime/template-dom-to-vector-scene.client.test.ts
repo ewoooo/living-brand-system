@@ -1,5 +1,14 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { fitRect } from './image-to-data-url.client'
+
+// jsdom에는 canvas가 없어 실제 굽기를 돌릴 수 없다 — 워커가 굽기를 **부르는지**만 본다.
+// 구운 결과가 맞는지는 순수 함수 `fitRect`와 브라우저 실측이 담당한다.
+vi.mock('./image-to-data-url.client', async (importOriginal) => ({
+	...(await importOriginal<typeof import('./image-to-data-url.client')>()),
+	toBakedImageDataUrl: vi.fn(async () => 'data:image/png;base64,BAKED'),
+}))
+
 import {
 	hasRealGradient,
 	solidColor,
@@ -72,9 +81,9 @@ describe('templateDomToVectorScene', () => {
 		).toEqual([])
 	})
 
-	it('img를 image 프리미티브로 옮기고 object-fit을 preserveAspectRatio로 번역한다', async () => {
+	it('img를 구운 data URI로 싣는다 — URL을 그대로 두면 파일 밖에서 안 보인다', async () => {
 		const stage = stageWith(
-			'<img data-node-id="img-1" src="data:image/png;base64,AAA" style="object-fit:contain">',
+			'<img data-node-id="img-1" src="/api/application-images/file/a.png" style="object-fit:contain">',
 		)
 		measure(stage.firstElementChild as Element, { x: 5, y: 5, width: 40, height: 40 })
 
@@ -83,10 +92,28 @@ describe('templateDomToVectorScene', () => {
 
 		expect(group.kind === 'group' && group.children[0]).toMatchObject({
 			kind: 'image',
-			href: 'data:image/png;base64,AAA',
-			preserveAspectRatio: 'xMidYMid meet',
+			href: 'data:image/png;base64,BAKED',
+			// 맞춤은 굽는 쪽이 이미 반영했다 — 여기서 또 맞추면 두 번 적용된다.
+			preserveAspectRatio: 'none',
 			x: 5,
 			y: 5,
+		})
+	})
+
+	// 🔴 Figma importer는 IMAGE fill을 img가 아니라 background-image로 내린다 — 이걸 놓쳐서
+	//    실제 템플릿에서 사진이 통째로 빠졌다(2026-08-27).
+	it('div의 background-image도 싣는다', async () => {
+		const stage = stageWith(
+			'<div data-node-id="photo" style="background-image:url(&quot;/api/application-images/file/b.png&quot;);background-size:cover"></div>',
+		)
+		measure(stage.firstElementChild as Element, { x: 0, y: 0, width: 100, height: 100 })
+
+		const { scene } = await templateDomToVectorScene(stage, { width: 400, height: 300 })
+		const group = scene.primitives[0]
+
+		expect(group.kind === 'group' && group.children[0]).toMatchObject({
+			kind: 'image',
+			href: 'data:image/png;base64,BAKED',
 		})
 	})
 
@@ -159,5 +186,27 @@ describe('위장 그라디언트', () => {
 			fill: '#00ad45',
 		})
 		expect(unsupported).toEqual([])
+	})
+})
+
+describe('fitRect', () => {
+	const natural = { width: 200, height: 100 }
+	const target = { width: 100, height: 100 }
+
+	it('cover는 상자를 덮고 남는 쪽이 가운데로 넘친다', () => {
+		expect(fitRect(natural, target, 'cover')).toEqual({
+			x: -50,
+			y: 0,
+			width: 200,
+			height: 100,
+		})
+	})
+
+	it('contain은 비율을 지키고 남는 축을 가운데로 민다', () => {
+		expect(fitRect(natural, target, 'contain')).toEqual({ x: 0, y: 25, width: 100, height: 50 })
+	})
+
+	it('fill은 상자를 그대로 채운다', () => {
+		expect(fitRect(natural, target, 'fill')).toEqual({ x: 0, y: 0, width: 100, height: 100 })
 	})
 })
