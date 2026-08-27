@@ -211,10 +211,29 @@ export function roundedRectPath(width: number, height: number, radius: number): 
 	].join('')
 }
 
-/** `#rrggbb`만 읽는다 — 씬은 워커가 이미 정규화해 넣는다. */
-function parseColor(value: string) {
-	const match = value.match(/^#([0-9a-f]{6})$/i)
-	if (!match) return undefined
-	const int = Number.parseInt(match[1], 16)
-	return rgb(((int >> 16) & 255) / 255, ((int >> 8) & 255) / 255, (int & 255) / 255)
+/**
+ * 씬은 `#rrggbb`를 약속하지만 `#rgb`·`rgb(...)`도 읽는다.
+ * 🔴 못 읽는 색을 undefined로 흘리면 그 도형이 **색 없이 사라진다** — 인쇄물에서는 눈치채기 어렵다.
+ */
+export function parseColor(value: string) {
+	const short = value.match(/^#([0-9a-f]{3})$/i)
+	const hex = short
+		? short[1]
+				.split('')
+				.map((channel) => channel + channel)
+				.join('')
+		: value.match(/^#([0-9a-f]{6})$/i)?.[1]
+	if (hex) {
+		const int = Number.parseInt(hex, 16)
+		return rgb(((int >> 16) & 255) / 255, ((int >> 8) & 255) / 255, (int & 255) / 255)
+	}
+	const parts = value
+		.match(/^rgba?\(([^)]+)\)$/i)?.[1]
+		?.split(/[,/\s]+/)
+		.filter(Boolean)
+		.map(Number)
+	if (parts && parts.length >= 3 && parts.slice(0, 3).every(Number.isFinite)) {
+		return rgb(parts[0] / 255, parts[1] / 255, parts[2] / 255)
+	}
+	return undefined
 }

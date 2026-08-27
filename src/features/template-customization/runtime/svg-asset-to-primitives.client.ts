@@ -49,7 +49,7 @@ export async function svgAssetToPrimitives(
 	return shapes.map(({ d, fill }) => ({
 		kind: 'path' as const,
 		d,
-		fill,
+		fill: normalizeCssColor(fill),
 		scale,
 		// viewBox의 원점을 빼서 자산 좌표를 판 좌표로 옮긴다.
 		x: offsetX - source.x * scale,
@@ -142,6 +142,21 @@ function shapeToPath(element: Element): string | null {
 		default:
 			return null
 	}
+}
+
+/**
+ * 🔴 SVG 자산은 `black`·`rgb(...)`·`#abc` 등 CSS 색 문법을 아무거나 쓴다. 씬은 `#rrggbb`만 약속하고
+ *    PDF 어댑터도 그것만 읽으므로, 여기서 정규화하지 않으면 **PDF에서 로고가 색 없이 사라진다**
+ *    (SVG에서는 멀쩡해 보여서 눈으로는 안 잡힌다).
+ * canvas의 `fillStyle`이 CSS 색 문법 전체를 정규화해 준다 — 파서를 새로 쓰지 않는다.
+ */
+export function normalizeCssColor(value: string): string {
+	const context = document.createElement('canvas').getContext('2d')
+	if (!context) return value
+	context.fillStyle = '#000000'
+	context.fillStyle = value
+	const normalized = context.fillStyle
+	return typeof normalized === 'string' ? normalized : value
 }
 
 function ellipsePath(cx: number, cy: number, rx: number, ry: number): string {
