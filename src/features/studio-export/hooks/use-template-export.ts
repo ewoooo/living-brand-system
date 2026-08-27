@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react'
 import type {
 	TemplateRasterArtifactProducer,
+	TemplateVectorArtifactResult,
 	TemplateVideoArtifactProducer,
 } from '@/features/template-customization/runtime/template-runtime.client'
 import {
@@ -43,16 +44,19 @@ function resolveOutputSize(
 	}
 	return { width: metadata.width * scale, height: metadata.height * scale }
 }
-type TemplateExportRequest = Extract<ExportRequest, { artifact: 'raster' | 'video' }>
+type TemplateExportRequest = Extract<ExportRequest, { artifact: 'raster' | 'video' | 'vector' }>
 
 /** Template Raster Artifact를 공통 ExportRequest와 Artifact executor에 연결한다. */
 export function useTemplateExport({
 	artifact,
+	vectorArtifact,
 	videoArtifact,
 	capability,
 	metadata,
 }: {
 	artifact: TemplateRasterArtifactProducer
+	/** 인쇄용 벡터. 없으면 SVG 형식을 내놓지 않는다. */
+	vectorArtifact?: (() => Promise<TemplateVectorArtifactResult>) | null
 	/** 배경 Graphic처럼 시간축이 있는 소스가 있을 때만 MP4가 실제로 움직인다. */
 	videoArtifact?: TemplateVideoArtifactProducer | null
 	capability: StudioOutputCapability
@@ -67,6 +71,9 @@ export function useTemplateExport({
 		Math.min(5, capability.video?.mp4.maxDurationSeconds ?? 5),
 	)
 	const [scale, setScale] = useState(1)
+	// 🔴 인쇄물은 되돌릴 수 없다 — 벡터로 못 옮긴 것을 화면이 말할 수 있게 남긴다.
+	const [vectorDiagnostics, setVectorDiagnostics] =
+		useState<TemplateVectorArtifactResult['diagnostics'] | null>(null)
 	const effectivePpi = ppi && capability.print?.ppi.includes(ppi) ? ppi : capability.print?.ppi[0]
 	const effectiveFps =
 		fps && capability.video?.mp4.fps.includes(fps) ? fps : capability.video?.mp4.fps[0]
@@ -96,6 +103,24 @@ export function useTemplateExport({
 	const effectiveScale = scaleApplies ? selectedScale : 1
 	const createRequest = useCallback(
 		(candidate: StudioOutputFormat | null): TemplateExportRequest | null => {
+			if (candidate === 'svg') {
+				return metadata && vectorArtifact
+					? {
+							artifact: 'vector',
+							format: 'svg',
+							colorProfile: {
+								space: 'rgb',
+								icc: capability.colorProfiles?.rgb?.[0] ?? 'srgb',
+							},
+							options: {
+								width: metadata.width,
+								height: metadata.height,
+								// 글자는 굽기 단계가 이미 윤곽선으로 바꾼다 — 여기서 다시 요청하지 않는다.
+								outlineText: false,
+							},
+						}
+					: null
+			}
 			const request =
 				candidate && metadata
 					? createRasterExportRequest(candidate, capability, {
@@ -119,6 +144,7 @@ export function useTemplateExport({
 			effectivePpi,
 			effectiveScale,
 			metadata,
+			vectorArtifact,
 			videoArtifact,
 		],
 	)
@@ -126,6 +152,16 @@ export function useTemplateExport({
 		async (request: TemplateExportRequest) => {
 			if (!metadata) throw new Error('Template export is unavailable.')
 			// Video Artifact는 전경을 목표 프레임 크기로 구워야 하므로 요청 해상도를 넘긴다.
+			if (request.artifact === 'vector') {
+				if (!vectorArtifact) throw new Error('Template export is unavailable.')
+				const { artifact: vector, diagnostics } = await vectorArtifact()
+				setVectorDiagnostics(diagnostics)
+				return executeArtifactExport({
+					artifact: vector,
+					fileName: metadata.fileName,
+					request,
+				})
+			}
 			if (request.artifact === 'video') {
 				if (!videoArtifact) throw new Error('Template export is unavailable.')
 				const { width, height } = request.options
@@ -141,7 +177,7 @@ export function useTemplateExport({
 				request,
 			})
 		},
-		[artifact, metadata, videoArtifact],
+		[artifact, metadata, vectorArtifact, videoArtifact],
 	)
 	const output = useExport<TemplateExportRequest>({
 		capability,
@@ -164,6 +200,8 @@ export function useTemplateExport({
 	return {
 		busy: output.exporting !== null,
 		error: output.error,
+		/** 마지막 벡터 내보내기에서 옮기지 못한 것. 없으면 null이다. */
+		vectorDiagnostics,
 		formats,
 		format,
 		setFormat: (next: StudioOutputFormat) => {

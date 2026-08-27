@@ -59,6 +59,7 @@ function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
 	useTemplateAuthoringPatch(template.id, session)
 	const exporting = useTemplateExport({
 		artifact: canvas.artifact,
+		vectorArtifact: canvas.vectorArtifact,
 		videoArtifact: canvas.videoArtifact,
 		capability: config.output,
 		metadata: {

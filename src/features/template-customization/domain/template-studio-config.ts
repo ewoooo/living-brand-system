@@ -636,7 +636,8 @@ export function getTemplateRuntimeManifest({
 				}
 			: null
 	return {
-		artifacts: { raster: {}, ...(videoFrame ? { video: videoFrame } : {}) },
+		// 벡터는 캔버스 크기와 무관하게 항상 낼 수 있다 — 재서 도형으로 옮기는 것이라 배율 예산이 없다.
+		artifacts: { raster: {}, vector: {}, ...(videoFrame ? { video: videoFrame } : {}) },
 		controller: {
 			groups: [
 				...(textControls.length

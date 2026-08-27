@@ -199,11 +199,13 @@ describe('deriveTemplateStudioConfig', () => {
 
 	it('Effective output은 Template Artifact와 실제 Exporter capability를 벗어날 수 없다', () => {
 		const config = deriveTemplateStudioConfig(template, [imageConfig], [forwardStraightConfig])
-		const withCommonFormat = {
+		// artifacts에 없는 형식을 output에 적으면 거부한다 — vector를 뺀 채 svg를 요구하는 꼴이다.
+		const withoutVector = {
 			...config,
+			artifacts: { raster: {} },
 			output: { ...config.output, formats: ['svg'] as const },
 		}
-		expect(() => parseTemplateStudioConfig(withCommonFormat)).toThrow(
+		expect(() => parseTemplateStudioConfig(withoutVector)).toThrow(
 			'지원하지 않는 output format',
 		)
 	})
@@ -249,7 +251,8 @@ describe('deriveTemplateStudioConfig', () => {
 
 	it('output은 Raster Exporter capability를 따르고 canvas만 Template 도메인 정보로 남긴다', () => {
 		expect(deriveTemplateStudioConfig(template)).toMatchObject({
-			output: { formats: ['png', 'jpeg', 'tiff', 'pdf', 'mp4'] },
+			// svg는 인쇄용 벡터 내보내기가 열었다 — Template artifacts가 vector를 선언한다.
+			output: { formats: ['png', 'jpeg', 'tiff', 'pdf', 'svg', 'mp4'] },
 			template: {
 				exportOption: {
 					canvas: { width: 800, height: 600 },
@@ -262,12 +265,12 @@ describe('deriveTemplateStudioConfig', () => {
 				exportPolicy: { allowedFormats: ['pdf'] },
 			}).output.formats,
 		).toEqual(['pdf'])
-		expect(() =>
+		expect(
 			deriveTemplateStudioConfig({
 				...template,
 				exportPolicy: { allowedFormats: ['svg'] },
-			}),
-		).toThrow('지원하지 않는 output format')
+			}).output.formats,
+		).toEqual(['svg'])
 	})
 
 	it('동적 published Template에서 만든 envelope도 공통 strict validator를 통과해야 한다', () => {
