@@ -98,9 +98,13 @@ export function projectStudioOutputPolicy(input: unknown): StudioOutputPolicy | 
 	const policy = record(input, 'exportPolicy')
 	assertKeys(policy, ['allowedFormats', 'original', 'print', 'video'], 'exportPolicy')
 	const output: StudioOutputPolicy = {}
+	// 🔴 빈 배열은 「좁히지 않음」으로 읽는다. Payload가 hasMany를 빈 배열로 실체화하므로
+	//    「설정한 적 없음」과 「비우기로 정함」을 여기서 구별할 수 없고, 그대로 넣으면 필드를
+	//    건드리지 않은 프로파일이 전부 「내보내기 전면 금지」로 떨어진다(버튼이 화면에서 사라진다).
+	//    전부 금지는 프로파일을 draft로 둔다. `resolveStudioOutputFormats`의 「[] = 전부 금지」는 그대로다.
 	if (policy.allowedFormats !== undefined && policy.allowedFormats !== null) {
 		assertStudioOutputFormats(policy.allowedFormats, 'exportPolicy.allowedFormats')
-		output.allowedFormats = policy.allowedFormats
+		if (policy.allowedFormats.length > 0) output.allowedFormats = policy.allowedFormats
 	}
 	if (policy.original !== undefined && policy.original !== null) {
 		if (typeof policy.original !== 'boolean') {
