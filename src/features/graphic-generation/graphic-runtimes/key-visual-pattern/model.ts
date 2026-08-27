@@ -77,7 +77,7 @@ function resolveOption<Id extends string>(
 export function toKeyVisualPatternInput(values: ControllerValues): KeyVisualPatternInput {
 	const base = KEY_VISUAL_PATTERN_DEFAULT_INPUT
 	const origin = values.origin
-	return keyVisualPatternInputSchema.parse({
+	const parsed = keyVisualPatternInputSchema.parse({
 		...base,
 		direction: resolveOption(values.direction, directionIds, base.direction),
 		viewpoint: resolveOption(values.viewpoint, viewpointIds, base.viewpoint),
@@ -93,6 +93,12 @@ export function toKeyVisualPatternInput(values: ControllerValues): KeyVisualPatt
 			? { x: (origin.x + 1) / 2, y: (origin.y + 1) / 2 }
 			: base.origin,
 	})
+
+	// 🔴 두 슬라이더가 서로를 모른다 — 「가장 얇은 라인」을 「가장 두꺼운 라인」 위로 올릴 수 있고,
+	//    그러면 lerp(max, min)이 뒤집혀 기준점이 가장 얇아진다(라벨이 거짓이 된다).
+	//    Definition의 min/max는 정적이라 UI에서 상한을 걸 수 없으므로 값 경계에서 얇은 쪽을 눌러 둔다.
+	//    두꺼운 쪽을 내리면 얇은 쪽이 따라 내려온다 — 어느 슬라이더를 움직여도 반응은 남는다.
+	return { ...parsed, minWeight: Math.min(parsed.minWeight, parsed.maxWeight) }
 }
 
 type Point = {
