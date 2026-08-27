@@ -46,6 +46,8 @@ export type ImageRuntimeFeature =
 			azimuths: readonly CameraAzimuth[]
 			elevations: readonly CameraElevation[]
 	  }
+	/** 사용자가 첨부한 이미지 한 장을 시드로 쓴다. 첨부는 저장하지 않으므로 세부 설정이 없다. */
+	| { type: 'reference-image' }
 
 export type ImageRuntimeManifest = StudioRuntimeManifest & {
 	supportedFeatures: readonly ImageRuntimeFeature[]
@@ -128,6 +130,7 @@ export function getImageRuntimeManifest(modelPreset: ImageModelPreset): ImageRun
 				},
 			},
 			{ type: 'camera-control', azimuths: CAMERA_AZIMUTHS, elevations: CAMERA_ELEVATIONS },
+			{ type: 'reference-image' },
 		],
 	}
 }

@@ -45,6 +45,13 @@ const featureBlocks: Block[] = [
 			{ name: 'elevations', type: 'json', label: '허용 높이' },
 		],
 	},
+	{
+		slug: 'referenceImage',
+		interfaceName: 'ImageProfileReferenceImageFeature',
+		labels: { singular: '참조 이미지 첨부', plural: '참조 이미지 첨부' },
+		// 첨부는 저장하지 않는 1회용이라 프로파일이 좁힐 세부 설정이 없다 — 켜고 끄는 것이 전부다.
+		fields: [],
+	},
 ]
 
 /** Image Profile이 Image Runtime Manifest 지원 범위 안에서 열 feature를 선택하는 필드다.

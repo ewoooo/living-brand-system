@@ -228,4 +228,30 @@ describe('POST /api/generate-image', () => {
 		expect(response.status).toBe(400)
 		expect(mocks.generateImages).not.toHaveBeenCalled()
 	})
+
+	it('첨부 참조는 주소 없이 그대로 넘긴다 — 본문에 이미 들어 있다', async () => {
+		const response = await POST(
+			imageRequest({
+				prompt: 'sample',
+				profileId: 5,
+				reference: { upload: 'data:image/png;base64,AAAA' },
+			}),
+		)
+
+		expect(response.status).toBe(200)
+		expect(mocks.generateImages).toHaveBeenCalledWith(
+			expect.objectContaining({
+				reference: { upload: 'data:image/png;base64,AAAA' },
+			}),
+		)
+	})
+
+	it('첨부만 보내고 프롬프트를 비우면 400으로 거부한다 — 첨부는 프롬프트를 물려주지 않는다', async () => {
+		const response = await POST(
+			imageRequest({ profileId: 5, reference: { upload: 'data:image/png;base64,AAAA' } }),
+		)
+
+		expect(response.status).toBe(400)
+		expect(mocks.generateImages).not.toHaveBeenCalled()
+	})
 })

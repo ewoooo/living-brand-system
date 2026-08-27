@@ -92,6 +92,7 @@ import * as migration_20260826_043937_sub_block from './20260826_043937_sub_bloc
 import * as migration_20260826_053723_chapter_collection from './20260826_053723_chapter_collection';
 import * as migration_20260826_063726_fix_orphan_versions from './20260826_063726_fix_orphan_versions';
 import * as migration_20260826_064938_topic_surface_and_block_width from './20260826_064938_topic_surface_and_block_width';
+import * as migration_20260827_085320_image_profile_reference_image_feature from './20260827_085320_image_profile_reference_image_feature';
 
 export const migrations = [
   {
@@ -562,6 +563,11 @@ export const migrations = [
   {
     up: migration_20260826_064938_topic_surface_and_block_width.up,
     down: migration_20260826_064938_topic_surface_and_block_width.down,
-    name: '20260826_064938_topic_surface_and_block_width'
+    name: '20260826_064938_topic_surface_and_block_width',
+  },
+  {
+    up: migration_20260827_085320_image_profile_reference_image_feature.up,
+    down: migration_20260827_085320_image_profile_reference_image_feature.down,
+    name: '20260827_085320_image_profile_reference_image_feature'
   },
 ];

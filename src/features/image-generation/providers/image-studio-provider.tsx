@@ -14,6 +14,10 @@ import {
 	type ImageStudioConfig,
 } from '@/features/image-generation/domain/image-studio-config'
 import { useImageGeneration } from '@/features/image-generation/hooks/use-image-generation'
+import {
+	IMAGE_REFERENCE_UPLOAD_MAX_BYTES,
+	IMAGE_REFERENCE_UPLOAD_MIME_TYPES,
+} from '@/features/image-generation/image-generation-limits'
 import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import type { ImageColorAdjustment } from '@/features/image-generation/runtime/image-colorize'
 import { fetchImageStudioConfigs } from '@/features/image-generation/services/list-image-studio-configs.client'
@@ -43,6 +47,9 @@ export function ImageStudioProvider({
 	const [profileId, setProfileId] = useState(initial.id)
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	const [angles, setAngles] = useState({ azimuthDeg: 0, elevationDeg: 0 })
+	// 첨부는 저장하지 않는다 — 이 상태가 사본의 전부이고, 새로고침하면 사라진다.
+	const [attachment, setAttachment] = useState<{ dataUri: string; name: string } | null>(null)
+	const [attachmentError, setAttachmentError] = useState<string | null>(null)
 	const { error, generate, loading, requested, selected, session, setSelected } =
 		useImageGeneration()
 
@@ -50,6 +57,7 @@ export function ImageStudioProvider({
 	const definitions = useMemo(() => getImageStudioControls(config), [config])
 	const colorDefinitions = useMemo(() => getImageColorAdjustmentControls(config), [config])
 	const supportsCamera = Boolean(getImageStudioFeature(config, 'camera-control'))
+	const supportsReference = Boolean(getImageStudioFeature(config, 'reference-image'))
 	const options = configs
 
 	const prompt = stringValue(values[definitions.prompt.id], definitions.prompt.defaultValue)
@@ -103,6 +111,32 @@ export function ImageStudioProvider({
 		[config],
 	)
 
+	// 서버가 어차피 다시 판정하지만, 여기서 걸러야 10MB를 실어 보내고 400을 받는 일이 없다.
+	const attachReference = useCallback((file: File) => {
+		if (!(IMAGE_REFERENCE_UPLOAD_MIME_TYPES as readonly string[]).includes(file.type)) {
+			setAttachmentError('JPG, PNG, WebP 이미지만 첨부할 수 있어요.')
+			return
+		}
+		if (file.size > IMAGE_REFERENCE_UPLOAD_MAX_BYTES) {
+			setAttachmentError(
+				`첨부 이미지는 ${Math.floor(IMAGE_REFERENCE_UPLOAD_MAX_BYTES / 1_000_000)}MB까지 올릴 수 있어요.`,
+			)
+			return
+		}
+		const reader = new FileReader()
+		reader.onload = () => {
+			setAttachmentError(null)
+			setAttachment({ dataUri: String(reader.result), name: file.name })
+		}
+		reader.onerror = () => setAttachmentError('이미지를 읽지 못했어요.')
+		reader.readAsDataURL(file)
+	}, [])
+
+	const clearReference = useCallback(() => {
+		setAttachment(null)
+		setAttachmentError(null)
+	}, [])
+
 	const selectProfile = useCallback(
 		(nextProfileId: number) => {
 			const next = (browse.data ?? configs).find((item) => item.id === nextProfileId)
@@ -119,9 +153,11 @@ export function ImageStudioProvider({
 	// 참조는 한 번 정해지면 고정된다 — 조정본을 다시 참조로 삼지 않아 세대 누적 열화가 없다.
 	// 고정된 참조도 프로파일 일치는 지켜야 한다 — 서버가 시드를 scenario로 조회하므로
 	// 프로파일을 바꾼 뒤의 재생성은 언제나 InvalidSeedImageError가 된다.
+	// 🔑 저장된 생성 결과로 고정된 참조만 계속 붙든다. 첨부로 만든 세션은 id가 없어 서버가 다시
+	//    조회할 수 없으므로, 그 세션에서는 사용자가 고른 결과 카드가 다음 참조가 된다.
 	const referenceImage = useMemo(() => {
 		const pinned = session?.reference
-		if (pinned) return pinned.profileId === config.id ? pinned : null
+		if (pinned?.generatedImageId) return pinned.profileId === config.id ? pinned : null
 		const picked = selected === null ? undefined : items[selected]
 		return picked?.generatedImageId && picked.profileId === config.id ? picked : null
 	}, [config.id, items, selected, session])
@@ -145,13 +181,22 @@ export function ImageStudioProvider({
 				setResolution: (resolution) => update(definitions.resolution.id, resolution),
 				run: () => {
 					if (!canRun) return
-					void generate({
-						aspectRatio: ratioValue as ImageAspectRatio,
-						count: Number(batchValue),
-						imageSize: resolutionValue as ImageOutputSize,
-						profileId: config.id,
-						prompt,
-					})
+					// 계약이 첨부를 열지 않은 프로파일에서는 들고 있던 첨부도 보내지 않는다.
+					const upload = supportsReference ? attachment : null
+					void generate(
+						{
+							aspectRatio: ratioValue as ImageAspectRatio,
+							count: Number(batchValue),
+							imageSize: resolutionValue as ImageOutputSize,
+							profileId: config.id,
+							prompt,
+							...(upload ? { reference: { upload: upload.dataUri } } : {}),
+						},
+						// 첨부도 참조라서 그리드 0번을 차지한다 — 무엇을 보고 만들었는지가 결과 옆에 남는다.
+						upload
+							? { src: upload.dataUri, generatedImageId: null, profileId: config.id }
+							: null,
+					)
 				},
 				canRun,
 				busy: loading,
@@ -167,6 +212,13 @@ export function ImageStudioProvider({
 						update(colorDefinitions.background.id, patch.background)
 					}
 				},
+			},
+			reference: {
+				value: supportsReference ? (attachment?.dataUri ?? null) : null,
+				name: supportsReference ? (attachment?.name ?? null) : null,
+				error: attachmentError,
+				attach: attachReference,
+				clear: clearReference,
 			},
 			camera: {
 				...angles,
@@ -203,11 +255,15 @@ export function ImageStudioProvider({
 		}),
 		[
 			angles,
+			attachReference,
+			attachment,
+			attachmentError,
 			batchValue,
 			bindings,
 			browse,
 			cameraSeed,
 			canRun,
+			clearReference,
 			colorDefinitions,
 			colorValue,
 			config,
@@ -228,6 +284,7 @@ export function ImageStudioProvider({
 			session,
 			setSelected,
 			supportsCamera,
+			supportsReference,
 			update,
 			values,
 		],

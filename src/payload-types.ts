@@ -1500,7 +1500,9 @@ export interface ImageProfile {
         id?: string | null;
       }[]
     | null;
-  features?: (ImageProfileColorAdjustmentFeature | ImageProfileCameraControlFeature)[] | null;
+  features?:
+    | (ImageProfileColorAdjustmentFeature | ImageProfileCameraControlFeature | ImageProfileReferenceImageFeature)[]
+    | null;
   controllerRestrictions?:
     | {
         [k: string]: unknown;
@@ -1594,6 +1596,15 @@ export interface ImageProfileCameraControlFeature {
   id?: string | null;
   blockName?: string | null;
   blockType: 'cameraControl';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageProfileReferenceImageFeature".
+ */
+export interface ImageProfileReferenceImageFeature {
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'referenceImage';
 }
 /**
  * 등록된 그래픽 runtime의 기본 Controller 계약을 좁혀 기본값·선택지·범위·사용 상태를 관리합니다.
@@ -3175,6 +3186,7 @@ export interface ImageProfilesSelect<T extends boolean = true> {
     | {
         colorAdjustment?: T | ImageProfileColorAdjustmentFeatureSelect<T>;
         cameraControl?: T | ImageProfileCameraControlFeatureSelect<T>;
+        referenceImage?: T | ImageProfileReferenceImageFeatureSelect<T>;
       };
   controllerRestrictions?: T;
   controllerPresentation?: T;
@@ -3217,6 +3229,14 @@ export interface ImageProfileColorAdjustmentFeatureSelect<T extends boolean = tr
 export interface ImageProfileCameraControlFeatureSelect<T extends boolean = true> {
   azimuths?: T;
   elevations?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageProfileReferenceImageFeature_select".
+ */
+export interface ImageProfileReferenceImageFeatureSelect<T extends boolean = true> {
   id?: T;
   blockName?: T;
 }
