@@ -23,6 +23,9 @@ Payload collection REST, GraphQL, 인증 endpoint는 Payload가 소유하므로 
 | Guideline | `GET` | `/api/guideline-documents/{documentId}/preview` | Manager/Admin |
 | Studio | `POST` | `/api/studio-exports/print/{format}` | 로그인 사용자, 요청 횟수 제한 |
 | Create | `POST` | `/api/templates/import-figma-html` | Manager/Admin |
+| Studio | `POST` | `/api/studio/preview` | Manager/Admin |
+| Guideline | `POST` | `/api/ci-outline` | same-origin |
+| MCP | `POST` | `/api/mcp-key` | 로그인 사용자 |
 
 독립 생성 명령은 `/api/generate-*`를 사용합니다.
 저장된 리소스의 후속 동작은 리소스 식별자를 URL path로 전달합니다.

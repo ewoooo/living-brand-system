@@ -37,13 +37,13 @@ Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 
 
 | 토큰군 | 의미 | 소유 파일(SoT) |
 | --- | --- | --- |
-| color 원시값 | `:root`(라이트), `.dark`(다크)의 원시 색 정의 | `src/app/(frontend)/theme.css`, `theme.css` |
-| color 유틸 매핑 | 원시값 → `@theme inline`의 `--color-*` 유틸 토큰 | `theme.css` |
-| inverted | 반전 표면과 그 전경의 짝 `--inverted`/`--inverted-foreground` | `theme.css` |
+| color 원시값 | `:root`(라이트), `.dark`(다크)의 원시 색 정의 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
+| color 유틸 매핑 | 원시값 → `@theme inline`의 `--color-*` 유틸 토큰 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
+| inverted | 반전 표면과 그 전경의 짝 `--inverted`/`--inverted-foreground` | `src/app/(frontend)/theme.css` |
 | 상태색 | 판정·상태 표시 전용 `--success`/`--info`/`--warning`(실패는 기존 `--destructive`, 해당 없음은 `--muted`). Admin 확장은 같은 이름을 Payload 테마에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
 | highlight | 강조 배경과 전경 토큰, `bg-highlight` 유틸. Frontend는 gradient, Admin은 Payload success 색에 매핑 | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
-| radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl/2xl/3xl` 6단 파생(`lg`는 뿌리값, 나머지는 calc) | `theme.css`, `theme.css` |
-| 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(**미정 — Pretendard로 폴백.** 토큰과 `.font-title`은 자리를 지키고 있으니 서체가 정해지면 값만 바꿉니다), `HD`(CI 락업 워드마크 전용 @font-face) | `theme.css` |
+| radius | `--radius` 뿌리 1개에서 `--radius-sm/md/lg/xl/2xl/3xl` 6단 파생(`lg`는 뿌리값, 나머지는 calc) | `src/app/(frontend)/theme.css`, `src/app/(payload)/admin-tailwind.css` |
+| 폰트 패밀리 | `--font-body`(Pretendard), `--font-title`(**미정 — Pretendard로 폴백.** 토큰과 `.font-title`은 자리를 지키고 있으니 서체가 정해지면 값만 바꿉니다), `HD`(CI 락업 워드마크 전용 @font-face) | `src/app/(frontend)/theme.css` |
 | 루트 크기 | 모든 화면에서 고정된 16px `rem` 기준 크기 | `src/app/(frontend)/styles.css`의 `html` |
 | 타이포 리듬 | `.typeset` 블록의 크기·행간·흐름(shadcn/typeset) | `src/app/(frontend)/typeset.css` |
 | base body / scrollbar / import 순서 | `body` 기본, `scrollbar-none` 유틸, CSS `@import` 체인 | `src/app/(frontend)/styles.css` |
@@ -126,10 +126,10 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|or
 
 | 사실 | 근거 |
 | --- | --- |
-| `--font-body`(Pretendard)는 `body`에 배선되어 기본 폰트로 동작 | `theme.css`, `styles.css` |
-| `--font-title`은 값이 정해지지 않아 Pretendard로 폴백하며, `.font-title` 클래스는 정의되어 있으나 상위 guideline 헤더에 미배선 | `theme.css`, `theme.css` |
-| 그래서 `GuidelineHeader`의 `ChapterHeader`/`SectionHeader` 등은 `font-title` 없이 렌더되어 기본 body 폰트로 폴백 | `guideline-header.tsx:51-73` |
-| `--font-heading`/`--font-mono`는 어디에도 정의되지 않아 `.typeset`의 `code`/`pre`는 브라우저 monospace로 폴백 | `typeset.css` (참조만, 정의 없음) |
+| `--font-body`(Pretendard)는 `body`에 배선되어 기본 폰트로 동작 | `src/app/(frontend)/theme.css`, `src/app/(frontend)/styles.css` |
+| `--font-title`은 값이 정해지지 않아 Pretendard로 폴백하며, `.font-title` 클래스는 정의되어 있으나 상위 guideline 헤더에 미배선 | `src/app/(frontend)/theme.css` |
+| 그래서 `GuidelineHeader`의 `ChapterHeader`/`SectionHeader` 등은 `font-title` 없이 렌더되어 기본 body 폰트로 폴백 | `guideline-header.tsx` |
+| `--font-heading`/`--font-mono`는 어디에도 정의되지 않아 `.typeset`의 `code`/`pre`는 브라우저 monospace로 폴백 | `src/app/(frontend)/typeset.css` (참조만, 정의 없음) |
 
 `font-title`을 헤더에 붙이거나 `--font-mono`를 정의하는 것은 파운데이션 변경(09)이지 컴포넌트 작업이 아닙니다. 상세한 텍스트 저작 규칙은 `docs/10`이 소유합니다.
 
@@ -142,9 +142,9 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 | 표면색 껍질 | `GuidelineBlockFrame`(`<section>`) | 전체 폭 배경/전경(`normal`/`secondary`/`inverted`) |
 | 폭 프레임 | `ContentFrame` | 최대 폭과 가로 여백(`max-w-[1540px] px-4 md:px-8`) |
 
-`GuidelineBlockFrame`(`guideline-block-frame.tsx:24-46`)은 표면색만 정하고 즉시 `ContentFrame`을 감쌉니다. 폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx:22`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
+`GuidelineBlockFrame`(`guideline-block-frame.tsx`)은 표면색만 정하고 즉시 `ContentFrame`을 감쌉니다. 폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
 
-세로 리듬은 프레임의 self-padding(`content-frame.tsx:21`의 `py-8`)과 스택 컨테이너의 `gap`이 함께 담당합니다. 요소 사이 실제 간격은 `패딩 + gap + 패딩`의 합입니다. "블록마다 마진을 흩뿌리지 않는다"의 뜻은 *바꾸지 않는다*가 아니라 *요소마다 제각각 다르게 주지 않는다*이며, 다음 세 불변식으로 리듬을 통일합니다:
+세로 리듬은 프레임의 self-padding(`content-frame.tsx`의 `py-8`)과 스택 컨테이너의 `gap`이 함께 담당합니다. 요소 사이 실제 간격은 `패딩 + gap + 패딩`의 합입니다. "블록마다 마진을 흩뿌리지 않는다"의 뜻은 *바꾸지 않는다*가 아니라 *요소마다 제각각 다르게 주지 않는다*이며, 다음 세 불변식으로 리듬을 통일합니다:
 
 1. 한 요소의 상하 패딩은 대칭이다(`py-*` 하나로).
 2. 모든 요소의 패딩은 동일하다(프레임 한 곳에서 소유).
@@ -152,7 +152,7 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 
 값을 바꿀 때도 이 세 불변식만 유지하면 됩니다. 개별 블록이 자기 패딩·마진을 오버라이드하는 것은 이 통일을 깨므로 지양합니다.
 
-최상위 헤더 계층은 `GuidelineHeader`가 `variant`(`onboard`/`chapter`/`section`/`page`/`block`)로 분기해 소유합니다(`guideline-header.tsx:10-29`). page 헤더는 `GuidelinePageHeading`으로 분리되어 있습니다. 앱 셸의 `main` 랜드마크는 layout이 아니라 각 라우트 본문이 소유합니다(`layout.tsx`).
+최상위 헤더 계층은 `GuidelineHeader`가 `variant`(`onboard`/`chapter`/`section`/`page`/`block`)로 분기해 소유합니다(`guideline-header.tsx`). page 헤더는 `GuidelinePageHeading`으로 분리되어 있습니다. 앱 셸의 `main` 랜드마크는 layout이 아니라 각 라우트 본문이 소유합니다(`layout.tsx`).
 
 ### 가이드라인 계층 이름은 Figma 정본과 다릅니다
 

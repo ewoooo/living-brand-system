@@ -389,7 +389,7 @@ const MAIN: Swatch[] = [
 
 ## 8. Payload Admin 표면 예외
 
-`src/components/admin`은 Payload Admin 런타임 위에서 돌므로 아래 항목만 계약과 다릅니다. 여기 명시되지 않은 나머지(재사용 사다리, 시맨틱 토큰, `cn`, named export, kebab-case, carbon 아이콘, 자기 검증)는 그대로 적용합니다. 원형은 `src/components/admin/template/`(shadcn 재구축 그룹)입니다.
+`src/components/admin`은 Payload Admin 런타임 위에서 돌므로 아래 항목만 계약과 다릅니다. 여기 명시되지 않은 나머지(재사용 사다리, 시맨틱 토큰, `cn`, named export, kebab-case, carbon 아이콘, 자기 검증)는 그대로 적용합니다. 원형은 `src/components/admin/templates/`(shadcn 재구축 그룹)입니다.
 
 - **`use client`**: Payload form 컨텍스트(`useField`/`useForm`/`useFormFields`)에 접속하는 필드 컴포넌트는 무조건 client입니다. "조건부" 규칙의 예외가 아니라 client 의존성 기준을 충족하는 경우입니다. RSC로 남길 수 있는 것은 폼 밖 조회 화면(`DashboardSummary` 등)뿐입니다.
 - **`@payloadcms/ui` 유지 목록**: 동작을 소유한 컴포넌트는 shadcn으로 갈아끼우지 않습니다 — `RelationshipField`(관계 검색·페이지네이션), `PublishButton`(저장 파이프라인), `Gutter`(admin 폭), `Popup`(admin 포털·z-index), `toast`. 그 밖의 표현은 `src/components/ui` 프리미티브를 씁니다(`template-layer-editors.tsx` 원형).
