@@ -72,8 +72,9 @@ export function useTemplateExport({
 	)
 	const [scale, setScale] = useState(1)
 	// 🔴 인쇄물은 되돌릴 수 없다 — 벡터로 못 옮긴 것을 화면이 말할 수 있게 남긴다.
-	const [vectorDiagnostics, setVectorDiagnostics] =
-		useState<TemplateVectorArtifactResult['diagnostics'] | null>(null)
+	const [vectorDiagnostics, setVectorDiagnostics] = useState<
+		TemplateVectorArtifactResult['diagnostics'] | null
+	>(null)
 	const effectivePpi = ppi && capability.print?.ppi.includes(ppi) ? ppi : capability.print?.ppi[0]
 	const effectiveFps =
 		fps && capability.video?.mp4.fps.includes(fps) ? fps : capability.video?.mp4.fps[0]

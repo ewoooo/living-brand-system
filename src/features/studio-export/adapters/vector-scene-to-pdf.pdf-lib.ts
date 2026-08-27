@@ -1,5 +1,6 @@
-import { PDFDocument, type PDFPage, rgb } from 'pdf-lib'
+import { type Color, cmyk, PDFDocument, PDFName, type PDFPage, PDFString, rgb } from 'pdf-lib'
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
+import type { CmykColor } from './rgb-to-cmyk.sharp'
 
 /**
  * Vector Scene을 단일 페이지 벡터 PDF로 직렬화한다. 인쇄용 내보내기의 최종 어댑터다.
@@ -10,21 +11,78 @@ import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/stu
  *    뒤집히므로(pdf-lib의 `drawSvgPath`가 이미 y를 아래로 읽는다) 프리미티브마다 명시적으로 옮긴다.
  * 🔴 pdf-lib은 그라디언트·그림자·블러를 그리지 못한다. 그런 노드는 씬에 오기 전에 래스터로 바뀌어
  *    `image`로 들어와야 한다(워커의 `unsupported`가 그 목록이다).
+ * 🔑 `cmyk`를 주면 도형 색을 잉크로 찍고 PDF/X OutputIntent를 붙인다 — 래스터 인쇄 경로와 같은
+ *    ICC를 타야 같은 판의 이미지와 도형이 같은 색으로 나온다.
  */
-export async function vectorSceneToPdf(scene: VectorScene): Promise<Buffer> {
+export async function vectorSceneToPdf(
+	scene: VectorScene,
+	print?: {
+		colors: ReadonlyMap<string, CmykColor>
+		iccProfile: Buffer
+		iccProfileName: string
+	},
+): Promise<Buffer> {
 	const pdf = await PDFDocument.create()
 	const page = pdf.addPage([scene.width, scene.height])
+	if (print) attachOutputIntent(pdf, print.iccProfile, print.iccProfileName)
+	const color = (value: string | undefined) => resolveColor(value, print?.colors)
 
 	page.drawRectangle({
-		color: parseColor(scene.background) ?? rgb(1, 1, 1),
+		color: color(scene.background) ?? rgb(1, 1, 1),
 		height: scene.height,
 		width: scene.width,
 		x: 0,
 		y: 0,
 	})
-	for (const primitive of scene.primitives) await draw(pdf, page, primitive, scene.height)
+	for (const primitive of scene.primitives) await draw(pdf, page, primitive, scene.height, color)
 
 	return Buffer.from(await pdf.save())
+}
+
+/** 씬에서 잉크로 바꿔야 하는 색을 모은다 — 호출부가 이 목록만 ICC 변환하면 된다. */
+export function collectSceneColors(scene: VectorScene): string[] {
+	const collect = (primitives: readonly VectorPrimitive[]): string[] =>
+		primitives.flatMap((primitive) => {
+			if (primitive.kind === 'group') return collect(primitive.children)
+			return [
+				'fill' in primitive ? primitive.fill : undefined,
+				'stroke' in primitive ? primitive.stroke : undefined,
+			].filter((value): value is string => typeof value === 'string')
+		})
+	return [scene.background, ...collect(scene.primitives)]
+}
+
+/** PDF/X가 요구하는 출력 의도. `cmyk-jpeg-to-pdf`와 같은 형태다. */
+function attachOutputIntent(pdf: PDFDocument, iccProfile: Buffer, iccProfileName: string) {
+	const profile = pdf.context.flateStream(Uint8Array.from(iccProfile), {
+		Alternate: 'DeviceCMYK',
+		N: 4,
+	})
+	const profileRef = pdf.context.register(profile)
+	const outputIntent = pdf.context.obj({
+		Type: 'OutputIntent',
+		S: 'GTS_PDFX',
+		DestOutputProfile: profileRef,
+		Info: PDFString.of(iccProfileName),
+		OutputConditionIdentifier: PDFString.of(iccProfileName),
+		RegistryName: PDFString.of('https://registry.color.org'),
+	})
+	pdf.catalog.set(
+		PDFName.of('OutputIntents'),
+		pdf.context.obj([pdf.context.register(outputIntent)]),
+	)
+}
+
+type ColorResolver = (value: string | undefined) => Color | undefined
+
+function resolveColor(
+	value: string | undefined,
+	colors: ReadonlyMap<string, CmykColor> | undefined,
+) {
+	if (!value) return undefined
+	const ink = colors?.get(value.toLowerCase())
+	if (ink) return cmyk(ink.c, ink.m, ink.y, ink.k)
+	return parseColor(value)
 }
 
 async function draw(
@@ -32,6 +90,7 @@ async function draw(
 	page: PDFPage,
 	primitive: VectorPrimitive,
 	sceneHeight: number,
+	color: ColorResolver,
 ): Promise<void> {
 	/** 씬 좌표(위에서 아래)를 PDF 좌표(아래에서 위)로. `boxHeight`는 상자 아래 모서리를 잡을 때 쓴다. */
 	const flip = (y: number, boxHeight = 0) => sceneHeight - y - boxHeight
@@ -39,14 +98,14 @@ async function draw(
 	switch (primitive.kind) {
 		case 'group': {
 			// 그룹은 인쇄물에서 의미가 없다 — 자식만 순서대로 그린다(레이어 구조는 SVG가 갖는다).
-			for (const child of primitive.children) await draw(pdf, page, child, sceneHeight)
+			for (const child of primitive.children) await draw(pdf, page, child, sceneHeight, color)
 			return
 		}
 		case 'path':
 			// drawSvgPath는 주어진 점을 좌상단으로 보고 path의 y를 아래로 읽는다.
 			page.drawSvgPath(primitive.d, {
-				color: primitive.fill ? parseColor(primitive.fill) : undefined,
-				...(primitive.stroke ? { borderColor: parseColor(primitive.stroke) } : {}),
+				color: color(primitive.fill),
+				...(primitive.stroke ? { borderColor: color(primitive.stroke) } : {}),
 				...(primitive.strokeWidth === undefined
 					? {}
 					: { borderWidth: primitive.strokeWidth }),
@@ -75,15 +134,16 @@ async function draw(
 						...(primitive.opacity === undefined ? {} : { opacity: primitive.opacity }),
 					},
 					sceneHeight,
+					color,
 				)
 			}
 			page.drawRectangle({
-				color: primitive.fill ? parseColor(primitive.fill) : undefined,
+				color: color(primitive.fill),
 				height: primitive.height,
 				width: primitive.width,
 				x: primitive.x,
 				y: flip(primitive.y, primitive.height),
-				...(primitive.stroke ? { borderColor: parseColor(primitive.stroke) } : {}),
+				...(primitive.stroke ? { borderColor: color(primitive.stroke) } : {}),
 				...(primitive.strokeWidth === undefined
 					? {}
 					: { borderWidth: primitive.strokeWidth }),
@@ -105,7 +165,7 @@ async function draw(
 		}
 		case 'line':
 			page.drawLine({
-				color: parseColor(primitive.stroke),
+				color: color(primitive.stroke),
 				end: { x: primitive.x2, y: flip(primitive.y2) },
 				start: { x: primitive.x1, y: flip(primitive.y1) },
 				thickness: primitive.strokeWidth,
@@ -113,7 +173,7 @@ async function draw(
 			return
 		case 'circle':
 			page.drawCircle({
-				color: parseColor(primitive.fill),
+				color: color(primitive.fill),
 				size: primitive.radius,
 				x: primitive.cx,
 				y: flip(primitive.cy),
