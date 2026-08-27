@@ -57,6 +57,57 @@ describe('useTemplateExport', () => {
 		)
 	})
 
+	it('벡터가 있으면 PDF를 벡터 경로로 보내고 못 옮긴 것을 경고로 남긴다', async () => {
+		const vector = {
+			artifact: {
+				kind: 'vector',
+				source: { width: 600, height: 300, background: '#ffffff', primitives: [] },
+			},
+			diagnostics: {
+				unsupported: [{ nodeId: 'hero', reason: 'box-shadow' }],
+				notOutlined: [
+					{ text: 'Bold', fontFamily: 'Pretendard', reason: 'variable-weight' },
+				],
+			},
+		} as const
+		const { result } = renderHook(() =>
+			useTemplateExport({
+				artifact: () =>
+					createTemplateRasterArtifact({
+						html: '<div>card</div>',
+						width: 600,
+						height: 300,
+					}),
+				vectorArtifact: async () => vector,
+				capability: {
+					formats: ['pdf'],
+					colorProfiles: { cmyk: ['cgats21-crpc6'] },
+					print: { ppi: [300] },
+				},
+				metadata: {
+					fileName: 'card',
+					width: 600,
+					height: 300,
+					maxScale: 1,
+					controller: { groups: [], values: {} },
+				},
+			}),
+		)
+
+		act(() => result.current.run())
+		await waitFor(() => expect(executeArtifactExport).toHaveBeenCalledOnce())
+		// 판 전체를 굽는 래스터 PDF가 아니라 도형을 싣는 벡터 PDF로 가야 한다.
+		expect(executeArtifactExport).toHaveBeenCalledWith(
+			expect.objectContaining({
+				artifact: vector.artifact,
+				request: expect.objectContaining({ artifact: 'vector', format: 'pdf' }),
+			}),
+		)
+		await waitFor(() => expect(result.current.vectorWarnings).toHaveLength(2))
+		expect(result.current.vectorWarnings[0]).toContain('그림자')
+		expect(result.current.vectorWarnings[1]).toContain('Pretendard')
+	})
+
 	const MP4_CAPABILITY = {
 		formats: ['mp4'],
 		video: {

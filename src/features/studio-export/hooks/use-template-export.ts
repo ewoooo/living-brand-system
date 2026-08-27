@@ -219,6 +219,7 @@ export function useTemplateExport({
 		error: output.error,
 		/** 마지막 벡터 내보내기에서 옮기지 못한 것. 없으면 null이다. */
 		vectorDiagnostics,
+		vectorWarnings: describeVectorDiagnostics(vectorDiagnostics),
 		formats,
 		format,
 		setFormat: (next: StudioOutputFormat) => {
@@ -259,4 +260,35 @@ export function useTemplateExport({
 		},
 		runFormat,
 	}
+}
+
+/**
+ * 진단을 사람이 읽는 한 줄로 옮긴다. 노드 id를 그대로 보여 주지 않는다 — 화면에서 그 id로
+ * 무엇을 찾을 수 없고, 알아야 할 것은 「무엇이 원본과 달라졌나」다.
+ */
+function describeVectorDiagnostics(
+	diagnostics: TemplateVectorArtifactResult['diagnostics'] | null,
+): string[] {
+	if (!diagnostics) return []
+	const warnings: string[] = []
+
+	const effects = new Set(diagnostics.unsupported.map(({ reason }) => reason))
+	const effectLabels: Record<string, string> = {
+		'backdrop-filter': '배경 흐림',
+		'blend-mode': '혼합 모드',
+		'box-shadow': '그림자',
+		filter: '흐림 효과',
+		gradient: '그라디언트',
+		mask: '마스크',
+	}
+	const named = [...effects].map((reason) => effectLabels[reason] ?? reason)
+	if (named.length > 0) {
+		warnings.push(`벡터로 옮기지 못한 효과가 있습니다: ${named.join(' · ')}`)
+	}
+
+	const fonts = new Set(diagnostics.notOutlined.map(({ fontFamily }) => fontFamily))
+	if (fonts.size > 0) {
+		warnings.push(`글자를 윤곽선으로 바꾸지 못해 서체가 필요합니다: ${[...fonts].join(' · ')}`)
+	}
+	return warnings
 }
