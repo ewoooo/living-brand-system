@@ -104,8 +104,21 @@ export function useTemplateExport({
 	const effectiveScale = scaleApplies ? selectedScale : 1
 	const createRequest = useCallback(
 		(candidate: StudioOutputFormat | null): TemplateExportRequest | null => {
-			if (candidate === 'svg') {
-				return metadata && vectorArtifact
+			// 🔑 PDF는 벡터가 있으면 벡터로 간다 — 판 전체를 굽는 래스터 PDF보다 글자·도형이 선명하고,
+			//    같은 CMYK ICC를 타므로 색이 달라지지 않는다. 벡터가 없는 스튜디오만 래스터로 남는다.
+			if (
+				candidate &&
+				vectorArtifact &&
+				metadata &&
+				(candidate === 'svg' || candidate === 'pdf')
+			) {
+				const options = {
+					width: metadata.width,
+					height: metadata.height,
+					// 글자는 굽기 단계가 이미 윤곽선으로 바꾼다 — 여기서 다시 요청하지 않는다.
+					outlineText: false,
+				}
+				return candidate === 'svg'
 					? {
 							artifact: 'vector',
 							format: 'svg',
@@ -113,14 +126,17 @@ export function useTemplateExport({
 								space: 'rgb',
 								icc: capability.colorProfiles?.rgb?.[0] ?? 'srgb',
 							},
-							options: {
-								width: metadata.width,
-								height: metadata.height,
-								// 글자는 굽기 단계가 이미 윤곽선으로 바꾼다 — 여기서 다시 요청하지 않는다.
-								outlineText: false,
-							},
+							options,
 						}
-					: null
+					: {
+							artifact: 'vector',
+							format: 'pdf',
+							colorProfile: {
+								space: 'cmyk',
+								icc: capability.colorProfiles?.cmyk?.[0] ?? 'cgats21-crpc6',
+							},
+							options,
+						}
 			}
 			const request =
 				candidate && metadata
