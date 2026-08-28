@@ -11,6 +11,7 @@ import type {
 } from '@/features/template-customization/domain/template-studio-config'
 import type {
 	TemplateRasterArtifact,
+	TemplateVectorArtifactResult,
 	TemplateVideoArtifactProducer,
 } from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
@@ -171,6 +172,8 @@ export type TemplateStudioValue = {
 	canvas: {
 		html: string
 		artifact: () => TemplateRasterArtifact
+		/** 인쇄용 벡터. 같은 판을 굽지 않고 재서 도형으로 옮긴다(진단이 함께 나온다). */
+		vectorArtifact: () => Promise<TemplateVectorArtifactResult>
 		/** 배경 Graphic이 켜져 있을 때만 시간축이 있다 — 그 밖에는 MP4도 정지 화면이 정답이다. */
 		videoArtifact: TemplateVideoArtifactProducer | null
 		previewRef: RefObject<HTMLDivElement | null>

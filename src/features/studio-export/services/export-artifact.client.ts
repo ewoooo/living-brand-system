@@ -55,7 +55,9 @@ export async function executeArtifactExport({
 			throw new Error('지원하지 않는 Raster export 형식입니다.')
 		}
 		case 'vector':
-			return exportVectorArtifactAsSvg(fileName, artifact as VectorSceneArtifact)
+			return request.format === 'pdf'
+				? exportVectorArtifactAsPrintPdf(fileName, artifact as VectorSceneArtifact)
+				: exportVectorArtifactAsSvg(fileName, artifact as VectorSceneArtifact)
 		case 'video':
 			return exportVideoArtifactAsMp4(
 				fileName,
@@ -74,6 +76,27 @@ export function exportVectorArtifactAsSvg(
 		data: new Blob([vectorSceneToSvg(artifact)], { type: 'image/svg+xml' }),
 		filename: `${fileName}.svg`,
 		mimeType: 'image/svg+xml',
+	}
+}
+
+/**
+ * Vector Artifact를 인쇄용 CMYK PDF로 만든다.
+ * 🔴 변환은 서버가 한다 — ICC 색 변환(sharp)이 서버 전용이고 pdf-lib을 클라이언트 번들에 넣지 않는다.
+ */
+export async function exportVectorArtifactAsPrintPdf(
+	fileName: string,
+	artifact: VectorSceneArtifact,
+): Promise<ExportResult> {
+	const response = await fetch('/api/studio-exports/vector-print', {
+		body: JSON.stringify({ scene: artifact.source }),
+		headers: { 'Content-Type': 'application/json' },
+		method: 'POST',
+	})
+	if (!response.ok) throw new Error('인쇄용 PDF를 만들지 못했습니다.')
+	return {
+		data: await response.blob(),
+		filename: `${fileName}.pdf`,
+		mimeType: 'application/pdf',
 	}
 }
 

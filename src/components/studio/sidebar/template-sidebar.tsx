@@ -179,6 +179,7 @@ export function TemplateSidebar({
 							busy={exporting.busy}
 							disabled={!exporting.canExport}
 							error={exporting.error}
+							warnings={exporting.vectorWarnings}
 							onExport={exporting.run}
 						/>
 					</>

@@ -67,6 +67,13 @@ export type ExportRequest =
 			colorProfile: RgbColorProfile
 			options: { width: number; height: number; outlineText: boolean }
 	  }
+	// 인쇄용 벡터 PDF. 판 전체를 굽는 래스터 PDF와 달리 도형과 윤곽선을 그대로 싣는다.
+	| {
+			artifact: 'vector'
+			format: 'pdf'
+			colorProfile: CmykColorProfile
+			options: { width: number; height: number; outlineText: boolean }
+	  }
 	| { artifact: 'video'; format: 'mp4'; options: VideoExportSpec }
 
 export type ExportResult = {
