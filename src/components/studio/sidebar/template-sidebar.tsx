@@ -9,8 +9,7 @@ import {
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import {
 	ExportAction,
-	PrintControls,
-	ScaleControls,
+	SizingControls,
 	VideoControls,
 } from '@/components/studio/shared/output-controls'
 import { PreviewRefreshSlot } from '@/components/studio/shared/preview-refresh-slot'
@@ -130,19 +129,19 @@ export function TemplateSidebar({
 									Setting
 								</span>
 							</div>
-							<Controller.Row label="Size" readonly>
-								<span className="text-sm text-muted-foreground">
-									{exporting.outputSize?.width ?? canvas.width} ×{' '}
-									{exporting.outputSize?.height ?? canvas.height}px
-								</span>
-							</Controller.Row>
-							{exporting.scaleApplies && (
-								<ScaleControls
-									scale={exporting.scale}
-									options={exporting.scaleOptions}
-									onChange={exporting.setScale}
-								/>
-							)}
+							{/* 🔑 판의 종횡비는 Figma가 정한 값으로 고정이다 — 한 변을 고치면 다른 변이 따라온다. */}
+							<SizingControls
+								value={
+									exporting.size ?? { width: canvas.width, height: canvas.height }
+								}
+								maxWidth={exporting.maxWidth}
+								maxHeight={exporting.maxHeight}
+								ppi={exporting.ppi}
+								ppiOptions={exporting.ppiOptions}
+								lockAspect
+								onChange={exporting.setSize}
+								onPpiChange={exporting.setPpi}
+							/>
 							<Controller.Row label="Format">
 								<Controller.Select
 									options={exporting.formats.map((candidate) => ({
@@ -155,15 +154,6 @@ export function TemplateSidebar({
 									}
 								/>
 							</Controller.Row>
-							{(exporting.format === 'tiff' || exporting.format === 'pdf') &&
-								exporting.ppi &&
-								config.output.print && (
-									<PrintControls
-										ppi={exporting.ppi}
-										options={config.output.print.ppi}
-										onChange={exporting.setPpi}
-									/>
-								)}
 							{video && exporting.fps && (
 								<VideoControls
 									fps={exporting.fps}

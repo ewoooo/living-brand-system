@@ -45,8 +45,13 @@ export function createRasterExportRequest(
 				icc: capability.colorProfiles?.cmyk?.[0] ?? DEFAULT_CMYK_ICC_PROFILE,
 			}
 			return format === 'tiff'
-				? { artifact: 'raster', format, colorProfile, options: { ppi, compression: 'lzw' } }
-				: { artifact: 'raster', format, colorProfile, options: { ppi, bleedMm: 0 } }
+				? {
+						artifact: 'raster',
+						format,
+						colorProfile,
+						options: { ppi, compression: 'lzw', scale },
+					}
+				: { artifact: 'raster', format, colorProfile, options: { ppi, bleedMm: 0, scale } }
 		}
 		case 'mp4': {
 			const video = capability.video?.mp4

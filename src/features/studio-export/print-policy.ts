@@ -78,6 +78,23 @@ export function pixelsToPdfPoints(pixels: number, ppi: PrintPpi): number {
 	return (pixels * PDF_POINTS_PER_INCH) / ppi
 }
 
+/**
+ * 종횡비를 지킨 채 래스터 인쇄 한도 안에 들어가는 가장 큰 판.
+ * 변 한도(`MAX_PRINT_SIDE_PIXELS`)와 총 픽셀(`MAX_PRINT_PIXELS`)이 **따로** 걸리므로 둘 다 본다.
+ *
+ * 🔴 인쇄 상한을 영상 인코더 예산(H.264 매크로블록)으로 대신하면 안 된다 — 그 예산은 1080px
+ *    판을 2배까지만 허용해 A4 300ppi가 요구하는 2,480px을 막는다.
+ */
+export function maxPrintSize(width: number, height: number): { width: number; height: number } {
+	const ratio = width / height
+	// width × (width / ratio) ≤ MAX_PRINT_PIXELS  →  width ≤ √(MAX × ratio)
+	const byTotal = Math.floor(Math.sqrt(MAX_PRINT_PIXELS * ratio))
+	const maxWidth = Math.max(1, Math.min(MAX_PRINT_SIDE_PIXELS, byTotal))
+	const maxHeight = Math.max(1, Math.min(MAX_PRINT_SIDE_PIXELS, Math.floor(maxWidth / ratio)))
+	// 높이 쪽 한도에 먼저 걸리면 너비를 그 비율로 되돌려 준다.
+	return { width: Math.max(1, Math.round(maxHeight * ratio)), height: maxHeight }
+}
+
 export function findPrintOutputBlocker(candidate: {
 	enabled?: unknown
 	height?: unknown

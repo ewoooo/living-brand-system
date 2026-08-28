@@ -52,13 +52,15 @@ export type ExportRequest =
 			artifact: 'raster'
 			format: 'tiff'
 			colorProfile: CmykColorProfile
-			options: { ppi: PrintPpi; compression: 'lzw' }
+			// 🔑 `scale`은 캔버스 좌표계 대비 렌더 배율이다 — `ppi`는 물리 크기를 정할 뿐
+			//    픽셀을 한 개도 늘리지 않으므로, 인쇄 밀도는 이 값이 소유한다.
+			options: { ppi: PrintPpi; compression: 'lzw'; scale: number }
 	  }
 	| {
 			artifact: 'raster'
 			format: 'pdf'
 			colorProfile: CmykColorProfile
-			options: { ppi: PrintPpi; bleedMm: number }
+			options: { ppi: PrintPpi; bleedMm: number; scale: number }
 	  }
 	| { artifact: 'raster'; format: 'mp4'; options: VideoExportSpec }
 	| {

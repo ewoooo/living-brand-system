@@ -212,9 +212,11 @@ export async function exportRasterArtifactAsPrint(
 		colorProfile: request.colorProfile.icc,
 		fileName,
 		format: request.format,
+		// 🔴 여기 `scale: 1`이 하드코딩돼 있었다 — 어떤 해상도를 골라도 인쇄물이 캔버스 픽셀
+		//    그대로 나가, A4 300ppi가 요구하는 픽셀을 만들 경로가 아예 없었다.
 		png: await renderRasterArtifactToPng(
 			artifact,
-			{ scale: 1, transparent: false },
+			{ scale: request.options.scale, transparent: false },
 			renderSize,
 		),
 		ppi: request.options.ppi,

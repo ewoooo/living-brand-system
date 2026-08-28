@@ -373,9 +373,17 @@ function validRequestOptions(request: ExportRequest): boolean {
 						request.options.scale > 0
 					)
 				case 'tiff':
-					return isPrintPpi(request.options.ppi) && request.options.compression === 'lzw'
+					return (
+						isPrintPpi(request.options.ppi) &&
+						request.options.compression === 'lzw' &&
+						request.options.scale > 0
+					)
 				case 'pdf':
-					return isPrintPpi(request.options.ppi) && request.options.bleedMm >= 0
+					return (
+						isPrintPpi(request.options.ppi) &&
+						request.options.bleedMm >= 0 &&
+						request.options.scale > 0
+					)
 				case 'mp4':
 					return validVideoExportSpec(request.options)
 			}

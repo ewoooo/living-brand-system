@@ -5,6 +5,7 @@ import {
 	MAX_PRINT_PIXELS,
 	MAX_PRINT_PPI,
 	MAX_PRINT_SIDE_PIXELS,
+	maxPrintSize,
 	millimetersToPixels,
 	parsePrintPpi,
 	pixelsToMillimeters,
@@ -83,5 +84,32 @@ describe('물리 크기 환산', () => {
 		// A4를 300ppi로 잡은 판: 2480px → 595pt(=210mm). px를 pt에 그대로 꽂으면 2480pt가 된다.
 		expect(pixelsToPdfPoints(2480, 300)).toBeCloseTo(595.2, 1)
 		expect(pixelsToPdfPoints(2480, 72)).toBe(2480)
+	})
+})
+
+describe('maxPrintSize', () => {
+	it('A4 비율 판이 300ppi를 낼 수 있을 만큼 크다 — 영상 예산으로 대신하면 여기서 막힌다', () => {
+		const limit = maxPrintSize(1080, 1527)
+		expect(limit.width).toBeGreaterThanOrEqual(2480)
+	})
+
+	it('두 한도를 모두 지킨다 — 변 한도와 총 픽셀은 따로 걸린다', () => {
+		for (const [width, height] of [
+			[1080, 1527],
+			[600, 1800],
+			[16000, 100],
+			[1, 1],
+		]) {
+			const limit = maxPrintSize(width, height)
+			expect(limit.width).toBeLessThanOrEqual(MAX_PRINT_SIDE_PIXELS)
+			expect(limit.height).toBeLessThanOrEqual(MAX_PRINT_SIDE_PIXELS)
+			expect(limit.width * limit.height).toBeLessThanOrEqual(MAX_PRINT_PIXELS)
+			expect(findPrintOutputBlocker({ enabled: true, ...limit })).toBeNull()
+		}
+	})
+
+	it('종횡비를 지킨다', () => {
+		const limit = maxPrintSize(1080, 1527)
+		expect(limit.width / limit.height).toBeCloseTo(1080 / 1527, 2)
 	})
 })
