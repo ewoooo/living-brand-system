@@ -4,6 +4,8 @@ import { fitRect } from './image-to-data-url.client'
 
 // jsdom에는 canvas가 없어 실제 굽기를 돌릴 수 없다 — 워커가 굽기를 **부르는지**만 본다.
 // 구운 결과가 맞는지는 순수 함수 `fitRect`와 브라우저 실측이 담당한다.
+// html-to-image도 jsdom에서 못 돈다 — 굽기를 부르는지만 본다.
+vi.mock('html-to-image', () => ({ toPng: vi.fn(async () => 'data:image/png;base64,FLAT') }))
 vi.mock('./image-to-data-url.client', async (importOriginal) => ({
 	...(await importOriginal<typeof import('./image-to-data-url.client')>()),
 	toBakedImageDataUrl: vi.fn(async () => 'data:image/png;base64,BAKED'),
@@ -115,6 +117,35 @@ describe('templateDomToVectorScene', () => {
 			kind: 'image',
 			href: 'data:image/png;base64,BAKED',
 		})
+	})
+
+	// 🔴 굽지 않으면 배경 이미지를 건너뛰고 배경색만 남아 **단색 사각형이 그림을 덮는다**.
+	//    Technical Illustration의 색 입힘이 이 형태다(2026-08-27 실물 확인).
+	it('래스터 마스크는 그 노드를 구워 이미지로 얹는다', async () => {
+		const stage = stageWith(
+			'<div data-node-id="carrier" style="background-color:#ffffff">' +
+				'<div data-node-id="carrier-colorize" style="background-color:#000000;mask-image:url(&quot;/api/generated-images/file/a.jpg&quot;)"></div>' +
+				'</div>',
+		)
+		const carrier = stage.firstElementChild as HTMLElement
+		measure(carrier, { x: 0, y: 0, width: 100, height: 100 })
+		measure(carrier.firstElementChild as Element, { x: 0, y: 0, width: 100, height: 100 })
+
+		const { scene, unsupported } = await templateDomToVectorScene(stage, {
+			width: 400,
+			height: 300,
+		})
+		const group = scene.primitives[0]
+		const children = group.kind === 'group' ? group.children : []
+
+		// 바닥은 벡터로 남고 오버레이만 이미지가 된다 — 그래야 밑색이 비쳐 원본과 같아진다.
+		expect(children[0]).toMatchObject({ kind: 'rect', fill: '#ffffff' })
+		const overlay = children[1]
+		expect(overlay.kind === 'group' && overlay.children[0]).toMatchObject({
+			kind: 'image',
+			href: 'data:image/png;base64,FLAT',
+		})
+		expect(unsupported).toContainEqual({ nodeId: 'carrier-colorize', reason: 'mask' })
 	})
 
 	it('벡터로 못 옮기는 효과는 버리지 않고 unsupported로 보고한다', async () => {

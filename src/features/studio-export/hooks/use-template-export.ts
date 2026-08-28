@@ -273,17 +273,21 @@ function describeVectorDiagnostics(
 	const warnings: string[] = []
 
 	const effects = new Set(diagnostics.unsupported.map(({ reason }) => reason))
+	// 마스크는 이미지로 구워 **결과가 원본과 같다** — 나머지는 아직 굽지 않아 결과가 달라진다.
+	// 둘을 한 문장으로 묶으면 「무엇을 확인해야 하나」가 흐려진다.
+	if (effects.delete('mask')) {
+		warnings.push('색을 입힌 이미지는 편집 가능한 도형이 아니라 이미지 레이어로 들어갑니다.')
+	}
 	const effectLabels: Record<string, string> = {
 		'backdrop-filter': '배경 흐림',
 		'blend-mode': '혼합 모드',
 		'box-shadow': '그림자',
 		filter: '흐림 효과',
 		gradient: '그라디언트',
-		mask: '마스크',
 	}
 	const named = [...effects].map((reason) => effectLabels[reason] ?? reason)
 	if (named.length > 0) {
-		warnings.push(`벡터로 옮기지 못한 효과가 있습니다: ${named.join(' · ')}`)
+		warnings.push(`이 효과는 내보내기에 담기지 않습니다: ${named.join(' · ')}`)
 	}
 
 	const fonts = new Set(diagnostics.notOutlined.map(({ fontFamily }) => fontFamily))

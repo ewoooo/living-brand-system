@@ -1,5 +1,6 @@
 'use client'
 
+import { toPng } from 'html-to-image'
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
 import { type ImageFit, toBakedImageDataUrl } from './image-to-data-url.client'
 import { svgAssetToPrimitives } from './svg-asset-to-primitives.client'
@@ -14,7 +15,12 @@ import { svgAssetToPrimitives } from './svg-asset-to-primitives.client'
  *
  * 🔑 SVG 자산(로고·심볼)은 도형으로 펼친다. `img[src$=.svg]`든 CSS 마스크든 마찬가지다 —
  *    그대로 두면 인쇄물에서 로고만 벡터가 아니게 된다(`svg-asset-to-primitives`).
- * 표현하지 못하는 시각 효과는 버리지 않고 `unsupported`에 담아 돌려준다.
+ * 🔑 **래스터 마스크는 그 노드만 구워 얹는다.** 생성 이미지를 휘도 마스크로 써서 색을 입히는
+ *    컬러라이즈가 그 형태인데(`compose-template-html`의 `applyImageColorize`), 원리적으로 벡터가
+ *    될 수 없다. 굽지 않으면 배경 이미지를 건너뛰고 배경색만 남아 **단색 사각형이 그림을 덮는다.**
+ * 🔴 그 밖의 효과(그라디언트·그림자·블러·블렌드)는 **감지만 하고 굽지 않는다.** 2026-08-27 실측에서
+ *    쓰는 템플릿이 0건이었다 — 안 쓰는 것을 위해 만들면 멀쩡한 것을 망가뜨린다(위장 그라디언트 사고).
+ *    실제로 나타나면 `unsupported` 경고가 먼저 알려 준다.
  */
 export type TemplateVectorSceneResult = {
 	scene: VectorScene
@@ -74,6 +80,16 @@ async function walk(element: HTMLElement, context: WalkContext): Promise<VectorP
 	// SVG 자산은 마스크째 도형으로 펴진다 — 그때는 마스크를 「못 옮긴 효과」로 세지 않는다.
 	const svgAsset = await svgAssetPrimitives(element, box, style)
 	reportUnsupported(style, nodeId, context, { maskHandled: svgAsset !== null })
+
+	// 래스터 마스크는 브라우저가 이미 정확히 합성해 두었다 — 그 결과를 그대로 구워 얹는다.
+	// 🔑 자식까지 함께 굽는다(마스크는 하위 트리에 걸린다). 대신 **부모의 칠은 벡터로 남아** 밑에서
+	//    비치므로, 2겹인 컬러라이즈도 원본과 같은 그림이 된다.
+	if (!svgAsset && maskUrl(style)) {
+		const flattened = await flattenToImage(element, box, context)
+		return flattened
+			? [{ kind: 'group', label: element.dataset.name ?? nodeId, children: flattened }]
+			: []
+	}
 
 	const own =
 		svgAsset ??
@@ -265,6 +281,27 @@ async function bakedImage(
 	const href = await toBakedImageDataUrl(source, box, fit, crop)
 	// 🔑 맞춤은 굽는 쪽이 이미 반영했다 — 여기서 또 비율을 맞추면 두 번 적용된다.
 	return href ? [{ kind: 'image', ...visible, href, preserveAspectRatio: 'none' }] : []
+}
+
+/**
+ * 노드를 하위 트리째 이미지로 굽는다. 마스크 밖은 투명하게 남으므로 알파 PNG가 되고, 밑에 깔린
+ * 벡터가 그대로 비친다.
+ * 🔴 굽는 배율이 3배 고정이다 — 인쇄 목표 해상도를 모른 채 굽는다.
+ *    ponytail: 그 문제는 「인쇄 치수 계약」(farnext §1-2)이 소유한다. 여기서 정하지 않는다.
+ */
+async function flattenToImage(
+	element: HTMLElement,
+	box: Box,
+	context: WalkContext,
+): Promise<VectorPrimitive[] | null> {
+	const visible = intersect(box, clipBoxOf(element, context.origin))
+	if (!visible || visible.width <= 0 || visible.height <= 0) return null
+	try {
+		const href = await toPng(element, { pixelRatio: 3 })
+		return [{ kind: 'image', ...visible, href, preserveAspectRatio: 'none' }]
+	} catch {
+		return null
+	}
 }
 
 /** 이 요소를 실제로 자르는 가장 가까운 조상의 상자. 아무도 안 자르면 null이다. */
