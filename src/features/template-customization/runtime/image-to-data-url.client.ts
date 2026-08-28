@@ -82,6 +82,30 @@ async function bake(
 		: canvas.toDataURL('image/png')
 }
 
+/**
+ * 이미 구운 이미지를 **보이는 부분만** 잘라 낸다.
+ *
+ * 🔴 자르지 않고 좁은 상자에 밀어 넣으면 그림이 찌그러진다 — 2026-08-27에 3462×1932 비트맵이
+ *    630×644 상자에 들어가 가로로 0.55배가 됐다. 조상 프레임이 자르는 만큼 **비트맵에서** 잘라야 한다.
+ * `crop`은 원본 상자 안에서의 좌표이고, `sourceScale`은 그 상자 대비 비트맵의 배율이다.
+ */
+export async function cropBakedImage(
+	dataUrl: string,
+	crop: { x: number; y: number; width: number; height: number },
+	sourceScale: number,
+): Promise<string | null> {
+	const image = await loadImage(dataUrl)
+	if (!image) return null
+	const canvas = document.createElement('canvas')
+	canvas.width = Math.max(1, Math.round(crop.width * sourceScale))
+	canvas.height = Math.max(1, Math.round(crop.height * sourceScale))
+	const context = canvas.getContext('2d')
+	if (!context) return null
+	context.drawImage(image, -crop.x * sourceScale, -crop.y * sourceScale)
+	// 마스크 밖이 투명이라 알파를 잃으면 안 된다 — 여기서는 항상 PNG다.
+	return canvas.toDataURL('image/png')
+}
+
 /** CSS `object-fit`/`background-size`가 정하는 그리기 사각형. 원점은 캔버스 좌상단이다. */
 export function fitRect(
 	natural: { width: number; height: number },

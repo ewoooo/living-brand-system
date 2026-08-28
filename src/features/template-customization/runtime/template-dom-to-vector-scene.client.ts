@@ -2,7 +2,7 @@
 
 import { toPng } from 'html-to-image'
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
-import { type ImageFit, toBakedImageDataUrl } from './image-to-data-url.client'
+import { cropBakedImage, type ImageFit, toBakedImageDataUrl } from './image-to-data-url.client'
 import { svgAssetToPrimitives } from './svg-asset-to-primitives.client'
 
 /**
@@ -284,10 +284,16 @@ async function bakedImage(
 }
 
 /**
+ * 굽는 배율. 🔴 인쇄 목표 해상도를 모른 채 굽는다 —
+ * ponytail: 그 문제는 「인쇄 치수 계약」(farnext §1-2)이 소유한다. 여기서 정하지 않는다.
+ */
+const FLATTEN_SCALE = 3
+
+/**
  * 노드를 하위 트리째 이미지로 굽는다. 마스크 밖은 투명하게 남으므로 알파 PNG가 되고, 밑에 깔린
  * 벡터가 그대로 비친다.
- * 🔴 굽는 배율이 3배 고정이다 — 인쇄 목표 해상도를 모른 채 굽는다.
- *    ponytail: 그 문제는 「인쇄 치수 계약」(farnext §1-2)이 소유한다. 여기서 정하지 않는다.
+ * 🔴 구운 것은 **요소 전체**다. 조상이 자른 만큼 비트맵에서도 잘라야 한다 — 잘린 상자에 그대로
+ *    밀어 넣으면 그림이 찌그러진다(2026-08-27: 3462×1932가 630×644에 들어가 가로 0.55배가 됐다).
  */
 async function flattenToImage(
 	element: HTMLElement,
@@ -297,8 +303,23 @@ async function flattenToImage(
 	const visible = intersect(box, clipBoxOf(element, context.origin))
 	if (!visible || visible.width <= 0 || visible.height <= 0) return null
 	try {
-		const href = await toPng(element, { pixelRatio: 3 })
-		return [{ kind: 'image', ...visible, href, preserveAspectRatio: 'none' }]
+		const baked = await toPng(element, { pixelRatio: FLATTEN_SCALE })
+		const cropped =
+			visible.width === box.width && visible.height === box.height
+				? baked
+				: await cropBakedImage(
+						baked,
+						{
+							x: visible.x - box.x,
+							y: visible.y - box.y,
+							width: visible.width,
+							height: visible.height,
+						},
+						FLATTEN_SCALE,
+					)
+		return cropped
+			? [{ kind: 'image', ...visible, href: cropped, preserveAspectRatio: 'none' }]
+			: null
 	} catch {
 		return null
 	}

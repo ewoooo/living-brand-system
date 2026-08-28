@@ -9,6 +9,7 @@ vi.mock('html-to-image', () => ({ toPng: vi.fn(async () => 'data:image/png;base6
 vi.mock('./image-to-data-url.client', async (importOriginal) => ({
 	...(await importOriginal<typeof import('./image-to-data-url.client')>()),
 	toBakedImageDataUrl: vi.fn(async () => 'data:image/png;base64,BAKED'),
+	cropBakedImage: vi.fn(async () => 'data:image/png;base64,CROPPED'),
 }))
 
 import {
@@ -146,6 +147,33 @@ describe('templateDomToVectorScene', () => {
 			href: 'data:image/png;base64,FLAT',
 		})
 		expect(unsupported).toContainEqual({ nodeId: 'carrier-colorize', reason: 'mask' })
+	})
+
+	// 🔴 구운 것은 요소 전체다. 조상이 자른 좁은 상자에 그대로 밀어 넣으면 그림이 찌그러진다 —
+	//    실물에서 3462×1932 비트맵이 630×644 상자에 들어가 가로 0.55배가 됐다(2026-08-27).
+	it('조상이 자르면 비트맵도 같이 잘라 비율을 지킨다', async () => {
+		const { cropBakedImage } = await import('./image-to-data-url.client')
+		const stage = stageWith(
+			'<div data-node-id="frame" style="overflow:hidden">' +
+				'<div data-node-id="wide" style="background-color:#000000;mask-image:url(&quot;/api/generated-images/file/a.jpg&quot;)"></div>' +
+				'</div>',
+		)
+		const frame = stage.firstElementChild as HTMLElement
+		// 프레임이 100 너비로 자르는데 내용은 200 너비다.
+		measure(frame, { x: 0, y: 0, width: 100, height: 60 })
+		measure(frame.firstElementChild as Element, { x: 0, y: 0, width: 200, height: 60 })
+
+		const { scene } = await templateDomToVectorScene(stage, { width: 400, height: 300 })
+
+		expect(cropBakedImage).toHaveBeenCalledWith(
+			expect.any(String),
+			{ x: 0, y: 0, width: 100, height: 60 },
+			expect.any(Number),
+		)
+		// 그린 상자와 잘라 낸 비트맵이 같은 영역이어야 비율이 산다.
+		const flat = JSON.stringify(scene.primitives)
+		expect(flat).toContain('"href":"data:image/png;base64,CROPPED"')
+		expect(flat).toContain('"width":100')
 	})
 
 	it('벡터로 못 옮기는 효과는 버리지 않고 unsupported로 보고한다', async () => {
