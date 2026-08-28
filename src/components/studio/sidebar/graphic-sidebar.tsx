@@ -6,7 +6,6 @@ import { GraphicProfilePicker } from '@/components/studio/graphic/graphic-profil
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import {
 	ExportAction,
-	PrintControls,
 	SizingControls,
 	VideoControls,
 } from '@/components/studio/shared/output-controls'
@@ -42,7 +41,10 @@ export function GraphicSidebar({
 					value={{ width: output.draft.width, height: output.draft.height }}
 					maxWidth={video?.maxWidth}
 					maxHeight={video?.maxHeight}
+					ppi={output.ppi}
+					ppiOptions={output.ppiOptions}
 					onChange={output.setSize}
+					onPpiChange={output.setPpi}
 				/>
 				<Controller.Row label="Format" readonly={config.output.formats.length <= 1}>
 					{config.output.formats.length <= 1 ? (
@@ -65,13 +67,6 @@ export function GraphicSidebar({
 						maxDurationSeconds={video.maxDurationSeconds}
 						onFpsChange={output.setFps}
 						onDurationChange={output.setDuration}
-					/>
-				)}
-				{(format === 'tiff' || format === 'pdf') && config.output.print && (
-					<PrintControls
-						ppi={output.draft.ppi}
-						options={config.output.print.ppi}
-						onChange={output.setPpi}
 					/>
 				)}
 			</div>

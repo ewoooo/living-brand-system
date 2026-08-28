@@ -1,5 +1,11 @@
 export const PRINT_PPI_VALUES = [72, 150, 300] as const
 
+/**
+ * 고르지 않은 판이 시작하는 해상도. 상업 인쇄의 표준값이라 여기서 출발한다.
+ * 🔴 목록의 첫 값(72)을 기본으로 삼으면 인쇄물이 조용히 4배 크게 나간다.
+ */
+export const DEFAULT_PRINT_PPI = 300
+
 export const PRINT_PPI_OPTIONS = [
 	{ label: '대형 인쇄 (72ppi)', value: '72' },
 	{ label: '일반 용지 인쇄 (150ppi)', value: '150' },
@@ -39,6 +45,14 @@ export function isPrintPpi(value: unknown): value is PrintPpi {
 export function parsePrintPpi(value: unknown): PrintPpi | undefined {
 	const ppi = Number(value)
 	return isPrintPpi(ppi) ? ppi : undefined
+}
+
+/** 프리셋 목록에서 기본으로 고를 해상도. 표준값이 없는 목록이면 가장 낮은 것으로 떨어진다. */
+export function resolveDefaultPrintPpi(options: readonly PrintPpi[] | undefined): PrintPpi {
+	if (!options || options.length === 0) return DEFAULT_PRINT_PPI
+	return options.includes(DEFAULT_PRINT_PPI)
+		? DEFAULT_PRINT_PPI
+		: (options[0] ?? DEFAULT_PRINT_PPI)
 }
 
 export function pixelsToMillimeters(pixels: number, ppi: PrintPpi): number {

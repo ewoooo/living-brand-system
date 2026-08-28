@@ -6,7 +6,7 @@ import type { GraphicBrowserArtifacts } from '@/features/graphic-generation/runt
 import { getGraphicStudioVectorArtifact } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../export-contract'
-import type { PrintPpi } from '../print-policy'
+import { PRINT_PPI_VALUES, type PrintPpi, resolveDefaultPrintPpi } from '../print-policy'
 import { createRasterExportRequest } from '../services/create-raster-export-request'
 import { executeArtifactExport } from '../services/export-artifact.client'
 import { acceptsPrintPpi } from '../studio-output'
@@ -28,11 +28,12 @@ export type GraphicOutputDraft =
 			width: number | null
 			height: number | null
 	  }
+	// 🔑 `ppi`는 여기 없다 — 해상도는 형식이 아니라 **판**의 성질이라 draft 밖에 산다.
+	//    형식을 갈아도 판의 물리 크기가 따라 바뀌면 안 된다.
 	| {
 			format: 'tiff' | 'pdf'
 			width: number | null
 			height: number | null
-			ppi: PrintPpi
 	  }
 
 export type GraphicExportView = ReturnType<typeof useGraphicExport>['output']
@@ -54,6 +55,8 @@ export function useGraphicExport({
 	values: ControllerValues
 	viewport: GraphicOutputSize | null
 }) {
+	const ppiOptions = config.output.print?.ppi ?? PRINT_PPI_VALUES
+	const [ppi, setPpi] = useState<PrintPpi>(() => resolveDefaultPrintPpi(config.output.print?.ppi))
 	const [draftState, setDraftState] = useState(() => ({
 		profileId: config.id,
 		draft: createGraphicOutputDraft(config),
@@ -128,16 +131,12 @@ export function useGraphicExport({
 		},
 		[config.output.video, setDraft],
 	)
-	const setPpi = useCallback(
-		(ppi: PrintPpi) => {
-			if (!acceptsPrintPpi(config.output, ppi)) return
-			setDraft((current) =>
-				current?.format === 'tiff' || current?.format === 'pdf'
-					? { ...current, ppi }
-					: current,
-			)
+	const changePpi = useCallback(
+		(next: PrintPpi) => {
+			// 🔑 프리셋 목록이 아니라 유효 범위로 받는다 — 직접 입력한 값이 조용히 무시되면 안 된다.
+			if (acceptsPrintPpi(config.output, next)) setPpi(next)
 		},
-		[config.output, setDraft],
+		[config.output],
 	)
 	const createVectorArtifact = useCallback(
 		(width: number, height: number) =>
@@ -178,7 +177,7 @@ export function useGraphicExport({
 		},
 		execute,
 	})
-	const request = createGraphicExportRequest(config, draft)
+	const request = createGraphicExportRequest(config, draft, ppi)
 
 	return {
 		output: {
@@ -190,7 +189,9 @@ export function useGraphicExport({
 			setSize,
 			setFps,
 			setDuration,
-			setPpi,
+			ppi,
+			ppiOptions,
+			setPpi: changePpi,
 			run: () => {
 				if (request) void graphicExport.run(request)
 			},
@@ -226,10 +227,7 @@ function createGraphicOutputDraft(
 		return { format, width: viewport?.width ?? null, height: viewport?.height ?? null }
 	}
 	if (format === 'tiff' || format === 'pdf') {
-		const ppi = config.output.print?.ppi[0]
-		return ppi
-			? { format, width: viewport?.width ?? null, height: viewport?.height ?? null, ppi }
-			: null
+		return { format, width: viewport?.width ?? null, height: viewport?.height ?? null }
 	}
 	return null
 }
@@ -237,6 +235,7 @@ function createGraphicOutputDraft(
 function createGraphicExportRequest(
 	config: GraphicStudioConfig,
 	draft: GraphicOutputDraft | null,
+	ppi: PrintPpi,
 ): GraphicExportRequest | null {
 	if (!draft) return null
 	if (draft.format === 'svg') {
@@ -259,10 +258,7 @@ function createGraphicExportRequest(
 	) {
 		if (draft.width === null || draft.height === null) return null
 		const size = { width: draft.width, height: draft.height }
-		const request = createRasterExportRequest(draft.format, config.output, {
-			...size,
-			ppi: 'ppi' in draft ? draft.ppi : undefined,
-		})
+		const request = createRasterExportRequest(draft.format, config.output, { ...size, ppi })
 		return request ? { ...request, size } : null
 	}
 	if (draft.format !== 'mp4') return null
