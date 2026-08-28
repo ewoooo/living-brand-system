@@ -284,6 +284,8 @@ function describeVectorDiagnostics(
 		'box-shadow': '그림자',
 		filter: '흐림 효과',
 		gradient: '그라디언트',
+		'svg-stylesheet-fill': '자산의 색 지정 방식(검정으로 나갑니다)',
+		'uneven-border': '변마다 다른 테두리',
 	}
 	const named = [...effects].map((reason) => effectLabels[reason] ?? reason)
 	if (named.length > 0) {

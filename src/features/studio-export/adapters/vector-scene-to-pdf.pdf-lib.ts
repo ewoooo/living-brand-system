@@ -1,4 +1,14 @@
-import { type Color, cmyk, PDFDocument, PDFName, type PDFPage, PDFString, rgb } from 'pdf-lib'
+import {
+	type Color,
+	cmyk,
+	PDFDocument,
+	PDFName,
+	type PDFPage,
+	PDFRawStream,
+	type PDFRef,
+	PDFString,
+	rgb,
+} from 'pdf-lib'
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
 import type { CmykColor } from './rgb-to-cmyk.sharp'
 
@@ -24,7 +34,9 @@ export async function vectorSceneToPdf(
 ): Promise<Buffer> {
 	const pdf = await PDFDocument.create()
 	const page = pdf.addPage([scene.width, scene.height])
-	if (print) attachOutputIntent(pdf, print.iccProfile, print.iccProfileName)
+	const profileRef = print
+		? attachOutputIntent(pdf, print.iccProfile, print.iccProfileName)
+		: null
 	const color = (value: string | undefined) => resolveColor(value, print?.colors)
 
 	page.drawRectangle({
@@ -34,7 +46,8 @@ export async function vectorSceneToPdf(
 		x: 0,
 		y: 0,
 	})
-	for (const primitive of scene.primitives) await draw(pdf, page, primitive, scene.height, color)
+	for (const primitive of scene.primitives)
+		await draw(pdf, page, primitive, scene.height, color, profileRef)
 
 	return Buffer.from(await pdf.save())
 }
@@ -52,8 +65,8 @@ export function collectSceneColors(scene: VectorScene): string[] {
 	return [scene.background, ...collect(scene.primitives)]
 }
 
-/** PDF/X가 요구하는 출력 의도. `cmyk-jpeg-to-pdf`와 같은 형태다. */
-function attachOutputIntent(pdf: PDFDocument, iccProfile: Buffer, iccProfileName: string) {
+/** PDF/X가 요구하는 출력 의도. `cmyk-jpeg-to-pdf`와 같은 형태다. 이미지 색 공간도 이 프로파일을 쓴다. */
+function attachOutputIntent(pdf: PDFDocument, iccProfile: Buffer, iccProfileName: string): PDFRef {
 	const profile = pdf.context.flateStream(Uint8Array.from(iccProfile), {
 		Alternate: 'DeviceCMYK',
 		N: 4,
@@ -71,6 +84,7 @@ function attachOutputIntent(pdf: PDFDocument, iccProfile: Buffer, iccProfileName
 		PDFName.of('OutputIntents'),
 		pdf.context.obj([pdf.context.register(outputIntent)]),
 	)
+	return profileRef
 }
 
 type ColorResolver = (value: string | undefined) => Color | undefined
@@ -91,6 +105,7 @@ async function draw(
 	primitive: VectorPrimitive,
 	sceneHeight: number,
 	color: ColorResolver,
+	profileRef: PDFRef | null,
 ): Promise<void> {
 	/** 씬 좌표(위에서 아래)를 PDF 좌표(아래에서 위)로. `boxHeight`는 상자 아래 모서리를 잡을 때 쓴다. */
 	const flip = (y: number, boxHeight = 0) => sceneHeight - y - boxHeight
@@ -98,7 +113,8 @@ async function draw(
 	switch (primitive.kind) {
 		case 'group': {
 			// 그룹은 인쇄물에서 의미가 없다 — 자식만 순서대로 그린다(레이어 구조는 SVG가 갖는다).
-			for (const child of primitive.children) await draw(pdf, page, child, sceneHeight, color)
+			for (const child of primitive.children)
+				await draw(pdf, page, child, sceneHeight, color, profileRef)
 			return
 		}
 		case 'path':
@@ -110,7 +126,8 @@ async function draw(
 					? {}
 					: { borderWidth: primitive.strokeWidth }),
 				...(primitive.opacity === undefined ? {} : { opacity: primitive.opacity }),
-				scale: 1,
+				// 🔴 배율을 빠뜨리면 SVG는 멀쩡한데 PDF에서만 로고가 viewBox 크기로 찍힌다.
+				scale: primitive.scale ?? 1,
 				x: primitive.x ?? 0,
 				y: flip(primitive.y ?? 0),
 			})
@@ -135,6 +152,7 @@ async function draw(
 					},
 					sceneHeight,
 					color,
+					profileRef,
 				)
 			}
 			page.drawRectangle({
@@ -154,6 +172,18 @@ async function draw(
 		case 'image': {
 			const embedded = await embedImage(pdf, primitive.href)
 			if (!embedded) return
+			// 🔴 pdf-lib은 3채널 이미지를 DeviceRGB로 넣는다. 서비스가 CMYK로 바꿔 둔 것은
+			//    색 공간을 출력 의도와 같은 ICC로 덮어야 RIP가 다시 변환하지 않는다.
+			if (primitive.colorSpace === 'cmyk' && profileRef) {
+				await embedded.embed()
+				const stream = pdf.context.lookup(embedded.ref)
+				if (stream instanceof PDFRawStream) {
+					stream.dict.set(
+						PDFName.of('ColorSpace'),
+						pdf.context.obj([PDFName.of('ICCBased'), profileRef]),
+					)
+				}
+			}
 			page.drawImage(embedded, {
 				height: primitive.height,
 				width: primitive.width,

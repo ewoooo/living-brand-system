@@ -170,6 +170,12 @@ export type VectorPrimitive =
 			/** CSS object-fit에 대응한다. 생략하면 상자를 꽉 채운다. */
 			preserveAspectRatio?: string
 			opacity?: number
+			/**
+			 * 이 이미지가 이미 CMYK로 변환됐는지. 🔴 PDF는 색 공간을 파일에 적어야 하고, 안 적으면
+			 * DeviceRGB로 들어가 **CMYK 출력의도를 단 파일 안에 관리되지 않은 RGB 사진**이 된다.
+			 * 서버의 인쇄 경로만 이 값을 채운다(브라우저에는 ICC 변환기가 없다).
+			 */
+			colorSpace?: 'cmyk'
 	  }
 	| {
 			/**

@@ -24,6 +24,25 @@ type Box = { x: number; y: number; width: number; height: number }
 
 const cache = new Map<string, Promise<Document | null>>()
 
+/**
+ * 🔴 `<style>`이나 class로만 색을 정한 자산은 fill을 못 읽어 **검정 덩어리로** 나간다.
+ *    리포의 템플릿 자산은 전부 fill 속성이라 실측 0건이고(2026-08-27), CSS 셀렉터 엔진을 만들지
+ *    않았다 — 대신 그런 자산을 만나면 호출부가 경고할 수 있게 알린다.
+ */
+export function usesStyleSheetFill(document_: Document): boolean {
+	const root = document_.querySelector('svg')
+	if (!root) return false
+	return (
+		root.querySelector('style') !== null ||
+		[...root.querySelectorAll('[class]')].some((el) => !el.getAttribute('fill'))
+	)
+}
+
+export async function svgAssetUsesStyleSheetFill(url: string): Promise<boolean> {
+	const document_ = await loadSvg(url)
+	return document_ ? usesStyleSheetFill(document_) : false
+}
+
 export async function svgAssetToPrimitives(
 	url: string,
 	box: Box,

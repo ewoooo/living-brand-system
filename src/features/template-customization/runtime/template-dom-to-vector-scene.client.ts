@@ -3,7 +3,7 @@
 import { toPng } from 'html-to-image'
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
 import { cropBakedImage, type ImageFit, toBakedImageDataUrl } from './image-to-data-url.client'
-import { svgAssetToPrimitives } from './svg-asset-to-primitives.client'
+import { svgAssetToPrimitives, svgAssetUsesStyleSheetFill } from './svg-asset-to-primitives.client'
 
 /**
  * 레이아웃이 끝난 export stage를 파일 형식과 무관한 Vector Scene으로 옮긴다.
@@ -81,6 +81,11 @@ async function walk(element: HTMLElement, context: WalkContext): Promise<VectorP
 	const svgAsset = await svgAssetPrimitives(element, box, style)
 	reportUnsupported(style, nodeId, context, { maskHandled: svgAsset !== null })
 
+	// 자산이 <style>·class로만 색을 정하면 fill을 못 읽어 검정으로 나간다 — 사람이 알아야 한다.
+	if (svgAsset && (await svgAssetStyleSheetWarning(element, style))) {
+		context.unsupported.push({ nodeId, reason: 'svg-stylesheet-fill' })
+	}
+
 	// 래스터 마스크는 브라우저가 이미 정확히 합성해 두었다 — 그 결과를 그대로 구워 얹는다.
 	// 🔑 자식까지 함께 굽는다(마스크는 하위 트리에 걸린다). 대신 **부모의 칠은 벡터로 남아** 밑에서
 	//    비치므로, 2겹인 컬러라이즈도 원본과 같은 그림이 된다.
@@ -131,6 +136,7 @@ function reportUnsupported(
 		['backdrop-filter', isSet(style.backdropFilter)],
 		['mask', !maskHandled && maskUrl(style) !== null],
 		['blend-mode', isSet(style.mixBlendMode, 'normal')],
+		['uneven-border', hasUnevenBorder(style)],
 	]
 	for (const [reason, hit] of effects) {
 		if (hit) context.unsupported.push({ nodeId, reason })
@@ -158,6 +164,17 @@ async function svgAssetPrimitives(
 	// 마스크는 모양만 쓴다 — 색은 배경색이 정한다. 없으면 검정이 인쇄 기본이다.
 	const tint = solidColor(style.backgroundColor) ?? '#000000'
 	return svgAssetToPrimitives(mask, box, { fit: fitOf(style.maskSize), tint })
+}
+
+/** 이 노드가 쓰는 SVG 자산이 스타일시트로만 색을 정하는지. 틴트가 있으면 색을 덮으므로 무관하다. */
+async function svgAssetStyleSheetWarning(
+	element: HTMLElement,
+	style: CSSStyleDeclaration,
+): Promise<boolean> {
+	const mask = maskUrl(style)
+	if (mask) return false
+	const source = element instanceof HTMLImageElement ? element.currentSrc || element.src : ''
+	return source && isSvgUrl(source) ? svgAssetUsesStyleSheetFill(source) : false
 }
 
 function isSvgUrl(value: string): boolean {
@@ -212,6 +229,8 @@ function boxPrimitives(box: Box, style: CSSStyleDeclaration): VectorPrimitive[] 
 	const fill = layered ?? solidColor(style.backgroundColor)
 	const border = borderOf(style)
 	if (!fill && !border) return []
+	// 위장 그라디언트로 온 색은 그 자체가 불투명한 레이어다 — 배경색 알파를 씌우지 않는다.
+	const alpha = layered ? 1 : colorAlpha(style.backgroundColor)
 	return [
 		{
 			kind: 'rect',
@@ -219,6 +238,7 @@ function boxPrimitives(box: Box, style: CSSStyleDeclaration): VectorPrimitive[] 
 			...(fill ? { fill } : {}),
 			...(border ? { stroke: border.color, strokeWidth: border.width } : {}),
 			...(uniformRadius(style) ? { radius: uniformRadius(style) as number } : {}),
+			...(alpha < 1 ? { opacity: alpha } : {}),
 		},
 	]
 }
@@ -327,11 +347,19 @@ async function flattenToImage(
 
 /** 이 요소를 실제로 자르는 가장 가까운 조상의 상자. 아무도 안 자르면 null이다. */
 function clipBoxOf(element: HTMLElement, origin: DOMRect): Box | null {
-	for (let node = element.parentElement; node; node = node.parentElement) {
+	// 🔴 자기 자신부터 본다 — Figma의 고정 크기 텍스트는 `<p style="overflow:hidden">`으로 내려와
+	//    자기 글자를 자른다. 부모만 보면 화면에서 잘린 문장이 인쇄물에 되살아난다.
+	// 🔴 첫 클립에서 멈추지 않는다 — 더 위에 더 좁은 프레임이 있으면 그것도 함께 자른다.
+	let clip: Box | null = null
+	for (let node: HTMLElement | null = element; node; node = node.parentElement) {
 		const overflow = getComputedStyle(node).overflow
-		if (overflow && overflow !== 'visible') return toBox(node.getBoundingClientRect(), origin)
+		if (!overflow || overflow === 'visible') continue
+		const box = toBox(node.getBoundingClientRect(), origin)
+		clip = clip ? intersect(clip, box) : box
+		// 교차가 비면 이 요소는 어디에도 안 보인다 — 더 볼 것이 없다.
+		if (!clip) return { x: 0, y: 0, width: 0, height: 0 }
 	}
-	return null
+	return clip
 }
 
 function intersect(box: Box, clip: Box | null): Box | null {
@@ -368,10 +396,16 @@ function textPrimitives(
 	const fontSize = Number.parseFloat(style.fontSize) || 0
 	if (fontSize <= 0) return []
 	const anchor = textAnchorOf(style.textAlign)
+	const alpha = colorAlpha(style.color)
+	// 🔴 브라우저는 잘린 줄도 레이아웃해 둔다 — `getClientRects()`가 그 줄까지 돌려주므로,
+	//    클립을 안 보면 화면에 없는 문장이 판에 실려 아래 요소를 덮는다.
+	//    줄 단위 판정이다(반쯤 걸친 줄은 통째로 남는다) — clipPath를 쓰지 않는다는 원칙 때문이다.
+	const clip = clipBoxOf(element, context.origin)
 
 	return lineRects(element).flatMap(({ rect, text }) => {
 		const box = toBox(rect, context.origin)
 		if (!text.trim() || box.width <= 0) return []
+		if (!intersect(box, clip)) return []
 		return [
 			{
 				kind: 'text' as const,
@@ -392,6 +426,7 @@ function textPrimitives(
 					? { letterSpacing: letterSpacingOf(style) as number }
 					: {}),
 				fill,
+				...(alpha < 1 ? { opacity: alpha } : {}),
 				...(anchor !== 'start' ? { textAnchor: anchor } : {}),
 			},
 		]
@@ -462,6 +497,22 @@ function toBox(rect: DOMRect, origin: DOMRect): Box {
 	}
 }
 
+/**
+ * 색의 알파. 🔴 이것을 버리면 반투명 칠이 100% 농도로 인쇄된다 — 캔버스 디머가
+ * `rgba(0,0,0,0.4)`로 들어오는데(`compose-template-html`의 `applyCanvasDimmer`),
+ * 알파를 잃으면 **판 전체가 새까맣게** 나가고 경고도 뜨지 않는다.
+ */
+export function colorAlpha(value: string): number {
+	const parts = value.match(/rgba?\(([^)]+)\)/)?.[1]
+	if (!parts) return 1
+	const numbers = parts
+		.split(/[,/\s]+/)
+		.filter(Boolean)
+		.map(Number)
+	const alpha = numbers[3]
+	return Number.isFinite(alpha) ? Math.min(1, Math.max(0, alpha)) : 1
+}
+
 /** 투명하지 않은 단색만 돌려준다 — `rgba(0,0,0,0)`은 배경 없음이지 검정이 아니다. */
 export function solidColor(value: string): string | null {
 	const match = value.match(/rgba?\(([^)]+)\)/)
@@ -475,10 +526,30 @@ export function solidColor(value: string): string | null {
 	return `#${[r, g, b].map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('')}`
 }
 
+/**
+ * 🔴 rect의 stroke는 **네 변이 같을 때만** 참이다. Figma의 `individualStrokeWeights`는 한 변짜리
+ *    밑줄을 만들 수 있는데, 그것을 균일 테두리로 그리면 화면에 없는 사각 상자가 생긴다.
+ *    실측 0건이라 변별 테두리를 그리는 코드는 만들지 않았다 — 대신 만나면 경고한다.
+ */
+function borderWidths(style: CSSStyleDeclaration) {
+	const read = (value: string) => Number.parseFloat(value) || 0
+	return {
+		top: read(style.borderTopWidth),
+		right: read(style.borderRightWidth),
+		bottom: read(style.borderBottomWidth),
+		left: read(style.borderLeftWidth),
+	}
+}
+
+export function hasUnevenBorder(style: CSSStyleDeclaration): boolean {
+	const sides = Object.values(borderWidths(style))
+	return sides.some((side) => side > 0) && new Set(sides).size > 1
+}
+
 function borderOf(style: CSSStyleDeclaration): { color: string; width: number } | null {
-	const width = Number.parseFloat(style.borderTopWidth) || 0
+	const { top } = borderWidths(style)
 	const color = solidColor(style.borderTopColor)
-	return width > 0 && color && style.borderTopStyle !== 'none' ? { color, width } : null
+	return top > 0 && color && style.borderTopStyle !== 'none' ? { color, width: top } : null
 }
 
 /** SVG `rx`는 네 모서리가 같을 때만 참이다 — 다르면 path로 내려가야 하므로 여기서는 포기한다. */

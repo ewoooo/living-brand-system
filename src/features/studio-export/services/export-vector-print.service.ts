@@ -1,5 +1,6 @@
 import type { VectorScene } from '@/modules/studio-artifact/studio-artifact'
 import { convertRgbToCmyk } from '../adapters/rgb-to-cmyk.sharp'
+import { convertSceneImagesToCmyk } from '../adapters/scene-images-to-cmyk.sharp'
 import { collectSceneColors, vectorSceneToPdf } from '../adapters/vector-scene-to-pdf.pdf-lib'
 import { DEFAULT_CMYK_ICC_PROFILE } from '../color-profile'
 import { readCmykIccProfile, resolveCmykIccProfilePath } from '../color-profile.server'
@@ -26,9 +27,11 @@ export async function exportVectorPrint({
 	if (countPrimitives(scene) > MAX_PRIMITIVES) throw new VectorPrintInputError()
 
 	const iccPath = resolveCmykIccProfilePath(colorProfile)
-	const colors = await convertRgbToCmyk(collectSceneColors(scene), iccPath)
+	// 🔑 도형만 잉크로 바꾸면 사진이 RGB로 남아 같은 판에서 색이 갈린다 — 둘 다 같은 ICC를 탄다.
+	const { scene: inked } = await convertSceneImagesToCmyk(scene, iccPath)
+	const colors = await convertRgbToCmyk(collectSceneColors(inked), iccPath)
 
-	return vectorSceneToPdf(scene, {
+	return vectorSceneToPdf(inked, {
 		colors,
 		iccProfile: await readCmykIccProfile(colorProfile),
 		iccProfileName: colorProfile,

@@ -13,6 +13,7 @@ vi.mock('./image-to-data-url.client', async (importOriginal) => ({
 }))
 
 import {
+	colorAlpha,
 	hasRealGradient,
 	solidColor,
 	templateDomToVectorScene,
@@ -176,6 +177,56 @@ describe('templateDomToVectorScene', () => {
 		expect(flat).toContain('"width":100')
 	})
 
+	// 🔴 캔버스 디머가 rgba(0,0,0,0.4)로 들어온다 — 알파를 버리면 판 전체가 새까맣게 인쇄되고
+	//    경고도 뜨지 않는다(불투명 단색으로 보이므로).
+	it('반투명 칠의 알파를 opacity로 싣는다', async () => {
+		const stage = stageWith(
+			'<div data-node-id="dimmer" style="background-color:rgba(0, 0, 0, 0.4)"></div>',
+		)
+		measure(stage.firstElementChild as Element, { x: 0, y: 0, width: 100, height: 100 })
+
+		const { scene } = await templateDomToVectorScene(stage, { width: 400, height: 300 })
+		const group = scene.primitives[0]
+
+		expect(group.kind === 'group' && group.children[0]).toMatchObject({
+			kind: 'rect',
+			fill: '#000000',
+			opacity: 0.4,
+		})
+	})
+
+	// 🔴 브라우저는 잘린 줄도 레이아웃해 둔다 — 클립을 안 보면 화면에 없는 문장이 판에 실린다.
+	//    Figma의 고정 크기 텍스트가 <p style="overflow:hidden">으로 내려오므로 흔한 형태다.
+	it('overflow로 잘린 줄은 싣지 않는다', async () => {
+		const stage = stageWith(
+			'<p data-node-id="fixed" style="overflow:hidden;font-size:20px;color:#000000">보이는 줄</p>',
+		)
+		const p = stage.firstElementChild as HTMLElement
+		measure(p, { x: 0, y: 0, width: 200, height: 24 })
+		// 상자(높이 24) 아래로 밀려난 줄을 흉내 낸다.
+		const node = p.firstChild as Text
+		const range = document.createRange()
+		range.selectNodeContents(node)
+		range.getClientRects = () => [] as unknown as DOMRectList
+		range.getBoundingClientRect = () =>
+			({
+				left: 0,
+				top: 100,
+				right: 120,
+				bottom: 124,
+				width: 120,
+				height: 24,
+				x: 0,
+				y: 100,
+				toJSON: () => ({}),
+			}) as DOMRect
+		document.createRange = () => range
+
+		const { scene } = await templateDomToVectorScene(stage, { width: 400, height: 300 })
+
+		expect(JSON.stringify(scene.primitives)).not.toContain('보이는 줄')
+	})
+
 	it('벡터로 못 옮기는 효과는 버리지 않고 unsupported로 보고한다', async () => {
 		const stage = stageWith(
 			'<div data-node-id="hero" style="background-image:linear-gradient(90deg,#000,#fff);box-shadow:0 2px 4px #000"></div>',
@@ -267,5 +318,13 @@ describe('fitRect', () => {
 
 	it('fill은 상자를 그대로 채운다', () => {
 		expect(fitRect(natural, target, 'fill')).toEqual({ x: 0, y: 0, width: 100, height: 100 })
+	})
+})
+
+describe('colorAlpha', () => {
+	it('rgba의 알파를 읽고, 없으면 1이다', () => {
+		expect(colorAlpha('rgba(0, 0, 0, 0.4)')).toBe(0.4)
+		expect(colorAlpha('rgb(0, 0, 0)')).toBe(1)
+		expect(colorAlpha('#000000')).toBe(1)
 	})
 })

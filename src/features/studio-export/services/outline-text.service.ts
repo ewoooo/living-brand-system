@@ -135,11 +135,10 @@ export async function outlineTextRun({
 			const position = laid.positions[index]
 			// 글립을 자기 자리로 옮긴 뒤 한 번에 px로 줄인다. y를 뒤집는 것은 폰트 좌표계(위로 +)를
 			// SVG·PDF가 쓰는 아래로 + 좌표계로 맞추는 것이다.
+			// 🔴 `advance`가 이미 글립마다 letterSpacing을 누적한다 — 여기서 또 더하면 자간이
+			//    두 배가 되고, `index`는 세그먼트 안 번호라 국문↔라틴 경계에서 0으로 리셋된다.
 			const placed = glyph.path
-				.translate(
-					(advance + letterSpacing * index) / scale + (position.xOffset ?? 0),
-					position.yOffset ?? 0,
-				)
+				.translate(advance / scale + (position.xOffset ?? 0), position.yOffset ?? 0)
 				.scale(scale, -scale)
 			const d = placed.toSVG()
 			if (d) parts.push(d)
