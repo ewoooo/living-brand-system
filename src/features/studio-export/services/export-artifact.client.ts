@@ -15,6 +15,7 @@ import { elementToJpeg } from '../adapters/element-to-jpeg.client'
 import { elementToPng } from '../adapters/element-to-png.client'
 import { vectorSceneToSvg } from '../adapters/vector-scene-to-svg'
 import type { ExportRequest, ExportResult } from '../export-contract'
+import type { PrintPpi } from '../print-policy'
 import { requestPrintExport } from './export-print.client'
 
 export type ExportableStudioArtifact =
@@ -56,7 +57,11 @@ export async function executeArtifactExport({
 		}
 		case 'vector':
 			return request.format === 'pdf'
-				? exportVectorArtifactAsPrintPdf(fileName, artifact as VectorSceneArtifact)
+				? exportVectorArtifactAsPrintPdf(
+						fileName,
+						artifact as VectorSceneArtifact,
+						request.options.ppi,
+					)
 				: exportVectorArtifactAsSvg(fileName, artifact as VectorSceneArtifact)
 		case 'video':
 			return exportVideoArtifactAsMp4(
@@ -86,9 +91,10 @@ export function exportVectorArtifactAsSvg(
 export async function exportVectorArtifactAsPrintPdf(
 	fileName: string,
 	artifact: VectorSceneArtifact,
+	ppi: PrintPpi,
 ): Promise<ExportResult> {
 	const response = await fetch('/api/studio-exports/vector-print', {
-		body: JSON.stringify({ scene: artifact.source }),
+		body: JSON.stringify({ ppi, scene: artifact.source }),
 		headers: { 'Content-Type': 'application/json' },
 		method: 'POST',
 	})

@@ -1,7 +1,7 @@
 import { DEFAULT_CMYK_ICC_PROFILE } from '../color-profile'
 import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../export-contract'
 import type { PrintPpi } from '../print-policy'
-import type { StudioOutputCapability } from '../studio-output'
+import { acceptsPrintPpi, type StudioOutputCapability } from '../studio-output'
 
 export type RasterExportSettings = {
 	width: number
@@ -39,7 +39,7 @@ export function createRasterExportRequest(
 		case 'tiff':
 		case 'pdf': {
 			const ppi = settings.ppi ?? capability.print?.ppi[0]
-			if (!ppi || !capability.print?.ppi.includes(ppi)) return null
+			if (!acceptsPrintPpi(capability, ppi)) return null
 			const colorProfile = {
 				space: 'cmyk' as const,
 				icc: capability.colorProfiles?.cmyk?.[0] ?? DEFAULT_CMYK_ICC_PROFILE,

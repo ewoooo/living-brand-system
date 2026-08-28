@@ -12,10 +12,14 @@ import {
 	type ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../export-contract'
-import type { PrintPpi } from '../print-policy'
+import { isPrintPpi, type PrintPpi } from '../print-policy'
 import { createRasterExportRequest } from '../services/create-raster-export-request'
 import { executeArtifactExport } from '../services/export-artifact.client'
-import { resolveMaxExportScale, type StudioOutputCapability } from '../studio-output'
+import {
+	acceptsPrintPpi,
+	resolveMaxExportScale,
+	type StudioOutputCapability,
+} from '../studio-output'
 import { useExport } from './use-export'
 
 export type TemplateExportMetadata = {
@@ -75,7 +79,7 @@ export function useTemplateExport({
 	const [vectorDiagnostics, setVectorDiagnostics] = useState<
 		TemplateVectorArtifactResult['diagnostics'] | null
 	>(null)
-	const effectivePpi = ppi && capability.print?.ppi.includes(ppi) ? ppi : capability.print?.ppi[0]
+	const effectivePpi = acceptsPrintPpi(capability, ppi) ? ppi : capability.print?.ppi[0]
 	const effectiveFps =
 		fps && capability.video?.mp4.fps.includes(fps) ? fps : capability.video?.mp4.fps[0]
 	const effectiveDuration = Math.min(
@@ -118,25 +122,29 @@ export function useTemplateExport({
 					// 글자는 굽기 단계가 이미 윤곽선으로 바꾼다 — 여기서 다시 요청하지 않는다.
 					outlineText: false,
 				}
-				return candidate === 'svg'
-					? {
-							artifact: 'vector',
-							format: 'svg',
-							colorProfile: {
-								space: 'rgb',
-								icc: capability.colorProfiles?.rgb?.[0] ?? 'srgb',
-							},
-							options,
-						}
-					: {
-							artifact: 'vector',
-							format: 'pdf',
-							colorProfile: {
-								space: 'cmyk',
-								icc: capability.colorProfiles?.cmyk?.[0] ?? 'cgats21-crpc6',
-							},
-							options,
-						}
+				if (candidate === 'svg') {
+					return {
+						artifact: 'vector',
+						format: 'svg',
+						colorProfile: {
+							space: 'rgb',
+							icc: capability.colorProfiles?.rgb?.[0] ?? 'srgb',
+						},
+						options,
+					}
+				}
+				// 🔴 인쇄용 벡터 PDF는 해상도 없이 만들 수 없다 — 페이지 치수가 거기서 나오고,
+				//    없는 채로 내보내면 판이 조용히 72ppi 크기로 나간다.
+				if (!isPrintPpi(effectivePpi)) return null
+				return {
+					artifact: 'vector',
+					format: 'pdf',
+					colorProfile: {
+						space: 'cmyk',
+						icc: capability.colorProfiles?.cmyk?.[0] ?? 'cgats21-crpc6',
+					},
+					options: { ...options, ppi: effectivePpi },
+				}
 			}
 			const request =
 				candidate && metadata
@@ -227,7 +235,7 @@ export function useTemplateExport({
 		},
 		ppi: effectivePpi ?? null,
 		setPpi: (next: PrintPpi) => {
-			if (capability.print?.ppi.includes(next)) setPpi(next)
+			if (acceptsPrintPpi(capability, next)) setPpi(next)
 		},
 		fps: effectiveFps ?? null,
 		setFps: (next: VideoExportSpec['fps']) => {

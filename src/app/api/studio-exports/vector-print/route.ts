@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { isCmykIccProfile } from '@/features/studio-export/color-profile'
+import { parsePrintPpi } from '@/features/studio-export/print-policy'
 import {
 	exportVectorPrint,
 	VectorPrintInputError,
@@ -15,6 +16,7 @@ const MAX_SCENE_BYTES = 20_000_000
 
 const requestSchema = z.object({
 	colorProfile: z.string().optional(),
+	ppi: z.unknown(),
 	scene: z.object({
 		width: z.number().positive(),
 		height: z.number().positive(),
@@ -47,10 +49,14 @@ export async function POST(request: Request) {
 	if (colorProfile !== undefined && !isCmykIccProfile(colorProfile)) {
 		return Response.json({ message: 'Invalid color profile.' }, { status: 400 })
 	}
+	// 🔴 기본값을 두지 않는다 — 빠뜨리면 페이지가 조용히 72ppi로 나가고, 인쇄물은 되돌릴 수 없다.
+	const ppi = parsePrintPpi(parsed.data.ppi)
+	if (ppi === undefined) return Response.json({ message: 'Invalid ppi.' }, { status: 400 })
 
 	try {
 		const pdf = await exportVectorPrint({
 			...(colorProfile ? { colorProfile } : {}),
+			ppi,
 			scene: scene as VectorScene,
 		})
 		return new Response(new Uint8Array(pdf), {

@@ -10,6 +10,7 @@ import {
 	rgb,
 } from 'pdf-lib'
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
+import { type PrintPpi, pixelsToPdfPoints } from '../print-policy'
 import type { CmykColor } from './rgb-to-cmyk.sharp'
 
 /**
@@ -23,6 +24,8 @@ import type { CmykColor } from './rgb-to-cmyk.sharp'
  *    `image`로 들어와야 한다(워커의 `unsupported`가 그 목록이다).
  * 🔑 `cmyk`를 주면 도형 색을 잉크로 찍고 PDF/X OutputIntent를 붙인다 — 래스터 인쇄 경로와 같은
  *    ICC를 타야 같은 판의 이미지와 도형이 같은 색으로 나온다.
+ * 🔴 씬 좌표는 CSS px이고 PDF 단위는 pt(1/72인치)다. 둘을 그대로 맞대면 **판이 72ppi라고 선언하는
+ *    것**이 되어 A4 판이 381mm 페이지로 나간다. 그래서 다 그린 뒤 판 전체를 `ppi`로 되읽는다.
  */
 export async function vectorSceneToPdf(
 	scene: VectorScene,
@@ -30,6 +33,8 @@ export async function vectorSceneToPdf(
 		colors: ReadonlyMap<string, CmykColor>
 		iccProfile: Buffer
 		iccProfileName: string
+		/** 씬의 px 좌표를 물리 크기로 읽는 해상도. 페이지 치수와 내용 배율을 함께 정한다. */
+		ppi: PrintPpi
 	},
 ): Promise<Buffer> {
 	const pdf = await PDFDocument.create()
@@ -48,6 +53,11 @@ export async function vectorSceneToPdf(
 	})
 	for (const primitive of scene.primitives)
 		await draw(pdf, page, primitive, scene.height, color, profileRef)
+
+	// 🔴 반드시 다 그린 뒤에 부른다 — `scale`은 이미 쌓인 content stream을 감싸는 방식이라
+	//    먼저 부르면 그 뒤에 그린 것이 배율 밖에 남는다.
+	const pointsPerPixel = print ? pixelsToPdfPoints(1, print.ppi) : 1
+	if (pointsPerPixel !== 1) page.scale(pointsPerPixel, pointsPerPixel)
 
 	return Buffer.from(await pdf.save())
 }

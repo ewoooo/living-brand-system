@@ -9,6 +9,7 @@ import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../expo
 import type { PrintPpi } from '../print-policy'
 import { createRasterExportRequest } from '../services/create-raster-export-request'
 import { executeArtifactExport } from '../services/export-artifact.client'
+import { acceptsPrintPpi } from '../studio-output'
 import { useExport } from './use-export'
 
 type GraphicOutputSize = { width: number; height: number }
@@ -129,14 +130,14 @@ export function useGraphicExport({
 	)
 	const setPpi = useCallback(
 		(ppi: PrintPpi) => {
-			if (!config.output.print?.ppi.includes(ppi)) return
+			if (!acceptsPrintPpi(config.output, ppi)) return
 			setDraft((current) =>
 				current?.format === 'tiff' || current?.format === 'pdf'
 					? { ...current, ppi }
 					: current,
 			)
 		},
-		[config.output.print, setDraft],
+		[config.output, setDraft],
 	)
 	const createVectorArtifact = useCallback(
 		(width: number, height: number) =>
