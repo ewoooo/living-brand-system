@@ -173,14 +173,14 @@ describe('useTemplateExport', () => {
 			}),
 		)
 
-		act(() => result.current.setSize({ width: 1200, height: 600 }))
+		act(() => result.current.setScale(2))
 		act(() => result.current.run())
 		await waitFor(() => expect(produce).toHaveBeenCalledOnce())
 		expect(produce).toHaveBeenCalledWith({ width: 1200, height: 600 })
 		expect(result.current.outputSize).toEqual({ width: 1200, height: 600 })
 	})
 
-	it('한도를 넘는 크기는 갈 수 있는 최대로 눌러 둔다', () => {
+	it('허용 배율을 넘는 값은 무시하고 1배로 둔다', () => {
 		const { result } = renderHook(() =>
 			useTemplateExport({
 				artifact: () =>
@@ -196,12 +196,12 @@ describe('useTemplateExport', () => {
 		)
 
 		// MP4는 인코더 예산에 걸린다 — 이 캔버스는 1배가 상한이다.
-		expect(result.current.maxWidth).toBe(600)
-		act(() => result.current.setSize({ width: 1800, height: 900 }))
-		expect(result.current.size).toEqual({ width: 600, height: 300 })
+		expect(result.current.scaleOptions).toEqual([1])
+		act(() => result.current.setScale(3))
+		expect(result.current.scale).toBe(1)
 	})
 
-	it('인쇄 형식도 고른 크기를 그대로 쓴다 — ppi는 픽셀을 늘리지 않는다', () => {
+	it('인쇄 형식에도 배율이 그대로 먹는다', () => {
 		// 🔴 예전에는 TIFF·PDF가 배율을 버려서, 어떤 해상도를 골라도 캔버스 픽셀 그대로 나갔다.
 		const { result } = renderHook(() =>
 			useTemplateExport({
@@ -221,10 +221,11 @@ describe('useTemplateExport', () => {
 			}),
 		)
 
-		act(() => result.current.setSize({ width: 2400, height: 1200 }))
+		act(() => result.current.setScale(4))
+		expect(result.current.scaleApplies).toBe(true)
 		expect(result.current.outputSize).toEqual({ width: 2400, height: 1200 })
-		// 인쇄 한도는 영상 예산이 아니라 캔버스·총 픽셀이 정한다 — 4배를 훨씬 넘겨 갈 수 있다.
-		expect(result.current.maxWidth).toBeGreaterThan(600 * 4)
+		// 인쇄 배율 상한은 영상 예산이 아니라 캔버스·총 픽셀이 정한다 — 4배를 훨씬 넘겨 갈 수 있다.
+		expect(result.current.scaleOptions.length).toBeGreaterThan(4)
 	})
 
 	it('MP4 Size는 짝수 내림까지 거친 실제 프레임 크기를 안내한다', () => {
@@ -264,15 +265,15 @@ describe('useTemplateExport', () => {
 		)
 
 		act(() => result.current.setFps(24))
-		expect(result.current.maxWidth).toBe(630 * 4)
+		expect(result.current.scaleOptions).toEqual([1, 2, 3, 4])
 
-		act(() => result.current.setSize({ width: 2520, height: 3564 }))
-		expect(result.current.size?.width).toBe(2520)
+		act(() => result.current.setScale(4))
+		expect(result.current.scale).toBe(4)
 
-		// 60fps로 올리면 4배는 초당 처리량 예산을 넘는다 — 크기가 3배 한도로 눌린다.
+		// 60fps로 올리면 4배는 초당 처리량 예산을 넘는다 — 1로 떨어지지 않고 3으로 붙는다.
 		act(() => result.current.setFps(60))
-		expect(result.current.maxWidth).toBe(630 * 3)
-		expect(result.current.size?.width).toBe(630 * 3)
+		expect(result.current.scaleOptions).toEqual([1, 2, 3])
+		expect(result.current.scale).toBe(3)
 	})
 
 	it('PNG는 영상 예산이 아니라 인쇄·캔버스 한도까지 커진다', () => {
@@ -291,7 +292,7 @@ describe('useTemplateExport', () => {
 		)
 
 		// 🔴 정지 이미지에 H.264 매크로블록 예산을 씌우면 A4 300ppi가 막힌다.
-		expect(result.current.maxWidth).toBeGreaterThan(630 * 4)
+		expect(result.current.scaleOptions.length).toBeGreaterThan(4)
 	})
 
 	it('시간축이 없어도 MP4는 Raster Artifact로 반드시 나온다', async () => {

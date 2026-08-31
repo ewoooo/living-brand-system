@@ -16,10 +16,6 @@ function widthInput() {
 	return screen.getByRole('spinbutton', { name: 'Width' })
 }
 
-function heightInput() {
-	return screen.getByRole('spinbutton', { name: 'Height' })
-}
-
 /** 프리셋 밖 해상도를 주면 직접 입력란이 바로 뜬다 — Select는 radix라 열지 않고 이 칸으로 검증한다. */
 function manualPpiInput() {
 	return screen.queryByRole('spinbutton', { name: '직접 입력' })
@@ -152,32 +148,8 @@ describe('해상도는 인쇄(mm)에서만 묻는다', () => {
 	})
 })
 
-describe('종횡비가 고정된 판', () => {
-	// 🔑 템플릿은 Figma가 정한 비율이 고정이라 한 변을 고치면 다른 변이 따라와야 한다.
-	//    비율을 깨면 디자인이 늘어나는데 되돌릴 수단이 없다.
-	it('너비를 고치면 높이가 비율로 따라온다', () => {
-		const { onChange } = renderSizing({
-			value: { width: 1000, height: 2000 },
-			lockAspect: true,
-		})
-
-		fireEvent.blur(widthInput(), { target: { value: '500' } })
-
-		expect(onChange).toHaveBeenCalledWith({ width: 500, height: 1000 })
-	})
-
-	it('높이를 고쳐도 같은 비율로 너비가 따라온다', () => {
-		const { onChange } = renderSizing({
-			value: { width: 1000, height: 2000 },
-			lockAspect: true,
-		})
-
-		fireEvent.blur(heightInput(), { target: { value: '1000' } })
-
-		expect(onChange).toHaveBeenCalledWith({ width: 500, height: 1000 })
-	})
-
-	it('고정이 아니면 손댄 축만 바뀐다', () => {
+describe('한 축만 고친다', () => {
+	it('손댄 축만 바뀌고 나머지는 그대로다', () => {
 		const { onChange } = renderSizing({ value: { width: 1000, height: 2000 } })
 
 		fireEvent.blur(widthInput(), { target: { value: '500' } })

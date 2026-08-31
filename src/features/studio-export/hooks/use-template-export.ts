@@ -12,13 +12,7 @@ import {
 	type ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../export-contract'
-import {
-	isPrintPpi,
-	maxPrintSize,
-	PRINT_PPI_VALUES,
-	type PrintPpi,
-	resolveDefaultPrintPpi,
-} from '../print-policy'
+import { isPrintPpi, maxPrintSize, type PrintPpi, resolveDefaultPrintPpi } from '../print-policy'
 import { createRasterExportRequest } from '../services/create-raster-export-request'
 import { executeArtifactExport } from '../services/export-artifact.client'
 import {
@@ -32,7 +26,7 @@ export type TemplateExportMetadata = {
 	fileName: string
 	width: number
 	height: number
-	/** 캔버스 좌표계 대비 허용 최대 출력 배율 — 1이면 배율 선택지가 없다. */
+	/** 캔버스 좌표계 대비 허용 최대 출력 배율. MP4 인코딩 한도에서 나온 값이라 MP4에만 적용한다. */
 	maxScale: number
 	controller: {
 		groups: readonly ControllerGroupDefinition[]
@@ -45,17 +39,27 @@ export type TemplateExportView = ReturnType<typeof useTemplateExport>
 /** 사이드바가 안내할 출력 크기를 요청에서 되읽는다. MP4만 짝수 내림을 거쳐 값이 달라진다. */
 function resolveOutputSize(
 	request: TemplateExportRequest | null,
-	size: { width: number; height: number } | null,
+	metadata: TemplateExportMetadata | null,
+	scale: number,
 ): { width: number; height: number } | null {
+	if (!metadata) return null
 	if (request?.format === 'mp4') {
 		return { width: request.options.width, height: request.options.height }
 	}
-	return size
+	return { width: metadata.width * scale, height: metadata.height * scale }
 }
 
-/** 한 변을 한도 안으로 누른다. 판의 비율은 크기 컨트롤이 이미 맞춰 놓는다. */
-function clampSide(value: number, limit: number): number {
-	return Math.max(1, Math.min(Math.round(value), limit))
+/**
+ * 인쇄 한도가 허용하는 정수 배율. 종횡비를 지키므로 먼저 막히는 변이 상한이다.
+ * 🔴 여기에 영상 인코더 예산(H.264 매크로블록)을 쓰면 1080px 판이 2배에서 막혀 A4 300ppi가 안 나온다.
+ * ponytail: 목록 길이는 자르지 않는다 — 4로 자르면 그 사고가 그대로 돌아온다.
+ */
+function printScaleCeiling(metadata: TemplateExportMetadata): number {
+	const limit = maxPrintSize(metadata.width, metadata.height)
+	return Math.max(
+		1,
+		Math.floor(Math.min(limit.width / metadata.width, limit.height / metadata.height)),
+	)
 }
 type TemplateExportRequest = Extract<ExportRequest, { artifact: 'raster' | 'video' | 'vector' }>
 
@@ -83,9 +87,7 @@ export function useTemplateExport({
 	const [durationSeconds, setDurationSeconds] = useState(() =>
 		Math.min(5, capability.video?.mp4.maxDurationSeconds ?? 5),
 	)
-	// 🔑 판의 크기를 배율이 아니라 **픽셀로** 들고 있다. 사용자는 mm로 말하고 싶어 하는데
-	//    배율(2×·3×)로는 「210mm」를 표현할 수 없다 — 배율은 이 크기에서 파생한다.
-	const [size, setSize] = useState<{ width: number; height: number } | null>(null)
+	const [scale, setScale] = useState(1)
 	// 🔴 인쇄물은 되돌릴 수 없다 — 벡터로 못 옮긴 것을 화면이 말할 수 있게 남긴다.
 	const [vectorDiagnostics, setVectorDiagnostics] = useState<
 		TemplateVectorArtifactResult['diagnostics'] | null
@@ -102,40 +104,26 @@ export function useTemplateExport({
 	const formats = capability.formats
 	const format =
 		selectedFormat && formats.includes(selectedFormat) ? selectedFormat : (formats[0] ?? null)
-	// MP4만 초당 처리량 예산에 걸린다 — fps를 올리면 같은 캔버스라도 갈 수 있는 배율이 줄어든다.
-	const maxScale = metadata
-		? Math.min(
-				Math.max(1, Math.floor(metadata.maxScale)),
-				resolveMaxExportScale(
-					metadata.width,
-					metadata.height,
-					format === 'mp4' ? effectiveFps : undefined,
-				),
-			)
-		: 1
+	// 🔑 벡터 요청은 판 크기를 그대로 싣는다 — 배율이 들어갈 자리가 없다.
+	//    request 이전에 판정해야 배율 계산이 request에 의존하지 않는다.
+	const usesVector = Boolean(vectorArtifact && metadata && (format === 'svg' || format === 'pdf'))
 	/**
-	 * 판이 커질 수 있는 한도. 🔑 형식마다 정하는 것이 다르다 —
-	 * MP4는 **인코더 예산**(매크로블록)이, 나머지는 **브라우저 캔버스와 인쇄 한도**가 정한다.
+	 * 배율 상한. 🔑 형식마다 정하는 것이 다르다 — MP4는 **인코더 예산**(매크로블록)이,
+	 * 나머지는 **브라우저 캔버스와 인쇄 한도**가 정한다. fps를 올리면 MP4만 상한이 줄어든다.
 	 * 🔴 정지 이미지에 인코더 예산을 씌우면 1080px 판이 2배에서 막혀 A4 300ppi가 안 나온다.
 	 */
-	const limits =
-		metadata &&
-		(format === 'mp4'
-			? {
-					width: Math.round(metadata.width * maxScale),
-					height: Math.round(metadata.height * maxScale),
-				}
-			: maxPrintSize(metadata.width, metadata.height))
-	// 크기를 안 고른 판은 캔버스 크기 그대로다. 한도를 넘는 크기는 갈 수 있는 최대로 눌러 둔다.
-	const effectiveSize =
-		metadata && limits
-			? {
-					width: clampSide(size?.width ?? metadata.width, limits.width),
-					height: clampSide(size?.height ?? metadata.height, limits.height),
-				}
-			: null
-	// 🔑 배율은 이제 파생값이다 — 렌더러가 캔버스 좌표계 대비 얼마나 촘촘히 구울지 정한다.
-	const effectiveScale = effectiveSize && metadata ? effectiveSize.width / metadata.width : 1
+	const maxScale = !metadata
+		? 1
+		: format === 'mp4'
+			? Math.min(
+					Math.max(1, Math.floor(metadata.maxScale)),
+					resolveMaxExportScale(metadata.width, metadata.height, effectiveFps),
+				)
+			: printScaleCeiling(metadata)
+	const scaleOptions = Array.from({ length: maxScale }, (_, index) => index + 1)
+	// fps를 올려 지금 배율이 예산을 넘으면 1로 떨어뜨리지 않고 갈 수 있는 최대로 붙인다.
+	const selectedScale = Math.min(Math.max(1, Math.floor(scale)), maxScale)
+	const effectiveScale = usesVector ? 1 : selectedScale
 	const createRequest = useCallback(
 		(candidate: StudioOutputFormat | null): TemplateExportRequest | null => {
 			// 🔑 PDF는 벡터가 있으면 벡터로 간다 — 판 전체를 굽는 래스터 PDF보다 글자·도형이 선명하고,
@@ -147,8 +135,8 @@ export function useTemplateExport({
 				(candidate === 'svg' || candidate === 'pdf')
 			) {
 				const options = {
-					width: effectiveSize?.width ?? metadata.width,
-					height: effectiveSize?.height ?? metadata.height,
+					width: metadata.width,
+					height: metadata.height,
 					// 글자는 굽기 단계가 이미 윤곽선으로 바꾼다 — 여기서 다시 요청하지 않는다.
 					outlineText: false,
 				}
@@ -198,7 +186,6 @@ export function useTemplateExport({
 			effectiveFps,
 			effectivePpi,
 			effectiveScale,
-			effectiveSize,
 			metadata,
 			vectorArtifact,
 			videoArtifact,
@@ -265,7 +252,6 @@ export function useTemplateExport({
 			if (formats.includes(next)) setSelectedFormat(next)
 		},
 		ppi: effectivePpi,
-		ppiOptions: capability.print?.ppi ?? PRINT_PPI_VALUES,
 		setPpi: (next: PrintPpi) => {
 			if (acceptsPrintPpi(capability, next)) setPpi(next)
 		},
@@ -278,19 +264,21 @@ export function useTemplateExport({
 			const max = capability.video?.mp4.maxDurationSeconds
 			if (max && next > 0 && next <= max) setDurationSeconds(next)
 		},
-		/** 실제로 내보낼 판 크기(px). 사이드바의 크기 컨트롤이 이 값을 편집한다. */
-		size: effectiveSize,
-		/** 이 형식이 허용하는 최대 변. 크기 컨트롤이 상한으로 쓴다. */
-		maxWidth: limits?.width,
-		maxHeight: limits?.height,
-		setSize: (next: { width: number; height: number }) => {
-			if (next.width > 0 && next.height > 0) setSize(next)
+		scale: effectiveScale,
+		scaleOptions,
+		/**
+		 * 이번 요청이 배율을 실제로 쓰는지 — 안 쓰면 사이드바가 Scale 행을 감춘다.
+		 * 🔑 TIFF·PDF 래스터도 이제 배율을 쓴다. 벡터만 판 크기를 그대로 실어 배율이 들어갈 자리가 없다.
+		 */
+		scaleApplies: !usesVector,
+		setScale: (next: number) => {
+			if (scaleOptions.includes(next)) setScale(next)
 		},
 		/**
 		 * 실제로 나올 픽셀 크기. MP4는 짝수 내림까지 거친 요청 값을 그대로 쓴다 —
 		 * 캔버스에 배율만 곱해 보여 주면 홀수 변에서 1px 어긋난 값을 안내하게 된다.
 		 */
-		outputSize: resolveOutputSize(request, effectiveSize),
+		outputSize: resolveOutputSize(request, metadata, effectiveScale),
 		canExport: Boolean(request && output.canExport(request)),
 		run: () => {
 			if (request) void output.run(request)

@@ -182,11 +182,6 @@ type SizingControlsProps = {
 	ppi: PrintPpi
 	/** 드롭다운에 띄울 해상도 프리셋. 목록 밖 값은 「직접 입력」으로 들어온다. */
 	ppiOptions: readonly PrintPpi[]
-	/**
-	 * 판의 종횡비가 고정된 스튜디오(템플릿)는 한 변을 고치면 다른 변이 따라온다.
-	 * 🔴 늘어난 판에 디자인을 다시 앉히는 수단이 없으므로, 비율을 깨는 입력은 애초에 안 만든다.
-	 */
-	lockAspect?: boolean
 	onChange: (value: { width: number; height: number }) => void
 	onPpiChange: (ppi: PrintPpi) => void
 }
@@ -209,7 +204,6 @@ export function SizingControls({
 	maxHeight,
 	ppi,
 	ppiOptions,
-	lockAspect = false,
 	onChange,
 	onPpiChange,
 }: SizingControlsProps) {
@@ -220,21 +214,12 @@ export function SizingControls({
 	const artboardOptions = listArtboardOptions({ maxWidth, maxHeight, current: artboard })
 	const showManualPpi = manualPpi || !ppiOptions.includes(ppi)
 
-	/** 한 변이 바뀌었을 때 실제로 적용할 판. 비율이 고정이면 반대쪽이 따라온다. */
+	/** 한 축을 고친다. 저장값은 언제나 px이므로 입력 단위를 여기서 되돌린다. */
 	const resize = (axis: 'width' | 'height', next: number) => {
 		const px = Math.max(1, Math.round(unitToPx(next, unit, ppi)))
 		const { width, height } = value
 		if (width === null || height === null) return
-		if (!lockAspect) {
-			onChange(axis === 'width' ? { width: px, height } : { width, height: px })
-			return
-		}
-		const ratio = width / height
-		onChange(
-			axis === 'width'
-				? { width: px, height: Math.max(1, Math.round(px / ratio)) }
-				: { width: Math.max(1, Math.round(px * ratio)), height: px },
-		)
+		onChange(axis === 'width' ? { width: px, height } : { width, height: px })
 	}
 
 	/**
@@ -373,6 +358,34 @@ export function VideoControls({
 				onChange={onDurationChange}
 			/>
 		</div>
+	)
+}
+
+/**
+ * Footer에서 캔버스 좌표계 대비 출력 배율을 고른다.
+ * 선택지가 하나뿐이면(캔버스가 이미 인코딩 한도에 가까우면) 읽기 전용으로 둔다.
+ */
+export function ScaleControls({
+	scale,
+	options,
+	onChange,
+}: {
+	scale: number
+	options: readonly number[]
+	onChange: (scale: number) => void
+}) {
+	return (
+		<Controller.Row label="Scale" readonly={options.length <= 1}>
+			{options.length <= 1 ? (
+				<span className="text-sm text-muted-foreground">{scale}×</span>
+			) : (
+				<Controller.Select
+					options={options.map((value) => ({ value: String(value), label: `${value}×` }))}
+					value={String(scale)}
+					onChange={(next) => onChange(Number(next))}
+				/>
+			)}
+		</Controller.Row>
 	)
 }
 
