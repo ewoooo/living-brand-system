@@ -54,6 +54,15 @@ export type ImageStudioValue = {
 		value: ImageColorAdjustment | null
 		update: (patch: Partial<ImageColorAdjustment>) => void
 	}
+	reference: {
+		/** 첨부한 참조 이미지의 data URI — 저장하지 않으므로 이 세션 메모리가 유일한 사본이다. */
+		value: string | null
+		name: string | null
+		/** 형식·용량으로 거절한 사유. 서버까지 가지 않고 화면에서 잡은 것만 여기 있다. */
+		error: string | null
+		attach: (file: File) => void
+		clear: () => void
+	}
 	camera: {
 		azimuthDeg: number
 		elevationDeg: number

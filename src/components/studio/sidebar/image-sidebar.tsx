@@ -44,7 +44,7 @@ export function ImageSidebar({
 	download: ImageExportView
 	preview: ReturnType<typeof useProfilePreview>
 }) {
-	const { config, profiles, controls, generation, camera } = useImageStudio()
+	const { config, profiles, controls, generation, camera, reference } = useImageStudio()
 	const { batch, ratio, resolution } = getImageStudioControls(config)
 	const generationControlIds = new Set<string>([
 		IMAGE_STUDIO_CONTROL_IDS.batch,
@@ -233,6 +233,14 @@ export function ImageSidebar({
 					values={controls.values}
 					bindings={controls.bindings}
 					onChange={controls.update}
+					reference={{
+						value: reference.value,
+						name: reference.name,
+						error: reference.error,
+						busy: generation.busy,
+						onAttach: reference.attach,
+						onClear: reference.clear,
+					}}
 					camera={{
 						azimuthDeg: camera.azimuthDeg,
 						elevationDeg: camera.elevationDeg,
