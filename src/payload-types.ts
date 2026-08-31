@@ -1619,30 +1619,14 @@ export interface GraphicProfile {
    */
   previewImage: number | ApplicationImage;
   displayOrder: number;
-  /**
-   * 브랜드 디자이너가 정해 두는 파라미터 조합입니다. 창작자는 이 중 하나를 고른 뒤 노출된 컨트롤만 조정합니다. 코드가 제공하는 프리셋은 그대로 남고 여기 만든 것이 뒤에 붙습니다.
-   */
   presets?:
     | {
-        /**
-         * 스튜디오가 저장하는 값입니다. 🔴 만든 뒤에 바꾸면 이미 그 프리셋을 고른 사람의 선택이 풀립니다.
-         */
-        presetId: string;
-        label: string;
-        /**
-         * 런타임 입력 스키마의 일부입니다. 여기 없는 값은 런타임 기본값을 따릅니다.
-         */
-        values?:
-          | {
-              [k: string]: unknown;
-            }
-          | unknown[]
-          | string
-          | number
-          | boolean
-          | null;
-        id?: string | null;
-      }[]
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
     | null;
   controllerRestrictions?:
     | {
@@ -3258,14 +3242,7 @@ export interface GraphicProfilesSelect<T extends boolean = true> {
   runtime?: T;
   previewImage?: T;
   displayOrder?: T;
-  presets?:
-    | T
-    | {
-        presetId?: T;
-        label?: T;
-        values?: T;
-        id?: T;
-      };
+  presets?: T;
   controllerRestrictions?: T;
   controllerPresentation?: T;
   exportPolicy?:

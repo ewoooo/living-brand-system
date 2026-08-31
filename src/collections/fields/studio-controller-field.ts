@@ -51,6 +51,49 @@ export function studioControllerPresentationField({
 	}
 }
 
+/**
+ * 매니저가 창작자에게 제공할 프리셋 목록. 🔑 `controllerRestrictions`와 같은 자리에 둔다 —
+ * 「무엇을 노출할지」와 「어디서 시작할지」를 같은 사람이 같은 화면에서 정하기 때문이다.
+ * 🔑 저장 형태가 json인 것도 그 필드와 같다 — 렌더를 통째로 대신하므로 array 행 UI가 필요 없다.
+ */
+export function graphicPresetsField({
+	source,
+	baseConfigs,
+}: {
+	source: StudioKind
+	baseConfigs?: readonly StudioAdminBaseConfig[]
+}): Field {
+	return {
+		name: 'presets',
+		type: 'json',
+		label: '프리셋',
+		admin: {
+			components: {
+				Field: {
+					path: '/components/admin/studio/graphic-presets-field#GraphicPresetsField',
+					clientProps: { source, baseConfigs },
+				},
+			},
+		},
+		// 🔴 같은 식별자가 둘이면 뒤엣것이 조용히 가려진다 — 화면에는 둘 다 보이는데 하나만 먹는다.
+		validate: (value: unknown) => {
+			if (value === null || value === undefined) return true
+			if (!Array.isArray(value)) return '프리셋은 목록이어야 합니다.'
+			const ids = value
+				.map((entry) => (entry as { presetId?: unknown } | null)?.presetId)
+				.filter((id): id is string => typeof id === 'string')
+			const invalid = ids.filter((id) => !/^[a-z][a-z0-9-]*$/.test(id))
+			if (invalid.length > 0) {
+				return `식별자는 영문 소문자로 시작하고 소문자·숫자·하이픈만 씁니다: ${invalid.join(', ')}`
+			}
+			const duplicated = ids.filter((id, index) => ids.indexOf(id) !== index)
+			return duplicated.length === 0
+				? true
+				: `프리셋 식별자가 중복되었습니다: ${[...new Set(duplicated)].join(', ')}`
+		},
+	}
+}
+
 /** Exporter 호환 형식을 Admin이 추가하지 않고 좁히기만 하는 정책 필드다. */
 export function studioExportPolicyField({
 	source,

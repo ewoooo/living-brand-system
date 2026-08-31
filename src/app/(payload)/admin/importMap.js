@@ -30,6 +30,7 @@ import { StudioControllerRestrictionsField as StudioControllerRestrictionsField_
 import { StudioControllerPresentationField as StudioControllerPresentationField_715c81ea8a3b886458ef2633d308523c } from '../../../components/admin/studio/studio-controller-restrictions-field'
 import { StudioExportPolicyField as StudioExportPolicyField_100bfeb2a58aa702365ab77b55c4baee } from '../../../components/admin/studio/studio-export-policy-field'
 import { ImageProfileTestPanel as ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640 } from '../../../components/admin/image-profiles/image-profile-test-panel'
+import { GraphicPresetsField as GraphicPresetsField_3d926ce7f1b13da12968cebc19cad2dc } from '../../../components/admin/studio/graphic-presets-field'
 import { TemplateLayersField as TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6 } from '../../../components/admin/templates/template-layers-field'
 import { TemplateBackgroundPolicyField as TemplateBackgroundPolicyField_db5e24a3a4d2a7d4f0c86814bf290e5c } from '../../../components/admin/templates/template-background-policy-field'
 import { SidebarDivider as SidebarDivider_34b02386e3687855f2c939d264827b16 } from '../../../components/admin/templates/sidebar-divider'
@@ -84,6 +85,7 @@ export const importMap = {
   "/components/admin/studio/studio-controller-restrictions-field#StudioControllerPresentationField": StudioControllerPresentationField_715c81ea8a3b886458ef2633d308523c,
   "/components/admin/studio/studio-export-policy-field#StudioExportPolicyField": StudioExportPolicyField_100bfeb2a58aa702365ab77b55c4baee,
   "/components/admin/image-profiles/image-profile-test-panel#ImageProfileTestPanel": ImageProfileTestPanel_4e5dbfcb16cbe71d2377850041f37640,
+  "/components/admin/studio/graphic-presets-field#GraphicPresetsField": GraphicPresetsField_3d926ce7f1b13da12968cebc19cad2dc,
   "/components/admin/templates/template-layers-field#TemplateLayersField": TemplateLayersField_50c68c65c3e705e4e610557c8a05e5e6,
   "/components/admin/templates/template-background-policy-field#TemplateBackgroundPolicyField": TemplateBackgroundPolicyField_db5e24a3a4d2a7d4f0c86814bf290e5c,
   "/components/admin/templates/sidebar-divider#SidebarDivider": SidebarDivider_34b02386e3687855f2c939d264827b16,
