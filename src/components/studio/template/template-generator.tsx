@@ -59,6 +59,7 @@ function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
 	useTemplateAuthoringPatch(template.id, session)
 	const exporting = useTemplateExport({
 		artifact: canvas.artifact,
+		vectorArtifact: canvas.vectorArtifact,
 		videoArtifact: canvas.videoArtifact,
 		capability: config.output,
 		metadata: {
@@ -66,6 +67,7 @@ function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
 			width: config.template.exportOption.canvas.width,
 			height: config.template.exportOption.canvas.height,
 			maxScale: config.template.exportOption.maxScale,
+			canvasPpi: config.template.exportOption.canvasPpi,
 			controller: {
 				groups: config.controller.groups,
 				values: execution.controllerValues,

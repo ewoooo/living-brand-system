@@ -52,13 +52,15 @@ export type ExportRequest =
 			artifact: 'raster'
 			format: 'tiff'
 			colorProfile: CmykColorProfile
-			options: { ppi: PrintPpi; compression: 'lzw' }
+			// 🔑 `scale`은 캔버스 좌표계 대비 렌더 배율이다 — `ppi`는 물리 크기를 정할 뿐
+			//    픽셀을 한 개도 늘리지 않으므로, 인쇄 밀도는 이 값이 소유한다.
+			options: { ppi: PrintPpi; compression: 'lzw'; scale: number }
 	  }
 	| {
 			artifact: 'raster'
 			format: 'pdf'
 			colorProfile: CmykColorProfile
-			options: { ppi: PrintPpi; bleedMm: number }
+			options: { ppi: PrintPpi; bleedMm: number; scale: number }
 	  }
 	| { artifact: 'raster'; format: 'mp4'; options: VideoExportSpec }
 	| {
@@ -66,6 +68,14 @@ export type ExportRequest =
 			format: 'svg'
 			colorProfile: RgbColorProfile
 			options: { width: number; height: number; outlineText: boolean }
+	  }
+	// 인쇄용 벡터 PDF. 판 전체를 굽는 래스터 PDF와 달리 도형과 윤곽선을 그대로 싣는다.
+	// 🔑 `ppi`는 화질이 아니라 **페이지 치수**를 정한다 — 벡터라 해상도 개념이 없다.
+	| {
+			artifact: 'vector'
+			format: 'pdf'
+			colorProfile: CmykColorProfile
+			options: { width: number; height: number; outlineText: boolean; ppi: PrintPpi }
 	  }
 	| { artifact: 'video'; format: 'mp4'; options: VideoExportSpec }
 

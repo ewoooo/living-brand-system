@@ -115,23 +115,112 @@ export type OriginalArtifact<Source = unknown> = Artifact<'original', Source>
 
 export type StudioArtifact = RasterArtifact | VectorArtifact | VideoArtifact | OriginalArtifact
 
+/**
+ * 🔑 디자인 툴이 개체로 푸는 최소 집합만 둔다. Figma는 CSS 클래스·`<style>`보다
+ * presentation attribute를 안정적으로 읽으므로 직렬화기가 그것만 쯜다.
+ * 🔴 `foreignObject`는 넣지 않는다 — 확장자만 svg이고 Figma·Illustrator에서 빈 화면으로 열린다.
+ */
+export type VectorPrimitive =
+	| {
+			kind: 'line'
+			x1: number
+			y1: number
+			x2: number
+			y2: number
+			stroke: string
+			strokeWidth: number
+			lineCap?: 'butt' | 'round' | 'square'
+	  }
+	| { kind: 'circle'; cx: number; cy: number; radius: number; fill: string }
+	| {
+			kind: 'rect'
+			x: number
+			y: number
+			width: number
+			height: number
+			fill?: string
+			stroke?: string
+			strokeWidth?: number
+			/** 교차 반지름은 SVG가 못 표현한다 — 네 모서리가 같을 때만 적는다. */
+			radius?: number
+			opacity?: number
+	  }
+	| {
+			kind: 'text'
+			x: number
+			/** baseline y. DOM은 상단 기준이므로 변환기가 baseline을 직접 재서 넣는다. */
+			y: number
+			text: string
+			fontFamily: string
+			fontSize: number
+			fontWeight?: number
+			letterSpacing?: number
+			fill: string
+			textAnchor?: 'start' | 'middle' | 'end'
+			opacity?: number
+	  }
+	| {
+			kind: 'image'
+			x: number
+			y: number
+			width: number
+			height: number
+			/** data: URI를 권장한다 — 외부 URL은 받는 쪽 네트워크에서 깨진다. */
+			href: string
+			/** CSS object-fit에 대응한다. 생략하면 상자를 꽉 채운다. */
+			preserveAspectRatio?: string
+			opacity?: number
+			/**
+			 * 이 이미지가 이미 CMYK로 변환됐는지. 🔴 PDF는 색 공간을 파일에 적어야 하고, 안 적으면
+			 * DeviceRGB로 들어가 **CMYK 출력의도를 단 파일 안에 관리되지 않은 RGB 사진**이 된다.
+			 * 서버의 인쇄 경로만 이 값을 채운다(브라우저에는 ICC 변환기가 없다).
+			 */
+			colorSpace?: 'cmyk'
+	  }
+	| {
+			/**
+			 * 임의 도형. 두 자리에서 쓴다 — 라인 아트를 트레이싱해 채우는 레이어와,
+			 * 글자를 아웃라인으로 뺄 때다. 둘 다 `image`·`text`를 이것으로 갈아끼우는 형태라
+			 * 계약을 다시 넓히지 않는다.
+			 */
+			kind: 'path'
+			/** SVG path `d`. 좌표는 아래 `x`·`y`를 원점으로 읽는다. */
+			d: string
+			/**
+			 * 이 path의 원점. 자유 transform 문자열 대신 평행이동만 둔다 — SVG는 `translate`,
+			 * PDF는 `drawSvgPath`의 x·y로 그대로 간다. 회전·기울임은 아직 쓰는 곳이 없다.
+			 */
+			x?: number
+			y?: number
+			/**
+			 * 균등 배율. viewBox를 가진 자산(로고 SVG)을 상자에 맞출 때 쓴다.
+			 * 🔴 균등만 둔다 — SVG는 `scale(s)`, PDF는 `drawSvgPath`의 `scale`로 그대로 가고,
+			 *    비균등이면 두 출력의 표현이 갈린다.
+			 */
+			scale?: number
+			fill?: string
+			stroke?: string
+			strokeWidth?: number
+			/** 겹치는 윤곽을 구멍으로 읽는다. 트레이싱 결과는 대개 evenodd다. */
+			fillRule?: 'nonzero' | 'evenodd'
+			opacity?: number
+	  }
+	| {
+			kind: 'group'
+			/** Figma·Illustrator가 레이어 이름으로 읽는다. */
+			label?: string
+			transform?: string
+			opacity?: number
+			/** 상자 밖을 잘라낸다. 그래픽 배경을 판 안에 가두는 데 쓴다. */
+			clip?: { x: number; y: number; width: number; height: number }
+			children: readonly VectorPrimitive[]
+	  }
+
 export type VectorScene = {
 	width: number
 	height: number
 	background: string
-	primitives: readonly (
-		| {
-				kind: 'line'
-				x1: number
-				y1: number
-				x2: number
-				y2: number
-				stroke: string
-				strokeWidth: number
-				lineCap?: 'butt' | 'round' | 'square'
-		  }
-		| { kind: 'circle'; cx: number; cy: number; radius: number; fill: string }
-	)[]
+	primitives: readonly VectorPrimitive[]
 }
 
 export type VectorSceneArtifact = VectorArtifact<VectorScene>

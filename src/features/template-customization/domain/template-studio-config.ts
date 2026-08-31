@@ -13,6 +13,7 @@ import {
 	type ImageAspectRatio,
 	type ImageOutputSize,
 } from '@/features/image-generation/image-size'
+import { isPrintPpi, type PrintPpi } from '@/features/studio-export/print-policy'
 import {
 	DEFAULT_RASTER_VIDEO_CAPABILITY,
 	parseStudioOutputCapability,
@@ -143,6 +144,8 @@ export type PublishedHtmlTemplate = {
 	nodeConfigs: Record<string, PublishedTemplateNodeConfig>
 	width: number
 	height: number
+	/** 판형 선언 — 이 px를 몇 ppi로 그렸는가. 없으면 디지털판이라 물리 크기가 없다. */
+	canvasPpi?: PrintPpi
 	templateVersion: string
 	exportPolicy?: unknown
 	backgroundPolicy?: TemplateBackgroundPolicy
@@ -173,6 +176,8 @@ export type TemplateStudioConfig = StudioControllerConfig<'template', number> & 
 		graphicConfigs: readonly GraphicStudioConfig[]
 		exportOption: {
 			canvas: { width: number; height: number }
+			/** 판형이 선언된 템플릿의 인쇄 해상도. 있으면 창작자가 크기도 해상도도 고르지 않는다. */
+			canvasPpi?: PrintPpi
 			/** 캔버스 좌표계 대비 허용 최대 출력 배율. MP4 인코딩 한도에서 되짚어 구한다. */
 			maxScale: number
 		}
@@ -323,7 +328,7 @@ export function parseTemplateStudioConfig(input: unknown): TemplateStudioConfig 
 	}
 
 	const exportOption = templateRecord(template.exportOption, 'TemplateStudioConfig exportOption')
-	assertTemplateKeys(exportOption, ['canvas', 'maxScale'])
+	assertTemplateKeys(exportOption, ['canvas', 'canvasPpi', 'maxScale'])
 	resolveStudioArtifactOutputFormats(
 		common.artifacts,
 		(root.output as StudioOutputCapability).formats,
@@ -333,6 +338,9 @@ export function parseTemplateStudioConfig(input: unknown): TemplateStudioConfig 
 	assertPositiveNumber(canvas.width, 'canvas.width')
 	assertPositiveNumber(canvas.height, 'canvas.height')
 	assertPositiveNumber(exportOption.maxScale, 'exportOption.maxScale')
+	if (exportOption.canvasPpi !== undefined && !isPrintPpi(exportOption.canvasPpi)) {
+		throw new Error('TemplateStudioConfig canvasPpi: 인쇄 해상도 범위의 정수여야 합니다.')
+	}
 
 	const typed = input as TemplateStudioConfig
 	const { text, background } = partitionTemplateSlots(typed.template.slots)
@@ -636,7 +644,8 @@ export function getTemplateRuntimeManifest({
 				}
 			: null
 	return {
-		artifacts: { raster: {}, ...(videoFrame ? { video: videoFrame } : {}) },
+		// 벡터는 캔버스 크기와 무관하게 항상 낼 수 있다 — 재서 도형으로 옮기는 것이라 배율 예산이 없다.
+		artifacts: { raster: {}, vector: {}, ...(videoFrame ? { video: videoFrame } : {}) },
 		controller: {
 			groups: [
 				...(textControls.length
@@ -759,7 +768,7 @@ export function deriveTemplateStudioConfig(
 		name: template.name,
 		output: resolveStudioOutputCapability(
 			runtimeManifest.artifacts,
-			projectStudioOutputPolicy(template.exportPolicy),
+			withGuaranteedTemplateFormats(projectStudioOutputPolicy(template.exportPolicy)),
 		),
 		artifacts: runtimeManifest.artifacts,
 		controller: {
@@ -775,12 +784,33 @@ export function deriveTemplateStudioConfig(
 			graphicConfigs: scopedGraphicConfigs,
 			exportOption: {
 				canvas: { width: template.width, height: template.height },
+				...(template.canvasPpi === undefined ? {} : { canvasPpi: template.canvasPpi }),
 				maxScale: resolveMaxExportScale(template.width, template.height),
 			},
 		},
 	}
 	parseTemplateStudioConfig(config)
 	return config
+}
+
+/**
+ * 🔑 템플릿은 어떤 정책이든 **벡터(svg·pdf)** 를 낸다. 벡터는 고르는 선택지가 아니라 판이 가진
+ *    성질이라, 정책이 지우면 「왜 벡터가 없지」를 템플릿마다 다시 디버깅하게 된다(2026-08-27에
+ *    실제로 그랬다 — 발행된 12개 중 벡터를 허용한 것이 하나도 없었다).
+ *    콘텐츠에 따라 벡터라도 사실상 이미지 덩어리일 수 있으나 그것은 결과의 성격이지 가부가 아니다.
+ * 🔴 래스터는 보장하지 않는다 — png를 못 끄게 만들면 admin의 「래스터」 토글이 거짓말을 한다.
+ */
+export const GUARANTEED_TEMPLATE_FORMATS = ['svg', 'pdf'] as const
+
+function withGuaranteedTemplateFormats(
+	policy: ReturnType<typeof projectStudioOutputPolicy>,
+): ReturnType<typeof projectStudioOutputPolicy> {
+	// 좁히지 않는 정책은 이미 전부 낸다 — 손대면 오히려 의미가 바뀐다.
+	if (!policy?.allowedFormats) return policy
+	return {
+		...policy,
+		allowedFormats: [...new Set([...policy.allowedFormats, ...GUARANTEED_TEMPLATE_FORMATS])],
+	}
 }
 
 function templateRecord(value: unknown, name: string): Record<string, unknown> {

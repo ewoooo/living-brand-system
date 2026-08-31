@@ -15,6 +15,7 @@ import { elementToJpeg } from '../adapters/element-to-jpeg.client'
 import { elementToPng } from '../adapters/element-to-png.client'
 import { vectorSceneToSvg } from '../adapters/vector-scene-to-svg'
 import type { ExportRequest, ExportResult } from '../export-contract'
+import type { PrintPpi } from '../print-policy'
 import { requestPrintExport } from './export-print.client'
 
 export type ExportableStudioArtifact =
@@ -55,7 +56,13 @@ export async function executeArtifactExport({
 			throw new Error('지원하지 않는 Raster export 형식입니다.')
 		}
 		case 'vector':
-			return exportVectorArtifactAsSvg(fileName, artifact as VectorSceneArtifact)
+			return request.format === 'pdf'
+				? exportVectorArtifactAsPrintPdf(
+						fileName,
+						artifact as VectorSceneArtifact,
+						request.options.ppi,
+					)
+				: exportVectorArtifactAsSvg(fileName, artifact as VectorSceneArtifact)
 		case 'video':
 			return exportVideoArtifactAsMp4(
 				fileName,
@@ -74,6 +81,28 @@ export function exportVectorArtifactAsSvg(
 		data: new Blob([vectorSceneToSvg(artifact)], { type: 'image/svg+xml' }),
 		filename: `${fileName}.svg`,
 		mimeType: 'image/svg+xml',
+	}
+}
+
+/**
+ * Vector Artifact를 인쇄용 CMYK PDF로 만든다.
+ * 🔴 변환은 서버가 한다 — ICC 색 변환(sharp)이 서버 전용이고 pdf-lib을 클라이언트 번들에 넣지 않는다.
+ */
+export async function exportVectorArtifactAsPrintPdf(
+	fileName: string,
+	artifact: VectorSceneArtifact,
+	ppi: PrintPpi,
+): Promise<ExportResult> {
+	const response = await fetch('/api/studio-exports/vector-print', {
+		body: JSON.stringify({ ppi, scene: artifact.source }),
+		headers: { 'Content-Type': 'application/json' },
+		method: 'POST',
+	})
+	if (!response.ok) throw new Error('인쇄용 PDF를 만들지 못했습니다.')
+	return {
+		data: await response.blob(),
+		filename: `${fileName}.pdf`,
+		mimeType: 'application/pdf',
 	}
 }
 
@@ -183,9 +212,11 @@ export async function exportRasterArtifactAsPrint(
 		colorProfile: request.colorProfile.icc,
 		fileName,
 		format: request.format,
+		// 🔴 여기 `scale: 1`이 하드코딩돼 있었다 — 어떤 해상도를 골라도 인쇄물이 캔버스 픽셀
+		//    그대로 나가, A4 300ppi가 요구하는 픽셀을 만들 경로가 아예 없었다.
 		png: await renderRasterArtifactToPng(
 			artifact,
-			{ scale: 1, transparent: false },
+			{ scale: request.options.scale, transparent: false },
 			renderSize,
 		),
 		ppi: request.options.ppi,

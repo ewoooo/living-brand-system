@@ -50,7 +50,7 @@ Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listIma
 
 | Surface | 상태 | 진입점 |
 | --- | --- | --- |
-| [Page](../surfaces/page.md) | 구현 | `/studio/generate/image` 또는 `/studio/generate/image/:profileSlug` — 프롬프트 입력 → 후보 그리드 → 택1 |
+| [Page](../surfaces/page.md) | 구현 | `/studio/image` 또는 `/studio/image/:profileSlug` — 프롬프트 입력 → 후보 그리드 → 택1 |
 | [AI Chat](../surfaces/ai-chat.md) | 구현 | agent tool `generateImage`로 대화 중 생성, 후보를 챗에 렌더 |
 | MCP | 구현 | `generateBrandImage`가 published 프로파일로 원본을 저장하고 MCP 이미지 미리보기와 원본 URL을 반환 |
 | [REST](../surfaces/rest.md) | 구현 | `POST /api/generate-image`(same-origin, 인증 필수), `POST /api/admin/generate-image`(Manager 전용) |
@@ -61,7 +61,7 @@ Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listIma
 - 이미지 프로바이더: 기존 프로파일은 OpenAI `gpt-image-2`, Technical Illustration은 Google `gemini-3.1-flash-lite-image`를 사용합니다. 프로파일이 모델 프리셋을 선택하고 Runtime Manifest가 capability를 발행하며 코어 생성 서비스가 공급자를 결정합니다.
 - Vercel AI SDK `generateImage`. Google은 provider options의 `imageConfig`, OpenAI는 Images API의 `size`를 사용합니다.
 - Google 직접 호출은 `@ai-sdk/google`과 서버의 `GEMINI_API_KEY`를 사용하며 AI Gateway를 거치지 않습니다.
-- 프로파일 저장소: Payload CMS의 published `image-profiles` 컬렉션. `slug`가 있는 프로파일은 `displayOrder` 순서로 Studio 내비게이션과 `/studio/generate/image/:profileSlug` 경로에 노출됩니다.
+- 프로파일 저장소: Payload CMS의 published `image-profiles` 컬렉션. `slug`가 있는 프로파일은 `displayOrder` 순서로 Studio 내비게이션과 `/studio/image/:profileSlug` 경로에 노출됩니다.
 - 프로파일 정규화: 유저 프롬프트 후보가 있는 프로파일만 Anthropic Haiku 구조화 출력을 사용합니다. 후보가 없는 정적 프로파일은 정규화 모델을 호출하지 않습니다.
 - Review 미사용(의도적) — 이미지 검수 성능이 아직 일부 항목에 한정되어 있어 생성 품질을 검수에 묶지 않습니다.
 - 키가 없으면 불가: 프리셋이 요구하는 키(`OPENAI_API_KEY` 또는 `GEMINI_API_KEY`)가 없으면 다른 모델로 대체하지 않고 실패합니다. dev 폴백은 없습니다.

@@ -93,6 +93,7 @@ import * as migration_20260826_053723_chapter_collection from './20260826_053723
 import * as migration_20260826_063726_fix_orphan_versions from './20260826_063726_fix_orphan_versions';
 import * as migration_20260826_064938_topic_surface_and_block_width from './20260826_064938_topic_surface_and_block_width';
 import * as migration_20260827_085320_image_profile_reference_image_feature from './20260827_085320_image_profile_reference_image_feature';
+import * as migration_20260831_012908_add_template_canvas_ppi from './20260831_012908_add_template_canvas_ppi';
 
 export const migrations = [
   {
@@ -568,6 +569,11 @@ export const migrations = [
   {
     up: migration_20260827_085320_image_profile_reference_image_feature.up,
     down: migration_20260827_085320_image_profile_reference_image_feature.down,
-    name: '20260827_085320_image_profile_reference_image_feature'
+    name: '20260827_085320_image_profile_reference_image_feature',
+  },
+  {
+    up: migration_20260831_012908_add_template_canvas_ppi.up,
+    down: migration_20260831_012908_add_template_canvas_ppi.down,
+    name: '20260831_012908_add_template_canvas_ppi',
   },
 ];

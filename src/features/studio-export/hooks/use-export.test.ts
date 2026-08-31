@@ -21,7 +21,7 @@ describe('useExport', () => {
 			artifact: 'raster',
 			format: 'pdf',
 			colorProfile: { space: 'cmyk', icc: 'cgats21-crpc6' },
-			options: { bleedMm: 0, ppi: 300 },
+			options: { bleedMm: 0, ppi: 300, scale: 1 },
 		} as const satisfies Request
 		const execute = vi.fn().mockRejectedValue(new Error('내보내기 실패'))
 		const { result } = renderHook(() =>

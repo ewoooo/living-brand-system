@@ -46,6 +46,7 @@ import {
 import {
 	composeTemplateStudioHtml,
 	createTemplateRasterArtifact,
+	createTemplateVectorArtifact,
 	createTemplateVideoArtifact,
 	type TemplateRasterArtifact,
 	type TemplateVideoArtifact,
@@ -573,6 +574,12 @@ export function TemplateStudioProvider({
 			width,
 		})
 	}, [background.state.type, composedHtml, height, width])
+	// 벡터는 배경 graphic을 래스터 프레임으로 깔지 않는다 — 그 프레임이 판 전체를 이미지 한 장으로
+	// 덮어 인쇄용 벡터의 목적을 없앤다. 배경은 씬의 바닥색으로만 남는다.
+	const vectorArtifact = useCallback(
+		() => createTemplateVectorArtifact({ height, html: composedHtml, width }),
+		[composedHtml, height, width],
+	)
 	// 배경이 graphic이어도 video artifact를 내지 않는 runtime이 있다(forward-straight는 vector·raster뿐).
 	// 타입만 보고 MP4를 Video 경로로 돌리면 producer가 던진다 — 선언을 보고 정적 MP4로 떨어뜨린다.
 	const supportsBackgroundVideo =
@@ -612,6 +619,7 @@ export function TemplateStudioProvider({
 			canvas: {
 				html: composedHtml,
 				artifact,
+				vectorArtifact,
 				videoArtifact: supportsBackgroundVideo ? videoArtifact : null,
 				previewRef,
 				registerGraphicFrame,
@@ -634,6 +642,7 @@ export function TemplateStudioProvider({
 			registerGraphicFrame,
 			registerGraphicVideo,
 			text,
+			vectorArtifact,
 			vectors,
 			videoArtifact,
 		],
