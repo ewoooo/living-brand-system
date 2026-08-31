@@ -1829,6 +1829,10 @@ export interface Template {
    */
   height?: number | null;
   /**
+   * 이 판을 인쇄물로 선언합니다. 물리 크기 = 위 px ÷ ppi × 25.4mm (예: 2480×3508px에 300 → A4). 비우면 디지털판이라 mm를 쓰지 않고, 창작자가 인쇄 해상도를 직접 고릅니다.
+   */
+  canvasPpi?: number | null;
+  /**
    * Create 화면 사이드바에서 이 템플릿이 속할 카테고리입니다.
    */
   category: number | TemplateCategory;
@@ -3314,6 +3318,7 @@ export interface TemplatesSelect<T extends boolean = true> {
   previewImage?: T;
   width?: T;
   height?: T;
+  canvasPpi?: T;
   category?: T;
   html?: T;
   updatedAt?: T;

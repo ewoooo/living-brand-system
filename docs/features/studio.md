@@ -137,6 +137,8 @@ config.output
 
 값의 정본은 언제나 px입니다. `px`와 `mm`는 대등한 두 모드이고 표시 설정이 아닙니다 — px 모드는 mm를 보여주지 않고, mm 모드는 px를 보여주지 않습니다. 해상도(ppi)는 두 모드를 잇는 값이라 mm 입력이 있는 컨트롤(`SizingControls`)에서만 묻습니다.
 
+Template은 판형이 문서에 선언되어 있어 창작자가 바꿀 수 없습니다. `templates.canvasPpi`가 그 선언이고 물리 크기는 `width·height(px) ÷ canvasPpi × 25.4mm`로 파생합니다. 물리 크기를 정하는 값은 이 하나뿐입니다 — mm를 따로 저장하면 px와 종횡비가 어긋나 한 변이 조용히 버려집니다. 판형이 선언된 인쇄판은 사이드바가 mm만 보여 주고 배율도 해상도도 고르지 않습니다. `canvasPpi`가 비어 있으면 디지털판이라 물리 크기가 없고, 인쇄 형식을 낼 때만 창작자가 `exportPolicy.print.allowedPpi` 프리셋에서 해상도를 고릅니다. 🔴 Figma 재import는 `baseHtml`·`html`·`overrides`·`width`·`height`·`sourceUrl`을 덮으므로 판형 선언을 그 축에 얹으면 안 됩니다.
+
 래스터 인쇄 요청이 싣는 크기 정보는 `scale` 하나뿐입니다(`createRasterExportRequest`) — 높이는 캔버스 비율에서 파생합니다. 그래서 판의 두 변을 따로 받는 크기 컨트롤을 Template 사이드바에 붙이면 높이 입력이 요청에 도달하지 못한 채 조용히 버려집니다(A size를 골라도 210×297mm가 아니라 210×262mm로 나갔습니다). Template 사이드바가 크기를 읽기 전용으로 두고 배율만 받는 이유가 이것입니다.
 
 배율 상한은 형식마다 정체가 다릅니다. MP4는 H.264 인코더 예산(`resolveMaxExportScale`)이, 그 밖의 형식은 브라우저 캔버스 변 한도와 인쇄 총 픽셀(`maxPrintSize`)이 정합니다. 정지 이미지에 인코더 예산을 씌우면 1080px 판이 2배에서 막혀 A4 300ppi가 요구하는 픽셀을 만들 경로가 없어집니다. Graphic·Image는 판형 선언이 없어 창작자가 크기와 밀도를 모두 정합니다.

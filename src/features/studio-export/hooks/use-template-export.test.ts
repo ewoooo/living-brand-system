@@ -320,4 +320,69 @@ describe('useTemplateExport', () => {
 			}),
 		)
 	})
+
+	describe('판형 선언', () => {
+		// 🔑 템플릿은 판형이 문서에 선언돼 있어 창작자가 크기도 밀도도 고르지 않는다.
+		it('판형이 선언된 인쇄판은 mm가 고정이고 배율·해상도를 고르지 않는다', () => {
+			const { result } = renderHook(() =>
+				useTemplateExport({
+					artifact: () =>
+						createTemplateRasterArtifact({
+							html: '<div>poster</div>',
+							width: 2480,
+							height: 3508,
+						}),
+					videoArtifact: null,
+					capability: {
+						formats: ['pdf'],
+						colorProfiles: { cmyk: ['cgats21-crpc6'] },
+						print: { ppi: [300] },
+					},
+					metadata: {
+						...MP4_METADATA,
+						width: 2480,
+						height: 3508,
+						maxScale: 4,
+						canvasPpi: 300,
+					},
+				}),
+			)
+
+			expect(result.current.scaleApplies).toBe(false)
+			expect(result.current.ppiApplies).toBe(false)
+			expect(Math.round(result.current.sizeMm?.width ?? 0)).toBe(210)
+			expect(Math.round(result.current.sizeMm?.height ?? 0)).toBe(297)
+
+			// 🔴 배율을 밀어 넣어도 선언한 판이 커지지 않는다.
+			//    2는 이 판의 배율 상한 안이라 실제로 적용될 수 있는 값이다 — 상한 밖 값(4)을 쓰면
+			//    애초에 무시돼 「선언이 배율을 막는다」를 검증하지 못한다.
+			expect(result.current.scaleOptions).toContain(2)
+			act(() => result.current.setScale(2))
+			expect(result.current.outputSize).toEqual({ width: 2480, height: 3508 })
+		})
+
+		it('선언이 없으면 디지털판이라 배율과 해상도를 창작자가 고른다', () => {
+			const { result } = renderHook(() =>
+				useTemplateExport({
+					artifact: () =>
+						createTemplateRasterArtifact({
+							html: '<div>card</div>',
+							width: 600,
+							height: 300,
+						}),
+					videoArtifact: null,
+					capability: {
+						formats: ['pdf'],
+						colorProfiles: { cmyk: ['cgats21-crpc6'] },
+						print: { ppi: [300] },
+					},
+					metadata: { ...MP4_METADATA, maxScale: 4 },
+				}),
+			)
+
+			expect(result.current.scaleApplies).toBe(true)
+			expect(result.current.ppiApplies).toBe(true)
+			expect(result.current.sizeMm).toBeNull()
+		})
+	})
 })
