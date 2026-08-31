@@ -22,6 +22,8 @@ export type PublishedGraphicProfileDefinition = {
 	name: string
 	runtime: string
 	controllerRestrictions?: unknown
+	/** 프로파일이 소유하는 프리셋 목록. 코드 프리셋 뒤에 붙는다. */
+	presets?: unknown
 	exportPolicy?: unknown
 	controllerPresentation?: unknown
 	previewImage?: unknown

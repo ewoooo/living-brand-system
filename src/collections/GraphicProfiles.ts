@@ -81,6 +81,61 @@ export const GraphicProfiles: CollectionConfig = {
 			min: 0,
 			admin: { position: 'sidebar' },
 		},
+		{
+			name: 'presets',
+			type: 'array',
+			label: '프리셋',
+			labels: { singular: '프리셋', plural: '프리셋' },
+			admin: {
+				initCollapsed: true,
+				description:
+					'브랜드 디자이너가 정해 두는 파라미터 조합입니다. 창작자는 이 중 하나를 고른 뒤 노출된 컨트롤만 조정합니다. 코드가 제공하는 프리셋은 그대로 남고 여기 만든 것이 뒤에 붙습니다.',
+			},
+			fields: [
+				{
+					name: 'presetId',
+					type: 'text',
+					required: true,
+					label: '식별자',
+					admin: {
+						width: '40%',
+						description:
+							'스튜디오가 저장하는 값입니다. 🔴 만든 뒤에 바꾸면 이미 그 프리셋을 고른 사람의 선택이 풀립니다.',
+					},
+					validate: (value: unknown) =>
+						typeof value === 'string' && /^[a-z][a-z0-9-]*$/.test(value)
+							? true
+							: '식별자는 영문 소문자로 시작하고 소문자·숫자·하이픈만 씁니다.',
+				},
+				{
+					name: 'label',
+					type: 'text',
+					required: true,
+					label: '이름',
+					admin: { width: '60%' },
+				},
+				{
+					name: 'values',
+					type: 'json',
+					label: '파라미터',
+					admin: {
+						description:
+							'런타임 입력 스키마의 일부입니다. 여기 없는 값은 런타임 기본값을 따릅니다.',
+					},
+				},
+			],
+			// 🔴 같은 식별자가 둘이면 뒤엣것이 조용히 가려진다 — 화면에는 둘 다 보이는데 하나만 먹는다.
+			validate: (value: unknown) => {
+				if (!Array.isArray(value)) return true
+				const ids = value
+					.map((entry) => (entry as { presetId?: unknown } | null)?.presetId)
+					.filter((id): id is string => typeof id === 'string')
+				const duplicated = ids.filter((id, index) => ids.indexOf(id) !== index)
+				return duplicated.length === 0
+					? true
+					: `프리셋 식별자가 중복되었습니다: ${[...new Set(duplicated)].join(', ')}`
+			},
+		},
 		studioControllerRestrictionsField({
 			source: 'graphic',
 			baseConfigs: graphicAdminRuntimeManifests,

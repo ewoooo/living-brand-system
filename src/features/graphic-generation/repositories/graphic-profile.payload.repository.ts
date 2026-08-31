@@ -21,6 +21,8 @@ export async function listPublishedGraphicProfileDefinitions(
 			controllerRestrictions: true,
 			controllerPresentation: true,
 			name: true,
+			// 🔴 화이트리스트에 없으면 타입은 통과하는데 런타임 값이 영원히 undefined다.
+			presets: true,
 			exportPolicy: true,
 			previewImage: true,
 			runtime: true,
@@ -37,11 +39,13 @@ export async function listPublishedGraphicProfileDefinitions(
 			runtime,
 			controllerRestrictions,
 			controllerPresentation,
+			presets,
 			exportPolicy,
 			previewImage,
 		} = document as typeof document & {
 			controllerRestrictions?: unknown
 			controllerPresentation?: unknown
+			presets?: unknown
 			exportPolicy?: PublishedGraphicProfileDefinition['exportPolicy']
 			previewImage?: unknown
 		}
@@ -51,6 +55,7 @@ export async function listPublishedGraphicProfileDefinitions(
 			runtime,
 			controllerRestrictions,
 			controllerPresentation,
+			presets,
 			exportPolicy,
 			previewImage,
 		}
