@@ -15,6 +15,7 @@ import { elementToJpeg } from '../adapters/element-to-jpeg.client'
 import { elementToPng } from '../adapters/element-to-png.client'
 import { vectorSceneToSvg } from '../adapters/vector-scene-to-svg'
 import type { ExportRequest, ExportResult } from '../export-contract'
+import type { PrintPpi } from '../print-policy'
 import { requestPrintExport } from './export-print.client'
 
 export type ExportableStudioArtifact =
@@ -56,7 +57,11 @@ export async function executeArtifactExport({
 		}
 		case 'vector':
 			return request.format === 'pdf'
-				? exportVectorArtifactAsPrintPdf(fileName, artifact as VectorSceneArtifact)
+				? exportVectorArtifactAsPrintPdf(
+						fileName,
+						artifact as VectorSceneArtifact,
+						request.options.ppi,
+					)
 				: exportVectorArtifactAsSvg(fileName, artifact as VectorSceneArtifact)
 		case 'video':
 			return exportVideoArtifactAsMp4(
@@ -86,9 +91,10 @@ export function exportVectorArtifactAsSvg(
 export async function exportVectorArtifactAsPrintPdf(
 	fileName: string,
 	artifact: VectorSceneArtifact,
+	ppi: PrintPpi,
 ): Promise<ExportResult> {
 	const response = await fetch('/api/studio-exports/vector-print', {
-		body: JSON.stringify({ scene: artifact.source }),
+		body: JSON.stringify({ ppi, scene: artifact.source }),
 		headers: { 'Content-Type': 'application/json' },
 		method: 'POST',
 	})
@@ -206,9 +212,11 @@ export async function exportRasterArtifactAsPrint(
 		colorProfile: request.colorProfile.icc,
 		fileName,
 		format: request.format,
+		// 🔴 여기 `scale: 1`이 하드코딩돼 있었다 — 어떤 해상도를 골라도 인쇄물이 캔버스 픽셀
+		//    그대로 나가, A4 300ppi가 요구하는 픽셀을 만들 경로가 아예 없었다.
 		png: await renderRasterArtifactToPng(
 			artifact,
-			{ scale: 1, transparent: false },
+			{ scale: request.options.scale, transparent: false },
 			renderSize,
 		),
 		ppi: request.options.ppi,

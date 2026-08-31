@@ -130,12 +130,15 @@ export function TemplateSidebar({
 									Setting
 								</span>
 							</div>
+							{/* 🔑 px면 mm를, mm면 px를 보여주지 않는다 — 두 축은 대등하고 섞지 않는다. */}
 							<Controller.Row label="Size" readonly>
 								<span className="text-sm text-muted-foreground">
-									{exporting.outputSize?.width ?? canvas.width} ×{' '}
-									{exporting.outputSize?.height ?? canvas.height}px
+									{exporting.sizeMm
+										? `${Math.round(exporting.sizeMm.width)} × ${Math.round(exporting.sizeMm.height)}mm`
+										: `${exporting.outputSize?.width ?? canvas.width} × ${exporting.outputSize?.height ?? canvas.height}px`}
 								</span>
 							</Controller.Row>
+							{/* 🔑 판형은 Figma가 정한 값으로 고정이다 — 사용자가 정하는 것은 「얼마나 촘촘히 굽나」다. */}
 							{exporting.scaleApplies && (
 								<ScaleControls
 									scale={exporting.scale}
@@ -156,7 +159,7 @@ export function TemplateSidebar({
 								/>
 							</Controller.Row>
 							{(exporting.format === 'tiff' || exporting.format === 'pdf') &&
-								exporting.ppi &&
+								exporting.ppiApplies &&
 								config.output.print && (
 									<PrintControls
 										ppi={exporting.ppi}

@@ -9,10 +9,10 @@ import type {
 	StudioOutputFormat,
 	VideoExportSpec,
 } from '../export-contract'
-import type { PrintPpi } from '../print-policy'
+import { type PrintPpi, resolveDefaultPrintPpi } from '../print-policy'
 import { createRasterExportRequest } from '../services/create-raster-export-request'
 import { executeArtifactExport } from '../services/export-artifact.client'
-import type { StudioOutputCapability } from '../studio-output'
+import { acceptsPrintPpi, type StudioOutputCapability } from '../studio-output'
 import { useExport } from './use-export'
 
 export type ImageExportView = ReturnType<typeof useImageExport>
@@ -34,14 +34,16 @@ export function useImageExport({
 	size: { width: number; height: number } | null
 }) {
 	const [selectedFormat, setSelectedFormat] = useState<StudioOutputFormat | null>(null)
-	const [ppi, setPpi] = useState<PrintPpi | undefined>(() => capability.print?.ppi[0])
+	const [ppi, setPpi] = useState<PrintPpi>(() => resolveDefaultPrintPpi(capability.print?.ppi))
 	const [fps, setFps] = useState<VideoExportSpec['fps'] | undefined>(
 		() => capability.video?.mp4.fps[0],
 	)
 	const [durationSeconds, setDurationSeconds] = useState(() =>
 		Math.min(5, capability.video?.mp4.maxDurationSeconds ?? 5),
 	)
-	const effectivePpi = ppi && capability.print?.ppi.includes(ppi) ? ppi : capability.print?.ppi[0]
+	const effectivePpi = acceptsPrintPpi(capability, ppi)
+		? ppi
+		: resolveDefaultPrintPpi(capability.print?.ppi)
 	const effectiveFps =
 		fps && capability.video?.mp4.fps.includes(fps) ? fps : capability.video?.mp4.fps[0]
 	const effectiveDuration = Math.min(
@@ -103,9 +105,9 @@ export function useImageExport({
 		setFormat: (next: StudioOutputFormat) => {
 			if (formats.includes(next)) setSelectedFormat(next)
 		},
-		ppi: effectivePpi ?? null,
+		ppi: effectivePpi,
 		setPpi: (next: PrintPpi) => {
-			if (capability.print?.ppi.includes(next)) setPpi(next)
+			if (acceptsPrintPpi(capability, next)) setPpi(next)
 		},
 		fps: effectiveFps ?? null,
 		setFps: (next: VideoExportSpec['fps']) => {

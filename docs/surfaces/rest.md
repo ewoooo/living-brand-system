@@ -22,6 +22,8 @@ Payload collection REST, GraphQL, 인증 endpoint는 Payload가 소유하므로 
 | Review | `POST` | `/api/check/{checkSessionId}/ai` | 로그인 사용자 |
 | Guideline | `GET` | `/api/guideline-documents/{documentId}/preview` | Manager/Admin |
 | Studio | `POST` | `/api/studio-exports/print/{format}` | 로그인 사용자, 요청 횟수 제한 |
+| Studio | `POST` | `/api/studio-exports/vector-print` | 로그인 사용자 |
+| Studio | `POST` | `/api/studio-exports/outline` | 로그인 사용자 |
 | Create | `POST` | `/api/templates/import-figma-html` | Manager/Admin |
 | Studio | `POST` | `/api/studio/preview` | Manager/Admin |
 | Guideline | `POST` | `/api/ci-outline` | same-origin |

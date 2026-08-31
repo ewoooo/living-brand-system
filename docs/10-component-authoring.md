@@ -170,7 +170,7 @@ Runtime Manifest는 정적 하드코딩을 의미하지 않습니다. Graphic은
 
 Template·Image·Graphic Config는 이 Manifest 구조를 그대로 쓰고, 실행에 필요한 도메인 descriptor·control id binding·Effective `output`을 확장합니다. `Runtime Manifest + Admin feature/controller restrictions + Exporter 호환성/출력 제한 → Effective StudioConfig`의 적용은 순수하고 멱등적이어야 합니다. Studio Provider는 공통화하지 않습니다. 각 Provider가 자기 도메인의 세션과 실행 결과를 소유합니다.
 
-`output.formats`는 `Runtime Artifact 사양 → 실제 Exporter 호환성 → Admin exportPolicy` 순서로 파생합니다. 공통 변환은 Raster→PNG/JPEG/TIFF/PDF/MP4, Vector→SVG, Video→MP4입니다. 실제 Video Artifact가 있으면 시간 기반 producer를 쓰고, Raster→MP4는 정지 프레임 영상입니다. Admin은 형식뿐 아니라 PPI·FPS·크기·길이 상한도 좁힐 수만 있습니다. 저장된 `exportPolicy`와 Effective Config의 `output`은 서로 다른 계약입니다.
+`output.formats`는 `Runtime Artifact 사양 → 실제 Exporter 호환성 → Admin exportPolicy` 순서로 파생합니다. 공통 변환은 Raster→PNG/JPEG/TIFF/PDF/MP4, Vector→SVG/PDF, Video→MP4입니다. 실제 Video Artifact가 있으면 시간 기반 producer를 쓰고, Raster→MP4는 정지 프레임 영상입니다. Admin은 형식뿐 아니라 FPS·크기·길이 상한도 좁힐 수만 있습니다. 인쇄 해상도만 예외입니다 — `exportPolicy.print.allowedPpi`는 범위를 좁히지 않고 드롭다운 프리셋 목록을 대신하며, 유효성은 `acceptsPrintPpi()`가 `isPrintPpi()` 범위(1~1200 정수)로 판정합니다. 저장된 `exportPolicy`와 Effective Config의 `output`은 서로 다른 계약입니다.
 
 형식 선택은 Controller Definition에 중복하지 않습니다. 세 Studio의 Export hook은 Artifact 선택과 batch/ZIP 같은 전달 정책만 조정하고, 모든 형식 분기와 인코딩은 공통 `executeArtifactExport()`가 소유합니다. `Controller.Footer`는 그 결과인 export view model만 표시합니다. 공통 `useExport.canExport(request)`가 Effective capability·Artifact 가용성·도메인 실행 조건을 함께 판정하고, `run()`은 실행 시 같은 판정을 다시 적용합니다. `ExportRequest`는 먼저 `raster | vector | video | original` Artifact로 분기합니다. Image 원본은 파일 형식이 아니므로 `OriginalArtifact`, `output.original` boolean, format 없는 Original 요청으로 표현합니다. Runtime·Provider·Canvas는 출력 형식을 해석하지 않습니다.
 

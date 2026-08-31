@@ -92,6 +92,7 @@ import * as migration_20260826_043937_sub_block from './20260826_043937_sub_bloc
 import * as migration_20260826_053723_chapter_collection from './20260826_053723_chapter_collection';
 import * as migration_20260826_063726_fix_orphan_versions from './20260826_063726_fix_orphan_versions';
 import * as migration_20260826_064938_topic_surface_and_block_width from './20260826_064938_topic_surface_and_block_width';
+import * as migration_20260831_012908_add_template_canvas_ppi from './20260831_012908_add_template_canvas_ppi';
 
 export const migrations = [
   {
@@ -562,6 +563,11 @@ export const migrations = [
   {
     up: migration_20260826_064938_topic_surface_and_block_width.up,
     down: migration_20260826_064938_topic_surface_and_block_width.down,
-    name: '20260826_064938_topic_surface_and_block_width'
+    name: '20260826_064938_topic_surface_and_block_width',
+  },
+  {
+    up: migration_20260831_012908_add_template_canvas_ppi.up,
+    down: migration_20260831_012908_add_template_canvas_ppi.down,
+    name: '20260831_012908_add_template_canvas_ppi'
   },
 ];

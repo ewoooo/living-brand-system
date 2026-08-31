@@ -12,18 +12,30 @@ import {
 	type ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../export-contract'
-import type { PrintPpi } from '../print-policy'
+import {
+	isPrintPpi,
+	maxPrintSize,
+	type PrintPpi,
+	pixelsToMillimeters,
+	resolveDefaultPrintPpi,
+} from '../print-policy'
 import { createRasterExportRequest } from '../services/create-raster-export-request'
 import { executeArtifactExport } from '../services/export-artifact.client'
-import { resolveMaxExportScale, type StudioOutputCapability } from '../studio-output'
+import {
+	acceptsPrintPpi,
+	resolveMaxExportScale,
+	type StudioOutputCapability,
+} from '../studio-output'
 import { useExport } from './use-export'
 
 export type TemplateExportMetadata = {
 	fileName: string
 	width: number
 	height: number
-	/** 캔버스 좌표계 대비 허용 최대 출력 배율 — 1이면 배율 선택지가 없다. */
+	/** 캔버스 좌표계 대비 허용 최대 출력 배율. MP4 인코딩 한도에서 나온 값이라 MP4에만 적용한다. */
 	maxScale: number
+	/** 템플릿이 선언한 판형 해상도. 있으면 인쇄판이라 물리 크기가 고정이고 창작자가 고르지 않는다. */
+	canvasPpi?: PrintPpi
 	controller: {
 		groups: readonly ControllerGroupDefinition[]
 		values: Readonly<ControllerValues>
@@ -32,7 +44,7 @@ export type TemplateExportMetadata = {
 
 export type TemplateExportView = ReturnType<typeof useTemplateExport>
 
-/** 사이드바가 안내할 출력 크기를 요청에서 되읽는다. 요청이 없으면 캔버스에 배율만 곱한다. */
+/** 사이드바가 안내할 출력 크기를 요청에서 되읽는다. MP4만 짝수 내림을 거쳐 값이 달라진다. */
 function resolveOutputSize(
 	request: TemplateExportRequest | null,
 	metadata: TemplateExportMetadata | null,
@@ -43,6 +55,19 @@ function resolveOutputSize(
 		return { width: request.options.width, height: request.options.height }
 	}
 	return { width: metadata.width * scale, height: metadata.height * scale }
+}
+
+/**
+ * 인쇄 한도가 허용하는 정수 배율. 종횡비를 지키므로 먼저 막히는 변이 상한이다.
+ * 🔴 여기에 영상 인코더 예산(H.264 매크로블록)을 쓰면 1080px 판이 2배에서 막혀 A4 300ppi가 안 나온다.
+ * ponytail: 목록 길이는 자르지 않는다 — 4로 자르면 그 사고가 그대로 돌아온다.
+ */
+function printScaleCeiling(metadata: TemplateExportMetadata): number {
+	const limit = maxPrintSize(metadata.width, metadata.height)
+	return Math.max(
+		1,
+		Math.floor(Math.min(limit.width / metadata.width, limit.height / metadata.height)),
+	)
 }
 type TemplateExportRequest = Extract<ExportRequest, { artifact: 'raster' | 'video' | 'vector' }>
 
@@ -63,7 +88,7 @@ export function useTemplateExport({
 	metadata: TemplateExportMetadata | null
 }) {
 	const [selectedFormat, setSelectedFormat] = useState<StudioOutputFormat | null>(null)
-	const [ppi, setPpi] = useState<PrintPpi | undefined>(() => capability.print?.ppi[0])
+	const [ppi, setPpi] = useState<PrintPpi>(() => resolveDefaultPrintPpi(capability.print?.ppi))
 	const [fps, setFps] = useState<VideoExportSpec['fps'] | undefined>(
 		() => capability.video?.mp4.fps[0],
 	)
@@ -75,7 +100,11 @@ export function useTemplateExport({
 	const [vectorDiagnostics, setVectorDiagnostics] = useState<
 		TemplateVectorArtifactResult['diagnostics'] | null
 	>(null)
-	const effectivePpi = ppi && capability.print?.ppi.includes(ppi) ? ppi : capability.print?.ppi[0]
+	// 🔑 판형이 선언된 인쇄판은 해상도가 판의 성질이라 창작자가 고르지 않는다.
+	const declaredPpi = isPrintPpi(metadata?.canvasPpi) ? metadata.canvasPpi : null
+	const effectivePpi =
+		declaredPpi ??
+		(acceptsPrintPpi(capability, ppi) ? ppi : resolveDefaultPrintPpi(capability.print?.ppi))
 	const effectiveFps =
 		fps && capability.video?.mp4.fps.includes(fps) ? fps : capability.video?.mp4.fps[0]
 	const effectiveDuration = Math.min(
@@ -85,23 +114,28 @@ export function useTemplateExport({
 	const formats = capability.formats
 	const format =
 		selectedFormat && formats.includes(selectedFormat) ? selectedFormat : (formats[0] ?? null)
-	// TIFF·PDF는 크기를 ppi가 정한다 — 배율을 받아도 쓰지 않으므로 아예 적용하지 않는다.
-	const scaleApplies = format === 'png' || format === 'jpeg' || format === 'mp4'
-	// MP4만 초당 처리량 예산에 걸린다 — fps를 올리면 같은 캔버스라도 갈 수 있는 배율이 줄어든다.
-	const maxScale = metadata
-		? Math.min(
-				Math.max(1, Math.floor(metadata.maxScale)),
-				resolveMaxExportScale(
-					metadata.width,
-					metadata.height,
-					format === 'mp4' ? effectiveFps : undefined,
-				),
-			)
-		: 1
+	// 🔑 벡터 요청은 판 크기를 그대로 싣는다 — 배율이 들어갈 자리가 없다.
+	//    request 이전에 판정해야 배율 계산이 request에 의존하지 않는다.
+	const usesVector = Boolean(vectorArtifact && metadata && (format === 'svg' || format === 'pdf'))
+	/**
+	 * 배율 상한. 🔑 형식마다 정하는 것이 다르다 — MP4는 **인코더 예산**(매크로블록)이,
+	 * 나머지는 **브라우저 캔버스와 인쇄 한도**가 정한다. fps를 올리면 MP4만 상한이 줄어든다.
+	 * 🔴 정지 이미지에 인코더 예산을 씌우면 1080px 판이 2배에서 막혀 A4 300ppi가 안 나온다.
+	 */
+	const maxScale = !metadata
+		? 1
+		: format === 'mp4'
+			? Math.min(
+					Math.max(1, Math.floor(metadata.maxScale)),
+					resolveMaxExportScale(metadata.width, metadata.height, effectiveFps),
+				)
+			: printScaleCeiling(metadata)
 	const scaleOptions = Array.from({ length: maxScale }, (_, index) => index + 1)
 	// fps를 올려 지금 배율이 예산을 넘으면 1로 떨어뜨리지 않고 갈 수 있는 최대로 붙인다.
 	const selectedScale = Math.min(Math.max(1, Math.floor(scale)), maxScale)
-	const effectiveScale = scaleApplies ? selectedScale : 1
+	// 🔴 인쇄판은 px도 mm도 선언으로 고정이다 — 배율을 곱하면 선언한 물리 크기가 깨진다.
+	// ponytail: 밀도 손잡이는 두지 않는다. 필요해지면 ppi × 배율을 요청에 함께 실을 것.
+	const effectiveScale = usesVector || declaredPpi ? 1 : selectedScale
 	const createRequest = useCallback(
 		(candidate: StudioOutputFormat | null): TemplateExportRequest | null => {
 			// 🔑 PDF는 벡터가 있으면 벡터로 간다 — 판 전체를 굽는 래스터 PDF보다 글자·도형이 선명하고,
@@ -118,25 +152,29 @@ export function useTemplateExport({
 					// 글자는 굽기 단계가 이미 윤곽선으로 바꾼다 — 여기서 다시 요청하지 않는다.
 					outlineText: false,
 				}
-				return candidate === 'svg'
-					? {
-							artifact: 'vector',
-							format: 'svg',
-							colorProfile: {
-								space: 'rgb',
-								icc: capability.colorProfiles?.rgb?.[0] ?? 'srgb',
-							},
-							options,
-						}
-					: {
-							artifact: 'vector',
-							format: 'pdf',
-							colorProfile: {
-								space: 'cmyk',
-								icc: capability.colorProfiles?.cmyk?.[0] ?? 'cgats21-crpc6',
-							},
-							options,
-						}
+				if (candidate === 'svg') {
+					return {
+						artifact: 'vector',
+						format: 'svg',
+						colorProfile: {
+							space: 'rgb',
+							icc: capability.colorProfiles?.rgb?.[0] ?? 'srgb',
+						},
+						options,
+					}
+				}
+				// 🔴 인쇄용 벡터 PDF는 해상도 없이 만들 수 없다 — 페이지 치수가 거기서 나오고,
+				//    없는 채로 내보내면 판이 조용히 72ppi 크기로 나간다.
+				if (!isPrintPpi(effectivePpi)) return null
+				return {
+					artifact: 'vector',
+					format: 'pdf',
+					colorProfile: {
+						space: 'cmyk',
+						icc: capability.colorProfiles?.cmyk?.[0] ?? 'cgats21-crpc6',
+					},
+					options: { ...options, ppi: effectivePpi },
+				}
 			}
 			const request =
 				candidate && metadata
@@ -225,9 +263,9 @@ export function useTemplateExport({
 		setFormat: (next: StudioOutputFormat) => {
 			if (formats.includes(next)) setSelectedFormat(next)
 		},
-		ppi: effectivePpi ?? null,
+		ppi: effectivePpi,
 		setPpi: (next: PrintPpi) => {
-			if (capability.print?.ppi.includes(next)) setPpi(next)
+			if (acceptsPrintPpi(capability, next)) setPpi(next)
 		},
 		fps: effectiveFps ?? null,
 		setFps: (next: VideoExportSpec['fps']) => {
@@ -240,8 +278,20 @@ export function useTemplateExport({
 		},
 		scale: effectiveScale,
 		scaleOptions,
-		/** 이번 포맷이 배율을 실제로 쓰는지 — 안 쓰면 사이드바가 Scale 행을 감춘다. */
-		scaleApplies,
+		/**
+		 * 이번 요청이 배율을 실제로 쓰는지 — 안 쓰면 사이드바가 Scale 행을 감춘다.
+		 * 🔑 TIFF·PDF 래스터도 이제 배율을 쓴다. 벡터만 판 크기를 그대로 실어 배율이 들어갈 자리가 없다.
+		 */
+		scaleApplies: !usesVector && !declaredPpi,
+		/** 창작자가 해상도를 고를 수 있는지 — 판형이 선언된 인쇄판은 고르지 않는다. */
+		ppiApplies: declaredPpi === null,
+		/** 실제로 나갈 물리 크기(mm). 판형을 선언한 인쇄판에서만 값이 있다. */
+		sizeMm: declaredPpi
+			? {
+					width: pixelsToMillimeters(metadata?.width ?? 0, declaredPpi),
+					height: pixelsToMillimeters(metadata?.height ?? 0, declaredPpi),
+				}
+			: null,
 		setScale: (next: number) => {
 			if (scaleOptions.includes(next)) setScale(next)
 		},

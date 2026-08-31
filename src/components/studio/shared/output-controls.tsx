@@ -5,24 +5,33 @@ import { Controller } from '@/components/shared/controller'
 import { Button } from '@/components/ui/button'
 import { Typography } from '@/components/ui/typography'
 import type { VideoExportSpec } from '@/features/studio-export/export-contract'
-import type { PrintPpi } from '@/features/studio-export/print-policy'
+import {
+	MAX_PRINT_PPI,
+	MIN_PRINT_PPI,
+	millimetersToPixels,
+	PRINT_PPI_OPTIONS,
+	type PrintPpi,
+	pixelsToMillimeters,
+} from '@/features/studio-export/print-policy'
 
 export type OutputSizeValue = {
 	width: number | null
 	height: number | null
 }
 
-/** 프리셋에 속하지 않는 크기의 mm 환산 기준. 원본(`HD_PATTERN.js`)의 폴백값과 같다. */
-const DEFAULT_MM_DPI = 300
-
 type OutputSizeUnit = 'px' | 'mm'
+
+/** 프리셋 목록에 없는 해상도를 직접 넣는 항목. 대지의 `CUSTOM_ARTBOARD`와 같은 방식이다. */
+const MANUAL_PPI = 'manual'
 
 /**
  * 대지 프리셋. 값·단위·dpi는 디자이너 원본 `RATIO_PRESETS`를 그대로 옮겼다.
  *
- * 🔑 dpi가 프리셋마다 다르다 — 근접해서 보는 인쇄물은 300, 멀리서 보는 대형 배너는 72다.
- * 원본 주석: 배너에 300dpi를 쓰면 그리드 칸이 수만 개로 늘어나 매 프레임이 무거워진다.
- * `unit`은 그 규격을 사람이 말할 때 쓰는 단위이고, 고르면 입력란도 그 단위로 맞춘다.
+ * 🔑 `unit`은 그 규격을 사람이 말할 때 쓰는 단위다 — px 규격은 디지털, mm 규격은 인쇄다.
+ * 🔑 `dpi`는 mm 규격을 고를 때 **함께 적용되는 권장 해상도**이지 환산율이 아니다. 판의 물리
+ *    크기는 mm가 갖고, 그 mm를 몇 픽셀로 채울지는 사용자가 고른 해상도가 정한다.
+ * 🔴 배너가 72인 이유는 화질이 아니라 크기다 — 600×1800mm를 300ppi로 채우면 7,087×21,260px이
+ *    되어 브라우저 캔버스 한도(16,384px)를 넘는다.
  */
 const ARTBOARD_PRESETS = {
 	square: {
@@ -59,22 +68,47 @@ export type ArtboardKey = keyof typeof ARTBOARD_PRESETS
 /** 어느 프리셋과도 맞지 않는 크기. 사용자가 직접 넣은 값이다. */
 export const CUSTOM_ARTBOARD = 'custom'
 
-/** 프리셋이 선언한 규격을 px로 환산한다 — mm 규격은 그 프리셋의 dpi로 환산한다. */
-export function presetSizeInPx(key: ArtboardKey) {
+/** 프리셋을 고르면 적용될 판. mm 규격은 자기 권장 해상도를 함께 들고 온다. */
+export function presetArtboard(key: ArtboardKey) {
 	const preset = ARTBOARD_PRESETS[key]
-	const perMm = preset.dpi / 25.4
 	return preset.unit === 'mm'
-		? { width: Math.round(preset.width * perMm), height: Math.round(preset.height * perMm) }
-		: { width: preset.width, height: preset.height }
+		? {
+				width: millimetersToPixels(preset.width, preset.dpi),
+				height: millimetersToPixels(preset.height, preset.dpi),
+				ppi: preset.dpi,
+				unit: 'mm' as const,
+			}
+		: { width: preset.width, height: preset.height, ppi: undefined, unit: 'px' as const }
 }
 
-/** 현재 크기와 정확히 같은 프리셋을 찾는다. 없으면 직접 입력이다. */
-export function matchArtboard(value: OutputSizeValue): ArtboardKey | typeof CUSTOM_ARTBOARD {
+/** 프리셋을 고르면 나올 픽셀 크기. 목록에서 한도 초과 규격을 거를 때 쓴다. */
+export function presetSizeInPx(key: ArtboardKey) {
+	const { width, height } = presetArtboard(key)
+	return { width, height }
+}
+
+/**
+ * 현재 판과 같은 프리셋을 찾는다. 없으면 직접 입력이다.
+ * 🔑 mm 규격은 **물리 크기로 견준다** — 해상도를 바꾸면 픽셀 수는 달라져도 같은 A4다.
+ *    px로 견주면 해상도를 건드리는 순간 선택이 「직접 입력」으로 튄다.
+ */
+export function matchArtboard(
+	value: OutputSizeValue,
+	ppi: PrintPpi,
+): ArtboardKey | typeof CUSTOM_ARTBOARD {
 	const keys = Object.keys(ARTBOARD_PRESETS) as ArtboardKey[]
 	return (
 		keys.find((key) => {
-			const size = presetSizeInPx(key)
-			return size.width === value.width && size.height === value.height
+			const preset = ARTBOARD_PRESETS[key]
+			if (value.width === null || value.height === null) return false
+			if (preset.unit === 'px') {
+				return preset.width === value.width && preset.height === value.height
+			}
+			// 반올림으로 1px이 어긋나도 같은 판이므로 0.5mm 안이면 같다고 본다.
+			return (
+				Math.abs(pixelsToMillimeters(value.width, ppi) - preset.width) < 0.5 &&
+				Math.abs(pixelsToMillimeters(value.height, ppi) - preset.height) < 0.5
+			)
 		}) ?? CUSTOM_ARTBOARD
 	)
 }
@@ -84,22 +118,26 @@ const UNIT_OPTIONS = [
 	{ value: 'mm', label: 'mm' },
 ] as const
 
-/** 🔑 저장되는 값은 언제나 px다. 단위는 **입력란의 표시·입력만** 바꾼다(원본과 같은 규칙). */
-function pxToUnit(px: number, unit: OutputSizeUnit, dpi: number) {
-	return unit === 'mm' ? px / (dpi / 25.4) : px
+/**
+ * 🔑 저장되는 값은 언제나 px다. 단위는 **입력란의 표시·입력만** 바꾼다(원본과 같은 규칙).
+ * 그 환산율이 해상도이고, 환산 자체는 `print-policy`가 소유한다 — 여기서 다시 나눗셈을 쓰면
+ * 화면과 파일이 서로 다른 기준을 갖게 된다.
+ */
+function pxToUnit(px: number, unit: OutputSizeUnit, ppi: PrintPpi) {
+	return unit === 'mm' ? pixelsToMillimeters(px, ppi) : px
 }
 
-function unitToPx(value: number, unit: OutputSizeUnit, dpi: number) {
-	return unit === 'mm' ? value * (dpi / 25.4) : value
+function unitToPx(value: number, unit: OutputSizeUnit, ppi: PrintPpi) {
+	return unit === 'mm' ? millimetersToPixels(value, ppi) : value
 }
 
 /** 정수로만 보여주고 받는다 — 원본의 `formatSizeValue`도 반올림한다. */
-function displayValue(px: number | null, unit: OutputSizeUnit, dpi: number) {
-	return px === null ? null : Math.round(pxToUnit(px, unit, dpi))
+function displayValue(px: number | null, unit: OutputSizeUnit, ppi: PrintPpi) {
+	return px === null ? null : Math.round(pxToUnit(px, unit, ppi))
 }
 
-function displayMax(px: number | undefined, unit: OutputSizeUnit, dpi: number) {
-	return px === undefined ? undefined : Math.floor(pxToUnit(px, unit, dpi))
+function displayMax(px: number | undefined, unit: OutputSizeUnit, ppi: PrintPpi) {
+	return px === undefined ? undefined : Math.floor(pxToUnit(px, unit, ppi))
 }
 
 /**
@@ -137,20 +175,66 @@ type SizingControlsProps = {
 	value: OutputSizeValue
 	maxWidth?: number
 	maxHeight?: number
+	/**
+	 * 판의 물리 크기를 정하는 해상도. mm 표시·입력의 환산율이자, 인쇄 형식이 나갈 때의
+	 * 페이지 치수를 정한다. px 모드에서도 값은 살아 있고 화면에 안 보일 뿐이다.
+	 */
+	ppi: PrintPpi
+	/** 드롭다운에 띄울 해상도 프리셋. 목록 밖 값은 「직접 입력」으로 들어온다. */
+	ppiOptions: readonly PrintPpi[]
 	onChange: (value: { width: number; height: number }) => void
+	onPpiChange: (ppi: PrintPpi) => void
+}
+
+/** 해상도 프리셋의 사람이 읽는 이름. 목록에 없는 값은 숫자로만 보여 준다. */
+function ppiLabel(ppi: PrintPpi) {
+	return PRINT_PPI_OPTIONS.find((option) => option.value === String(ppi))?.label ?? `${ppi}ppi`
 }
 
 /**
  * Footer에서 정적 이미지와 영상 출력 크기를 같은 Width·Height 행으로 편집한다.
  * 단위 선택은 이 컴포넌트가 소유한다 — 세션에 저장할 값이 아니라 보는 방식이다.
+ *
+ * 🔑 px와 mm는 대등한 두 축이지 표시 설정이 아니다. px는 디지털이라 해상도라는 개념이 없고,
+ *    mm는 인쇄라 「그 mm를 몇 픽셀로 채울까」가 따라온다. 그래서 해상도 행은 mm에서만 뜬다.
  */
-export function SizingControls({ value, maxWidth, maxHeight, onChange }: SizingControlsProps) {
+export function SizingControls({
+	value,
+	maxWidth,
+	maxHeight,
+	ppi,
+	ppiOptions,
+	onChange,
+	onPpiChange,
+}: SizingControlsProps) {
 	const [unit, setUnit] = useState<OutputSizeUnit>('px')
+	const [manualPpi, setManualPpi] = useState(false)
 	// 🔑 선택 상태를 따로 들지 않는다 — 현재 크기에서 파생한다. 크기를 직접 고치면 저절로 「직접 입력」이 된다.
-	const artboard = matchArtboard(value)
-	const dpi = artboard === CUSTOM_ARTBOARD ? DEFAULT_MM_DPI : ARTBOARD_PRESETS[artboard].dpi
-
+	const artboard = matchArtboard(value, ppi)
 	const artboardOptions = listArtboardOptions({ maxWidth, maxHeight, current: artboard })
+	const showManualPpi = manualPpi || !ppiOptions.includes(ppi)
+
+	/** 한 축을 고친다. 저장값은 언제나 px이므로 입력 단위를 여기서 되돌린다. */
+	const resize = (axis: 'width' | 'height', next: number) => {
+		const px = Math.max(1, Math.round(unitToPx(next, unit, ppi)))
+		const { width, height } = value
+		if (width === null || height === null) return
+		onChange(axis === 'width' ? { width: px, height } : { width, height: px })
+	}
+
+	/**
+	 * 해상도가 바뀌면 **mm를 지키고 픽셀을 다시 잡는다** — A4를 300에서 150으로 내리면
+	 * 판은 여전히 A4여야 한다. px 모드에서는 픽셀이 정본이므로 판을 건드리지 않는다.
+	 */
+	const changePpi = (next: PrintPpi) => {
+		if (unit === 'mm' && value.width !== null && value.height !== null) {
+			onChange({
+				width: millimetersToPixels(pixelsToMillimeters(value.width, ppi), next),
+				height: millimetersToPixels(pixelsToMillimeters(value.height, ppi), next),
+			})
+		}
+		onPpiChange(next)
+	}
 
 	return (
 		<div data-slot="sizing-controls" className="flex flex-col gap-1">
@@ -160,10 +244,15 @@ export function SizingControls({ value, maxWidth, maxHeight, onChange }: SizingC
 					value={artboard}
 					onChange={(next) => {
 						if (next === CUSTOM_ARTBOARD) return
-						const key = next as ArtboardKey
-						onChange(presetSizeInPx(key))
+						const preset = presetArtboard(next as ArtboardKey)
+						onChange({ width: preset.width, height: preset.height })
 						// 규격을 말할 때 쓰는 단위로 입력란을 맞춘다(원본도 프리셋 단위를 따라간다).
-						setUnit(ARTBOARD_PRESETS[key].unit)
+						setUnit(preset.unit)
+						// mm 규격은 자기 권장 해상도를 갖는다 — 배너를 300ppi로 채우면 한도를 넘는다.
+						if (preset.ppi !== undefined) {
+							setManualPpi(false)
+							onPpiChange(preset.ppi)
+						}
 					}}
 				/>
 			</Controller.Row>
@@ -177,32 +266,52 @@ export function SizingControls({ value, maxWidth, maxHeight, onChange }: SizingC
 			</Controller.Row>
 			<NumberRow
 				label="Width"
-				value={displayValue(value.width, unit, dpi)}
-				max={displayMax(maxWidth, unit, dpi)}
+				value={displayValue(value.width, unit, ppi)}
+				max={displayMax(maxWidth, unit, ppi)}
 				suffix={unit}
-				onChange={(width) => {
-					if (value.height !== null) {
-						onChange({
-							width: Math.round(unitToPx(width, unit, dpi)),
-							height: value.height,
-						})
-					}
-				}}
+				onChange={(width) => resize('width', width)}
 			/>
 			<NumberRow
 				label="Height"
-				value={displayValue(value.height, unit, dpi)}
-				max={displayMax(maxHeight, unit, dpi)}
+				value={displayValue(value.height, unit, ppi)}
+				max={displayMax(maxHeight, unit, ppi)}
 				suffix={unit}
-				onChange={(height) => {
-					if (value.width !== null) {
-						onChange({
-							width: value.width,
-							height: Math.round(unitToPx(height, unit, dpi)),
-						})
-					}
-				}}
+				onChange={(height) => resize('height', height)}
 			/>
+			{unit === 'mm' && (
+				<>
+					<Controller.Row label="해상도">
+						<Controller.Select
+							options={[
+								...ppiOptions.map((option) => ({
+									value: String(option),
+									label: ppiLabel(option),
+								})),
+								{ value: MANUAL_PPI, label: '직접 입력' },
+							]}
+							value={showManualPpi ? MANUAL_PPI : String(ppi)}
+							onChange={(next) => {
+								if (next === MANUAL_PPI) {
+									setManualPpi(true)
+									return
+								}
+								setManualPpi(false)
+								changePpi(Number(next))
+							}}
+						/>
+					</Controller.Row>
+					{showManualPpi && (
+						<NumberRow
+							label="직접 입력"
+							value={ppi}
+							min={MIN_PRINT_PPI}
+							max={MAX_PRINT_PPI}
+							suffix="ppi"
+							onChange={changePpi}
+						/>
+					)}
+				</>
+			)}
 		</div>
 	)
 }
@@ -344,12 +453,14 @@ export function ExportAction({ busy, disabled, error, warnings, onExport }: Expo
 function NumberRow({
 	label,
 	value,
+	min = 1,
 	max,
 	suffix,
 	onChange,
 }: {
 	label: string
 	value: number | null
+	min?: number
 	max?: number
 	suffix: string
 	onChange: (value: number) => void
@@ -361,7 +472,7 @@ function NumberRow({
 					key={`${label}-${value ?? 'empty'}`}
 					type="number"
 					inputMode="numeric"
-					min={1}
+					min={min}
 					max={max}
 					step={1}
 					defaultValue={value ?? ''}
@@ -371,7 +482,7 @@ function NumberRow({
 						const next = event.currentTarget.valueAsNumber
 						if (
 							Number.isInteger(next) &&
-							next > 0 &&
+							next >= min &&
 							(max === undefined || next <= max)
 						) {
 							onChange(next)

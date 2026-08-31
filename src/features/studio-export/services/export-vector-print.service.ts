@@ -5,6 +5,7 @@ import { collectSceneColors, vectorSceneToPdf } from '../adapters/vector-scene-t
 import { DEFAULT_CMYK_ICC_PROFILE } from '../color-profile'
 import { readCmykIccProfile, resolveCmykIccProfilePath } from '../color-profile.server'
 import type { CmykIccProfile } from '../export-contract'
+import type { PrintPpi } from '../print-policy'
 
 export class VectorPrintInputError extends Error {}
 
@@ -19,9 +20,12 @@ const MAX_PRIMITIVES = 20_000
  */
 export async function exportVectorPrint({
 	colorProfile = DEFAULT_CMYK_ICC_PROFILE,
+	ppi,
 	scene,
 }: {
 	colorProfile?: CmykIccProfile
+	/** 씬의 px 좌표를 물리 크기로 읽는 해상도. PDF 페이지 치수가 여기서 나온다. */
+	ppi: PrintPpi
 	scene: VectorScene
 }): Promise<Buffer> {
 	if (countPrimitives(scene) > MAX_PRIMITIVES) throw new VectorPrintInputError()
@@ -35,6 +39,7 @@ export async function exportVectorPrint({
 		colors,
 		iccProfile: await readCmykIccProfile(colorProfile),
 		iccProfileName: colorProfile,
+		ppi,
 	})
 }
 

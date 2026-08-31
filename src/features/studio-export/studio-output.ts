@@ -14,7 +14,7 @@ import type {
 	VideoExportSpec,
 } from './export-contract'
 import { STUDIO_OUTPUT_FORMATS } from './export-contract'
-import { PRINT_PPI_VALUES, type PrintPpi } from './print-policy'
+import { isPrintPpi, PRINT_PPI_VALUES, type PrintPpi } from './print-policy'
 
 /**
  * video 사양을 선언하지 않은 Raster runtime의 MP4 폴백.
@@ -305,6 +305,18 @@ export function supportsStudioOutput<Format extends StudioOutputFormat>(
 	return capability.formats.includes(format)
 }
 
+/**
+ * 이 capability가 인쇄를 지원하고 그 해상도가 유효한지 본다.
+ * 🔴 `print.ppi` 목록을 보지 않는다 — 그것은 드롭다운 프리셋이고, 사람이 직접 입력한 값은
+ *    거기 없어도 유효하다. 목록으로 막으면 직접 입력이 전부 조용히 거부된다.
+ */
+export function acceptsPrintPpi(
+	capability: Pick<StudioOutputCapability, 'print'>,
+	ppi: unknown,
+): ppi is PrintPpi {
+	return capability.print !== undefined && isPrintPpi(ppi)
+}
+
 /** 직렬화된 capability가 이번 요청의 형식·색상·영상 범위를 허용하는지 확인한다. */
 export function supportsStudioExportRequest(
 	capability: StudioOutputCapability,
@@ -323,7 +335,7 @@ export function supportsStudioExportRequest(
 	if (
 		request.artifact === 'raster' &&
 		(request.format === 'tiff' || request.format === 'pdf') &&
-		!capability.print?.ppi.includes(request.options.ppi)
+		!acceptsPrintPpi(capability, request.options.ppi)
 	) {
 		return false
 	}
@@ -362,13 +374,15 @@ function validRequestOptions(request: ExportRequest): boolean {
 					)
 				case 'tiff':
 					return (
-						PRINT_PPI_VALUES.includes(request.options.ppi) &&
-						request.options.compression === 'lzw'
+						isPrintPpi(request.options.ppi) &&
+						request.options.compression === 'lzw' &&
+						request.options.scale > 0
 					)
 				case 'pdf':
 					return (
-						PRINT_PPI_VALUES.includes(request.options.ppi) &&
-						request.options.bleedMm >= 0
+						isPrintPpi(request.options.ppi) &&
+						request.options.bleedMm >= 0 &&
+						request.options.scale > 0
 					)
 				case 'mp4':
 					return validVideoExportSpec(request.options)
@@ -442,7 +456,7 @@ function assertPrintPpi(value: unknown, label: string): asserts value is PrintPp
 	if (
 		!Array.isArray(value) ||
 		value.length === 0 ||
-		value.some((ppi) => !PRINT_PPI_VALUES.includes(ppi as PrintPpi)) ||
+		value.some((ppi) => !isPrintPpi(ppi)) ||
 		new Set(value).size !== value.length
 	) {
 		throw new Error(`${label}가 올바르지 않습니다.`)
@@ -469,10 +483,15 @@ function normalizeFrameRates(value: unknown): readonly StudioVideoFrameRate[] {
 	return normalized as StudioVideoFrameRate[]
 }
 
+/**
+ * 화면 드롭다운에 띄울 인쇄 해상도 프리셋. 🔑 이것은 **허용 목록이 아니다** —
+ * 사람이 직접 입력한 값은 이 목록에 없어도 `isPrintPpi` 범위 안이면 나간다.
+ * Admin이 지정하면 그 목록이 프리셋을 대신한다(프리셋 밖 값도 담을 수 있다).
+ */
 function narrowPrintPpi(allowed: readonly PrintPpi[] | undefined): readonly PrintPpi[] {
 	if (!allowed) return PRINT_PPI_VALUES
 	assertPrintPpi(allowed, 'Admin print PPI')
-	return PRINT_PPI_VALUES.filter((ppi) => allowed.includes(ppi))
+	return [...allowed].sort((a, b) => a - b)
 }
 
 function narrowFrameRates(

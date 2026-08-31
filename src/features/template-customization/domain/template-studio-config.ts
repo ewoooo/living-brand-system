@@ -13,6 +13,7 @@ import {
 	type ImageAspectRatio,
 	type ImageOutputSize,
 } from '@/features/image-generation/image-size'
+import { isPrintPpi, type PrintPpi } from '@/features/studio-export/print-policy'
 import {
 	DEFAULT_RASTER_VIDEO_CAPABILITY,
 	parseStudioOutputCapability,
@@ -143,6 +144,8 @@ export type PublishedHtmlTemplate = {
 	nodeConfigs: Record<string, PublishedTemplateNodeConfig>
 	width: number
 	height: number
+	/** 판형 선언 — 이 px를 몇 ppi로 그렸는가. 없으면 디지털판이라 물리 크기가 없다. */
+	canvasPpi?: PrintPpi
 	templateVersion: string
 	exportPolicy?: unknown
 	backgroundPolicy?: TemplateBackgroundPolicy
@@ -173,6 +176,8 @@ export type TemplateStudioConfig = StudioControllerConfig<'template', number> & 
 		graphicConfigs: readonly GraphicStudioConfig[]
 		exportOption: {
 			canvas: { width: number; height: number }
+			/** 판형이 선언된 템플릿의 인쇄 해상도. 있으면 창작자가 크기도 해상도도 고르지 않는다. */
+			canvasPpi?: PrintPpi
 			/** 캔버스 좌표계 대비 허용 최대 출력 배율. MP4 인코딩 한도에서 되짚어 구한다. */
 			maxScale: number
 		}
@@ -323,7 +328,7 @@ export function parseTemplateStudioConfig(input: unknown): TemplateStudioConfig 
 	}
 
 	const exportOption = templateRecord(template.exportOption, 'TemplateStudioConfig exportOption')
-	assertTemplateKeys(exportOption, ['canvas', 'maxScale'])
+	assertTemplateKeys(exportOption, ['canvas', 'canvasPpi', 'maxScale'])
 	resolveStudioArtifactOutputFormats(
 		common.artifacts,
 		(root.output as StudioOutputCapability).formats,
@@ -333,6 +338,9 @@ export function parseTemplateStudioConfig(input: unknown): TemplateStudioConfig 
 	assertPositiveNumber(canvas.width, 'canvas.width')
 	assertPositiveNumber(canvas.height, 'canvas.height')
 	assertPositiveNumber(exportOption.maxScale, 'exportOption.maxScale')
+	if (exportOption.canvasPpi !== undefined && !isPrintPpi(exportOption.canvasPpi)) {
+		throw new Error('TemplateStudioConfig canvasPpi: 인쇄 해상도 범위의 정수여야 합니다.')
+	}
 
 	const typed = input as TemplateStudioConfig
 	const { text, background } = partitionTemplateSlots(typed.template.slots)
@@ -776,6 +784,7 @@ export function deriveTemplateStudioConfig(
 			graphicConfigs: scopedGraphicConfigs,
 			exportOption: {
 				canvas: { width: template.width, height: template.height },
+				...(template.canvasPpi === undefined ? {} : { canvasPpi: template.canvasPpi }),
 				maxScale: resolveMaxExportScale(template.width, template.height),
 			},
 		},
