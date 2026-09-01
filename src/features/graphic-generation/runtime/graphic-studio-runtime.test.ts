@@ -110,6 +110,31 @@ describe('graphicStudioRuntime', () => {
 		expect(getGraphicStudioRuntimeBindings(config, { width: 800, height: 0 })).toEqual({})
 	})
 
+	it('기본 선언이 없는 런타임은 controller에 그 키를 싣지 않는다', () => {
+		const derived = deriveGraphicStudioConfig({
+			id: 13,
+			name: '선언 없음',
+			runtime: 'forward-straight',
+		})
+
+		// 🔴 undefined를 그대로 실으면 JSON 직렬화 검사에서 프로파일 전체가 거부된다.
+		expect('basic' in derived.controller).toBe(false)
+	})
+
+	it('Admin 제한은 기본 선언을 건드리지 않는다 — readonly는 숨김이 아니다', () => {
+		const derived = deriveGraphicStudioConfig({
+			id: 11,
+			name: '광원 고정',
+			runtime: 'radial-fluted-glass',
+			controllerRestrictions: {
+				controls: [{ controlId: 'sourceOffsetX', availability: 'readonly' }],
+			},
+		})
+
+		// 두 기제는 독립이다: 제한은 만질 수 있는지를, 기본 선언은 어디에 서는지를 정한다.
+		expect(derived.controller.basic).toEqual(['source', 'sourceOffsetX', 'sourceOffsetY'])
+	})
+
 	it('published Graphic Profile은 Restrictions로 Runtime Manifest를 좁히고 미등록 runtime을 거부한다', () => {
 		const profile = {
 			id: 9,

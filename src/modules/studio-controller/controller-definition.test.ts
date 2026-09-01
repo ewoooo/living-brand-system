@@ -10,8 +10,74 @@ import {
 	parseStudioControllerConfig,
 	projectPayloadControllerRestrictions,
 	resolveControllerPresentation,
+	splitControllerGroups,
 	toStudioPreviewImage,
 } from './controller-definition'
+
+describe('splitControllerGroups', () => {
+	const groups: readonly ControllerGroupDefinition[] = [
+		{
+			id: 'palette',
+			title: 'Ray Palette',
+			controls: [
+				{ id: 'rayColor1', label: '광선 색상 1', kind: 'color', defaultValue: '#ffffff' },
+				{ id: 'rayColor2', label: '광선 색상 2', kind: 'color', defaultValue: '#000000' },
+			],
+		},
+		{
+			id: 'position',
+			title: 'Position',
+			controls: [
+				{
+					id: 'sourceOffsetX',
+					label: '광원 X 오프셋',
+					kind: 'range',
+					defaultValue: 0,
+					min: -1,
+					max: 1,
+					step: 0.01,
+				},
+			],
+		},
+	]
+
+	it('기본에 남긴 컨트롤과 나머지를 그룹 구조 그대로 가른다', () => {
+		const split = splitControllerGroups(groups, ['sourceOffsetX'])
+
+		expect(split.basic.map((group) => group.id)).toEqual(['position'])
+		expect(split.advanced.map((group) => group.id)).toEqual(['palette'])
+		expect(split.advanced[0]?.controls.map((control) => control.id)).toEqual([
+			'rayColor1',
+			'rayColor2',
+		])
+	})
+
+	it('🔴 선언이 없으면 전부 기본이다 — 안 정한 런타임의 화면이 비면 안 된다', () => {
+		const split = splitControllerGroups(groups, undefined)
+
+		expect(split.basic).toEqual(groups)
+		expect(split.advanced).toEqual([])
+	})
+
+	it('빈 배열은 전부 고급이다 — 빈 선언과 미선언을 같게 취급하지 않는다', () => {
+		const split = splitControllerGroups(groups, [])
+
+		expect(split.basic).toEqual([])
+		expect(split.advanced.map((group) => group.id)).toEqual(['palette', 'position'])
+	})
+
+	it('한 그룹이 양쪽으로 갈려도 각자 자기 제목을 지킨다', () => {
+		const split = splitControllerGroups(groups, ['rayColor1', 'sourceOffsetX'])
+
+		expect(split.basic.map((group) => [group.title, group.controls.length])).toEqual([
+			['Ray Palette', 1],
+			['Position', 1],
+		])
+		expect(split.advanced.map((group) => [group.title, group.controls.length])).toEqual([
+			['Ray Palette', 1],
+		])
+	})
+})
 
 describe('createControllerValues', () => {
 	it('가변 그룹의 기본값을 control id 기준 세션 값으로 만든다', () => {

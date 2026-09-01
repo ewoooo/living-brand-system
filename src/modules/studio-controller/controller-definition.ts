@@ -26,6 +26,19 @@ export type StudioRuntimeManifest = {
 	artifacts: StudioArtifactCapabilities
 	controller: {
 		groups: readonly ControllerGroupDefinition[]
+		/**
+		 * 기본 화면에 남길 컨트롤 id. 나머지는 「고급 설정」 뒤로 접힌다.
+		 *
+		 * 🔑 기준은 **판에 앉혀 보고 나서야 알 수 있는 축인가**다. 위치·맞춤은 템플릿에 넣어 본
+		 *    뒤에 조정해야 하므로 기본이고, 색·광선·물성은 미리 고를 수 있으므로 프리셋에 맡긴다.
+		 *
+		 * 🔴 **비워 두면 전부 기본이다.** 아직 정하지 않은 런타임은 선언하지 않는다 —
+		 *    빈 배열을 넣으면 컨트롤이 통째로 사라진다.
+		 *
+		 * 지금은 코드가 정하지만 나중에 프로파일(manager)로 옮겨진다. `controllerPresentation`이
+		 * 같은 성격으로 이미 그 길을 갔다.
+		 */
+		basic?: readonly string[]
 	}
 }
 
@@ -125,6 +138,29 @@ export type ControllerGroupDefinition = {
 	controls: readonly ControllerControlDefinition[]
 }
 
+/**
+ * 그룹을 기본/고급 두 벌로 가른다. 그룹 구조는 양쪽에서 그대로 유지되고,
+ * 남는 컨트롤이 없는 그룹은 그 쪽에서 빠진다.
+ *
+ * 🔴 `basic`이 없으면 전부 기본이다 — 선언하지 않은 런타임의 화면이 비지 않게 한다.
+ */
+export function splitControllerGroups(
+	groups: readonly ControllerGroupDefinition[],
+	basic: readonly string[] | undefined,
+): { basic: readonly ControllerGroupDefinition[]; advanced: readonly ControllerGroupDefinition[] } {
+	if (!basic) return { basic: groups, advanced: [] }
+	const keep = new Set(basic)
+	const pick = (wanted: boolean) =>
+		groups
+			.map((group) => ({
+				...group,
+				controls: group.controls.filter((control) => keep.has(control.id) === wanted),
+			}))
+			.filter((group) => group.controls.length > 0)
+
+	return { basic: pick(true), advanced: pick(false) }
+}
+
 export type ControllerGroupPresentation = {
 	groupId: string
 	collapsible: boolean
@@ -182,10 +218,11 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	parseStudioArtifactCapabilities(config.artifacts)
 
 	const controller = asRecord(config.controller, 'controller')
-	assertOnlyKeys(controller, ['groups'], 'controller')
+	assertOnlyKeys(controller, ['basic', 'groups'], 'controller')
 	if (!Array.isArray(controller.groups)) invalid('controller.groups', '배열이어야 합니다.')
 
 	const groupIds = new Set<string>()
+	const controlIds = new Set<string>()
 	for (const [groupIndex, groupValue] of controller.groups.entries()) {
 		const groupPath = `controller.groups[${groupIndex}]`
 		const group = asRecord(groupValue, groupPath)
@@ -197,8 +234,10 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 		if (!Array.isArray(group.controls)) invalid(`${groupPath}.controls`, '배열이어야 합니다.')
 		for (const [controlIndex, controlValue] of group.controls.entries()) {
 			validateControl(controlValue, `${groupPath}.controls[${controlIndex}]`)
+			controlIds.add((controlValue as { id: string }).id)
 		}
 	}
+	if (controller.basic !== undefined) validateControllerBasic(controller.basic, controlIds)
 	if (config.controllerPresentation !== undefined) {
 		validateControllerPresentation(config.controllerPresentation, groupIds)
 	}
@@ -903,6 +942,24 @@ function asRecord(value: unknown, path: string): Record<string, unknown> {
 		invalid(path, '객체여야 합니다.')
 	}
 	return value as Record<string, unknown>
+}
+
+/**
+ * 기본 컨트롤 선언을 검증한다.
+ *
+ * 🔴 **없는 id를 통과시키면 안 된다.** 오타 하나가 「그 컨트롤이 조용히 고급으로 밀린 것」과
+ *    구분되지 않고, 화면에서는 컨트롤 하나가 이유 없이 사라진 것으로만 보인다.
+ */
+function validateControllerBasic(value: unknown, controlIds: ReadonlySet<string>) {
+	if (!Array.isArray(value)) invalid('controller.basic', '배열이어야 합니다.')
+	const seen = new Set<string>()
+	for (const [index, id] of value.entries()) {
+		const path = `controller.basic[${index}]`
+		assertNonEmptyString(id, path)
+		if (seen.has(id)) invalid(path, `중복되었습니다: ${id}`)
+		seen.add(id)
+		if (!controlIds.has(id)) invalid(path, `존재하지 않는 control id입니다: ${id}`)
+	}
 }
 
 function assertOnlyKeys(value: Record<string, unknown>, allowed: readonly string[], path: string) {
