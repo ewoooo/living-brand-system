@@ -33,6 +33,19 @@ export function GraphicSidebar({
 		config.controller.groups,
 		config.controller.basic,
 	)
+	/**
+	 * 「고급 설정」을 열면 안쪽 그룹은 전부 닫혀 있다.
+	 *
+	 * 🔴 Admin이 정한 `defaultOpen`을 그대로 쓰면 열자마자 40여 개가 쏟아진다 — 접은 이유가 사라진다.
+	 *    Admin의 표현 정책은 기본 화면에만 적용된다.
+	 */
+	const advancedPresentation = {
+		groups: advancedGroups.map((group) => ({
+			groupId: group.id,
+			collapsible: true,
+			defaultOpen: false,
+		})),
+	}
 	const format = output.draft?.format
 	const video = format === 'mp4' ? config.output.video?.mp4 : undefined
 	const formatOptions = STUDIO_OUTPUT_FORMAT_OPTIONS.filter(({ value }) =>
@@ -144,7 +157,7 @@ export function GraphicSidebar({
 						<ControllerRenderer
 							first={false}
 							groups={advancedGroups}
-							presentation={config.controllerPresentation}
+							presentation={advancedPresentation}
 							values={controls.values}
 							bindings={controls.bindings}
 							onChange={controls.update}

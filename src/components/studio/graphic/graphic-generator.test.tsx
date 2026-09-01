@@ -248,24 +248,33 @@ describe('GraphicGenerator', () => {
 			...forwardStraightConfig,
 			controller: {
 				...forwardStraightConfig.controller,
-				// 판에 앉히는 축만 기본 — 나머지는 접힌다.
-				basic: ['origin', 'columnGap'],
+				// 판에 앉히는 축만 기본 — 나머지 그룹은 통째로 접힌다.
+				basic: ['origin'],
 			},
 		} satisfies GraphicStudioConfig
 
 		render(createElement(GraphicGenerator, { config }))
 
-		expect(screen.getByRole('slider', { name: '열 간격' })).toBeInTheDocument()
 		// 🔴 접힌 것이 아니라 아예 없어야 한다 — 있으면 스크린리더와 탭 이동에 그대로 잡힌다.
-		expect(screen.queryByRole('slider', { name: '행 간격' })).not.toBeInTheDocument()
+		expect(screen.queryByRole('slider', { name: '열 간격' })).not.toBeInTheDocument()
 		expect(screen.queryByRole('slider', { name: '원근 압축' })).not.toBeInTheDocument()
 
 		await user.click(screen.getByRole('button', { name: /고급 설정/ }))
 
+		// 열어도 안쪽 그룹은 전부 닫혀 있다 — 열자마자 40여 개가 쏟아지면 접은 이유가 없다.
 		await waitFor(() =>
-			expect(screen.getByRole('slider', { name: '행 간격' })).toBeInTheDocument(),
+			expect(screen.getByRole('button', { name: 'Grid' })).toBeInTheDocument(),
 		)
-		expect(screen.getByRole('slider', { name: '원근 압축' })).toBeInTheDocument()
+		expect(screen.queryByRole('slider', { name: '열 간격' })).not.toBeInTheDocument()
+
+		await user.click(screen.getByRole('button', { name: 'Grid' }))
+
+		await waitFor(() =>
+			expect(screen.getByRole('slider', { name: '열 간격' })).toBeInTheDocument(),
+		)
+		expect(screen.getByRole('slider', { name: '행 간격' })).toBeInTheDocument()
+		// 다른 그룹은 여전히 닫혀 있다 — 하나를 열어도 나머지가 따라 열리지 않는다.
+		expect(screen.queryByRole('slider', { name: '원근 압축' })).not.toBeInTheDocument()
 	})
 
 	it('선언이 없는 런타임은 전부 기본이고 「고급 설정」이 뜨지 않는다', () => {
@@ -351,17 +360,26 @@ describe('GraphicGenerator', () => {
 		await waitFor(() =>
 			expect(screen.getByRole('button', { name: 'Ray Palette' })).toBeInTheDocument(),
 		)
-		expect(screen.getByText('Rays')).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: 'Rays' })).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: 'Pulse' })).toBeInTheDocument()
-		expect(screen.getByText('Glass')).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: 'Glass' })).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: 'Glass Motion' })).toBeInTheDocument()
-		expect(screen.getByRole('combobox', { name: '왜곡 형태' })).toHaveTextContent('Lens')
+
+		// 안쪽 그룹은 닫힌 채로 열리므로 컨트롤을 보려면 그 그룹도 열어야 한다.
+		fireEvent.click(screen.getByRole('button', { name: 'Glass' }))
+		await waitFor(() =>
+			expect(screen.getByRole('combobox', { name: '왜곡 형태' })).toHaveTextContent('Lens'),
+		)
 		expect(screen.getByRole('spinbutton', { name: 'Width' })).toHaveValue(1920)
 		expect(screen.getByRole('spinbutton', { name: 'Height' })).toHaveValue(1080)
 		expect(screen.getByRole('combobox', { name: 'FPS' })).toHaveTextContent('30')
 		expect(screen.getByRole('spinbutton', { name: 'Duration' })).toHaveValue(5)
 		await waitFor(() => expect(screen.getByRole('button', { name: '내보내기' })).toBeEnabled())
 
+		fireEvent.click(screen.getByRole('button', { name: 'Rays' }))
+		await waitFor(() =>
+			expect(screen.getByRole('slider', { name: '광선 강도' })).toBeInTheDocument(),
+		)
 		fireEvent.keyDown(screen.getByRole('slider', { name: '광선 강도' }), {
 			key: 'ArrowRight',
 		})
