@@ -179,12 +179,12 @@ const linearFlutedGlassRuntimeManifest = defineGraphicRuntime({
 		groups: [
 			{
 				id: 'preset',
-				title: 'Preset',
+				title: 'Style',
 				controls: [
 					{
 						id: 'preset',
 						kind: 'select' as const,
-						label: '프리셋',
+						label: '스타일',
 						defaultValue: 'basic' satisfies LinearFlutedGlassPresetId,
 						options: LINEAR_FLUTED_GLASS_PRESET_IDS.map((id) => ({
 							value: id,

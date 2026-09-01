@@ -33,6 +33,8 @@ type ControllerRendererProps = {
 	values: ControllerValues
 	bindings?: ControllerRuntimeBindings
 	onChange: (controlId: string, value: ControllerControlValue) => void
+	/** 첫 그룹의 위 구분선을 걷는다. 이 목록 앞에 다른 그룹이 서면 `false`를 준다. */
+	first?: boolean
 }
 
 /** 직렬화된 Definition과 세션 값을 도메인 지식 없이 Controller primitive로 투영한다. */
@@ -42,6 +44,7 @@ export function ControllerRenderer({
 	values,
 	bindings,
 	onChange,
+	first = true,
 }: ControllerRendererProps) {
 	return (
 		<>
@@ -60,7 +63,7 @@ export function ControllerRenderer({
 					<ControllerGroupRenderer
 						key={group.id}
 						definition={group}
-						first={index === 0}
+						first={first && index === 0}
 						presentation={presentation?.groups.find(
 							({ groupId }) => groupId === group.id,
 						)}

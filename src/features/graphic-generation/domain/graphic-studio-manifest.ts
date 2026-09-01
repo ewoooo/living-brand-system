@@ -15,6 +15,7 @@ import {
 	resolveControllerPresentation,
 	toStudioPreviewImage,
 } from '@/modules/studio-controller/controller-definition'
+import { parseGraphicProfilePresets } from './graphic-preset'
 import type { PublishedGraphicProfileDefinition } from './graphic-studio-config'
 
 export { graphicRuntimeManifests }
@@ -51,6 +52,9 @@ export function deriveGraphicStudioConfig(
 		...manifest,
 		name: profile.name,
 		output: resolveGraphicStudioOutput(manifest, profile.exportPolicy),
+		// 🔑 프리셋은 컨트롤 목록이 아니라 그 옆에 선다 — 제한이 좁힌 컨트롤만 채우는 것은
+		//    적용 시점에 거른다(`pickGraphicPresetValues`).
+		presets: parseGraphicProfilePresets(profile.presets),
 		controller: {
 			groups,
 		},

@@ -24,7 +24,8 @@ export function GraphicSidebar({
 	output: GraphicExportView
 	preview: ReturnType<typeof useProfilePreview>
 }) {
-	const { config, profiles, controls } = useGraphicStudio()
+	const { config, profiles, controls, preset } = useGraphicStudio()
+	const presets = config.presets ?? []
 	const format = output.draft?.format
 	const video = format === 'mp4' ? config.output.video?.mp4 : undefined
 	const formatOptions = STUDIO_OUTPUT_FORMAT_OPTIONS.filter(({ value }) =>
@@ -106,8 +107,25 @@ export function GraphicSidebar({
 				}
 				footer={footer}
 			>
+				{presets.length > 0 && (
+					<Controller.Group title="Preset" collapsible={false}>
+						<Controller.Row label="프리셋">
+							<Controller.Select
+								options={presets.map(({ id, label }) => ({
+									value: id,
+									label,
+								}))}
+								// 🔴 undefined를 주면 radix Select가 uncontrolled로 돌아 옛 라벨을 붙들고 있는다.
+								value={preset.applied ?? ''}
+								placeholder="직접 설정"
+								onChange={preset.apply}
+							/>
+						</Controller.Row>
+					</Controller.Group>
+				)}
 				<ControllerRenderer
 					groups={config.controller.groups}
+					first={presets.length === 0}
 					presentation={config.controllerPresentation}
 					values={controls.values}
 					bindings={controls.bindings}
