@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ControllerGroupDefinition } from '@/modules/studio-controller/controller-definition'
 import {
+	describeGraphicPresetError,
 	findGraphicProfilePreset,
 	type GraphicProfilePreset,
 	parseGraphicProfilePresets,
@@ -49,6 +50,33 @@ describe('parseGraphicProfilePresets', () => {
 
 		expect(parsed).toHaveLength(1)
 		expect(parsed[0]?.label).toBe('먼저')
+	})
+})
+
+describe('describeGraphicPresetError', () => {
+	// 🔴 admin validate와 런타임 parse가 같은 규칙을 써야 한다 — 갈리면 저장은 되는데 안 뜬다.
+	it('parse가 버리는 항목을 모두 오류로 설명한다', () => {
+		const dropped = [
+			null,
+			'문자열',
+			[{ presetId: 'in-array' }],
+			{ presetId: 'Bad Id', label: '대문자·공백', values: {} },
+			{ presetId: 'no-label', values: {} },
+			{ presetId: 'empty-label', label: '', values: {} },
+			{ presetId: 'array-values', label: '배열', values: [1, 2] },
+			{ presetId: 'null-values', label: 'null', values: null },
+		]
+
+		expect(parseGraphicProfilePresets(dropped)).toEqual([])
+		for (const entry of dropped) {
+			expect(describeGraphicPresetError(entry)).toBeTypeOf('string')
+		}
+	})
+
+	it('정상 항목은 null이다', () => {
+		expect(
+			describeGraphicPresetError({ presetId: 'hd-navy', label: 'HD 네이비', values: {} }),
+		).toBeNull()
 	})
 })
 

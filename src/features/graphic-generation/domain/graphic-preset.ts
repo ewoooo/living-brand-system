@@ -19,17 +19,38 @@ export type GraphicProfilePreset = {
 	values: Readonly<Record<string, unknown>>
 }
 
-/** 식별자 규칙 — admin 필드의 validate와 같은 모양이다. */
 const PRESET_ID_PATTERN = /^[a-z][a-z0-9-]*$/
 
-function toPreset(input: unknown): GraphicProfilePreset | null {
-	if (!input || typeof input !== 'object') return null
+type GraphicPresetEntry = { presetId: string; label: string; values: Record<string, unknown> }
+
+/**
+ * 프리셋 항목 하나의 형식 오류를 설명한다. 정상이면 `null`.
+ *
+ * 🔑 parse는 이것으로 **버리고** admin `validate`는 이것으로 **막는다** — 두 규칙이 갈리면
+ *    저장은 성공하는데 스튜디오에는 뜨지 않는 항목이 생긴다.
+ */
+export function describeGraphicPresetError(input: unknown): string | null {
+	if (!input || typeof input !== 'object' || Array.isArray(input)) {
+		return '프리셋 항목은 객체여야 합니다.'
+	}
 	const { presetId, label, values } = input as Record<string, unknown>
-	if (typeof presetId !== 'string' || !PRESET_ID_PATTERN.test(presetId)) return null
-	if (typeof label !== 'string' || label.length === 0) return null
+	if (typeof presetId !== 'string' || !PRESET_ID_PATTERN.test(presetId)) {
+		return `식별자는 영문 소문자로 시작하고 소문자·숫자·하이픈만 씁니다: ${String(presetId)}`
+	}
+	if (typeof label !== 'string' || label.length === 0) {
+		return `${presetId}: 화면에 띄울 label이 필요합니다.`
+	}
 	// 🔴 배열·null은 조합이 아니다 — 스프레드하면 런타임 입력이 조용히 깨진다.
-	if (!values || typeof values !== 'object' || Array.isArray(values)) return null
-	return { id: presetId, label, values: values as Record<string, unknown> }
+	if (!values || typeof values !== 'object' || Array.isArray(values)) {
+		return `${presetId}: values는 「컨트롤 id: 값」 객체여야 합니다.`
+	}
+	return null
+}
+
+function toPreset(input: unknown): GraphicProfilePreset | null {
+	if (describeGraphicPresetError(input) !== null) return null
+	const { presetId, label, values } = input as GraphicPresetEntry
+	return { id: presetId, label, values }
 }
 
 /**

@@ -1,4 +1,5 @@
 import type { Field } from 'payload'
+import { describeGraphicPresetError } from '@/features/graphic-generation/domain/graphic-preset'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 import type {
 	StudioKind,
@@ -67,17 +68,16 @@ export function graphicPresetsField(): Field {
 			description:
 				'창작자 화면의 시작값 묶음입니다. [{ "presetId": "hd-navy", "label": "HD 네이비", "values": { "<컨트롤 id>": <값> } }] 형태이며, values는 「Controller 제한」이 노출한 컨트롤만 반영됩니다.',
 		},
-		// 🔴 같은 식별자가 둘이면 뒤엣것이 조용히 가려진다 — 화면에는 둘 다 보이는데 하나만 먹는다.
+		// 🔴 런타임이 버리는 항목은 여기서 막는다 — 안 그러면 저장은 되는데 스튜디오에 안 뜬다.
 		validate: (value: unknown) => {
 			if (value === null || value === undefined) return true
 			if (!Array.isArray(value)) return '프리셋은 목록이어야 합니다.'
-			const ids = value
-				.map((entry) => (entry as { presetId?: unknown } | null)?.presetId)
-				.filter((id): id is string => typeof id === 'string')
-			const invalid = ids.filter((id) => !/^[a-z][a-z0-9-]*$/.test(id))
-			if (invalid.length > 0) {
-				return `식별자는 영문 소문자로 시작하고 소문자·숫자·하이픈만 씁니다: ${invalid.join(', ')}`
-			}
+			const errors = value
+				.map(describeGraphicPresetError)
+				.filter((message): message is string => message !== null)
+			if (errors.length > 0) return errors.join(' / ')
+			// 같은 식별자가 둘이면 뒤엣것이 조용히 가려진다 — 화면에는 둘 다 보이는데 하나만 먹는다.
+			const ids = value.map((entry) => (entry as { presetId: string }).presetId)
 			const duplicated = ids.filter((id, index) => ids.indexOf(id) !== index)
 			return duplicated.length === 0
 				? true
