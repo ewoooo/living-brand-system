@@ -14,10 +14,8 @@ import {
 } from './fields/studio-controller-field'
 import { draftVersions } from './shared'
 
-// 🔑 `type`을 함께 싣는다 — Admin의 프리셋 미리보기가 runtime adapter를 고를 때 id와 type을 대조한다.
-//    빼면 `loadGraphicRuntimeAdapter`가 언제나 null을 돌려주고 미리보기가 「등록되지 않은 runtime」이 된다.
 const graphicAdminRuntimeManifests = graphicRuntimeManifests.map(
-	({ artifacts, controller, id, type }) => ({ artifacts, controller, id, type }),
+	({ artifacts, controller, id }) => ({ artifacts, controller, id }),
 )
 
 export const GraphicProfiles: CollectionConfig = {
@@ -84,7 +82,7 @@ export const GraphicProfiles: CollectionConfig = {
 			min: 0,
 			admin: { position: 'sidebar' },
 		},
-		graphicPresetsField({ source: 'graphic', baseConfigs: graphicAdminRuntimeManifests }),
+		graphicPresetsField(),
 		studioControllerRestrictionsField({
 			source: 'graphic',
 			baseConfigs: graphicAdminRuntimeManifests,

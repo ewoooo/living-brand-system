@@ -52,28 +52,20 @@ export function studioControllerPresentationField({
 }
 
 /**
- * 매니저가 창작자에게 제공할 프리셋 목록. 🔑 `controllerRestrictions`와 같은 자리에 둔다 —
- * 「무엇을 노출할지」와 「어디서 시작할지」를 같은 사람이 같은 화면에서 정하기 때문이다.
- * 🔑 저장 형태가 json인 것도 그 필드와 같다 — 렌더를 통째로 대신하므로 array 행 UI가 필요 없다.
+ * 매니저가 창작자에게 제공할 프리셋 목록.
+ *
+ * 🔴 **전용 편집 UI를 두지 않는다.** Payload 기본 JSON 폼으로만 편집한다 — 이 값이 창작자 화면의
+ *    시작값을 정하므로, 무엇을 어떻게 입력하게 할지는 임의로 정할 수 있는 것이 아니다.
+ *    (2026-09-01 사용자 지정: 기본 입력 폼을 쓰지 않는 admin 화면을 걷어냈다.)
  */
-export function graphicPresetsField({
-	source,
-	baseConfigs,
-}: {
-	source: StudioKind
-	baseConfigs?: readonly StudioAdminBaseConfig[]
-}): Field {
+export function graphicPresetsField(): Field {
 	return {
 		name: 'presets',
 		type: 'json',
-		label: '프리셋',
+		label: '제공 프리셋',
 		admin: {
-			components: {
-				Field: {
-					path: '/components/admin/studio/graphic-presets-field#GraphicPresetsField',
-					clientProps: { source, baseConfigs },
-				},
-			},
+			description:
+				'창작자 화면의 시작값 묶음입니다. [{ "presetId": "hd-navy", "label": "HD 네이비", "values": { "<컨트롤 id>": <값> } }] 형태이며, values는 「Controller 제한」이 노출한 컨트롤만 반영됩니다.',
 		},
 		// 🔴 같은 식별자가 둘이면 뒤엣것이 조용히 가려진다 — 화면에는 둘 다 보이는데 하나만 먹는다.
 		validate: (value: unknown) => {
