@@ -2,11 +2,9 @@ import { describe, expect, it } from 'vitest'
 import type { ControllerGroupDefinition } from '@/modules/studio-controller/controller-definition'
 import {
 	findGraphicProfilePreset,
-	GRAPHIC_PRESET_CONTROL_ID,
 	type GraphicProfilePreset,
-	mergeGraphicPresetOptions,
 	parseGraphicProfilePresets,
-	withProfilePresetOptions,
+	pickGraphicPresetValues,
 } from './graphic-preset'
 
 const preset = (id: string, label = id): GraphicProfilePreset => ({
@@ -54,32 +52,6 @@ describe('parseGraphicProfilePresets', () => {
 	})
 })
 
-describe('mergeGraphicPresetOptions', () => {
-	const code = [
-		{ value: 'basic', label: '기본' },
-		{ value: 'focused', label: '집중' },
-	]
-
-	it('코드 프리셋이 앞이고 프로파일 프리셋이 뒤에 붙는다', () => {
-		expect(mergeGraphicPresetOptions(code, [preset('hd-navy', 'HD 네이비')])).toEqual([
-			{ value: 'basic', label: '기본' },
-			{ value: 'focused', label: '집중' },
-			{ value: 'hd-navy', label: 'HD 네이비' },
-		])
-	})
-
-	it('🔴 식별자가 겹치면 코드가 이긴다 — 런타임이 기대하는 조합이 사라지면 안 된다', () => {
-		const merged = mergeGraphicPresetOptions(code, [preset('basic', '가로채기')])
-
-		expect(merged).toHaveLength(2)
-		expect(merged.find((option) => option.value === 'basic')?.label).toBe('기본')
-	})
-
-	it('프로파일 프리셋이 없으면 코드 목록 그대로다', () => {
-		expect(mergeGraphicPresetOptions(code, [])).toEqual(code)
-	})
-})
-
 describe('findGraphicProfilePreset', () => {
 	it('프로파일 프리셋이면 값 묶음을, 코드 프리셋이면 null을 준다', () => {
 		const presets = [preset('hd-navy')]
@@ -90,65 +62,53 @@ describe('findGraphicProfilePreset', () => {
 	})
 })
 
-describe('withProfilePresetOptions', () => {
-	const presetGroup: ControllerGroupDefinition = {
-		id: 'preset',
-		title: 'Preset',
-		controls: [
-			{
-				id: GRAPHIC_PRESET_CONTROL_ID,
-				label: '프리셋',
-				kind: 'select',
-				defaultValue: 'basic',
-				options: [{ value: 'basic', label: '기본' }],
-			},
-		],
-	}
-	const plainGroup: ControllerGroupDefinition = {
-		id: 'grid',
-		title: 'Grid',
-		controls: [
-			{
-				id: 'columnGap',
-				label: '열 간격',
-				kind: 'range',
-				defaultValue: 30,
-				min: 10,
-				max: 30,
-				step: 1,
-			},
-		],
-	}
+describe('pickGraphicPresetValues', () => {
+	const groups: readonly ControllerGroupDefinition[] = [
+		{
+			id: 'rays',
+			title: 'Rays',
+			controls: [
+				{
+					id: 'rayDensity',
+					label: '광선 밀도',
+					kind: 'range',
+					defaultValue: 0.2,
+					min: 0,
+					max: 1,
+					step: 0.01,
+				},
+				{ id: 'rayColor1', label: '광선 색상 1', kind: 'color', defaultValue: '#ffffff' },
+			],
+		},
+	]
 
-	it('프리셋 컨트롤이 있으면 그 선택지에 붙인다', () => {
-		const [group] = withProfilePresetOptions([presetGroup], [preset('hd-navy', 'HD 네이비')])
-		const control = group?.controls[0]
-
-		expect(control?.kind === 'select' && control.options).toEqual([
-			{ value: 'basic', label: '기본' },
-			{ value: 'hd-navy', label: 'HD 네이비' },
-		])
+	it('노출된 컨트롤의 값만 남긴다', () => {
+		expect(
+			pickGraphicPresetValues(groups, {
+				id: 'hd-navy',
+				label: 'HD 네이비',
+				values: { rayDensity: 0.4, rayColor1: '#001c4a' },
+			}),
+		).toEqual({ rayDensity: 0.4, rayColor1: '#001c4a' })
 	})
 
-	it('🔴 프리셋 컨트롤이 없는 런타임에서도 버리지 않고 그룹을 만들어 맨 앞에 세운다', () => {
-		const groups = withProfilePresetOptions([plainGroup], [preset('hd-navy', 'HD 네이비')])
-
-		expect(groups).toHaveLength(2)
-		expect(groups[0]?.id).toBe(GRAPHIC_PRESET_CONTROL_ID)
-		expect(groups[1]).toBe(plainGroup)
-		const control = groups[0]?.controls[0]
-		expect(control?.kind === 'select' && control.defaultValue).toBe('hd-navy')
+	it('🔴 제한으로 사라진 컨트롤의 값은 버린다 — 안 보이는 축이 몰래 움직이면 안 된다', () => {
+		expect(
+			pickGraphicPresetValues(groups, {
+				id: 'hd-navy',
+				label: 'HD 네이비',
+				values: { rayDensity: 0.4, glassBlur: 0.9 },
+			}),
+		).toEqual({ rayDensity: 0.4 })
 	})
 
-	it('프로파일 프리셋이 없으면 그룹을 그대로 돌려준다', () => {
-		const groups = [presetGroup, plainGroup]
-
-		expect(withProfilePresetOptions(groups, [])).toBe(groups)
-	})
-
-	it('프리셋과 무관한 컨트롤은 건드리지 않는다', () => {
-		const [, group] = withProfilePresetOptions([presetGroup, plainGroup], [preset('hd-navy')])
-
-		expect(group?.controls[0]).toEqual(plainGroup.controls[0])
+	it('🔴 컨트롤 계약을 벗어난 값도 버린다 — 프리셋을 만든 뒤 범위가 좁아질 수 있다', () => {
+		expect(
+			pickGraphicPresetValues(groups, {
+				id: 'broken',
+				label: '범위 밖',
+				values: { rayDensity: 4, rayColor1: '#001c4a' },
+			}),
+		).toEqual({ rayColor1: '#001c4a' })
 	})
 })

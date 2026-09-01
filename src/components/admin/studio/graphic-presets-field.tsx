@@ -89,7 +89,7 @@ export function GraphicPresetsField({
 
 	return (
 		<div className="lbs-kit field-type json mb-20">
-			<AdminSectionHeading>프리셋</AdminSectionHeading>
+			<AdminSectionHeading>제공 프리셋</AdminSectionHeading>
 			<FieldError message={errorMessage} path={path} showError={showError} />
 			<div className="flex flex-col gap-3 rounded-3xl border bg-background px-3 pt-6 pb-3">
 				{groups.length === 0 ? (
@@ -185,7 +185,7 @@ export function GraphicPresetsField({
 				)}
 			</div>
 			<FieldDescription
-				description="창작자는 이 중 하나를 고른 뒤 노출된 컨트롤만 조정합니다. 어떤 컨트롤을 노출할지는 위의 「Controller 제한」이 정하고, 프리셋은 그 범위 안의 값 조합입니다."
+				description="창작자는 이 중 하나를 골라 시작한 뒤 노출된 컨트롤을 조정합니다 — 하나라도 만지면 프리셋 선택이 풀립니다. 어떤 컨트롤을 노출할지는 위의 「Controller 제한」이 정하고, 프리셋은 그 범위 안의 값 조합입니다."
 				path={path}
 			/>
 		</div>

@@ -242,6 +242,45 @@ describe('GraphicGenerator', () => {
 		)
 	})
 
+	it('프리셋을 고르면 값이 들어가고, 컨트롤을 만지면 선택이 풀린다', async () => {
+		const user = userEvent.setup()
+		const config = {
+			...forwardStraightConfig,
+			presets: [
+				{ id: 'wide', label: '넓게', values: { columnGap: 30, perspectiveGamma: 1.4 } },
+			],
+		} satisfies GraphicStudioConfig
+
+		render(createElement(GraphicGenerator, { config }))
+
+		const preset = screen.getByRole('combobox', { name: '프리셋' })
+		expect(preset).toHaveTextContent('직접 설정')
+
+		preset.focus()
+		await user.keyboard('{ArrowDown}{Enter}')
+
+		await waitFor(() => expect(preset).toHaveTextContent('넓게'))
+		expect(screen.getByRole('slider', { name: '열 간격' })).toHaveAttribute(
+			'aria-valuenow',
+			'30',
+		)
+		expect(screen.getByRole('slider', { name: '원근 압축' })).toHaveAttribute(
+			'aria-valuenow',
+			'1.4',
+		)
+
+		// 🔴 값이 아니라 UX 상태다 — 하나만 만져도 풀리고, 되돌려도 다시 붙지 않는다.
+		const gamma = screen.getByRole('slider', { name: '원근 압축' })
+		gamma.focus()
+		await user.keyboard('{ArrowRight}')
+
+		await waitFor(() => expect(preset).toHaveTextContent('직접 설정'))
+		expect(screen.getByRole('slider', { name: '열 간격' })).toHaveAttribute(
+			'aria-valuenow',
+			'30',
+		)
+	})
+
 	it('Raster Artifact가 있는 Graphic은 공통 PNG adapter를 실행할 수 있다', async () => {
 		const config = {
 			...forwardStraightRuntimeManifest,

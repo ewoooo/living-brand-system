@@ -15,7 +15,7 @@ import {
 	resolveControllerPresentation,
 	toStudioPreviewImage,
 } from '@/modules/studio-controller/controller-definition'
-import { parseGraphicProfilePresets, withProfilePresetOptions } from './graphic-preset'
+import { parseGraphicProfilePresets } from './graphic-preset'
 import type { PublishedGraphicProfileDefinition } from './graphic-studio-config'
 
 export { graphicRuntimeManifests }
@@ -47,15 +47,14 @@ export function deriveGraphicStudioConfig(
 	const manifest = getGraphicRuntimeManifest(profile.runtime)
 	if (!manifest) throw new Error(`등록되지 않은 Graphic runtime입니다: ${profile.runtime}`)
 	const restrictions = projectPayloadControllerRestrictions(profile.controllerRestrictions)
-	const restricted = applyControllerRestrictions(manifest.controller.groups, restrictions)
-	// 🔑 프로파일 프리셋은 제한을 **적용한 뒤에** 붙인다 — 제한은 런타임 계약을 좁히는 것이고
-	//    프리셋은 그 위에서 고르는 값이라, 순서를 바꾸면 admin이 방금 만든 프리셋이 제한에 걸린다.
-	const presets = parseGraphicProfilePresets(profile.presets)
-	const groups = withProfilePresetOptions(restricted, presets)
+	const groups = applyControllerRestrictions(manifest.controller.groups, restrictions)
 	const config: GraphicStudioConfig = {
 		...manifest,
 		name: profile.name,
 		output: resolveGraphicStudioOutput(manifest, profile.exportPolicy),
+		// 🔑 프리셋은 컨트롤 목록이 아니라 그 옆에 선다 — 제한이 좁힌 컨트롤만 채우는 것은
+		//    적용 시점에 거른다(`pickGraphicPresetValues`).
+		presets: parseGraphicProfilePresets(profile.presets),
 		controller: {
 			groups,
 		},

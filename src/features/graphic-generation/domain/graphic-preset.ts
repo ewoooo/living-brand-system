@@ -1,19 +1,16 @@
-import type {
-	ControllerGroupDefinition,
-	ControllerOption,
+import {
+	acceptsControllerDraftValue,
+	type ControllerControlValue,
+	type ControllerGroupDefinition,
+	type ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 
 /**
- * 프리셋 select의 식별자. 🔑 런타임이 이 id로 컨트롤을 선언하면 프로파일 프리셋이 그 선택지에
- * 붙고, 선언하지 않았으면 프로파일이 프리셋을 가질 때 그룹째 만들어 준다.
- */
-export const GRAPHIC_PRESET_CONTROL_ID = 'preset'
-
-/**
- * 프로파일이 소유하는 프리셋. 브랜드 디자이너가 admin에서 만든 파라미터 조합이다.
+ * 프로파일이 소유하는 프리셋. 매니저가 admin에서 만든 **노출 컨트롤 값 조합**이다.
  *
- * 🔑 코드 프리셋(`definition.ts`의 상수)을 대체하지 않고 **뒤에 붙는다** — 코드 프리셋은 DB가
- *    비어 있어도 존재하므로, 그것을 지우면 새 환경에서 창작자가 파라미터 40여 개를 맨손으로 만나게 된다.
+ * 🔑 런타임의 「스타일」 컨트롤(`definition.ts`의 상수)과 다른 것이다 — 그쪽은 창작자에게 감춘
+ *    파라미터를 정하는 런타임 입력이고, 이쪽은 노출된 컨트롤을 한 번에 채워 주는 **시작점**이다.
+ *    그래서 값이 아니라 동작이고, 창작자가 컨트롤을 하나라도 만지면 선택이 풀린다.
  */
 export type GraphicProfilePreset = {
 	id: string
@@ -55,25 +52,6 @@ export function parseGraphicProfilePresets(input: unknown): readonly GraphicProf
 	return presets
 }
 
-/**
- * 프리셋 select의 선택지를 만든다. 코드 프리셋이 앞이고 프로파일 프리셋이 뒤다.
- *
- * 🔴 식별자가 겹치면 **코드가 이긴다.** 프로파일이 코드 프리셋을 덮으면 런타임이 기대하는 조합이
- *    화면에서 사라지는데, 그것이 왜 사라졌는지 admin 화면 어디에도 안 나타난다.
- */
-export function mergeGraphicPresetOptions(
-	codeOptions: readonly ControllerOption[],
-	profilePresets: readonly GraphicProfilePreset[],
-): readonly ControllerOption[] {
-	const reserved = new Set(codeOptions.map((option) => option.value))
-	return [
-		...codeOptions,
-		...profilePresets
-			.filter((preset) => !reserved.has(preset.id))
-			.map((preset) => ({ value: preset.id, label: preset.label })),
-	]
-}
-
 /** 고른 식별자가 프로파일 프리셋이면 그 값 묶음을, 코드 프리셋이면 `null`을 준다. */
 export function findGraphicProfilePreset(
 	presets: readonly GraphicProfilePreset[],
@@ -84,36 +62,22 @@ export function findGraphicProfilePreset(
 }
 
 /**
- * 런타임 컨트롤 그룹에 프로파일 프리셋을 얹는다.
+ * 프리셋이 담은 값 중 **지금 노출된 컨트롤이 받아들이는 것만** 남긴다.
  *
- * 🔴 프리셋 컨트롤이 없는 런타임(6개 중 4개)에서 프로파일 프리셋을 조용히 버리지 않는다 —
- *    admin이 만든 것이 화면에 안 나타나면 왜 없는지 알 길이 없다. 그때는 그룹을 만들어 붙인다.
+ * 🔴 프리셋을 만든 뒤에 「Controller 제한」이 바뀌면 사라진 컨트롤의 값이 그대로 남아 있다.
+ *    그것을 그냥 얹으면 창작자가 보지도 못하는 축이 몰래 움직인다.
  */
-export function withProfilePresetOptions(
+export function pickGraphicPresetValues(
 	groups: readonly ControllerGroupDefinition[],
-	presets: readonly GraphicProfilePreset[],
-): readonly ControllerGroupDefinition[] {
-	if (presets.length === 0) return groups
-
-	let attached = false
-	const next = groups.map((group) => ({
-		...group,
-		controls: group.controls.map((control) => {
-			if (control.id !== GRAPHIC_PRESET_CONTROL_ID || control.kind !== 'select')
-				return control
-			attached = true
-			return { ...control, options: mergeGraphicPresetOptions(control.options, presets) }
-		}),
-	}))
-	if (attached) return next
-
-	// 프리셋만 있는 그룹을 맨 앞에 세운다 — 판의 성격을 먼저 고르고 나머지를 조정하는 순서다.
-	const control = {
-		id: GRAPHIC_PRESET_CONTROL_ID,
-		label: '프리셋',
-		kind: 'select' as const,
-		defaultValue: presets[0]?.id ?? null,
-		options: mergeGraphicPresetOptions([], presets),
+	preset: GraphicProfilePreset,
+): ControllerValues {
+	const values: ControllerValues = {}
+	for (const group of groups) {
+		for (const control of group.controls) {
+			if (!(control.id in preset.values)) continue
+			const value = preset.values[control.id] as ControllerControlValue
+			if (acceptsControllerDraftValue(control, value)) values[control.id] = value
+		}
 	}
-	return [{ id: GRAPHIC_PRESET_CONTROL_ID, title: 'Preset', controls: [control] }, ...groups]
+	return values
 }
