@@ -68,10 +68,11 @@ Admin은 Manifest를 읽고 다음 두 공통 정책을 저장합니다(Template
 - `controllerRestrictions`: availability, 기본값, 선택지, 길이와 범위를 좁힙니다.
 - `exportPolicy`: 파일 형식, 원본 허용 여부, FPS, 크기와 길이 상한을 좁힙니다. 인쇄 해상도만 예외입니다 — `print.allowedPpi`는 범위를 좁히는 목록이 아니라 화면 드롭다운의 **프리셋 목록을 대신하는 값**이며(`narrowPrintPpi`), 프리셋 밖의 값도 담을 수 있습니다. 유효성은 `acceptsPrintPpi()`가 `isPrintPpi()` 범위(1~1200 정수)로 판정합니다.
 
-Graphic Profile은 여기에 **제공 프리셋**(`presets`)을 더합니다. 매니저가 admin에서 노출된 컨트롤을 직접 만져 본 뒤 그 값 조합을 저장한 것이고, 창작자에게는 컨트롤 목록 위의 「프리셋」 행 하나로 나갑니다.
+Graphic Profile은 여기에 **제공 프리셋**(`presets`)을 더합니다. 매니저가 admin의 JSON 폼에 `[{ "presetId", "label", "values" }]`로 적어 둔 값 조합이고, 창작자에게는 컨트롤 목록 위의 「프리셋」 행 하나로 나갑니다. 전용 편집 화면은 두지 않습니다.
 
 - 프리셋은 컨트롤이 아니라 **동작**입니다 — 고르면 값이 들어가고, 창작자가 컨트롤을 하나라도 만지면 선택이 즉시 풀립니다. 값을 손으로 되돌려도 다시 붙지 않습니다(같은 값 ≠ 같은 선택).
 - 그래서 `controllerRestrictions`가 좁힌 범위 밖의 값은 적용 시점에 버립니다(`pickGraphicPresetValues`). 프리셋을 만든 뒤 제한이 바뀌어도 안 보이는 축이 몰래 움직이지 않습니다.
+- 항목의 형식 검사는 admin `validate`와 런타임 parse가 같은 규칙(`describeGraphicPresetError`)을 씁니다. `label`이 없거나 `values`가 객체가 아니면 저장 단계에서 막힙니다 — 통과한 값이 스튜디오에서 조용히 사라지지 않게 하기 위해서입니다.
 - 🔴 런타임 자신의 「스타일」 컨트롤(`linear-fluted-glass` 등의 `definition.ts` 상수)과 다른 것입니다. 그쪽은 창작자에게 감춘 파라미터를 정하는 **런타임 입력**이라 값으로 저장되고, 제공 프리셋이 그 선택까지 담을 수 있습니다.
 
 Image Profile은 이 정책과 함께 Runtime Manifest의 `supportedFeatures`에서 사용할 feature를 선택합니다. Admin은 Manifest에 없는 control, feature, Artifact를 추가할 수 없습니다. 그룹 제목, `collapsible`, `defaultOpen`, label 같은 표현 정보도 바꾸지 않습니다.
