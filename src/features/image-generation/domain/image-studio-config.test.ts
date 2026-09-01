@@ -38,6 +38,7 @@ describe('deriveImageStudioConfig', () => {
 					azimuths: CAMERA_AZIMUTHS,
 					elevations: CAMERA_ELEVATIONS,
 				},
+				{ type: 'reference-image' },
 			],
 		})
 		expect(first.controller.groups.flatMap((group) => group.controls)).toEqual(
@@ -212,6 +213,27 @@ describe('projectImageProfileFeatureSelections', () => {
 				},
 			]),
 		).toEqual([{ type: 'camera-control' }, { type: 'color-adjustment', background: true }])
+	})
+
+	it('참조 이미지 첨부는 세부 설정 없이 켜고 끄는 feature로 투영된다', () => {
+		expect(
+			projectImageProfileFeatureSelections([
+				{ id: 'ref-1', blockType: 'referenceImage', blockName: null },
+			]),
+		).toEqual([{ type: 'reference-image' }])
+		expect(
+			getImageStudioFeature(
+				deriveImageStudioConfig({
+					...profile,
+					features: [{ blockType: 'referenceImage' }],
+				}),
+				'reference-image',
+			),
+		).toEqual({ type: 'reference-image' })
+		// 끈 프로파일에는 계약 자체가 없다 — 서비스의 신뢰 경계가 이 부재로 첨부를 거부한다.
+		expect(getImageStudioFeature(deriveImageStudioConfig(profile), 'reference-image')).toBe(
+			undefined,
+		)
 	})
 
 	it('카메라 구간을 고르면 그대로 투영하고, 비우면 좁히지 않는다', () => {

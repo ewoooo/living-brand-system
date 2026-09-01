@@ -12,6 +12,7 @@ import {
 	getImageStudioFeature,
 	type ImageStudioConfig,
 } from '@/features/image-generation/domain/image-studio-config'
+import { decodeImageDataUri } from '@/features/image-generation/image-data-uri'
 import {
 	acquireImageGenerationSlot,
 	ImageGenerationLimitError,
@@ -23,6 +24,7 @@ import {
 	supportsImageOutputSize,
 } from '@/features/image-generation/image-size'
 import {
+	type ResolvedReference,
 	resolveGeneratedImageReference,
 	storeGeneratedImages,
 } from '@/features/image-generation/repositories/generated-image.payload.repository'
@@ -50,6 +52,11 @@ export interface AgentGeneratedImagesAttachment {
 	profileName?: string
 	images: string[]
 }
+
+/** 생성 진입점이 받는 참조 소스 — 저장된 내 생성 결과이거나 1회용 첨부 data URI다. */
+export type ImageReferenceInput =
+	| { generatedImageId: number; requestUrl: string }
+	| { upload: string }
 
 export class ImageProfileNotFoundError extends Error {
 	constructor() {
@@ -168,8 +175,8 @@ export async function generateImages({
 	imageSize?: ImageOutputSize
 	/** 카메라 컨트롤 값 — feature가 열려 있을 때만 허용된다. */
 	camera?: CameraControlInput
-	/** 참조 이미지 — 지금은 내 생성 결과만 소스다. */
-	reference?: { generatedImageId: number; requestUrl: string }
+	/** 참조 이미지 — 내 생성 결과이거나, 프로파일이 열었을 때 사용자가 첨부한 이미지다. */
+	reference?: ImageReferenceInput
 }): Promise<GeneratedImages> {
 	const profile = await findPublishedImageProfile(user, profileId)
 	if (!profile) throw new ImageProfileNotFoundError()
@@ -179,7 +186,7 @@ export async function generateImages({
 	const resolvedCamera = camera ? resolveCameraFeature(config, camera) : null
 
 	const resolved = reference
-		? await resolveGeneratedImageReference({ ...reference, profileId, user })
+		? await resolveImageReference(config, reference, { profileId, user })
 		: null
 	if (reference && !resolved) throw new InvalidSeedImageError()
 
@@ -248,6 +255,29 @@ export async function generateImagesWithSettings({
 	user: unknown
 }): Promise<GeneratedImages> {
 	return runImageGeneration(planImageGenerationFromSettings(input), user)
+}
+
+/**
+ * 참조 소스별 해석을 한자리에서 고른다. 첨부는 저장하지 않으므로 이 요청 안에서만 시드로 살고
+ * `sourceImage`도 남기지 않는다 — 그래서 물려줄 프롬프트가 없고 프롬프트가 필수가 된다.
+ */
+async function resolveImageReference(
+	config: ImageStudioConfig,
+	reference: ImageReferenceInput,
+	owner: { profileId: number; user: unknown },
+): Promise<ResolvedReference | null> {
+	if (!('upload' in reference)) {
+		return resolveGeneratedImageReference({ ...reference, ...owner })
+	}
+	// 신뢰 경계에서 다시 판정한다 — 프로파일이 첨부를 열지 않았으면 요청이 무엇을 보내든 거부한다.
+	if (!getImageStudioFeature(config, 'reference-image')) {
+		throw new InvalidImageControllerInputError('reference')
+	}
+	try {
+		return { data: (await decodeImageDataUri(reference.upload)).data, generatedImageId: null }
+	} catch {
+		throw new InvalidSeedImageError()
+	}
 }
 
 /** 카메라 값을 feature 허용 범위 안에서 해석한다. 신뢰 경계에서 다시 검증한다 — UI가 좁혀도 요청은 임의 각도를 보낼 수 있다. */

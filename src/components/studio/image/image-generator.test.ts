@@ -70,6 +70,7 @@ function config(
 		colorAdjustment?: { line: string; background?: string }
 		imageModelPreset?: ImageModelPreset
 		maxPromptLength?: number
+		referenceImage?: boolean
 	} = {},
 ) {
 	return deriveImageStudioConfig({
@@ -87,6 +88,7 @@ function config(
 					]
 				: []),
 			...(options.cameraControl === false ? [] : [{ blockType: 'cameraControl' }]),
+			...(options.referenceImage ? [{ blockType: 'referenceImage' }] : []),
 		],
 		controllerRestrictions: {
 			controls: [
@@ -133,13 +135,17 @@ describe('ImageGenerator', () => {
 		})
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
-		expect(mocks.generate).toHaveBeenCalledWith({
-			aspectRatio: '2:3',
-			count: 4,
-			imageSize: '1K',
-			profileId: 5,
-			prompt: '파란 세럼병',
-		})
+		expect(mocks.generate).toHaveBeenCalledWith(
+			{
+				aspectRatio: '2:3',
+				count: 4,
+				imageSize: '1K',
+				profileId: 5,
+				prompt: '파란 세럼병',
+			},
+			// 첨부가 없으면 참조 카드도 없다 — 그리드 0번을 차지하는 것이 없다.
+			null,
+		)
 	})
 
 	// 어느 프로파일로 시작할지는 라우트(page)가 정한다 — 여기서는 받은 계약을 그리는지만 본다.
@@ -161,6 +167,62 @@ describe('ImageGenerator', () => {
 		expect(screen.getByRole('textbox', { name: 'Prompt' })).toHaveValue(
 			'신제품을 위한 깨끗한 스튜디오 제품 이미지',
 		)
+	})
+
+	it('첨부를 열지 않은 프로파일에는 Reference Image 섹션이 없다', () => {
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
+
+		expect(screen.queryByText('Reference Image')).not.toBeInTheDocument()
+	})
+
+	it('첨부한 이미지를 참조로 함께 보내고 그리드 0번 카드로 넘긴다', async () => {
+		const { container } = render(
+			createElement(ImageGenerator, {
+				config: config(5, '제품컷', { referenceImage: true }),
+			}),
+		)
+		const input = container.querySelector('input[type="file"]')
+		if (!input) throw new Error('첨부 입력이 없습니다')
+
+		fireEvent.change(input, {
+			target: {
+				files: [new File([new Uint8Array([1, 2, 3])], 'ref.png', { type: 'image/png' })],
+			},
+		})
+		// FileReader가 data URI를 만들 때까지 기다린다 — 미리보기가 뜨면 읽기가 끝난 것이다.
+		await waitFor(() => expect(screen.getByAltText(/ref\.png/)).toBeInTheDocument())
+
+		fireEvent.change(screen.getByRole('textbox', { name: 'Prompt' }), {
+			target: { value: '파란 세럼병' },
+		})
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+
+		expect(mocks.generate).toHaveBeenCalledWith(
+			expect.objectContaining({ reference: { upload: 'data:image/png;base64,AQID' } }),
+			// 첨부도 참조라서 결과 그리드 0번을 차지한다. 저장하지 않으므로 id는 없다.
+			{ src: 'data:image/png;base64,AQID', generatedImageId: null, profileId: 5 },
+		)
+	})
+
+	it('JPG·PNG·WebP가 아닌 파일은 첨부하지 않고 사유를 보여준다', async () => {
+		const { container } = render(
+			createElement(ImageGenerator, {
+				config: config(5, '제품컷', { referenceImage: true }),
+			}),
+		)
+		const input = container.querySelector('input[type="file"]')
+		if (!input) throw new Error('첨부 입력이 없습니다')
+
+		fireEvent.change(input, {
+			target: { files: [new File(['%PDF'], 'ref.pdf', { type: 'application/pdf' })] },
+		})
+
+		await waitFor(() =>
+			expect(
+				screen.getByText('JPG, PNG, WebP 이미지만 첨부할 수 있어요.'),
+			).toBeInTheDocument(),
+		)
+		expect(screen.queryByAltText(/ref\.pdf/)).not.toBeInTheDocument()
 	})
 
 	it('색을 개방하지 않은 프로파일에는 Profile Settings 섹션이 없다', () => {
@@ -374,6 +436,7 @@ describe('ImageProfilePicker', () => {
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 		expect(mocks.generate).toHaveBeenCalledWith(
 			expect.objectContaining({ profileId: 7, prompt: '노란 배경' }),
+			null,
 		)
 	})
 

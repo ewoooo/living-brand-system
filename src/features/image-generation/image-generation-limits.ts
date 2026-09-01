@@ -10,3 +10,13 @@ export const IMAGE_BATCH_SIZES = [1, 2, 3, 4] as const
 export const IMAGE_BATCH_MAX = IMAGE_BATCH_SIZES[IMAGE_BATCH_SIZES.length - 1]
 
 export const IMAGE_BATCH_DEFAULT = 4
+
+/**
+ * 참조 이미지 첨부의 상한과 허용 형식 — 첨부는 저장하지 않고 매 요청 본문에 실려 가므로
+ * 저장 이미지 상한(image-data-uri의 MAX_IMAGE_BYTES)보다 낮게 잡는다.
+ * 화면의 사전 거절과 라우트의 본문 길이 검증이 같은 값을 읽는다.
+ */
+export const IMAGE_REFERENCE_UPLOAD_MAX_BYTES = 10_000_000
+
+/** decodeImageDataUri가 실제로 통과시키는 형식과 같아야 한다 — 다르면 화면이 통과시킨 파일을 서버가 거절한다. */
+export const IMAGE_REFERENCE_UPLOAD_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const

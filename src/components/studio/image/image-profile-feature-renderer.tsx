@@ -17,6 +17,7 @@ import type {
 	ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 import { ImageCameraControl } from './image-camera-control'
+import { ImageReferenceUpload } from './image-reference-upload'
 
 export type ImageProfileCameraRuntime = {
 	azimuthDeg: number
@@ -27,12 +28,23 @@ export type ImageProfileCameraRuntime = {
 	onRegenerate: () => void
 }
 
+export type ImageProfileReferenceRuntime = {
+	/** 첨부한 참조 이미지의 data URI — 없으면 빈 판을 그린다. */
+	value: string | null
+	name: string | null
+	error: string | null
+	busy: boolean
+	onAttach: (file: File) => void
+	onClear: () => void
+}
+
 type ImageProfileFeatureRendererProps = {
 	config: ImageStudioConfig
 	values: ControllerValues
 	bindings?: ControllerRuntimeBindings
 	onChange: (controlId: string, value: ControllerControlValue) => void
 	camera?: ImageProfileCameraRuntime
+	reference?: ImageProfileReferenceRuntime
 	/**
 	 * 프로파일 그룹을 하위 섹션으로 그린다 — Template처럼 **다른 그룹 안에서** 부를 때 준다.
 	 * 🔴 기본값(false)은 Image 스튜디오의 최상위 호출이다. 거기서는 구분선이 맞다.
@@ -49,6 +61,7 @@ export function ImageProfileFeatureRenderer({
 	bindings,
 	onChange,
 	camera,
+	reference,
 	attached = false,
 	section,
 }: ImageProfileFeatureRendererProps) {
@@ -71,6 +84,10 @@ export function ImageProfileFeatureRenderer({
 				return camera ? (
 					<CameraFeature key={feature.type} feature={feature} runtime={camera} />
 				) : null
+			case 'reference-image':
+				return reference ? (
+					<ReferenceFeature key={feature.type} runtime={reference} />
+				) : null
 			default:
 				return assertNever(feature)
 		}
@@ -81,6 +98,21 @@ function assertNever(value: never): never {
 	throw new Error(`지원하지 않는 ImageStudioFeature입니다: ${JSON.stringify(value)}`)
 }
 
+function ReferenceFeature({ runtime }: { runtime: ImageProfileReferenceRuntime }) {
+	return (
+		<Controller.Group title="Reference Image" collapsible>
+			<ImageReferenceUpload
+				value={runtime.value}
+				name={runtime.name}
+				error={runtime.error}
+				disabled={runtime.busy}
+				onAttach={runtime.onAttach}
+				onClear={runtime.onClear}
+			/>
+		</Controller.Group>
+	)
+}
+
 function ColorAdjustmentFeature({
 	config,
 	feature,
@@ -89,7 +121,7 @@ function ColorAdjustmentFeature({
 	onChange,
 	attached = false,
 	section,
-}: Omit<ImageProfileFeatureRendererProps, 'camera'> & {
+}: Omit<ImageProfileFeatureRendererProps, 'camera' | 'reference'> & {
 	feature: Extract<ImageStudioFeature, { type: 'color-adjustment' }>
 }) {
 	const controls = getImageColorAdjustmentControls(config)
