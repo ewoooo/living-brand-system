@@ -25,8 +25,7 @@ export function GraphicSidebar({
 	output: GraphicExportView
 	preview: ReturnType<typeof useProfilePreview>
 }) {
-	const { config, profiles, controls, preset } = useGraphicStudio()
-	const presets = config.presets ?? []
+	const { config, profiles, controls } = useGraphicStudio()
 	// 🔑 기본에는 판에 앉히는 축(위치·맞춤)만 남기고 나머지는 「고급 설정」 뒤로 접는다.
 	//    무엇이 기본인지는 런타임이 선언하고, 선언이 없으면 전부 기본이다.
 	const { basic: basicGroups, advanced: advancedGroups } = splitControllerGroups(
@@ -127,25 +126,8 @@ export function GraphicSidebar({
 				}
 				footer={footer}
 			>
-				{presets.length > 0 && (
-					<Controller.Group title="Preset" collapsible={false}>
-						<Controller.Row label="프리셋">
-							<Controller.Select
-								options={presets.map(({ id, label }) => ({
-									value: id,
-									label,
-								}))}
-								// 🔴 undefined를 주면 radix Select가 uncontrolled로 돌아 옛 라벨을 붙들고 있는다.
-								value={preset.applied ?? ''}
-								placeholder="직접 설정"
-								onChange={preset.apply}
-							/>
-						</Controller.Row>
-					</Controller.Group>
-				)}
 				<ControllerRenderer
 					groups={basicGroups}
-					first={presets.length === 0}
 					presentation={config.controllerPresentation}
 					values={controls.values}
 					bindings={controls.bindings}

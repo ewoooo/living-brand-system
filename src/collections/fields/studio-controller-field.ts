@@ -1,5 +1,4 @@
 import type { Field } from 'payload'
-import { describeGraphicPresetError } from '@/features/graphic-generation/domain/graphic-preset'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 import type {
 	StudioKind,
@@ -48,40 +47,6 @@ export function studioControllerPresentationField({
 					clientProps: { source, baseConfigs },
 				},
 			},
-		},
-	}
-}
-
-/**
- * 매니저가 창작자에게 제공할 프리셋 목록.
- *
- * 🔴 **전용 편집 UI를 두지 않는다.** Payload 기본 JSON 폼으로만 편집한다 — 이 값이 창작자 화면의
- *    시작값을 정하므로, 무엇을 어떻게 입력하게 할지는 임의로 정할 수 있는 것이 아니다.
- *    (2026-09-01 사용자 지정: 기본 입력 폼을 쓰지 않는 admin 화면을 걷어냈다.)
- */
-export function graphicPresetsField(): Field {
-	return {
-		name: 'presets',
-		type: 'json',
-		label: '제공 프리셋',
-		admin: {
-			description:
-				'창작자 화면의 시작값 묶음입니다. [{ "presetId": "hd-navy", "label": "HD 네이비", "values": { "<컨트롤 id>": <값> } }] 형태이며, values는 「Controller 제한」이 노출한 컨트롤만 반영됩니다.',
-		},
-		// 🔴 런타임이 버리는 항목은 여기서 막는다 — 안 그러면 저장은 되는데 스튜디오에 안 뜬다.
-		validate: (value: unknown) => {
-			if (value === null || value === undefined) return true
-			if (!Array.isArray(value)) return '프리셋은 목록이어야 합니다.'
-			const errors = value
-				.map(describeGraphicPresetError)
-				.filter((message): message is string => message !== null)
-			if (errors.length > 0) return errors.join(' / ')
-			// 같은 식별자가 둘이면 뒤엣것이 조용히 가려진다 — 화면에는 둘 다 보이는데 하나만 먹는다.
-			const ids = value.map((entry) => (entry as { presetId: string }).presetId)
-			const duplicated = ids.filter((id, index) => ids.indexOf(id) !== index)
-			return duplicated.length === 0
-				? true
-				: `프리셋 식별자가 중복되었습니다: ${[...new Set(duplicated)].join(', ')}`
 		},
 	}
 }

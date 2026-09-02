@@ -22,11 +22,6 @@ export type GraphicStudioValue = {
 		update: (controlId: string, value: ControllerControlValue) => boolean
 		registerBindings: (bindings: ControllerRuntimeBindings) => void
 	}
-	/** 매니저가 제공한 시작점. 고르면 값이 들어가고, 컨트롤을 만지면 `applied`가 풀린다. */
-	preset: {
-		applied: string | null
-		apply: (presetId: string) => void
-	}
 }
 
 export const GraphicStudioContext = createContext<GraphicStudioValue | null>(null)

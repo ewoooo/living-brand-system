@@ -96,6 +96,7 @@ import * as migration_20260827_085320_image_profile_reference_image_feature from
 import * as migration_20260831_012908_add_template_canvas_ppi from './20260831_012908_add_template_canvas_ppi';
 import * as migration_20260831_071102_add_graphic_profile_presets from './20260831_071102_add_graphic_profile_presets';
 import * as migration_20260831_084134_presets_as_json from './20260831_084134_presets_as_json';
+import * as migration_20260902_091453_drop_graphic_profile_presets from './20260902_091453_drop_graphic_profile_presets';
 
 export const migrations = [
   {
@@ -586,6 +587,11 @@ export const migrations = [
   {
     up: migration_20260831_084134_presets_as_json.up,
     down: migration_20260831_084134_presets_as_json.down,
-    name: '20260831_084134_presets_as_json'
+    name: '20260831_084134_presets_as_json',
+  },
+  {
+    up: migration_20260902_091453_drop_graphic_profile_presets.up,
+    down: migration_20260902_091453_drop_graphic_profile_presets.down,
+    name: '20260902_091453_drop_graphic_profile_presets'
   },
 ];

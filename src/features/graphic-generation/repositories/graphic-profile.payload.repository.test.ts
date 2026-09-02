@@ -24,7 +24,6 @@ describe('listPublishedGraphicProfileDefinitions', () => {
 				controllerRestrictions: true,
 				name: true,
 				// 🔴 빠지면 타입은 통과하는데 프로파일 프리셋이 런타임에서 영원히 undefined다.
-				presets: true,
 				exportPolicy: true,
 				previewImage: true,
 				runtime: true,
