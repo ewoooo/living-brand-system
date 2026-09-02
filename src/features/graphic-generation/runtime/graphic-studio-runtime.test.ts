@@ -121,18 +121,16 @@ describe('graphicStudioRuntime', () => {
 		expect('basic' in derived.controller).toBe(false)
 	})
 
-	it('Admin 제한은 기본 선언을 건드리지 않는다 — readonly는 숨김이 아니다', () => {
-		const derived = deriveGraphicStudioConfig({
-			id: 11,
-			name: '광원 고정',
-			runtime: 'radial-fluted-glass',
-			controllerRestrictions: {
-				controls: [{ controlId: 'sourceOffsetX', availability: 'readonly' }],
-			},
-		})
+	it('🔴 지금은 어느 런타임도 기본 컨트롤을 선언하지 않는다 — 화면이 예전 그대로여야 한다', () => {
+		// 무엇을 기본으로 남길지는 아직 정하지 않았다. 선언이 생기면 이 테스트가 먼저 깨져,
+		// 「일부 프로파일만 달라 보이는 상태」로 조용히 머지되는 것을 막는다.
+		// 선언이 하나도 없어 리터럴 타입에 `basic` 키가 없다 — 계약 기준으로 본다.
+		const declared = graphicRuntimeManifests.filter(
+			(manifest) =>
+				(manifest.controller as { basic?: readonly string[] }).basic !== undefined,
+		)
 
-		// 두 기제는 독립이다: 제한은 만질 수 있는지를, 기본 선언은 어디에 서는지를 정한다.
-		expect(derived.controller.basic).toEqual(['source', 'sourceOffsetX', 'sourceOffsetY'])
+		expect(declared.map((manifest) => manifest.id)).toEqual([])
 	})
 
 	it('published Graphic Profile은 Restrictions로 Runtime Manifest를 좁히고 미등록 runtime을 거부한다', () => {

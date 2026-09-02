@@ -81,11 +81,6 @@ const radialFlutedGlassRuntimeManifest = defineGraphicRuntime({
 		},
 	},
 	controller: {
-		/**
-		 * 🔑 판에 앉혀 보고 나서야 알 수 있는 축만 기본에 남긴다 — 위치가 그것이다.
-		 *    색·광선·물성은 미리 고를 수 있어 프리셋에 맡긴다(2026-09-01 결정).
-		 */
-		basic: ['source', 'sourceOffsetX', 'sourceOffsetY'],
 		groups: [
 			{
 				id: 'ray-palette',

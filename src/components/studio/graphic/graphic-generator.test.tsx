@@ -349,37 +349,21 @@ describe('GraphicGenerator', () => {
 				expect.objectContaining({ input: RADIAL_FLUTED_GLASS_DEFAULT_INPUT }),
 			),
 		)
-		// 기본에는 판에 앉히는 축(Position)만 서고, 룩을 정하는 그룹은 「고급 설정」 뒤에 있다.
-		expect(screen.getByText('Position')).toBeInTheDocument()
-		expect(screen.queryByRole('button', { name: 'Ray Palette' })).not.toBeInTheDocument()
-		expect(screen.queryByText('Rays')).not.toBeInTheDocument()
-		expect(screen.queryByRole('combobox', { name: '왜곡 형태' })).not.toBeInTheDocument()
-
-		fireEvent.click(screen.getByRole('button', { name: /고급 설정/ }))
-
-		await waitFor(() =>
-			expect(screen.getByRole('button', { name: 'Ray Palette' })).toBeInTheDocument(),
-		)
-		expect(screen.getByRole('button', { name: 'Rays' })).toBeInTheDocument()
+		// 이 런타임은 기본 컨트롤을 선언하지 않으므로 전부 기본이고 「고급 설정」이 없다.
+		expect(screen.queryByRole('button', { name: /고급 설정/ })).not.toBeInTheDocument()
+		expect(screen.getByRole('button', { name: 'Ray Palette' })).toBeInTheDocument()
+		expect(screen.getByText('Rays')).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: 'Pulse' })).toBeInTheDocument()
-		expect(screen.getByRole('button', { name: 'Glass' })).toBeInTheDocument()
+		expect(screen.getByText('Glass')).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: 'Glass Motion' })).toBeInTheDocument()
-
-		// 안쪽 그룹은 닫힌 채로 열리므로 컨트롤을 보려면 그 그룹도 열어야 한다.
-		fireEvent.click(screen.getByRole('button', { name: 'Glass' }))
-		await waitFor(() =>
-			expect(screen.getByRole('combobox', { name: '왜곡 형태' })).toHaveTextContent('Lens'),
-		)
+		expect(screen.getByText('Position')).toBeInTheDocument()
+		expect(screen.getByRole('combobox', { name: '왜곡 형태' })).toHaveTextContent('Lens')
 		expect(screen.getByRole('spinbutton', { name: 'Width' })).toHaveValue(1920)
 		expect(screen.getByRole('spinbutton', { name: 'Height' })).toHaveValue(1080)
 		expect(screen.getByRole('combobox', { name: 'FPS' })).toHaveTextContent('30')
 		expect(screen.getByRole('spinbutton', { name: 'Duration' })).toHaveValue(5)
 		await waitFor(() => expect(screen.getByRole('button', { name: '내보내기' })).toBeEnabled())
 
-		fireEvent.click(screen.getByRole('button', { name: 'Rays' }))
-		await waitFor(() =>
-			expect(screen.getByRole('slider', { name: '광선 강도' })).toBeInTheDocument(),
-		)
 		fireEvent.keyDown(screen.getByRole('slider', { name: '광선 강도' }), {
 			key: 'ArrowRight',
 		})
