@@ -110,6 +110,29 @@ describe('graphicStudioRuntime', () => {
 		expect(getGraphicStudioRuntimeBindings(config, { width: 800, height: 0 })).toEqual({})
 	})
 
+	it('기본 선언이 없는 런타임은 controller에 그 키를 싣지 않는다', () => {
+		const derived = deriveGraphicStudioConfig({
+			id: 13,
+			name: '선언 없음',
+			runtime: 'forward-straight',
+		})
+
+		// 🔴 undefined를 그대로 실으면 JSON 직렬화 검사에서 프로파일 전체가 거부된다.
+		expect('basic' in derived.controller).toBe(false)
+	})
+
+	it('🔴 지금은 어느 런타임도 기본 컨트롤을 선언하지 않는다 — 화면이 예전 그대로여야 한다', () => {
+		// 무엇을 기본으로 남길지는 아직 정하지 않았다. 선언이 생기면 이 테스트가 먼저 깨져,
+		// 「일부 프로파일만 달라 보이는 상태」로 조용히 머지되는 것을 막는다.
+		// 선언이 하나도 없어 리터럴 타입에 `basic` 키가 없다 — 계약 기준으로 본다.
+		const declared = graphicRuntimeManifests.filter(
+			(manifest) =>
+				(manifest.controller as { basic?: readonly string[] }).basic !== undefined,
+		)
+
+		expect(declared.map((manifest) => manifest.id)).toEqual([])
+	})
+
 	it('published Graphic Profile은 Restrictions로 Runtime Manifest를 좁히고 미등록 runtime을 거부한다', () => {
 		const profile = {
 			id: 9,

@@ -242,6 +242,48 @@ describe('GraphicGenerator', () => {
 		)
 	})
 
+	it('기본에 없는 컨트롤은 「고급 설정」을 열기 전까지 화면에 없다', async () => {
+		const user = userEvent.setup()
+		const config = {
+			...forwardStraightConfig,
+			controller: {
+				...forwardStraightConfig.controller,
+				// 판에 앉히는 축만 기본 — 나머지 그룹은 통째로 접힌다.
+				basic: ['origin'],
+			},
+		} satisfies GraphicStudioConfig
+
+		render(createElement(GraphicGenerator, { config }))
+
+		// 🔴 접힌 것이 아니라 아예 없어야 한다 — 있으면 스크린리더와 탭 이동에 그대로 잡힌다.
+		expect(screen.queryByRole('slider', { name: '열 간격' })).not.toBeInTheDocument()
+		expect(screen.queryByRole('slider', { name: '원근 압축' })).not.toBeInTheDocument()
+
+		await user.click(screen.getByRole('button', { name: /고급 설정/ }))
+
+		// 열어도 안쪽 그룹은 전부 닫혀 있다 — 열자마자 40여 개가 쏟아지면 접은 이유가 없다.
+		await waitFor(() =>
+			expect(screen.getByRole('button', { name: 'Grid' })).toBeInTheDocument(),
+		)
+		expect(screen.queryByRole('slider', { name: '열 간격' })).not.toBeInTheDocument()
+
+		await user.click(screen.getByRole('button', { name: 'Grid' }))
+
+		await waitFor(() =>
+			expect(screen.getByRole('slider', { name: '열 간격' })).toBeInTheDocument(),
+		)
+		expect(screen.getByRole('slider', { name: '행 간격' })).toBeInTheDocument()
+		// 다른 그룹은 여전히 닫혀 있다 — 하나를 열어도 나머지가 따라 열리지 않는다.
+		expect(screen.queryByRole('slider', { name: '원근 압축' })).not.toBeInTheDocument()
+	})
+
+	it('선언이 없는 런타임은 전부 기본이고 「고급 설정」이 뜨지 않는다', () => {
+		render(createElement(GraphicGenerator, { config: forwardStraightConfig }))
+
+		expect(screen.getByRole('slider', { name: '행 간격' })).toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: /고급 설정/ })).not.toBeInTheDocument()
+	})
+
 	it('프리셋을 고르면 값이 들어가고, 컨트롤을 만지면 선택이 풀린다', async () => {
 		const user = userEvent.setup()
 		const config = {
@@ -307,6 +349,8 @@ describe('GraphicGenerator', () => {
 				expect.objectContaining({ input: RADIAL_FLUTED_GLASS_DEFAULT_INPUT }),
 			),
 		)
+		// 이 런타임은 기본 컨트롤을 선언하지 않으므로 전부 기본이고 「고급 설정」이 없다.
+		expect(screen.queryByRole('button', { name: /고급 설정/ })).not.toBeInTheDocument()
 		expect(screen.getByRole('button', { name: 'Ray Palette' })).toBeInTheDocument()
 		expect(screen.getByText('Rays')).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: 'Pulse' })).toBeInTheDocument()
