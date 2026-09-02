@@ -85,11 +85,15 @@ export function GraphicStudioProvider({
 			if (!found) return
 			setValues((current) => ({
 				...current,
-				...pickGraphicPresetValues(config.controller.groups, found),
+				...pickGraphicPresetValues(
+					config.controller.groups,
+					found,
+					config.controller.basic,
+				),
 			}))
 			setPreset(presetId)
 		},
-		[config.controller.groups, config.presets],
+		[config.controller.basic, config.controller.groups, config.presets],
 	)
 
 	const selectProfile = useCallback(

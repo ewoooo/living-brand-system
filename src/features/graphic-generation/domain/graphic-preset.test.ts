@@ -130,6 +130,30 @@ describe('pickGraphicPresetValues', () => {
 		).toEqual({ rayDensity: 0.4 })
 	})
 
+	it('🔴 기본 축은 프리셋이 담고 있어도 버린다 — 맞춰 둔 위치가 튀면 안 된다', () => {
+		expect(
+			pickGraphicPresetValues(
+				groups,
+				{
+					id: 'hd-navy',
+					label: 'HD 네이비',
+					values: { rayDensity: 0.4, rayColor1: '#001c4a' },
+				},
+				['rayColor1'],
+			),
+		).toEqual({ rayDensity: 0.4 })
+	})
+
+	it('기본 축 선언이 없으면 전부 적용한다', () => {
+		expect(
+			pickGraphicPresetValues(
+				groups,
+				{ id: 'hd-navy', label: 'HD 네이비', values: { rayDensity: 0.4 } },
+				undefined,
+			),
+		).toEqual({ rayDensity: 0.4 })
+	})
+
 	it('🔴 컨트롤 계약을 벗어난 값도 버린다 — 프리셋을 만든 뒤 범위가 좁아질 수 있다', () => {
 		expect(
 			pickGraphicPresetValues(groups, {

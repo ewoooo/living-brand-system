@@ -87,14 +87,22 @@ export function findGraphicProfilePreset(
  *
  * 🔴 프리셋을 만든 뒤에 「Controller 제한」이 바뀌면 사라진 컨트롤의 값이 그대로 남아 있다.
  *    그것을 그냥 얹으면 창작자가 보지도 못하는 축이 몰래 움직인다.
+ *
+ * 🔑 기본 축(`basic`)은 프리셋이 담고 있어도 버린다. 프리셋은 룩만 정하고, 판에 앉히는 축은
+ *    창작자 손에 남는다.
  */
 export function pickGraphicPresetValues(
 	groups: readonly ControllerGroupDefinition[],
 	preset: GraphicProfilePreset,
+	basic?: readonly string[],
 ): ControllerValues {
+	// 🔴 기본 축(판에 앉히는 위치·맞춤)은 프리셋이 정하지 않는다 — 프리셋을 갈아 끼워도
+	//    창작자가 맞춰 둔 위치가 튀면 안 된다(2026-09-01 결정).
+	const reserved = new Set(basic ?? [])
 	const values: ControllerValues = {}
 	for (const group of groups) {
 		for (const control of group.controls) {
+			if (reserved.has(control.id)) continue
 			if (!(control.id in preset.values)) continue
 			const value = preset.values[control.id] as ControllerControlValue
 			if (acceptsControllerDraftValue(control, value)) values[control.id] = value
