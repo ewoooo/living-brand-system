@@ -229,59 +229,47 @@ describe('GraphicGenerator', () => {
 			'aria-valuenow',
 			'40',
 		)
-		const gamma = screen.getByRole('slider', { name: '원근 압축' })
-		expect(gamma).toHaveAttribute('aria-valuenow', '1')
-
-		gamma.focus()
+		const gap = screen.getByRole('slider', { name: '열 간격' })
+		gap.focus()
 		await user.keyboard('{ArrowRight}')
 
 		await waitFor(() =>
 			expect(mocks.preview.update).toHaveBeenLastCalledWith(
-				expect.objectContaining({ perspectiveGamma: 1.1 }),
+				expect.objectContaining({ columnGap: 41 }),
 			),
 		)
+		// 🔴 창작자에게 감춘 축은 화면에 없다 — 「고급」으로 접는 것이 아니다.
+		expect(screen.queryByRole('slider', { name: '원근 압축' })).not.toBeInTheDocument()
 	})
 
-	it('기본에 없는 컨트롤은 「고급 설정」을 열기 전까지 화면에 없다', async () => {
-		const user = userEvent.setup()
+	it('🔴 선언 밖의 컨트롤은 화면에 없다 — 접힌 것이 아니라 없다', () => {
+		render(createElement(GraphicGenerator, { config: forwardStraightConfig }))
+
+		// 선언한 축
+		expect(screen.getByRole('slider', { name: '열 간격' })).toBeInTheDocument()
+		expect(screen.getByRole('slider', { name: '여백' })).toBeInTheDocument()
+
+		// 선언 밖 — 창작자에게는 고급 옵션조차 필요 없으므로 여는 장치도 두지 않는다.
+		expect(screen.queryByRole('slider', { name: '기준점 두께' })).not.toBeInTheDocument()
+		expect(screen.queryByRole('slider', { name: '원경 크기' })).not.toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: /고급/ })).not.toBeInTheDocument()
+		// 남는 컨트롤이 없는 그룹은 제목도 서지 않는다.
+		expect(screen.queryByText('Weight')).not.toBeInTheDocument()
+		expect(screen.queryByText('Perspective')).not.toBeInTheDocument()
+	})
+
+	it('선언이 없는 런타임은 전부 보인다 — 정하지 않은 런타임의 화면이 비면 안 된다', () => {
+		const { controller, ...rest } = forwardStraightConfig
+		const { basic: _basic, ...controllerWithoutBasic } = controller
 		const config = {
-			...forwardStraightConfig,
-			controller: {
-				...forwardStraightConfig.controller,
-				// 판에 앉히는 축만 기본 — 나머지 그룹은 통째로 접힌다.
-				basic: ['origin'],
-			},
-		} satisfies GraphicStudioConfig
+			...rest,
+			controller: controllerWithoutBasic,
+		} as unknown as GraphicStudioConfig
 
 		render(createElement(GraphicGenerator, { config }))
 
-		// 🔴 접힌 것이 아니라 아예 없어야 한다 — 있으면 스크린리더와 탭 이동에 그대로 잡힌다.
-		expect(screen.queryByRole('slider', { name: '열 간격' })).not.toBeInTheDocument()
-		expect(screen.queryByRole('slider', { name: '원근 압축' })).not.toBeInTheDocument()
-
-		await user.click(screen.getByRole('button', { name: /고급 설정/ }))
-
-		// 열어도 안쪽 그룹은 전부 닫혀 있다 — 열자마자 40여 개가 쏟아지면 접은 이유가 없다.
-		await waitFor(() =>
-			expect(screen.getByRole('button', { name: 'Grid' })).toBeInTheDocument(),
-		)
-		expect(screen.queryByRole('slider', { name: '열 간격' })).not.toBeInTheDocument()
-
-		await user.click(screen.getByRole('button', { name: 'Grid' }))
-
-		await waitFor(() =>
-			expect(screen.getByRole('slider', { name: '열 간격' })).toBeInTheDocument(),
-		)
-		expect(screen.getByRole('slider', { name: '행 간격' })).toBeInTheDocument()
-		// 다른 그룹은 여전히 닫혀 있다 — 하나를 열어도 나머지가 따라 열리지 않는다.
-		expect(screen.queryByRole('slider', { name: '원근 압축' })).not.toBeInTheDocument()
-	})
-
-	it('선언이 없는 런타임은 전부 기본이고 「고급 설정」이 뜨지 않는다', () => {
-		render(createElement(GraphicGenerator, { config: forwardStraightConfig }))
-
-		expect(screen.getByRole('slider', { name: '행 간격' })).toBeInTheDocument()
-		expect(screen.queryByRole('button', { name: /고급 설정/ })).not.toBeInTheDocument()
+		expect(screen.getByRole('slider', { name: '기준점 두께' })).toBeInTheDocument()
+		expect(screen.getByRole('slider', { name: '원근 압축' })).toBeInTheDocument()
 	})
 
 	it('Raster Artifact가 있는 Graphic은 공통 PNG adapter를 실행할 수 있다', async () => {
@@ -310,27 +298,26 @@ describe('GraphicGenerator', () => {
 				expect.objectContaining({ input: RADIAL_FLUTED_GLASS_DEFAULT_INPUT }),
 			),
 		)
-		// 이 런타임은 기본 컨트롤을 선언하지 않으므로 전부 기본이고 「고급 설정」이 없다.
-		expect(screen.queryByRole('button', { name: /고급 설정/ })).not.toBeInTheDocument()
+		// 선언한 축이 있는 그룹만 선다 — 색·속도·광원.
 		expect(screen.getByRole('button', { name: 'Ray Palette' })).toBeInTheDocument()
 		expect(screen.getByText('Rays')).toBeInTheDocument()
-		expect(screen.getByRole('button', { name: 'Pulse' })).toBeInTheDocument()
-		expect(screen.getByText('Glass')).toBeInTheDocument()
-		expect(screen.getByRole('button', { name: 'Glass Motion' })).toBeInTheDocument()
 		expect(screen.getByText('Position')).toBeInTheDocument()
-		expect(screen.getByRole('combobox', { name: '왜곡 형태' })).toHaveTextContent('Lens')
+		// 선언 밖만 담은 그룹은 제목도 없다.
+		expect(screen.queryByRole('button', { name: 'Pulse' })).not.toBeInTheDocument()
+		expect(screen.queryByText('Glass')).not.toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: 'Glass Motion' })).not.toBeInTheDocument()
+		expect(screen.queryByRole('combobox', { name: '왜곡 형태' })).not.toBeInTheDocument()
 		expect(screen.getByRole('spinbutton', { name: 'Width' })).toHaveValue(1920)
 		expect(screen.getByRole('spinbutton', { name: 'Height' })).toHaveValue(1080)
 		expect(screen.getByRole('combobox', { name: 'FPS' })).toHaveTextContent('30')
 		expect(screen.getByRole('spinbutton', { name: 'Duration' })).toHaveValue(5)
 		await waitFor(() => expect(screen.getByRole('button', { name: '내보내기' })).toBeEnabled())
 
-		fireEvent.keyDown(screen.getByRole('slider', { name: '광선 강도' }), {
-			key: 'ArrowRight',
-		})
+		// 🔑 `속도`가 마스터 시계다 — 이 하나가 모든 움직임을 함께 늘리고 줄인다.
+		fireEvent.keyDown(screen.getByRole('slider', { name: '속도' }), { key: 'ArrowRight' })
 		await waitFor(() =>
 			expect(mocks.shaderPreview.update).toHaveBeenLastCalledWith(
-				expect.objectContaining({ rayIntensity: 0.96 }),
+				expect.objectContaining({ speed: 0.73 }),
 			),
 		)
 
@@ -560,9 +547,9 @@ describe('GraphicGenerator', () => {
 		])
 		render(createElement(GraphicGenerator, { config: forwardStraightConfig }))
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
-		const gamma = screen.getByRole('slider', { name: '원근 압축' })
-		fireEvent.keyDown(gamma, { key: 'ArrowRight' })
-		await waitFor(() => expect(gamma).not.toHaveAttribute('aria-valuenow', '1'))
+		const gap = screen.getByRole('slider', { name: '열 간격' })
+		fireEvent.keyDown(gap, { key: 'ArrowRight' })
+		await waitFor(() => expect(gap).toHaveAttribute('aria-valuenow', '41'))
 
 		const trigger = screen.getByRole('button', { name: '그래픽 변경' })
 		expect(trigger.closest('[data-slot="controller-header"]')).not.toBeNull()
@@ -590,9 +577,9 @@ describe('GraphicGenerator', () => {
 		)
 
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledTimes(2))
-		expect(screen.getByRole('slider', { name: '원근 압축' })).toHaveAttribute(
+		expect(screen.getByRole('slider', { name: '열 간격' })).toHaveAttribute(
 			'aria-valuenow',
-			'1',
+			'40',
 		)
 	})
 })

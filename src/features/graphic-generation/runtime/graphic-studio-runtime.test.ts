@@ -110,27 +110,43 @@ describe('graphicStudioRuntime', () => {
 		expect(getGraphicStudioRuntimeBindings(config, { width: 800, height: 0 })).toEqual({})
 	})
 
-	it('기본 선언이 없는 런타임은 controller에 그 키를 싣지 않는다', () => {
+	it('선언한 기본 축이 파생된 Config까지 실려 나간다', () => {
 		const derived = deriveGraphicStudioConfig({
 			id: 13,
-			name: '선언 없음',
+			name: '기본 축',
 			runtime: 'forward-straight',
 		})
 
-		// 🔴 undefined를 그대로 실으면 JSON 직렬화 검사에서 프로파일 전체가 거부된다.
-		expect('basic' in derived.controller).toBe(false)
+		// 재조립하면서 빠뜨리면 창작자 화면에 컨트롤이 전부 뜬다.
+		expect(derived.controller.basic).toEqual([
+			'lineColor',
+			'backgroundColor',
+			'columnGap',
+			'rowGap',
+			'margin',
+			'origin',
+		])
 	})
 
-	it('🔴 지금은 어느 런타임도 기본 컨트롤을 선언하지 않는다 — 화면이 예전 그대로여야 한다', () => {
-		// 무엇을 기본으로 남길지는 아직 정하지 않았다. 선언이 생기면 이 테스트가 먼저 깨져,
-		// 「일부 프로파일만 달라 보이는 상태」로 조용히 머지되는 것을 막는다.
-		// 선언이 하나도 없어 리터럴 타입에 `basic` 키가 없다 — 계약 기준으로 본다.
-		const declared = graphicRuntimeManifests.filter(
-			(manifest) =>
-				(manifest.controller as { basic?: readonly string[] }).basic !== undefined,
+	it('🔴 여섯 런타임이 모두 기본 컨트롤을 선언한다 — 일부만 적용된 채로 머지되지 않게', () => {
+		const missing = graphicRuntimeManifests.filter(
+			(manifest) => manifest.controller.basic === undefined,
 		)
 
-		expect(declared.map((manifest) => manifest.id)).toEqual([])
+		expect(missing.map((manifest) => manifest.id)).toEqual([])
+	})
+
+	it('선언한 축은 실제로 그 런타임에 있는 control id다', () => {
+		for (const manifest of graphicRuntimeManifests) {
+			const ids = new Set(
+				manifest.controller.groups.flatMap((group) =>
+					group.controls.map((control) => control.id),
+				),
+			)
+			const unknown = (manifest.controller.basic ?? []).filter((id) => !ids.has(id))
+
+			expect({ runtime: manifest.id, unknown }).toEqual({ runtime: manifest.id, unknown: [] })
+		}
 	})
 
 	it('published Graphic Profile은 Restrictions로 Runtime Manifest를 좁히고 미등록 runtime을 거부한다', () => {
