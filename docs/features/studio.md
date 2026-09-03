@@ -159,7 +159,7 @@ Template은 판형이 문서에 선언되어 있어 창작자가 바꿀 수 없�
 
 ### Studio 메뉴
 
-Studio는 사이드바 진입점 여섯 개로 노출됩니다. 목록과 순서의 정본은 `src/lib/routes.ts`의 `routes.studio`와 `src/components/studio/shared/studio-side-navigation.tsx`의 `navigation` 배열입니다.
+Studio는 GlobalHeader의 진입점 여섯 개로 노출됩니다. 목록과 순서의 정본은 `src/lib/routes.ts`의 `routes.studio`와 `src/components/global/header/global-header.tsx`의 `studioCreationItems`·`studioSettingItems`입니다. 🔴 같은 여섯 개를 그리던 좌측 사이드바는 걷어냈습니다(2026-09-03) — 헤더와 완전히 겹쳤습니다.
 
 | 메뉴 | 경로 | 성격 | 딥링크 | 화면 |
 | --- | --- | --- | --- | --- |

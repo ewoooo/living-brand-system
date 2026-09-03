@@ -1,7 +1,6 @@
 import type React from 'react'
 import { SectionLayout } from '@/components/global/section-layout'
 import { StudioCapabilitiesProvider } from '@/components/studio/shared/studio-capabilities'
-import { StudioSideNavigation } from '@/components/studio/shared/studio-side-navigation'
 import { isManager } from '@/lib/auth'
 import { authenticateRequest } from '@/lib/request-auth'
 
@@ -15,14 +14,8 @@ export default async function StudioLayout({ children }: { children: React.React
 
 	return (
 		<StudioCapabilitiesProvider canManageProfiles={isManager(user)}>
-			<SectionLayout
-				nav={<StudioSideNavigation />}
-				mobileNavigation={false}
-				sidebarStorageKey="lbs.studioSidebarOpen"
-				variant="workspace"
-			>
-				{children}
-			</SectionLayout>
+			{/* nav를 주지 않는다 — 진입점 6개가 GlobalHeader에 그대로 있어 좌측 메뉴는 같은 것을 두 번 그렸다. */}
+			<SectionLayout variant="workspace">{children}</SectionLayout>
 		</StudioCapabilitiesProvider>
 	)
 }
