@@ -129,9 +129,11 @@ const FLUTED_GLASS_VERTICAL_INPUT = {
 } as const
 
 const FLUTED_GLASS_SWEEP_INPUT = {
-	source: { x: 0, y: 0 },
-	sourceOffsetX: 0,
-	sourceOffsetY: -0.3,
+	// 🔑 스윕의 소실점은 판 **밖**에 있다 — 그것이 방사와 가르는 축이다. 광선 밭이 판 밖의 한
+	//    점을 축으로 돌아 등대처럼 판을 스쳐 지나간다. `source`는 -1~1이라 판 밖은 오프셋이 만든다.
+	source: { x: -1, y: 0 },
+	sourceOffsetX: -0.35,
+	sourceOffsetY: 0,
 	bloomColor: '#3dff8a',
 	rayColor1: '#000e06',
 	rayColor2: '#004218',
@@ -176,7 +178,8 @@ const FLUTED_GLASS_SWEEP_INPUT = {
 } as const
 
 const FLUTED_GLASS_RADIAL_INPUT = {
-	source: { x: -1, y: -1 },
+	// 🔑 방사의 소실점은 판 **정중앙**이다 — 스윕(판 밖)과 가르는 축이 소실점의 자리다.
+	source: { x: 0, y: 0 },
 	sourceOffsetX: 0,
 	sourceOffsetY: 0,
 	bloomColor: '#3dff8a',
@@ -412,45 +415,61 @@ function parallelLines(count: number, vertical: boolean): readonly PreviewLine[]
 }
 
 /**
- * 광원 한 점에서 사방으로 뻗는 부챗살.
+ * 광원 한 점에서 사방으로 뻗는 부챗살 중 **판 안에 보이는 구간**만 그린다.
  *
- * 🔴 끝점을 좌표별로 0~1로 자르면 각도가 망가진다(30° 선이 모서리로 끌려간다). 판 경계와의
- *    실제 교점까지만 뻗어 각도를 지킨다.
+ * 🔑 광원이 판 밖에 있는 모양(스윕)이 있어서 「광원에서 경계까지」로는 안 된다 — 판을 스치지도
+ *    않는 방향이 생기고, 보이지 않는 구간까지 좌표에 들어간다. 광선을 판과 교차시켜 들어오는
+ *    점과 나가는 점을 구하면 광원이 안이든 밖이든 같은 계산으로 처리된다.
  */
 function fanLines(
 	count: number,
 	source: { x: number; y: number },
 	startAngle: number,
 ): readonly PreviewLine[] {
+	const snap = (value: number) => Math.min(1, Math.max(0, Math.round(value * 1e4) / 1e4))
 	return Array.from({ length: count }, (_, index) => {
 		const angle = startAngle + (index / count) * Math.PI * 2
-		const dx = Math.cos(angle)
-		const dy = Math.sin(angle)
-		const reach = (from: number, direction: number) =>
-			direction > 0
-				? (1 - from) / direction
-				: direction < 0
-					? -from / direction
-					: Number.POSITIVE_INFINITY
-		const distance = Math.min(reach(source.x, dx), reach(source.y, dy))
-		// 🔴 교점 계산은 1.0000000000000002 같은 먼지를 남긴다 — 계약이 0~1을 요구하므로 접는다.
-		//    반올림은 각도를 바꿀 만큼 크지 않고, 선언된 좌표를 사람이 읽을 수 있게도 만든다.
-		const snap = (value: number) => Math.min(1, Math.max(0, Math.round(value * 1e4) / 1e4))
+		const chord = clipRayToUnitBox(source, { x: Math.cos(angle), y: Math.sin(angle) })
+		if (!chord) return null
 		return [
-			source.x,
-			source.y,
-			snap(source.x + dx * distance),
-			snap(source.y + dy * distance),
+			snap(chord.from.x),
+			snap(chord.from.y),
+			snap(chord.to.x),
+			snap(chord.to.y),
 		] as PreviewLine
-	})
+	}).filter((line): line is PreviewLine => line !== null)
+}
+
+/** 반직선과 단위 정사각형의 교차 구간. 스치지 않으면 null이다(그 방향은 그릴 것이 없다). */
+function clipRayToUnitBox(origin: { x: number; y: number }, direction: { x: number; y: number }) {
+	let enter = 0
+	let exit = Number.POSITIVE_INFINITY
+	for (const axis of ['x', 'y'] as const) {
+		const from = origin[axis]
+		const along = direction[axis]
+		if (Math.abs(along) < 1e-9) {
+			if (from < 0 || from > 1) return null
+			continue
+		}
+		const first = -from / along
+		const second = (1 - from) / along
+		enter = Math.max(enter, Math.min(first, second))
+		exit = Math.min(exit, Math.max(first, second))
+	}
+	if (enter > exit) return null
+	return {
+		from: { x: origin.x + direction.x * enter, y: origin.y + direction.y * enter },
+		to: { x: origin.x + direction.x * exit, y: origin.y + direction.y * exit },
+	}
 }
 
 const FLUTED_GLASS_SHAPE_PREVIEWS: Record<FlutedGlassShape, readonly PreviewLine[]> = {
 	linear: parallelLines(5, false),
 	vertical: parallelLines(5, true),
-	// 스윕은 광원이 판 안쪽에 있고 부챗살이 그 축을 돈다 — 시작 각을 틀어 회전을 읽히게 한다.
-	sweep: fanLines(10, { x: 0.5, y: 0.5 }, Math.PI / 12),
-	radial: fanLines(10, { x: 0.22, y: 0.24 }, 0),
+	// 🔑 두 부챗살을 가르는 것은 소실점의 자리다 — 스윕은 판 밖, 방사는 판 안.
+	//    각 모양의 기본 광원 위치를 그대로 옮긴 것이라 그림이 화면과 어긋나지 않는다.
+	sweep: fanLines(16, { x: -0.2, y: 0.5 }, 0),
+	radial: fanLines(12, { x: 0.5, y: 0.5 }, 0),
 }
 
 /**
