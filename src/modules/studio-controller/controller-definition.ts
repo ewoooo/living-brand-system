@@ -87,6 +87,16 @@ export type ControllerOption<Value extends string = string> = {
 	 * 한 control의 선택지는 전부 갖거나 전부 없어야 한다 — 섞이면 색 칩과 글자 목록이 반쪽으로 그려진다.
 	 */
 	colors?: readonly string[]
+	/**
+	 * 이 선택지가 곧 형태일 때 그 형태를 그리는 선분 목록. 한 선분은 단위 정사각형(0~1) 안의
+	 * `[x1, y1, x2, y2]`이고, 킷이 그것을 SVG로 그려 썸네일을 만든다.
+	 *
+	 * 🔑 이미지가 아니라 **좌표**인 이유: 파일을 두면 이 축이 admin 업로드에 묶여 환경마다 달라지고,
+	 * 아이콘 이름을 두면 킷이 런타임의 어휘를 알아야 한다. 좌표는 런타임이 자기 기하를 그대로
+	 * 적는 것이라 둘 다 피한다.
+	 * `colors`와 마찬가지로 한 control의 선택지는 전부 갖거나 전부 없어야 한다.
+	 */
+	preview?: readonly (readonly [number, number, number, number])[]
 }
 
 type ControllerControlBase = {
@@ -544,16 +554,21 @@ function validateControl(value: unknown, path: string) {
 			}
 			const optionValues = new Set<string>()
 			let colorOptionCount = 0
+			let previewOptionCount = 0
 			for (const [optionIndex, optionValue] of control.options.entries()) {
 				const optionPath = `${path}.options[${optionIndex}]`
 				const option = asRecord(optionValue, optionPath)
-				assertOnlyKeys(option, ['value', 'label', 'colors'], optionPath)
+				assertOnlyKeys(option, ['colors', 'label', 'preview', 'value'], optionPath)
 				assertNonEmptyString(option.value, `${optionPath}.value`)
 				assertNonEmptyString(option.label, `${optionPath}.label`)
 				// 색 조합 선택지 — 형식·중복 규칙은 color control의 팔레트와 같은 것을 쓴다.
 				if (option.colors !== undefined) {
 					assertColorValues(option.colors, `${optionPath}.colors`)
 					colorOptionCount += 1
+				}
+				if (option.preview !== undefined) {
+					assertPreviewLines(option.preview, `${optionPath}.preview`)
+					previewOptionCount += 1
 				}
 				if (optionValues.has(option.value)) {
 					invalid(`${optionPath}.value`, `중복되었습니다: ${option.value}`)
@@ -563,6 +578,9 @@ function validateControl(value: unknown, path: string) {
 			// 부분 선언은 막는다 — 일부만 색이면 칩 그리드도 목록도 되지 못하고 반쪽으로 그려진다.
 			if (colorOptionCount > 0 && colorOptionCount < control.options.length) {
 				invalid(`${path}.options`, 'colors는 모든 선택지에 있거나 없어야 합니다.')
+			}
+			if (previewOptionCount > 0 && previewOptionCount < control.options.length) {
+				invalid(`${path}.options`, 'preview는 모든 선택지에 있거나 없어야 합니다.')
 			}
 			if (control.defaultValue !== null && !optionValues.has(control.defaultValue)) {
 				invalid(`${path}.defaultValue`, 'options에 포함되어야 합니다.')
@@ -975,6 +993,21 @@ function validateControlIdList(value: unknown, controlIds: ReadonlySet<string>, 
 		if (seen.has(id)) invalid(path, `중복되었습니다: ${id}`)
 		seen.add(id)
 		if (!controlIds.has(id)) invalid(path, `존재하지 않는 control id입니다: ${id}`)
+	}
+}
+
+/** 단위 정사각형(0~1) 안의 선분 목록인가 — 밖으로 나가면 썸네일이 잘려 무엇인지 안 읽힌다. */
+function assertPreviewLines(value: unknown, path: string) {
+	if (!Array.isArray(value) || value.length === 0) invalid(path, '하나 이상의 선분이 필요합니다.')
+	for (const [index, line] of value.entries()) {
+		const linePath = `${path}[${index}]`
+		if (!Array.isArray(line) || line.length !== 4)
+			invalid(linePath, '[x1, y1, x2, y2] 네 값이어야 합니다.')
+		for (const coordinate of line) {
+			if (typeof coordinate !== 'number' || !Number.isFinite(coordinate))
+				invalid(linePath, '좌표는 유한한 숫자여야 합니다.')
+			if (coordinate < 0 || coordinate > 1) invalid(linePath, '좌표는 0~1이어야 합니다.')
+		}
 	}
 }
 

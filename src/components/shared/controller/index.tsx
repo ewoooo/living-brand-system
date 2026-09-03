@@ -7,6 +7,7 @@ import { ControllerCard } from './card'
 import { ControllerChips } from './chips'
 import { ControllerColorChips } from './color-chips'
 import { ControllerColorRow } from './color-row'
+import { ControllerColorStrip } from './color-strip'
 import { ControllerField } from './field'
 import { ControllerGroup } from './group'
 import { ControllerInput, ControllerTextarea } from './input'
@@ -15,6 +16,7 @@ import { ControllerContent, ControllerFooter, ControllerHeader, ControllerRoot }
 import { ControllerListRow } from './list-row'
 import { ControllerPad } from './pad'
 import { ControllerPagination } from './pagination'
+import { ControllerPreviewChips } from './preview-chips'
 import { ControllerRange } from './range'
 import { ControllerRow } from './row'
 import { ControllerSegmented } from './segmented'
@@ -53,7 +55,9 @@ export const Controller = {
 	Segmented: ControllerSegmented,
 	TabPanel: ControllerTabPanel,
 	ColorChips: ControllerColorChips,
+	ColorStrip: ControllerColorStrip,
 	ColorRow: ControllerColorRow,
+	PreviewChips: ControllerPreviewChips,
 	Select: ControllerSelect,
 	Input: ControllerInput,
 	Textarea: ControllerTextarea,
@@ -79,6 +83,7 @@ export {
 	ControllerChips,
 	ControllerColorChips,
 	ControllerColorRow,
+	ControllerColorStrip,
 	ControllerContent,
 	ControllerField,
 	ControllerFooter,
@@ -89,6 +94,7 @@ export {
 	ControllerListRow,
 	ControllerPad,
 	ControllerPagination,
+	ControllerPreviewChips,
 	ControllerRange,
 	ControllerRoot,
 	ControllerRow,

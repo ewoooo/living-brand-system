@@ -396,6 +396,64 @@ const FLUTED_GLASS_STYLE_LABELS: Record<FlutedGlassStyleId, string> = {
 }
 
 /**
+ * 모양 썸네일의 선분 — 단위 정사각형(0~1) 안에 그 모양의 기하를 그대로 적는다.
+ *
+ * 🔑 그림을 손으로 그리지 않는다. 가로·세로는 축에 평행한 줄이고, 방사는 광원에서 뻗는 부챗살이며,
+ *    스윕은 그 부챗살이 판 왼쪽 위로 치우친 광원에서 도는 것이다 — 각 모양이 셰이더에서 광선을
+ *    무엇으로 색인하는지가 그대로 그림이 된다.
+ */
+type PreviewLine = readonly [number, number, number, number]
+
+function parallelLines(count: number, vertical: boolean): readonly PreviewLine[] {
+	return Array.from({ length: count }, (_, index) => {
+		const at = (index + 1) / (count + 1)
+		return (vertical ? [at, 0, at, 1] : [0, at, 1, at]) as PreviewLine
+	})
+}
+
+/**
+ * 광원 한 점에서 사방으로 뻗는 부챗살.
+ *
+ * 🔴 끝점을 좌표별로 0~1로 자르면 각도가 망가진다(30° 선이 모서리로 끌려간다). 판 경계와의
+ *    실제 교점까지만 뻗어 각도를 지킨다.
+ */
+function fanLines(
+	count: number,
+	source: { x: number; y: number },
+	startAngle: number,
+): readonly PreviewLine[] {
+	return Array.from({ length: count }, (_, index) => {
+		const angle = startAngle + (index / count) * Math.PI * 2
+		const dx = Math.cos(angle)
+		const dy = Math.sin(angle)
+		const reach = (from: number, direction: number) =>
+			direction > 0
+				? (1 - from) / direction
+				: direction < 0
+					? -from / direction
+					: Number.POSITIVE_INFINITY
+		const distance = Math.min(reach(source.x, dx), reach(source.y, dy))
+		// 🔴 교점 계산은 1.0000000000000002 같은 먼지를 남긴다 — 계약이 0~1을 요구하므로 접는다.
+		//    반올림은 각도를 바꿀 만큼 크지 않고, 선언된 좌표를 사람이 읽을 수 있게도 만든다.
+		const snap = (value: number) => Math.min(1, Math.max(0, Math.round(value * 1e4) / 1e4))
+		return [
+			source.x,
+			source.y,
+			snap(source.x + dx * distance),
+			snap(source.y + dy * distance),
+		] as PreviewLine
+	})
+}
+
+const FLUTED_GLASS_SHAPE_PREVIEWS: Record<FlutedGlassShape, readonly PreviewLine[]> = {
+	linear: parallelLines(5, false),
+	vertical: parallelLines(5, true),
+	// 스윕은 광원이 판 안쪽에 있고 부챗살이 그 축을 돈다 — 시작 각을 틀어 회전을 읽히게 한다.
+	sweep: fanLines(10, { x: 0.5, y: 0.5 }, Math.PI / 12),
+	radial: fanLines(10, { x: 0.22, y: 0.24 }, 0),
+}
+
+/**
  * 노출 컨트롤의 기본값.
  *
  * 🔴 프로파일이 하나가 되면서 **기본 색 조합도 하나**가 된다. 합치기 전에는 두 벌이었다
@@ -473,12 +531,12 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 					{
 						id: 'shape',
 						kind: 'select' as const,
-						variant: 'segmented' as const,
 						label: '모양',
 						defaultValue: 'sweep' satisfies FlutedGlassShape,
 						options: FLUTED_GLASS_SHAPES.map((id) => ({
 							value: id,
 							label: FLUTED_GLASS_SHAPE_LABELS[id],
+							preview: FLUTED_GLASS_SHAPE_PREVIEWS[id],
 						})),
 					},
 				],

@@ -49,15 +49,24 @@ export function ControllerRenderer({
 	return (
 		<>
 			{groups.map((group, index) => {
-				const content = group.controls.map((control) => (
-					<ControllerControlRenderer
-						key={control.id}
-						definition={control}
-						value={control.id in values ? values[control.id] : control.defaultValue}
-						binding={bindings?.[control.id]}
-						onChange={(value) => onChange(control.id, value)}
+				const content = isColorOnlyGroup(group) ? (
+					<ColorStripGroup
+						group={group}
+						values={values}
+						bindings={bindings}
+						onChange={onChange}
 					/>
-				))
+				) : (
+					group.controls.map((control) => (
+						<ControllerControlRenderer
+							key={control.id}
+							definition={control}
+							value={control.id in values ? values[control.id] : control.defaultValue}
+							binding={bindings?.[control.id]}
+							onChange={(value) => onChange(control.id, value)}
+						/>
+					))
+				)
 
 				return (
 					<ControllerGroupRenderer
@@ -73,6 +82,70 @@ export function ControllerRenderer({
 				)
 			})}
 		</>
+	)
+}
+
+/**
+ * 🔑 그룹의 컨트롤이 전부 색이면 그 그룹은 「색 조합」이다 — 행으로 쌓지 않고 한 띠로 그린다.
+ *
+ * 데이터 모양으로 판정하는 것은 「선택지가 전부 색이면 칩 그리드」와 같은 방식이다(아래 select).
+ * 계약에 표현 플래그를 더하지 않는 이유가 그것이다 — 색만 모인 그룹은 이미 조합을 뜻한다.
+ * 칸이 하나뿐이면 띠가 될 것이 없으므로 평소의 색 행으로 떨어진다.
+ */
+function isColorOnlyGroup(group: ControllerGroupDefinition) {
+	return (
+		group.controls.length > 1 &&
+		group.controls.every((control) => control.kind === 'color' && !control.values?.length)
+	)
+}
+
+/** 색만 모인 그룹을 한 띠로 투영한다. 되돌리기는 띠 전체를 한 번에 비운다. */
+function ColorStripGroup({
+	group,
+	values,
+	bindings,
+	onChange,
+}: {
+	group: ControllerGroupDefinition
+	values: ControllerValues
+	bindings?: ControllerRuntimeBindings
+	onChange: (controlId: string, value: ControllerControlValue) => void
+}) {
+	const resolved = group.controls.map((control) => {
+		const value = control.id in values ? values[control.id] : control.defaultValue
+		return {
+			control,
+			availability: resolveControllerAvailability(
+				control.availability,
+				bindings?.[control.id]?.availability,
+			),
+			color: typeof value === 'string' ? value : null,
+		}
+	})
+	// 한 칸이라도 잠기면 띠를 통째로 잠근다 — 칸마다 다른 잠금은 띠 안에서 읽히지 않는다.
+	const disabled = resolved.some(({ availability }) => availability === 'disabled')
+	const readonly = resolved.some(({ availability }) => availability === 'readonly')
+	if (!disabled && readonly) {
+		return resolved.map(({ control, color }) => (
+			<ReadonlyRow key={control.id} label={control.label} value={color ?? '—'} />
+		))
+	}
+
+	return (
+		<Controller.ColorStrip
+			label={group.title}
+			disabled={disabled}
+			swatches={resolved.map(({ control, color }) => ({
+				id: control.id,
+				label: control.label,
+				value: color ?? '#000000',
+				isEmpty: color === null,
+			}))}
+			onChange={(id, hex) => onChange(id, hex)}
+			onReset={() => {
+				for (const { control } of resolved) onChange(control.id, null)
+			}}
+		/>
 	)
 }
 
@@ -230,6 +303,19 @@ function ControllerControl({
 			// 🔑 선택지 전부가 색 조합이면 칩 그리드다 — 여기서는 라벨이 아니라 **색이 정보**라서
 			//    목록도 pill도 무엇을 고르는지 보여주지 못한다. 계약이 부분 선언을 막지만,
 			//    검증을 거치지 않은 정의도 화면이 죽지 않게 every로 판정한다(섞이면 목록으로 떨어진다).
+			// 🔑 선택지 전부가 형태면 썸네일 그리드다 — 색 조합과 같은 근거로, 이름은 무엇을 고르는지
+			//    보여주지 못한다. 색 판정보다 먼저 본다(둘을 함께 든 선택지는 형태가 더 큰 정보다).
+			if (definition.options.every((option) => option.preview?.length)) {
+				return (
+					<Controller.PreviewChips
+						label={definition.label}
+						options={definition.options}
+						value={selected}
+						disabled={disabled}
+						onChange={onChange}
+					/>
+				)
+			}
 			if (definition.options.every((option) => option.colors?.length)) {
 				return (
 					<Controller.ColorChips

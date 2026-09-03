@@ -1,6 +1,5 @@
 'use client'
 
-import { Controller } from '@/components/shared/controller'
 import { ControllerRenderer } from '@/components/shared/controller-renderer'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
