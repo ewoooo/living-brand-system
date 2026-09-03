@@ -27,19 +27,19 @@ export type StudioRuntimeManifest = {
 	controller: {
 		groups: readonly ControllerGroupDefinition[]
 		/**
-		 * 창작자 화면에 세울 컨트롤 id. 나머지는 화면에 아예 없고, 그 값은 manager가 Payload에서
-		 * 조정한다 — 접어 두는 「고급 설정」이 아니다.
+		 * 왼쪽 패널에 세울 컨트롤 id — 창작자가 **실제로 다루기를 기대하는** 큰 축이다.
+		 * 색 조합과 전반적인 형태가 여기 온다.
 		 *
-		 * 🔑 기준은 **판에 앉혀 보고 나서야 알 수 있는 축인가**다. 위치·맞춤은 템플릿에 넣어 본
-		 *    뒤에 조정해야 하므로 기본이고, 색·광선·물성은 미리 고를 수 있으므로 프리셋에 맡긴다.
+		 * 나머지는 사라지지 않고 **오른쪽 패널**로 간다 — 세기·속도처럼 세밀하고 잡다한 값들이고,
+		 * 창작자가 다룰 수는 있으나 다루리라 기대하지는 않는다.
 		 *
-		 * 🔴 **비워 두면 전부 기본이다.** 아직 정하지 않은 런타임은 선언하지 않는다 —
-		 *    빈 배열을 넣으면 컨트롤이 통째로 사라진다.
+		 * 🔴 **비워 두면 전부 왼쪽이다.** 아직 정하지 않은 런타임은 선언하지 않는다 —
+		 *    빈 배열을 넣으면 왼쪽 패널이 통째로 빈다.
 		 *
 		 * 지금은 코드가 정하지만 나중에 프로파일(manager)로 옮겨진다. `controllerPresentation`이
 		 * 같은 성격으로 이미 그 길을 갔다.
 		 */
-		basic?: readonly string[]
+		left?: readonly string[]
 		/**
 		 * 값이 바뀌면 런타임을 **다시 만들어야** 하는 컨트롤 id.
 		 *
@@ -151,17 +151,17 @@ export type ControllerGroupDefinition = {
 }
 
 /**
- * 그룹을 기본/고급 두 벌로 가른다. 그룹 구조는 양쪽에서 그대로 유지되고,
+ * 그룹을 왼쪽/오른쪽 두 벌로 가른다. 그룹 구조는 양쪽에서 그대로 유지되고,
  * 남는 컨트롤이 없는 그룹은 그 쪽에서 빠진다.
  *
- * 🔴 `basic`이 없으면 전부 기본이다 — 선언하지 않은 런타임의 화면이 비지 않게 한다.
+ * 🔴 `left`가 없으면 전부 왼쪽이다 — 선언하지 않은 런타임의 화면이 비지 않게 한다.
  */
 export function splitControllerGroups(
 	groups: readonly ControllerGroupDefinition[],
-	basic: readonly string[] | undefined,
-): { basic: readonly ControllerGroupDefinition[]; advanced: readonly ControllerGroupDefinition[] } {
-	if (!basic) return { basic: groups, advanced: [] }
-	const keep = new Set(basic)
+	left: readonly string[] | undefined,
+): { left: readonly ControllerGroupDefinition[]; right: readonly ControllerGroupDefinition[] } {
+	if (!left) return { left: groups, right: [] }
+	const keep = new Set(left)
 	const pick = (wanted: boolean) =>
 		groups
 			.map((group) => ({
@@ -170,7 +170,7 @@ export function splitControllerGroups(
 			}))
 			.filter((group) => group.controls.length > 0)
 
-	return { basic: pick(true), advanced: pick(false) }
+	return { left: pick(true), right: pick(false) }
 }
 
 export type ControllerGroupPresentation = {
@@ -230,7 +230,7 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	parseStudioArtifactCapabilities(config.artifacts)
 
 	const controller = asRecord(config.controller, 'controller')
-	assertOnlyKeys(controller, ['basic', 'groups', 'remountOn'], 'controller')
+	assertOnlyKeys(controller, ['groups', 'left', 'remountOn'], 'controller')
 	if (!Array.isArray(controller.groups)) invalid('controller.groups', '배열이어야 합니다.')
 
 	const groupIds = new Set<string>()
@@ -249,8 +249,8 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 			controlIds.add((controlValue as { id: string }).id)
 		}
 	}
-	if (controller.basic !== undefined)
-		validateControlIdList(controller.basic, controlIds, 'controller.basic')
+	if (controller.left !== undefined)
+		validateControlIdList(controller.left, controlIds, 'controller.left')
 	if (controller.remountOn !== undefined)
 		validateControlIdList(controller.remountOn, controlIds, 'controller.remountOn')
 	if (config.controllerPresentation !== undefined) {
@@ -965,7 +965,7 @@ function asRecord(value: unknown, path: string): Record<string, unknown> {
  * 🔴 **없는 id를 통과시키면 안 된다.** 오타 하나가 「그 컨트롤이 조용히 고급으로 밀린 것」과
  *    구분되지 않고, 화면에서는 컨트롤 하나가 이유 없이 사라진 것으로만 보인다.
  */
-/** 존재하는 control id만 담은 중복 없는 배열인가 — `basic`과 `remountOn`이 같은 규칙을 쓴다. */
+/** 존재하는 control id만 담은 중복 없는 배열인가 — `left`와 `remountOn`이 같은 규칙을 쓴다. */
 function validateControlIdList(value: unknown, controlIds: ReadonlySet<string>, field: string) {
 	if (!Array.isArray(value)) invalid(field, '배열이어야 합니다.')
 	const seen = new Set<string>()

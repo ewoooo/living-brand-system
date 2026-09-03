@@ -444,16 +444,15 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 	},
 	controller: {
 		/**
-		 * 창작자에게 보여줄 축 — 색, 모양, 속도, 위치처럼 직관적이고 변화폭이 큰 것만 남긴다.
+		 * 왼쪽 패널에 세울 축 — 색 조합과 형태. 창작자가 실제로 다루는 것은 이 둘뿐이다.
 		 *
-		 * 🔑 `speed`가 마스터 시계다(셰이더 원문의 `iTime * uGodraySpeed`). 나머지 속도는 전부
-		 *    그렇게 스케일된 `time`을 곱하므로, 이 하나가 모든 움직임을 함께 늘리고 줄인다.
-		 * 🔴 나머지 컨트롤은 **선언에서 빼기만 한다.** 지우지 않는다 — 창작자에게 감추더라도
-		 *    manager는 Payload에서 그 값을 조정할 수 있어야 한다.
+		 * 오른쪽으로 가는 것: 속도·광원 위치와 광선·유리·스윕의 수치들. 사라지는 것은 없다.
+		 * 🔑 `speed`가 마스터 시계이지만(셰이더의 `iTime * uGodraySpeed`) 그래도 오른쪽이다 —
+		 *    영향이 크다는 것과 창작자가 그것을 만지리라는 것은 다른 얘기다.
 		 * 🔴 「스타일」은 가로·세로에만 값이 있다. 스윕·방사에서 고르면 아무것도 바뀌지 않는다 —
 		 *    두 모양에는 원래 프리셋이 없었고, 새로 만드는 것은 새 look을 정하는 일이라 하지 않았다.
 		 */
-		basic: [
+		left: [
 			'shape',
 			'preset',
 			'rayColor1',
@@ -463,10 +462,6 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 			'rayColor5',
 			'rayBackgroundColor',
 			'bloomColor',
-			'speed',
-			'source',
-			'sourceOffsetX',
-			'sourceOffsetY',
 		],
 		// 모양은 셰이더 프로그램을 갈아끼운다 — 살아 있는 런타임에 흘려 넣을 수 없다.
 		remountOn: ['shape'],
@@ -519,6 +514,15 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 						'배경 색상',
 						CONTROL_DEFAULTS.rayBackgroundColor,
 					),
+					// 블룸도 색이다 — 색 조합이 한 그룹에 다 모여야 그룹 하나가 통째로 왼쪽에 선다.
+					colorControl('bloomColor', '블룸 색상', CONTROL_DEFAULTS.bloomColor),
+				],
+			},
+			{
+				id: 'rays',
+				title: 'Rays',
+				controls: [
+					// 팔레트 「위상 속도」는 색이 아니라 속도다 — 색 그룹에 두면 그룹이 좌우로 갈린다.
 					// 가로 계열만 읽는다(스윕·방사 셰이더에는 uPaletteDrift가 없다).
 					rangeControl(
 						'paletteDrift',
@@ -527,13 +531,6 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 						-1,
 						1,
 					),
-				],
-			},
-			{
-				id: 'rays',
-				title: 'Rays',
-				controls: [
-					colorControl('bloomColor', '블룸 색상', CONTROL_DEFAULTS.bloomColor),
 					rangeControl('rayBloom', '블룸 강도', CONTROL_DEFAULTS.rayBloom, 0, 1),
 					rangeControl('rayIntensity', '광선 강도', CONTROL_DEFAULTS.rayIntensity, 0, 1),
 					rangeControl('rayDensity', '광선 밀도', CONTROL_DEFAULTS.rayDensity, 0, 1),

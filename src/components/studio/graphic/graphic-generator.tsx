@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import { GraphicCanvas } from '@/components/studio/graphic/graphic-canvas'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
+import { GraphicLeftPanel } from '@/components/studio/sidebar/graphic-left-panel'
 import { GraphicSidebar } from '@/components/studio/sidebar/graphic-sidebar'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
@@ -59,7 +60,10 @@ function GraphicWorkspace() {
 	})
 
 	return (
-		<StudioWorkspace sidebar={<GraphicSidebar output={output} preview={preview} />}>
+		<StudioWorkspace
+			leftPanel={<GraphicLeftPanel />}
+			sidebar={<GraphicSidebar output={output} preview={preview} />}
+		>
 			<GraphicCanvas output={output} registerArtifacts={registerArtifacts} />
 		</StudioWorkspace>
 	)

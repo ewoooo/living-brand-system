@@ -234,38 +234,52 @@ describe('GraphicGenerator', () => {
 				expect.objectContaining({ columnGap: 41 }),
 			),
 		)
-		// 🔴 창작자에게 감춘 축은 화면에 없다 — 「고급」으로 접는 것이 아니다.
-		expect(screen.queryByRole('slider', { name: '원근 압축' })).not.toBeInTheDocument()
+		// 왼쪽에 선언되지 않은 축은 사라지지 않는다 — 오른쪽 패널에 있다.
+		expect(screen.getByRole('slider', { name: '원근 압축' })).toBeInTheDocument()
 	})
 
-	it('🔴 선언 밖의 컨트롤은 화면에 없다 — 접힌 것이 아니라 없다', () => {
-		render(createElement(GraphicGenerator, { config: forwardStraightConfig }))
+	it('🔴 선언한 축은 왼쪽, 나머지는 오른쪽 — 사라지는 컨트롤은 없다', () => {
+		const { container } = render(
+			createElement(GraphicGenerator, { config: forwardStraightConfig }),
+		)
+		const panelOf = (slot: string) =>
+			container.querySelector<HTMLElement>(`[data-slot="${slot}"]`) ??
+			(() => {
+				throw new Error(`패널이 없다: ${slot}`)
+			})()
+		const left = panelOf('studio-workspace-left-panel')
+		const right = panelOf('studio-workspace-sidebar')
 
-		// 선언한 축
-		expect(screen.getByRole('slider', { name: '열 간격' })).toBeInTheDocument()
-		expect(screen.getByRole('slider', { name: '여백' })).toBeInTheDocument()
+		// 이 런타임의 큰 축은 색뿐이다.
+		expect(within(left).getByLabelText('선 색상 색상 선택')).toBeInTheDocument()
+		expect(within(left).getByLabelText('배경 색상 색상 선택')).toBeInTheDocument()
+		expect(within(left).queryByRole('slider', { name: '열 간격' })).toBeNull()
 
-		// 선언 밖 — 창작자에게는 고급 옵션조차 필요 없으므로 여는 장치도 두지 않는다.
-		expect(screen.queryByRole('slider', { name: '기준점 두께' })).not.toBeInTheDocument()
-		expect(screen.queryByRole('slider', { name: '원경 크기' })).not.toBeInTheDocument()
+		// 나머지는 감추지 않고 오른쪽에 둔다 — 창작자가 다룰 수는 있어야 한다.
+		expect(within(right).getByRole('slider', { name: '열 간격' })).toBeInTheDocument()
+		expect(within(right).getByRole('slider', { name: '여백' })).toBeInTheDocument()
+		expect(within(right).getByRole('slider', { name: '기준점 두께' })).toBeInTheDocument()
+		expect(within(right).getByRole('slider', { name: '원경 크기' })).toBeInTheDocument()
+		// 「고급 설정」으로 접는 장치는 없다 — 접는 것이 아니라 자리를 나눈 것이다.
 		expect(screen.queryByRole('button', { name: /고급/ })).not.toBeInTheDocument()
-		// 남는 컨트롤이 없는 그룹은 제목도 서지 않는다.
-		expect(screen.queryByText('Weight')).not.toBeInTheDocument()
-		expect(screen.queryByText('Perspective')).not.toBeInTheDocument()
 	})
 
-	it('선언이 없는 런타임은 전부 보인다 — 정하지 않은 런타임의 화면이 비면 안 된다', () => {
+	it('선언이 없는 런타임은 전부 왼쪽이다 — 정하지 않은 런타임의 화면이 비면 안 된다', () => {
 		const { controller, ...rest } = forwardStraightConfig
-		const { basic: _basic, ...controllerWithoutBasic } = controller
+		const { left: _left, ...controllerWithoutLeft } = controller
 		const config = {
 			...rest,
-			controller: controllerWithoutBasic,
+			controller: controllerWithoutLeft,
 		} as unknown as GraphicStudioConfig
 
-		render(createElement(GraphicGenerator, { config }))
+		const { container } = render(createElement(GraphicGenerator, { config }))
+		const left = container.querySelector<HTMLElement>(
+			'[data-slot="studio-workspace-left-panel"]',
+		)
+		if (!left) throw new Error('왼쪽 패널이 없다')
 
-		expect(screen.getByRole('slider', { name: '기준점 두께' })).toBeInTheDocument()
-		expect(screen.getByRole('slider', { name: '원근 압축' })).toBeInTheDocument()
+		expect(within(left).getByRole('slider', { name: '기준점 두께' })).toBeInTheDocument()
+		expect(within(left).getByRole('slider', { name: '원근 압축' })).toBeInTheDocument()
 	})
 
 	it('Raster Artifact가 있는 Graphic은 공통 PNG adapter를 실행할 수 있다', async () => {
@@ -285,24 +299,32 @@ describe('GraphicGenerator', () => {
 	})
 
 	it('Shader Definition을 WebGL preview와 MP4 Export UI에 연결한다', async () => {
-		const { unmount } = render(createElement(GraphicGenerator, { config: flutedGlassConfig }))
+		const { container, unmount } = render(
+			createElement(GraphicGenerator, { config: flutedGlassConfig }),
+		)
 
 		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
 		// 기본 모양은 스윕이다 — 배선이 어긋나면 다른 셰이더가 뜬다.
 		expect(
 			toFlutedGlassInput(mocks.createShaderPreview.mock.lastCall?.[0].input ?? {}).family,
 		).toBe('sweep')
-		// 선언한 축이 있는 그룹만 선다 — 모양·스타일·색·속도·광원.
-		expect(screen.getByText('Shape')).toBeInTheDocument()
-		expect(screen.getByText('Style')).toBeInTheDocument()
-		expect(screen.getByRole('button', { name: 'Ray Palette' })).toBeInTheDocument()
-		expect(screen.getByText('Rays')).toBeInTheDocument()
-		expect(screen.getByText('Position')).toBeInTheDocument()
-		// 선언 밖만 담은 그룹은 제목도 없다.
-		expect(screen.queryByRole('button', { name: 'Sweep' })).not.toBeInTheDocument()
-		expect(screen.queryByText('Glass')).not.toBeInTheDocument()
-		expect(screen.queryByRole('button', { name: 'Glass Motion' })).not.toBeInTheDocument()
-		expect(screen.queryByRole('combobox', { name: '왜곡 형태' })).not.toBeInTheDocument()
+
+		const left = container.querySelector<HTMLElement>(
+			'[data-slot="studio-workspace-left-panel"]',
+		)
+		const right = container.querySelector<HTMLElement>('[data-slot="studio-workspace-sidebar"]')
+		if (!left || !right) throw new Error('좌우 패널이 둘 다 있어야 한다')
+
+		// 왼쪽은 색 조합과 형태뿐이다.
+		expect(within(left).getByText('Shape')).toBeInTheDocument()
+		expect(within(left).getByText('Style')).toBeInTheDocument()
+		expect(within(left).getByRole('button', { name: 'Ray Palette' })).toBeInTheDocument()
+		// 오른쪽은 잔 축 전부 — 속도·광원 위치도 여기다.
+		expect(within(right).getByText('Rays')).toBeInTheDocument()
+		expect(within(right).getByText('Position')).toBeInTheDocument()
+		expect(within(right).getByRole('button', { name: 'Sweep' })).toBeInTheDocument()
+		expect(within(right).getByRole('button', { name: 'Glass' })).toBeInTheDocument()
+		expect(within(right).getByRole('button', { name: 'Glass Motion' })).toBeInTheDocument()
 		expect(screen.getByRole('spinbutton', { name: 'Width' })).toHaveValue(1920)
 		expect(screen.getByRole('spinbutton', { name: 'Height' })).toHaveValue(1080)
 		expect(screen.getByRole('combobox', { name: 'FPS' })).toHaveTextContent('30')
