@@ -3,6 +3,15 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const REQUIRED_FILES = ['definition.ts', 'model.ts', 'runtime.client.ts'] as const
+
+/**
+ * 🔴 이 스크립트가 내는 파일은 biome의 formatter 대상에서 빼 두었다(`biome.json`).
+ *
+ * 여기서 줄바꿈을 문자열로 박기 때문이다 — 런타임 이름이 짧아지면 그 줄이 biome의 lineWidth
+ * 안에 들어가 버려 formatter가 한 줄로 접고, 그러면 `--check`가 영원히 실패한다(Fluted 넷을
+ * `fluted-glass` 하나로 합칠 때 실제로 그랬다). 이름 길이에 따라 검사가 켜졌다 꺼졌다 하는
+ * 것보다 생성물을 formatter 밖에 두는 것이 낫다 — `payload-types.ts`도 그렇게 두었다.
+ */
 const GENERATED_HEADER =
 	'// 이 파일은 scripts/generate-graphic-runtime-catalogs.ts로 생성됩니다. 직접 수정하지 마세요.\n\n'
 

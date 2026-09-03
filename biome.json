@@ -18,6 +18,8 @@
 			"!blob-report",
 			"!src/payload-types.ts",
 			"!src/payload-generated-schema.ts",
+			"!src/features/graphic-generation/graphic-runtimes/catalog/*.generated.ts",
+			"!src/features/graphic-generation/graphic-runtimes/catalog/*.generated.client.ts",
 			"!src/app/(payload)/admin",
 			"!**/*.svg",
 			"!migrations"

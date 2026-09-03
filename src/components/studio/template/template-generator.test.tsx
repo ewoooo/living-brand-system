@@ -117,6 +117,19 @@ const effectiveGraphicConfigs = graphicRuntimeManifests.map((manifest) => ({
 	output: resolveGraphicStudioOutput(manifest),
 }))
 
+/**
+ * 런타임을 이름으로 집는다.
+ *
+ * 🔴 `effectiveGraphicConfigs[0]`으로 집으면 카탈로그가 늘거나 줄 때 조용히 다른 런타임을 가리킨다 —
+ *    Fluted 넷을 하나로 합치면서 첫 항목이 forward-straight에서 fluted-glass로 바뀌어 세 테스트가
+ *    함께 죽었다(2026-09-03).
+ */
+function graphicConfigOf(id: string) {
+	const found = effectiveGraphicConfigs.find((config) => config.id === id)
+	if (!found) throw new Error(`그래픽 런타임 fixture가 없습니다: ${id}`)
+	return found
+}
+
 function TemplateGenerator({
 	imageConfigs: providedImageConfigs = imageConfigs,
 	graphicConfigs: providedGraphicConfigs = effectiveGraphicConfigs,
@@ -1037,6 +1050,12 @@ describe('TemplateGenerator', () => {
 		const { container } = render(
 			<TemplateGenerator
 				categoryTitle="카드"
+				// 🔴 첫 항목이 기본으로 잡힌다 — Fluted Glass가 첫 항목이면 그것으로 「바꾸기」가
+				//    무변화가 되어 재마운트를 확인할 수 없다.
+				graphicConfigs={[
+					graphicConfigOf('forward-straight'),
+					graphicConfigOf('fluted-glass'),
+				]}
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px;background-color:rgb(0,40,10)"></div>',
@@ -1061,7 +1080,7 @@ describe('TemplateGenerator', () => {
 
 		screen.getByRole('combobox', { name: 'Graphic Type' }).focus()
 		await user.keyboard('{ArrowDown}')
-		await user.click(screen.getByRole('option', { name: 'Radial Fluted Glass' }))
+		await user.click(screen.getByRole('option', { name: 'Fluted Glass' }))
 		await waitFor(() => expect(mocks.mountGraphicPreview).toHaveBeenCalledTimes(2))
 		expect(mocks.destroyGraphicPreview).toHaveBeenCalledOnce()
 		fireEvent.keyDown(screen.getByRole('slider', { name: '광선 강도' }), {
@@ -1229,7 +1248,9 @@ describe('TemplateGenerator', () => {
 		expect(forwardStraightRuntimeManifest.artifacts).not.toHaveProperty('video')
 		render(
 			<TemplateStudioProvider
-				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				config={deriveTemplateStudioConfig(template, imageConfigs, [
+					graphicConfigOf('forward-straight'),
+				])}
 				template={template}
 				categoryTitle="카드"
 			>
@@ -1434,14 +1455,14 @@ describe('TemplateGenerator', () => {
 		first.unmount()
 
 		const secondary = {
-			...effectiveGraphicConfigs[0],
+			...graphicConfigOf('forward-straight'),
 			id: 'secondary',
 			name: 'Secondary',
 		} satisfies GraphicStudioConfig
 		render(
 			<TemplateStudioProvider
 				config={deriveTemplateStudioConfig(template, imageConfigs, [
-					effectiveGraphicConfigs[0],
+					graphicConfigOf('forward-straight'),
 					secondary,
 				])}
 				template={template}

@@ -22,11 +22,11 @@ describe('listGraphicStudioConfigs', () => {
 	it('출력 형식과 무관하게 published runtime을 모두 노출한다', async () => {
 		vi.mocked(listPublishedGraphicProfileDefinitions).mockResolvedValueOnce([
 			{ id: 3, name: 'SVG', runtime: 'forward-straight' },
-			{ id: 4, name: 'Shader', runtime: 'radial-fluted-glass' },
+			{ id: 4, name: 'Shader', runtime: 'fluted-glass' },
 		])
 		await expect(listGraphicStudioConfigs({})).resolves.toEqual([
 			expect.objectContaining({ id: 'forward-straight' }),
-			expect.objectContaining({ id: 'radial-fluted-glass' }),
+			expect.objectContaining({ id: 'fluted-glass' }),
 		])
 	})
 })

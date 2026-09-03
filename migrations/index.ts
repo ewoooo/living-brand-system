@@ -97,6 +97,7 @@ import * as migration_20260831_012908_add_template_canvas_ppi from './20260831_0
 import * as migration_20260831_071102_add_graphic_profile_presets from './20260831_071102_add_graphic_profile_presets';
 import * as migration_20260831_084134_presets_as_json from './20260831_084134_presets_as_json';
 import * as migration_20260902_091453_drop_graphic_profile_presets from './20260902_091453_drop_graphic_profile_presets';
+import * as migration_20260903_055351_merge_fluted_runtimes from './20260903_055351_merge_fluted_runtimes';
 
 export const migrations = [
   {
@@ -592,6 +593,11 @@ export const migrations = [
   {
     up: migration_20260902_091453_drop_graphic_profile_presets.up,
     down: migration_20260902_091453_drop_graphic_profile_presets.down,
-    name: '20260902_091453_drop_graphic_profile_presets'
+    name: '20260902_091453_drop_graphic_profile_presets',
+  },
+  {
+    up: migration_20260903_055351_merge_fluted_runtimes.up,
+    down: migration_20260903_055351_merge_fluted_runtimes.down,
+    name: '20260903_055351_merge_fluted_runtimes'
   },
 ];

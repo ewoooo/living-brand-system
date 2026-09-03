@@ -27,7 +27,8 @@ export type StudioRuntimeManifest = {
 	controller: {
 		groups: readonly ControllerGroupDefinition[]
 		/**
-		 * 기본 화면에 남길 컨트롤 id. 나머지는 「고급 설정」 뒤로 접힌다.
+		 * 창작자 화면에 세울 컨트롤 id. 나머지는 화면에 아예 없고, 그 값은 manager가 Payload에서
+		 * 조정한다 — 접어 두는 「고급 설정」이 아니다.
 		 *
 		 * 🔑 기준은 **판에 앉혀 보고 나서야 알 수 있는 축인가**다. 위치·맞춤은 템플릿에 넣어 본
 		 *    뒤에 조정해야 하므로 기본이고, 색·광선·물성은 미리 고를 수 있으므로 프리셋에 맡긴다.
@@ -39,6 +40,17 @@ export type StudioRuntimeManifest = {
 		 * 같은 성격으로 이미 그 길을 갔다.
 		 */
 		basic?: readonly string[]
+		/**
+		 * 값이 바뀌면 런타임을 **다시 만들어야** 하는 컨트롤 id.
+		 *
+		 * 대부분의 컨트롤은 uniform 하나를 바꾸므로 살아 있는 런타임에 흘려 넣으면 된다. 그런데
+		 * 「모양」처럼 셰이더 프로그램 자체를 갈아끼우는 축은 update로 반영할 수 없다 — 컴파일된
+		 * 프로그램에 없는 uniform은 조용히 무시되고 화면만 옛 모양으로 남는다.
+		 *
+		 * 🔴 여기 넣은 컨트롤은 만질 때마다 캔버스가 처음부터 다시 뜬다(애니메이션도 되감긴다).
+		 *    그 값이 프로그램을 바꾸는 축일 때만 넣는다.
+		 */
+		remountOn?: readonly string[]
 	}
 }
 
@@ -218,7 +230,7 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	parseStudioArtifactCapabilities(config.artifacts)
 
 	const controller = asRecord(config.controller, 'controller')
-	assertOnlyKeys(controller, ['basic', 'groups'], 'controller')
+	assertOnlyKeys(controller, ['basic', 'groups', 'remountOn'], 'controller')
 	if (!Array.isArray(controller.groups)) invalid('controller.groups', '배열이어야 합니다.')
 
 	const groupIds = new Set<string>()
@@ -237,7 +249,10 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 			controlIds.add((controlValue as { id: string }).id)
 		}
 	}
-	if (controller.basic !== undefined) validateControllerBasic(controller.basic, controlIds)
+	if (controller.basic !== undefined)
+		validateControlIdList(controller.basic, controlIds, 'controller.basic')
+	if (controller.remountOn !== undefined)
+		validateControlIdList(controller.remountOn, controlIds, 'controller.remountOn')
 	if (config.controllerPresentation !== undefined) {
 		validateControllerPresentation(config.controllerPresentation, groupIds)
 	}
@@ -950,11 +965,12 @@ function asRecord(value: unknown, path: string): Record<string, unknown> {
  * 🔴 **없는 id를 통과시키면 안 된다.** 오타 하나가 「그 컨트롤이 조용히 고급으로 밀린 것」과
  *    구분되지 않고, 화면에서는 컨트롤 하나가 이유 없이 사라진 것으로만 보인다.
  */
-function validateControllerBasic(value: unknown, controlIds: ReadonlySet<string>) {
-	if (!Array.isArray(value)) invalid('controller.basic', '배열이어야 합니다.')
+/** 존재하는 control id만 담은 중복 없는 배열인가 — `basic`과 `remountOn`이 같은 규칙을 쓴다. */
+function validateControlIdList(value: unknown, controlIds: ReadonlySet<string>, field: string) {
+	if (!Array.isArray(value)) invalid(field, '배열이어야 합니다.')
 	const seen = new Set<string>()
 	for (const [index, id] of value.entries()) {
-		const path = `controller.basic[${index}]`
+		const path = `${field}[${index}]`
 		assertNonEmptyString(id, path)
 		if (seen.has(id)) invalid(path, `중복되었습니다: ${id}`)
 		seen.add(id)

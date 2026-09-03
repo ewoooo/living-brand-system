@@ -4,13 +4,12 @@ import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import flutedGlassRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/fluted-glass/definition'
+import { toFlutedGlassInput } from '@/features/graphic-generation/graphic-runtimes/fluted-glass/model'
 import forwardStraightRuntimeManifest, {
 	FORWARD_STRAIGHT_DEFAULT_INPUT,
 } from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
 import { createForwardStraightScene } from '@/features/graphic-generation/graphic-runtimes/forward-straight/model'
-import radialFlutedGlassRuntimeManifest, {
-	RADIAL_FLUTED_GLASS_DEFAULT_INPUT,
-} from '@/features/graphic-generation/graphic-runtimes/radial-fluted-glass/definition'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 import { GraphicGenerator } from './graphic-generator'
 
@@ -27,9 +26,9 @@ const forwardStraightConfig = {
 	output: resolveGraphicStudioOutput(forwardStraightRuntimeManifest),
 } satisfies GraphicStudioConfig
 
-const radialFlutedGlassConfig = {
-	...radialFlutedGlassRuntimeManifest,
-	output: resolveGraphicStudioOutput(radialFlutedGlassRuntimeManifest),
+const flutedGlassConfig = {
+	...flutedGlassRuntimeManifest,
+	output: resolveGraphicStudioOutput(flutedGlassRuntimeManifest),
 } satisfies GraphicStudioConfig
 
 const mocks = vi.hoisted(() => {
@@ -125,17 +124,14 @@ vi.mock('@/features/graphic-generation/graphic-runtimes/forward-straight/runtime
 	},
 }))
 
-vi.mock(
-	'@/features/graphic-generation/graphic-runtimes/radial-fluted-glass/runtime.client',
-	() => ({
-		createRadialFlutedGlassRuntime: mocks.createShaderPreview,
-		default: {
-			type: 'shader',
-			mount: ({ container, values }: { container: HTMLElement; values: ControllerValues }) =>
-				mocks.createShaderPreview({ container, input: values }),
-		},
-	}),
-)
+vi.mock('@/features/graphic-generation/graphic-runtimes/fluted-glass/runtime.client', () => ({
+	createFlutedGlassRuntime: mocks.createShaderPreview,
+	default: {
+		type: 'shader',
+		mount: ({ container, values }: { container: HTMLElement; values: ControllerValues }) =>
+			mocks.createShaderPreview({ container, input: values }),
+	},
+}))
 
 vi.mock('@/features/studio-export/adapters/canvas-frames-to-mp4.mediabunny.client', () => ({
 	canvasFramesToMp4: mocks.canvasFramesToMp4,
@@ -289,21 +285,21 @@ describe('GraphicGenerator', () => {
 	})
 
 	it('Shader Definition을 WebGL preview와 MP4 Export UI에 연결한다', async () => {
-		const { unmount } = render(
-			createElement(GraphicGenerator, { config: radialFlutedGlassConfig }),
-		)
+		const { unmount } = render(createElement(GraphicGenerator, { config: flutedGlassConfig }))
 
-		await waitFor(() =>
-			expect(mocks.createShaderPreview).toHaveBeenCalledWith(
-				expect.objectContaining({ input: RADIAL_FLUTED_GLASS_DEFAULT_INPUT }),
-			),
-		)
-		// 선언한 축이 있는 그룹만 선다 — 색·속도·광원.
+		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
+		// 기본 모양은 스윕이다 — 배선이 어긋나면 다른 셰이더가 뜬다.
+		expect(
+			toFlutedGlassInput(mocks.createShaderPreview.mock.lastCall?.[0].input ?? {}).family,
+		).toBe('sweep')
+		// 선언한 축이 있는 그룹만 선다 — 모양·스타일·색·속도·광원.
+		expect(screen.getByText('Shape')).toBeInTheDocument()
+		expect(screen.getByText('Style')).toBeInTheDocument()
 		expect(screen.getByRole('button', { name: 'Ray Palette' })).toBeInTheDocument()
 		expect(screen.getByText('Rays')).toBeInTheDocument()
 		expect(screen.getByText('Position')).toBeInTheDocument()
 		// 선언 밖만 담은 그룹은 제목도 없다.
-		expect(screen.queryByRole('button', { name: 'Pulse' })).not.toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: 'Sweep' })).not.toBeInTheDocument()
 		expect(screen.queryByText('Glass')).not.toBeInTheDocument()
 		expect(screen.queryByRole('button', { name: 'Glass Motion' })).not.toBeInTheDocument()
 		expect(screen.queryByRole('combobox', { name: '왜곡 형태' })).not.toBeInTheDocument()
@@ -327,7 +323,7 @@ describe('GraphicGenerator', () => {
 
 	it('VideoControls 변경값을 MP4 ExportRequest에 연결한다', async () => {
 		const user = userEvent.setup()
-		const createObjectURL = vi.fn(() => 'blob:radial-fluted-glass')
+		const createObjectURL = vi.fn(() => 'blob:fluted-glass')
 		Object.defineProperty(URL, 'createObjectURL', {
 			configurable: true,
 			value: createObjectURL,
@@ -338,7 +334,7 @@ describe('GraphicGenerator', () => {
 		})
 		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
-		render(createElement(GraphicGenerator, { config: radialFlutedGlassConfig }))
+		render(createElement(GraphicGenerator, { config: flutedGlassConfig }))
 		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
 
 		const width = screen.getByRole('spinbutton', { name: 'Width' })
@@ -372,7 +368,7 @@ describe('GraphicGenerator', () => {
 	})
 
 	it('출력 사이즈 비율을 프리뷰 영역에 맞춰 반영한다', async () => {
-		render(createElement(GraphicGenerator, { config: radialFlutedGlassConfig }))
+		render(createElement(GraphicGenerator, { config: flutedGlassConfig }))
 		await waitFor(() => expect(mocks.createShaderPreview).toHaveBeenCalledOnce())
 		const observerCount = mocks.resizeObserverCount
 
@@ -543,7 +539,7 @@ describe('GraphicGenerator', () => {
 		// 교체 후보 목록은 패널이 열릴 때 /api/graphic-profiles에서 온다.
 		browseMocks.fetchGraphicStudioConfigs.mockResolvedValue([
 			forwardStraightConfig,
-			radialFlutedGlassConfig,
+			flutedGlassConfig,
 		])
 		render(createElement(GraphicGenerator, { config: forwardStraightConfig }))
 		await waitFor(() => expect(mocks.createPreview).toHaveBeenCalledOnce())
@@ -559,7 +555,7 @@ describe('GraphicGenerator', () => {
 			name: new RegExp(forwardStraightRuntimeManifest.name),
 		})
 		const shaderCard = within(panel).getByRole('button', {
-			name: new RegExp(radialFlutedGlassRuntimeManifest.name),
+			name: new RegExp(flutedGlassRuntimeManifest.name),
 		})
 		expect(forwardCard).toHaveAttribute('aria-current', 'true')
 

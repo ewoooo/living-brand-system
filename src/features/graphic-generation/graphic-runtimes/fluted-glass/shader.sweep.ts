@@ -1,12 +1,15 @@
 /**
- * Radial Fluted Glass의 fragment shader 원문.
+ * Fluted Glass 「스윕」 모양의 fragment shader 원문.
  *
  * `.glsl` 파일이 아니라 모듈 상수인 이유는 번들러다 — Turbopack의 `?raw` 규칙은 이 버전에서
  * default export를 만들지 않아 shader가 통째로 `undefined`로 들어갔다. public/에 두면
  * 고정 URL로 내려받히므로 그쪽으로도 돌아가지 않는다.
  */
 export default `// Shadertoy-style fragment shader; the Graphic Studio host supplies uniforms.
-// Seamless radial god rays + radial LinesIrregular fluted glass
+// Radial god rays that sweep around the source like a lighthouse, behind the same
+// radial fluted glass. Differs from the radial sibling in two places: the whole ray
+// field rotates over time (uSweepSpeed), and the pulse is an angular beam sector
+// instead of an expanding ring.
 
 #define PI 3.14159265359
 #define TAU 6.28318530718
@@ -29,6 +32,7 @@ uniform float uGodraySpeed;
 uniform float uFrameOffsetMs;
 uniform float uRayScale;
 uniform float uRayRotation;
+uniform float uSweepSpeed;
 uniform float uRadialFalloff;
 uniform float uRadialFlowSpeed;
 uniform float uPulseIntensity;
@@ -72,12 +76,13 @@ uniform int uDistortionShape;
 #define GODRAY_SCALE uRayScale
 #define GODRAY_ROTATION uRayRotation
 
+#define SWEEP_SPEED uSweepSpeed
 #define RADIAL_FALLOFF uRadialFalloff
 #define RADIAL_FLOW_SPEED uRadialFlowSpeed
-#define RADIAL_PULSE_INTENSITY uPulseIntensity
-#define RADIAL_PULSE_SPEED uPulseSpeed
-#define RADIAL_PULSE_DENSITY uPulseDensity
-#define RADIAL_PULSE_WIDTH uPulseWidth
+#define BEAM_INTENSITY uPulseIntensity
+#define BEAM_SPEED uPulseSpeed
+#define BEAM_DENSITY uPulseDensity
+#define BEAM_WIDTH uPulseWidth
 
 // 0 = many narrow ribs, 1 = fewer wide ribs
 #define GLASS_ANGLE uGlassAngle
@@ -235,7 +240,11 @@ vec3 godRaysScene(vec2 p, vec2 origin, float time) {
     float radius = max(length(delta), 0.0001);
     vec2 direction = delta / radius;
 
-    float angle = atan(delta.y, delta.x) - radians(GODRAY_ROTATION);
+    // The whole ray field turns around the source; per-frame the offset is constant,
+    // so atan's seam still cancels wherever the lane math uses an integer count.
+    float angle = atan(delta.y, delta.x)
+        - radians(GODRAY_ROTATION)
+        - time * SWEEP_SPEED;
 
     // One broad bend keeps the motion organic without creating water ripples.
     float broadBend = (
@@ -267,17 +276,16 @@ vec3 godRaysScene(vec2 p, vec2 origin, float time) {
     float radialHaze = exp(-radius * RADIAL_FALLOFF)
         * mix(0.38, 1.0, radialNoise);
 
-    // Wide rings moving outward from the source.
-    float pulsePhase = fract(
-        radius * RADIAL_PULSE_DENSITY
-        - time * RADIAL_PULSE_SPEED
-    );
-    float radialPulse = exp(-pow(
-        (pulsePhase - 0.5) / max(RADIAL_PULSE_WIDTH, 0.001),
+    // Angular beam sectors sweeping around the source — the conic form of the
+    // radial sibling's expanding rings. Integer beamCount keeps atan's seam closed.
+    float beamCount = max(1.0, floor(BEAM_DENSITY * 4.0 + 0.5));
+    float beamPhase = fract(angle * beamCount / TAU - time * BEAM_SPEED);
+    float beam = exp(-pow(
+        (beamPhase - 0.5) / max(BEAM_WIDTH, 0.001),
         2.0
     ));
-    radialPulse *= smoothstep(0.03, 0.18, radius)
-        * exp(-radius * 0.18)
+    beam *= smoothstep(0.03, 0.18, radius)
+        * exp(-radius * 0.35)
         * mix(0.60, 1.0, radialNoise);
 
     vec3 color = GODRAY_COLOR_BACK;
@@ -300,13 +308,14 @@ vec3 godRaysScene(vec2 p, vec2 origin, float time) {
     rays += rayLayer(warpedAngle, radius, 47.0 * density, 11.7, 0.82, 0.33, 0.58, time);
     rays += rayLayer(warpedAngle, radius, 88.0 * density, 23.4, 1.15, 0.18, 0.20, time);
 
-    // The pulse brightens the whole ray field instead of one dotted ray.
-    rays *= 1.0 + radialPulse * RADIAL_PULSE_INTENSITY * 0.36;
+    // The beam brightens the ray field it passes through instead of one dotted ray.
+    rays *= 1.0 + beam * BEAM_INTENSITY * 0.36;
     rays += uBloomColor
-        * radialPulse
-        * RADIAL_PULSE_INTENSITY
+        * beam
+        * BEAM_INTENSITY
         * 0.30;
 
+    // The key rays live in swept space, so they turn with the field.
     float keyRayA = exp(-pow(angleDistance(angle, 0.18) * 12.0, 2.0));
     float keyRayB = exp(-pow(angleDistance(angle, -0.25) * 16.0, 2.0));
     float keyFlow = 0.42 + noise(vec2(radius * 1.55 - time * 0.65, 7.3)) * 0.58;

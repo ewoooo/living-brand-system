@@ -8,8 +8,8 @@ import {
 	graphicRuntimeManifests,
 	resolveGraphicStudioOutput,
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
+import flutedGlassRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/fluted-glass/definition'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
-import radialFlutedGlassRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/radial-fluted-glass/definition'
 import { createControllerValues } from '@/modules/studio-controller/controller-definition'
 import { createGraphicStudioPluginCatalog } from './graphic-plugin'
 import {
@@ -25,7 +25,7 @@ describe('graphicStudioRuntime', () => {
 		expect(parseGraphicRuntimeManifest(parseGraphicRuntimeManifest(config))).toBe(config)
 		const effective = { ...config, output: resolveGraphicStudioOutput(config) }
 		expect(effective.output.formats).toEqual(['png', 'jpeg', 'tiff', 'pdf', 'svg', 'mp4'])
-		expect(resolveGraphicStudioOutput(radialFlutedGlassRuntimeManifest).formats).toEqual([
+		expect(resolveGraphicStudioOutput(flutedGlassRuntimeManifest).formats).toEqual([
 			'png',
 			'jpeg',
 			'tiff',
@@ -39,8 +39,8 @@ describe('graphicStudioRuntime', () => {
 			}).output.formats,
 		).toEqual(['png'])
 		const radial = {
-			...radialFlutedGlassRuntimeManifest,
-			output: resolveGraphicStudioOutput(radialFlutedGlassRuntimeManifest),
+			...flutedGlassRuntimeManifest,
+			output: resolveGraphicStudioOutput(flutedGlassRuntimeManifest),
 		}
 		expect(() => parseGraphicStudioConfig({ ...radial, output: { formats: ['svg'] } })).toThrow(
 			'지원하지 않는 output format',
@@ -65,7 +65,7 @@ describe('graphicStudioRuntime', () => {
 	})
 
 	it('Shader runtime은 browser artifact만 등록하고 Vector 합성에서는 제외한다', () => {
-		const shaderConfig = radialFlutedGlassRuntimeManifest
+		const shaderConfig = flutedGlassRuntimeManifest
 		const values = createControllerValues(shaderConfig.controller.groups)
 
 		expect(graphicRuntimeManifests).toContain(shaderConfig)
