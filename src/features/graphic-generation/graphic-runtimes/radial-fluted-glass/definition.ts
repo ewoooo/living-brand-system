@@ -81,6 +81,27 @@ const radialFlutedGlassRuntimeManifest = defineGraphicRuntime({
 		},
 	},
 	controller: {
+		/**
+		 * 창작자에게 보여줄 축 — 색, 모양, 속도, 위치처럼 직관적이고 변화폭이 큰 것만 남긴다.
+		 *
+		 * 🔑 `speed`가 마스터 시계다(`shader.ts`의 `iTime * uGodraySpeed`). 나머지 속도는 전부
+		 *    그렇게 스케일된 `time`을 곱하므로, 이 하나가 모든 움직임을 함께 늘리고 줄인다.
+		 * 🔴 나머지 컨트롤은 **선언에서 빼기만 한다.** 지우지 않는다 — 창작자에게 감추더라도
+		 *    manager는 Payload에서 그 값을 조정할 수 있어야 한다.
+		 */
+		basic: [
+			'rayColor1',
+			'rayColor2',
+			'rayColor3',
+			'rayColor4',
+			'rayColor5',
+			'rayBackgroundColor',
+			'bloomColor',
+			'speed',
+			'source',
+			'sourceOffsetX',
+			'sourceOffsetY',
+		],
 		groups: [
 			{
 				id: 'ray-palette',

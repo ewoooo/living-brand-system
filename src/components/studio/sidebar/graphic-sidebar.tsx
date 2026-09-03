@@ -26,25 +26,15 @@ export function GraphicSidebar({
 	preview: ReturnType<typeof useProfilePreview>
 }) {
 	const { config, profiles, controls } = useGraphicStudio()
-	// 🔑 기본에는 판에 앉히는 축(위치·맞춤)만 남기고 나머지는 「고급 설정」 뒤로 접는다.
-	//    무엇이 기본인지는 런타임이 선언하고, 선언이 없으면 전부 기본이다.
-	const { basic: basicGroups, advanced: advancedGroups } = splitControllerGroups(
+	/**
+	 * 🔑 창작자에게는 런타임이 선언한 축만 보인다. 나머지는 「고급」으로 접는 것이 아니라
+	 *    **화면에 아예 없다** — 창작자에게는 고급 옵션조차 필요하지 않고, 그 값은 manager가
+	 *    Payload에서 조정한다. 선언이 없으면 전부 보인다.
+	 */
+	const { basic: basicGroups } = splitControllerGroups(
 		config.controller.groups,
 		config.controller.basic,
 	)
-	/**
-	 * 「고급 설정」을 열면 안쪽 그룹은 전부 닫혀 있다.
-	 *
-	 * 🔴 Admin이 정한 `defaultOpen`을 그대로 쓰면 열자마자 40여 개가 쏟아진다 — 접은 이유가 사라진다.
-	 *    Admin의 표현 정책은 기본 화면에만 적용된다.
-	 */
-	const advancedPresentation = {
-		groups: advancedGroups.map((group) => ({
-			groupId: group.id,
-			collapsible: true,
-			defaultOpen: false,
-		})),
-	}
 	const format = output.draft?.format
 	const video = format === 'mp4' ? config.output.video?.mp4 : undefined
 	const formatOptions = STUDIO_OUTPUT_FORMAT_OPTIONS.filter(({ value }) =>
@@ -133,19 +123,6 @@ export function GraphicSidebar({
 					bindings={controls.bindings}
 					onChange={controls.update}
 				/>
-				{advancedGroups.length > 0 && (
-					<Controller.Group defaultOpen={false} title="고급 설정">
-						{/* 안쪽 목록은 이 그룹이 이미 구분선을 그었으므로 자기 위 선을 걷는다. */}
-						<ControllerRenderer
-							first={false}
-							groups={advancedGroups}
-							presentation={advancedPresentation}
-							values={controls.values}
-							bindings={controls.bindings}
-							onChange={controls.update}
-						/>
-					</Controller.Group>
-				)}
 			</StudioSidebar>
 		</Controller.Browser.Root>
 	)
