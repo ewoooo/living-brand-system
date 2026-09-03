@@ -65,7 +65,8 @@ export default defineGraphicRuntime({
 		 * 🔴 나머지 컨트롤은 **선언에서 빼기만 한다.** 지우지 않는다 — 창작자에게 감추더라도
 		 *    manager는 Payload에서 그 값을 조정할 수 있어야 한다.
 		 */
-		basic: ['lineColor', 'backgroundColor', 'columnGap', 'rowGap', 'margin', 'origin'],
+		// 이 런타임의 큰 축은 색뿐이다 — 간격·여백·기준점은 수치라 오른쪽으로 간다.
+		left: ['lineColor', 'backgroundColor'],
 		groups: [
 			{
 				id: 'graphic',
@@ -77,6 +78,13 @@ export default defineGraphicRuntime({
 						'배경 색상',
 						FORWARD_STRAIGHT_DEFAULT_INPUT.backgroundColor,
 					),
+				],
+			},
+			{
+				id: 'grid',
+				title: 'Grid',
+				controls: [
+					// 선 길이는 색이 아니라 격자 칸 안의 수치다 — Graphic에 두면 그룹이 좌우로 갈린다.
 					rangeControl(
 						'lineLength',
 						'선 길이',
@@ -84,12 +92,6 @@ export default defineGraphicRuntime({
 						2,
 						200,
 					),
-				],
-			},
-			{
-				id: 'grid',
-				title: 'Grid',
-				controls: [
 					rangeControl(
 						'columnGap',
 						'열 간격',

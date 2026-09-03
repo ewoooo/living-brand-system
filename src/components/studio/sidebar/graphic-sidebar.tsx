@@ -27,13 +27,13 @@ export function GraphicSidebar({
 }) {
 	const { config, profiles, controls } = useGraphicStudio()
 	/**
-	 * 🔑 창작자에게는 런타임이 선언한 축만 보인다. 나머지는 「고급」으로 접는 것이 아니라
-	 *    **화면에 아예 없다** — 창작자에게는 고급 옵션조차 필요하지 않고, 그 값은 manager가
-	 *    Payload에서 조정한다. 선언이 없으면 전부 보인다.
+	 * 🔑 이 패널은 **왼쪽에 서지 않은 축 전부**를 그린다 — 세기·속도처럼 세밀하고 잡다한 값들이다.
+	 *    감추지 않는다: 창작자가 다룰 수는 있어야 하고, 다만 다루리라 기대하지 않는 자리다.
+	 *    큰 축(색 조합·형태)은 `GraphicLeftPanel`이 캔버스 왼쪽에서 갖는다.
 	 */
-	const { basic: basicGroups } = splitControllerGroups(
+	const { right: rightGroups } = splitControllerGroups(
 		config.controller.groups,
-		config.controller.basic,
+		config.controller.left,
 	)
 	const format = output.draft?.format
 	const video = format === 'mp4' ? config.output.video?.mp4 : undefined
@@ -117,7 +117,7 @@ export function GraphicSidebar({
 				footer={footer}
 			>
 				<ControllerRenderer
-					groups={basicGroups}
+					groups={rightGroups}
 					presentation={config.controllerPresentation}
 					values={controls.values}
 					bindings={controls.bindings}

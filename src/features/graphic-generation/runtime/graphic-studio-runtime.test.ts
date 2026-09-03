@@ -110,27 +110,20 @@ describe('graphicStudioRuntime', () => {
 		expect(getGraphicStudioRuntimeBindings(config, { width: 800, height: 0 })).toEqual({})
 	})
 
-	it('선언한 기본 축이 파생된 Config까지 실려 나간다', () => {
+	it('선언한 왼쪽 축이 파생된 Config까지 실려 나간다', () => {
 		const derived = deriveGraphicStudioConfig({
 			id: 13,
-			name: '기본 축',
+			name: '왼쪽 축',
 			runtime: 'forward-straight',
 		})
 
-		// 재조립하면서 빠뜨리면 창작자 화면에 컨트롤이 전부 뜬다.
-		expect(derived.controller.basic).toEqual([
-			'lineColor',
-			'backgroundColor',
-			'columnGap',
-			'rowGap',
-			'margin',
-			'origin',
-		])
+		// 재조립하면서 빠뜨리면 오른쪽 컨트롤이 전부 왼쪽 패널로 몰린다.
+		expect(derived.controller.left).toEqual(['lineColor', 'backgroundColor'])
 	})
 
-	it('🔴 여섯 런타임이 모두 기본 컨트롤을 선언한다 — 일부만 적용된 채로 머지되지 않게', () => {
+	it('🔴 모든 런타임이 왼쪽 축을 선언한다 — 일부만 적용된 채로 머지되지 않게', () => {
 		const missing = graphicRuntimeManifests.filter(
-			(manifest) => manifest.controller.basic === undefined,
+			(manifest) => manifest.controller.left === undefined,
 		)
 
 		expect(missing.map((manifest) => manifest.id)).toEqual([])
@@ -143,7 +136,7 @@ describe('graphicStudioRuntime', () => {
 					group.controls.map((control) => control.id),
 				),
 			)
-			const unknown = (manifest.controller.basic ?? []).filter((id) => !ids.has(id))
+			const unknown = (manifest.controller.left ?? []).filter((id) => !ids.has(id))
 
 			expect({ runtime: manifest.id, unknown }).toEqual({ runtime: manifest.id, unknown: [] })
 		}

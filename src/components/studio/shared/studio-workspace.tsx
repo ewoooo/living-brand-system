@@ -39,17 +39,23 @@ export function StudioWorkspacePage({
 
 type StudioWorkspaceProps = {
 	sidebar: React.ReactNode
+	/** 캔버스 왼쪽 패널 — 창작자가 실제로 다루는 큰 축(색 조합·형태)이 앉는 자리. */
+	leftPanel?: React.ReactNode
 	children: React.ReactNode
 }
 
-export function StudioWorkspace({ sidebar, children }: StudioWorkspaceProps) {
+export function StudioWorkspace({ sidebar, leftPanel, children }: StudioWorkspaceProps) {
 	return (
 		// lg 행을 1fr로 못 박아야 컨트롤러가 길어져도 페이지 대신 패널 내부가 스크롤된다.
 		// 사이드바 열은 auto다 — 기본 폭(lg:w-80)은 StudioSidebar가 갖고, Review처럼 패널이
 		// 둘로 늘어나는 화면은 사이드바 쪽이 넓어지고 캔버스가 줄어든다(디자인 78:2706).
 		<section
 			data-slot="studio-workspace"
-			className="grid min-h-0 lg:h-full lg:max-h-full lg:grid-cols-[minmax(0,1fr)_auto] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden"
+			className={`grid min-h-0 lg:h-full lg:max-h-full lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden ${
+				leftPanel
+					? 'lg:grid-cols-[auto_minmax(0,1fr)_auto]'
+					: 'lg:grid-cols-[minmax(0,1fr)_auto]'
+			}`}
 		>
 			{/*
 			 * 🔴 overflow를 잠그지 않는다 — 자산 브라우저 패널이 컨트롤러 왼쪽(캔버스 위)으로
@@ -58,16 +64,25 @@ export function StudioWorkspace({ sidebar, children }: StudioWorkspaceProps) {
 			 */}
 			<aside
 				data-slot="studio-workspace-sidebar"
-				className="min-h-0 p-4 lg:order-2 lg:h-full lg:max-h-full"
+				className="min-h-0 p-4 lg:order-3 lg:h-full lg:max-h-full"
 			>
 				{sidebar}
 			</aside>
 			<div
 				data-slot="studio-workspace-canvas"
-				className="flex min-h-96 min-w-0 flex-col p-4 md:p-6 lg:order-1 lg:h-full lg:max-h-full lg:min-h-0 lg:overflow-hidden"
+				className="flex min-h-96 min-w-0 flex-col p-4 md:p-6 lg:order-2 lg:h-full lg:max-h-full lg:min-h-0 lg:overflow-hidden"
 			>
 				{children}
 			</div>
+			{/* DOM에서는 캔버스 뒤에 온다 — 좁은 화면에서 이 패널이 캔버스를 밀어내고 맨 위에 서지 않게. */}
+			{leftPanel && (
+				<aside
+					data-slot="studio-workspace-left-panel"
+					className="min-h-0 p-4 lg:order-1 lg:h-full lg:max-h-full"
+				>
+					{leftPanel}
+				</aside>
+			)}
 		</section>
 	)
 }
