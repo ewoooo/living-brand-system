@@ -5,10 +5,6 @@ import {
 	GraphicStudioContext,
 	type GraphicStudioValue,
 } from '@/features/graphic-generation/contexts/graphic-studio-context'
-import {
-	findGraphicProfilePreset,
-	pickGraphicPresetValues,
-} from '@/features/graphic-generation/domain/graphic-preset'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { fetchGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.client'
 import { useLazyResource } from '@/hooks/use-lazy-resource'
@@ -37,9 +33,6 @@ export function GraphicStudioProvider({
 	const groups = config.controller.groups
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	const [bindings, setBindings] = useState<ControllerRuntimeBindings>({})
-	// 🔑 프리셋 선택은 값이 아니라 화면 상태다 — 컨트롤을 하나라도 만지면 풀리고,
-	//    값을 손으로 되돌려도 다시 붙지 않는다(같은 값 ≠ 같은 선택).
-	const [preset, setPreset] = useState<string | null>(null)
 	const bindingsRef = useRef<ControllerRuntimeBindings>({})
 	const definitions = useMemo(
 		() =>
@@ -61,7 +54,6 @@ export function GraphicStudioProvider({
 				return false
 			}
 			setValues((current) => ({ ...current, [controlId]: value }))
-			setPreset(null)
 			return true
 		},
 		[definitions],
@@ -79,23 +71,6 @@ export function GraphicStudioProvider({
 		[definitions],
 	)
 
-	const applyPreset = useCallback(
-		(presetId: string) => {
-			const found = findGraphicProfilePreset(config.presets ?? [], presetId)
-			if (!found) return
-			setValues((current) => ({
-				...current,
-				...pickGraphicPresetValues(
-					config.controller.groups,
-					found,
-					config.controller.basic,
-				),
-			}))
-			setPreset(presetId)
-		},
-		[config.controller.basic, config.controller.groups, config.presets],
-	)
-
 	const selectProfile = useCallback(
 		(nextProfileId: string) => {
 			const next = browse.data?.find((item) => item.id === nextProfileId)
@@ -103,7 +78,6 @@ export function GraphicStudioProvider({
 			bindingsRef.current = {}
 			setBindings({})
 			setValues(createControllerValues(next.controller.groups))
-			setPreset(null)
 			setConfig(next)
 		},
 		[browse.data, config.id],
@@ -113,19 +87,8 @@ export function GraphicStudioProvider({
 			profiles: { browse, select: selectProfile },
 			config,
 			controls: { values, bindings, update, registerBindings },
-			preset: { applied: preset, apply: applyPreset },
 		}),
-		[
-			applyPreset,
-			bindings,
-			browse,
-			config,
-			preset,
-			registerBindings,
-			selectProfile,
-			update,
-			values,
-		],
+		[bindings, browse, config, registerBindings, selectProfile, update, values],
 	)
 
 	return (

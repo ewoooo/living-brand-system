@@ -7,7 +7,6 @@ import {
 import { managerManagedAccess } from '@/lib/auth'
 import { previewImageField } from './fields/preview-image-field'
 import {
-	graphicPresetsField,
 	studioControllerPresentationField,
 	studioControllerRestrictionsField,
 	studioExportPolicyField,
@@ -82,7 +81,6 @@ export const GraphicProfiles: CollectionConfig = {
 			min: 0,
 			admin: { position: 'sidebar' },
 		},
-		graphicPresetsField(),
 		studioControllerRestrictionsField({
 			source: 'graphic',
 			baseConfigs: graphicAdminRuntimeManifests,

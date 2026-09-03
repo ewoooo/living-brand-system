@@ -7,7 +7,6 @@ import {
 	parseStudioControllerConfig,
 	type StudioControllerConfig,
 } from '@/modules/studio-controller/controller-definition'
-import type { GraphicProfilePreset } from './graphic-preset'
 
 /** Admin 제한 전 P5·Shader runtime이 발행하는 서버 안전 원본 계약. */
 export type GraphicRuntimeManifest = StudioControllerConfig<'graphic', string> & {
@@ -17,8 +16,6 @@ export type GraphicRuntimeManifest = StudioControllerConfig<'graphic', string> &
 /** Published Graphic Profile 정책이 적용된 Effective Config. */
 export type GraphicStudioConfig = GraphicRuntimeManifest & {
 	output: StudioOutputCapability
-	/** 매니저가 제공한 시작점 목록. 컨트롤이 아니라 값을 채워 넣는 동작이다. */
-	presets?: readonly GraphicProfilePreset[]
 }
 
 /** Payload Graphic Profile이 runtime Config를 좁히기 위해 공개하는 서버측 정의. */
@@ -27,8 +24,6 @@ export type PublishedGraphicProfileDefinition = {
 	name: string
 	runtime: string
 	controllerRestrictions?: unknown
-	/** 프로파일이 소유하는 프리셋 목록. */
-	presets?: unknown
 	exportPolicy?: unknown
 	controllerPresentation?: unknown
 	previewImage?: unknown
@@ -72,7 +67,6 @@ export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
 		'name',
 		'artifacts',
 		'output',
-		'presets',
 		'controller',
 		'controllerPresentation',
 		'previewImage',

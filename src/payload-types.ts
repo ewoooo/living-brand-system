@@ -1630,18 +1630,6 @@ export interface GraphicProfile {
    */
   previewImage: number | ApplicationImage;
   displayOrder: number;
-  /**
-   * 창작자 화면의 시작값 묶음입니다. [{ "presetId": "hd-navy", "label": "HD 네이비", "values": { "<컨트롤 id>": <값> } }] 형태이며, values는 「Controller 제한」이 노출한 컨트롤만 반영됩니다.
-   */
-  presets?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
   controllerRestrictions?:
     | {
         [k: string]: unknown;
@@ -3265,7 +3253,6 @@ export interface GraphicProfilesSelect<T extends boolean = true> {
   runtime?: T;
   previewImage?: T;
   displayOrder?: T;
-  presets?: T;
   controllerRestrictions?: T;
   controllerPresentation?: T;
   exportPolicy?:
