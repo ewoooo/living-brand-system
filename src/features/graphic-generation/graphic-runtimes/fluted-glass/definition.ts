@@ -540,6 +540,16 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 			'rayBackgroundColor',
 			'bloomColor',
 		],
+		/**
+		 * 오른쪽 패널의 공용 4축 — 밀도·속도·기준점·두께. 세 그래픽 런타임이 같은 것을 세운다.
+		 *
+		 * 🔴 여기 없는 축(광선 11 · 유리 12 · 유리모션 6 · 스윕 7)은 창작자 화면에서 내려가고
+		 *    Payload admin에만 남는다. 지운 것이 아니다 — 후처리로 manager가 조정한다.
+		 * 🔑 `speed`가 마스터 시계라 나머지 속도 8개는 그것에 딸려 스케일된다. 그래서 속도 축은
+		 *    이 하나로 충분하다(`shader.*.ts`의 `iTime * uGodraySpeed`).
+		 * 광원 오프셋은 여기 없다 — 판 밖 소실점은 모양이 정하고, 창작자는 판 안에서 옮긴다.
+		 */
+		right: ['rayDensity', 'rayMidSize', 'speed', 'source'],
 		// 모양은 셰이더 프로그램을 갈아끼운다 — 살아 있는 런타임에 흘려 넣을 수 없다.
 		remountOn: ['shape'],
 		groups: [

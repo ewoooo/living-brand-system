@@ -14,7 +14,11 @@ import { splitControllerGroups } from '@/modules/studio-controller/controller-de
  */
 export function GraphicLeftPanel() {
 	const { config, controls } = useGraphicStudio()
-	const { left } = splitControllerGroups(config.controller.groups, config.controller.left)
+	const { left } = splitControllerGroups(
+		config.controller.groups,
+		config.controller.left,
+		config.controller.right,
+	)
 
 	if (left.length === 0) return null
 

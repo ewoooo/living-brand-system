@@ -234,11 +234,11 @@ describe('GraphicGenerator', () => {
 				expect.objectContaining({ columnGap: 41 }),
 			),
 		)
-		// 왼쪽에 선언되지 않은 축은 사라지지 않는다 — 오른쪽 패널에 있다.
-		expect(screen.getByRole('slider', { name: '원근 압축' })).toBeInTheDocument()
+		// 좌·우 어느 목록에도 없는 축은 창작자 화면에 없다 — 선언은 남아 admin에서 조정한다.
+		expect(screen.queryByRole('slider', { name: '원근 압축' })).toBeNull()
 	})
 
-	it('🔴 선언한 축은 왼쪽, 나머지는 오른쪽 — 사라지는 컨트롤은 없다', () => {
+	it('🔴 축은 세 층으로 갈린다 — 왼쪽·오른쪽·admin 전용', () => {
 		const { container } = render(
 			createElement(GraphicGenerator, { config: forwardStraightConfig }),
 		)
@@ -250,17 +250,19 @@ describe('GraphicGenerator', () => {
 		const left = panelOf('studio-workspace-left-panel')
 		const right = panelOf('studio-workspace-sidebar')
 
-		// 이 런타임의 큰 축은 색뿐이다.
+		// 왼쪽 — 이 런타임의 큰 축은 색뿐이다.
 		expect(within(left).getByLabelText('선 색상 색상 선택')).toBeInTheDocument()
 		expect(within(left).getByLabelText('배경 색상 색상 선택')).toBeInTheDocument()
-		expect(within(left).queryByRole('slider', { name: '열 간격' })).toBeNull()
 
-		// 나머지는 감추지 않고 오른쪽에 둔다 — 창작자가 다룰 수는 있어야 한다.
+		// 오른쪽 — 공용 4축(밀도·속도·기준점·두께). 정지 그래픽이라 속도는 없다.
 		expect(within(right).getByRole('slider', { name: '열 간격' })).toBeInTheDocument()
-		expect(within(right).getByRole('slider', { name: '여백' })).toBeInTheDocument()
 		expect(within(right).getByRole('slider', { name: '기준점 두께' })).toBeInTheDocument()
-		expect(within(right).getByRole('slider', { name: '원경 크기' })).toBeInTheDocument()
-		// 「고급 설정」으로 접는 장치는 없다 — 접는 것이 아니라 자리를 나눈 것이다.
+
+		// admin 전용 — 선언은 남아 있지만 창작자 화면에는 없다.
+		expect(screen.queryByRole('slider', { name: '선 길이' })).toBeNull()
+		expect(screen.queryByRole('slider', { name: '여백' })).toBeNull()
+		expect(screen.queryByRole('slider', { name: '두께 감쇠 거리' })).toBeNull()
+		// 「고급 설정」으로 접는 장치는 없다 — 접는 것이 아니라 층을 나눈 것이다.
 		expect(screen.queryByRole('button', { name: /고급/ })).not.toBeInTheDocument()
 	})
 
@@ -319,12 +321,14 @@ describe('GraphicGenerator', () => {
 		expect(within(left).getByText('Shape')).toBeInTheDocument()
 		expect(within(left).getByText('Style')).toBeInTheDocument()
 		expect(within(left).getByRole('button', { name: 'Ray Palette' })).toBeInTheDocument()
-		// 오른쪽은 잔 축 전부 — 속도·광원 위치도 여기다.
-		expect(within(right).getByText('Rays')).toBeInTheDocument()
+		// 오른쪽은 공용 4축만 — 밀도·두께·속도가 Rays에, 기준점이 Position에 남는다.
+		expect(within(right).getByRole('slider', { name: '광선 밀도' })).toBeInTheDocument()
+		expect(within(right).getByRole('slider', { name: '속도' })).toBeInTheDocument()
 		expect(within(right).getByText('Position')).toBeInTheDocument()
-		expect(within(right).getByRole('button', { name: 'Sweep' })).toBeInTheDocument()
-		expect(within(right).getByRole('button', { name: 'Glass' })).toBeInTheDocument()
-		expect(within(right).getByRole('button', { name: 'Glass Motion' })).toBeInTheDocument()
+		// 셰이더 고유 축은 admin 전용으로 내려가 창작자 화면에 없다.
+		expect(screen.queryByRole('button', { name: 'Sweep' })).toBeNull()
+		expect(screen.queryByRole('button', { name: 'Glass' })).toBeNull()
+		expect(screen.queryByRole('button', { name: 'Glass Motion' })).toBeNull()
 		expect(screen.getByRole('spinbutton', { name: 'Width' })).toHaveValue(1920)
 		expect(screen.getByRole('spinbutton', { name: 'Height' })).toHaveValue(1080)
 		expect(screen.getByRole('combobox', { name: 'FPS' })).toHaveTextContent('30')

@@ -41,6 +41,16 @@ export type StudioRuntimeManifest = {
 		 */
 		left?: readonly string[]
 		/**
+		 * 오른쪽 패널에 세울 컨트롤 id — 창작자가 다룰 수는 있으나 다루리라 기대하지 않는 축이다.
+		 *
+		 * 🔑 **여기에도 `left`에도 없는 컨트롤은 창작자 화면에 그려지지 않는다.** 선언은 남아 있어
+		 *    manager가 Payload에서 조정할 수 있다 — 지우는 것이 아니라 후처리 자리로 내리는 것이다.
+		 *
+		 * 🔴 비워 두면 `left`가 아닌 전부가 오른쪽이다. 아직 정하지 않은 런타임의 축이 조용히
+		 *    사라지지 않게 한다 — 빈 배열은 「오른쪽에 아무것도 세우지 않는다」는 뜻이다.
+		 */
+		right?: readonly string[]
+		/**
 		 * 값이 바뀌면 런타임을 **다시 만들어야** 하는 컨트롤 id.
 		 *
 		 * 대부분의 컨트롤은 uniform 하나를 바꾸므로 살아 있는 런타임에 흘려 넣으면 된다. 그런데
@@ -164,23 +174,36 @@ export type ControllerGroupDefinition = {
  * 그룹을 왼쪽/오른쪽 두 벌로 가른다. 그룹 구조는 양쪽에서 그대로 유지되고,
  * 남는 컨트롤이 없는 그룹은 그 쪽에서 빠진다.
  *
+ * 🔑 **어느 쪽에도 없는 컨트롤은 어느 쪽에도 그려지지 않는다** — 선언은 남으므로 manager는
+ *    Payload에서 그 값을 조정할 수 있다. 창작자 화면에서만 내려가는 세 번째 층이다.
+ *
  * 🔴 `left`가 없으면 전부 왼쪽이다 — 선언하지 않은 런타임의 화면이 비지 않게 한다.
+ * 🔴 `right`가 없으면 왼쪽이 아닌 전부가 오른쪽이다. 빈 배열은 그것과 다르다 —
+ *    「오른쪽에 아무것도 세우지 않는다」는 뜻이다.
  */
 export function splitControllerGroups(
 	groups: readonly ControllerGroupDefinition[],
 	left: readonly string[] | undefined,
+	right?: readonly string[],
 ): { left: readonly ControllerGroupDefinition[]; right: readonly ControllerGroupDefinition[] } {
 	if (!left) return { left: groups, right: [] }
-	const keep = new Set(left)
-	const pick = (wanted: boolean) =>
+	const leftIds = new Set(left)
+	const rightIds = right && new Set(right)
+	const pick = (side: 'left' | 'right') =>
 		groups
 			.map((group) => ({
 				...group,
-				controls: group.controls.filter((control) => keep.has(control.id) === wanted),
+				controls: group.controls.filter((control) =>
+					side === 'left'
+						? leftIds.has(control.id)
+						: rightIds
+							? rightIds.has(control.id)
+							: !leftIds.has(control.id),
+				),
 			}))
 			.filter((group) => group.controls.length > 0)
 
-	return { left: pick(true), right: pick(false) }
+	return { left: pick('left'), right: pick('right') }
 }
 
 export type ControllerGroupPresentation = {
@@ -240,7 +263,7 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	parseStudioArtifactCapabilities(config.artifacts)
 
 	const controller = asRecord(config.controller, 'controller')
-	assertOnlyKeys(controller, ['groups', 'left', 'remountOn'], 'controller')
+	assertOnlyKeys(controller, ['groups', 'left', 'remountOn', 'right'], 'controller')
 	if (!Array.isArray(controller.groups)) invalid('controller.groups', '배열이어야 합니다.')
 
 	const groupIds = new Set<string>()
@@ -261,6 +284,8 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	}
 	if (controller.left !== undefined)
 		validateControlIdList(controller.left, controlIds, 'controller.left')
+	if (controller.right !== undefined)
+		validateControlIdList(controller.right, controlIds, 'controller.right')
 	if (controller.remountOn !== undefined)
 		validateControlIdList(controller.remountOn, controlIds, 'controller.remountOn')
 	if (config.controllerPresentation !== undefined) {
@@ -983,7 +1008,7 @@ function asRecord(value: unknown, path: string): Record<string, unknown> {
  * 🔴 **없는 id를 통과시키면 안 된다.** 오타 하나가 「그 컨트롤이 조용히 고급으로 밀린 것」과
  *    구분되지 않고, 화면에서는 컨트롤 하나가 이유 없이 사라진 것으로만 보인다.
  */
-/** 존재하는 control id만 담은 중복 없는 배열인가 — `left`와 `remountOn`이 같은 규칙을 쓴다. */
+/** 존재하는 control id만 담은 중복 없는 배열인가 — `left`·`right`·`remountOn`이 같은 규칙을 쓴다. */
 function validateControlIdList(value: unknown, controlIds: ReadonlySet<string>, field: string) {
 	if (!Array.isArray(value)) invalid(field, '배열이어야 합니다.')
 	const seen = new Set<string>()

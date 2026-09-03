@@ -77,6 +77,26 @@ describe('splitControllerGroups', () => {
 			['Ray Palette', 1],
 		])
 	})
+	it('🔴 어느 쪽에도 없는 컨트롤은 어느 쪽에도 그려지지 않는다 — admin 전용 층', () => {
+		const split = splitControllerGroups(groups, ['rayColor1'], ['sourceOffsetX'])
+
+		expect(split.left.flatMap((group) => group.controls.map((c) => c.id))).toEqual([
+			'rayColor1',
+		])
+		expect(split.right.flatMap((group) => group.controls.map((c) => c.id))).toEqual([
+			'sourceOffsetX',
+		])
+		// rayColor2는 두 목록에 없다 — 선언은 남지만 창작자 화면에는 서지 않는다.
+	})
+
+	it('오른쪽 빈 배열과 미선언은 다르다 — 하나는 아무것도, 하나는 나머지 전부', () => {
+		expect(splitControllerGroups(groups, ['rayColor1'], []).right).toEqual([])
+		expect(
+			splitControllerGroups(groups, ['rayColor1'], undefined).right.flatMap((group) =>
+				group.controls.map((c) => c.id),
+			),
+		).toEqual(['rayColor2', 'sourceOffsetX'])
+	})
 })
 
 describe('createControllerValues', () => {

@@ -55,7 +55,8 @@ export function deriveGraphicStudioConfig(
 			groups,
 			/**
 			 * 🔴 재조립하면서 빠뜨리면 선언이 통째로 사라진다 — `left`를 빠뜨리면 오른쪽 컨트롤이
-			 *    전부 왼쪽 패널로 몰리고, `remountOn`을 빠뜨리면 모양을 바꿔도 캔버스가 옛
+			 *    전부 왼쪽 패널로 몰리고, `right`를 빠뜨리면 admin 전용으로 내린 축이 전부 오른쪽에
+			 *    되살아나고, `remountOn`을 빠뜨리면 모양을 바꿔도 캔버스가 옛
 			 *    프로그램으로 남는다. 미선언 런타임의 `undefined`를 그대로 실으면 JSON 직렬화
 			 *    검사가 프로파일을 거부하므로 키 자체를 빼야 한다.
 			 *
@@ -63,6 +64,7 @@ export function deriveGraphicStudioConfig(
 			 * 없애지 않으므로(`availability`는 readonly·disabled뿐이다) 고아 id가 생기지 않는다.
 			 */
 			...(manifest.controller.left ? { left: manifest.controller.left } : {}),
+			...(manifest.controller.right ? { right: manifest.controller.right } : {}),
 			...(manifest.controller.remountOn ? { remountOn: manifest.controller.remountOn } : {}),
 		},
 		controllerPresentation: resolveControllerPresentation(
