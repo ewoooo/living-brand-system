@@ -6,6 +6,9 @@ import { PanelCard, PanelChip } from '@/components/shared/panel-card'
 import { cn } from '@/lib/utils'
 import type { GetGuidelineNavigationOutput } from '../../services/get-guideline-navigation.service'
 
+/** 🔴 모듈 상수여야 한다 — 렌더마다 새 객체면 히어로 shader가 계속 다시 마운트된다. */
+const GUIDELINE_HERO_VALUES = { shape: 'linear' } as const
+
 /**
  * 챕터 카드의 배치(정본: Figma 89:1969) — 3열 그리드에서 챕터 순서대로
  * 1칸(낮은 카드) → 2칸(높은 카드) → 전폭 순으로 앉는다.
@@ -30,7 +33,8 @@ export function GuidelineOnboard({ navigation }: { navigation: GetGuidelineNavig
 				<PageHero
 					className="dark h-120 w-full"
 					fallbackSrc="/images/hero_guideline.png"
-					runtimeId="linear-fluted-glass"
+					runtimeId="fluted-glass"
+					values={GUIDELINE_HERO_VALUES}
 				>
 					<div className="flex items-center gap-6 text-foreground">
 						<Image alt="HD" height={32} src="/logos/logo_wht.svg" width={77} />

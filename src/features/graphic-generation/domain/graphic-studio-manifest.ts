@@ -54,14 +54,16 @@ export function deriveGraphicStudioConfig(
 		controller: {
 			groups,
 			/**
-			 * 🔴 재조립하면서 빠뜨리면 「고급 설정」이 통째로 사라지고 전부 기본으로 뜬다.
-			 *    미선언 런타임의 `undefined`를 그대로 실으면 JSON 직렬화 검사가 프로파일을 거부하므로
-			 *    키 자체를 빼야 한다.
+			 * 🔴 재조립하면서 빠뜨리면 선언이 통째로 사라진다 — `basic`을 빠뜨리면 감춘 컨트롤이
+			 *    전부 창작자 화면에 뜨고, `remountOn`을 빠뜨리면 모양을 바꿔도 캔버스가 옛
+			 *    프로그램으로 남는다. 미선언 런타임의 `undefined`를 그대로 실으면 JSON 직렬화
+			 *    검사가 프로파일을 거부하므로 키 자체를 빼야 한다.
 			 *
 			 * 제한과 함께 좁힐 필요는 없다 — `applyControllerRestrictions`는 컨트롤을 1:1로 옮기고
 			 * 없애지 않으므로(`availability`는 readonly·disabled뿐이다) 고아 id가 생기지 않는다.
 			 */
 			...(manifest.controller.basic ? { basic: manifest.controller.basic } : {}),
+			...(manifest.controller.remountOn ? { remountOn: manifest.controller.remountOn } : {}),
 		},
 		controllerPresentation: resolveControllerPresentation(
 			groups,

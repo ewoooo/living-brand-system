@@ -1,15 +1,14 @@
 /**
- * Sweep Fluted Glass의 fragment shader 원문.
+ * Fluted Glass 「가로·세로」 모양의 fragment shader 원문.
  *
  * `.glsl` 파일이 아니라 모듈 상수인 이유는 번들러다 — Turbopack의 `?raw` 규칙은 이 버전에서
  * default export를 만들지 않아 shader가 통째로 `undefined`로 들어갔다. public/에 두면
  * 고정 URL로 내려받히므로 그쪽으로도 돌아가지 않는다.
  */
 export default `// Shadertoy-style fragment shader; the Graphic Studio host supplies uniforms.
-// Radial god rays that sweep around the source like a lighthouse, behind the same
-// radial fluted glass. Differs from the radial sibling in two places: the whole ray
-// field rotates over time (uSweepSpeed), and the pulse is an angular beam sector
-// instead of an expanding ring.
+// Linear god rays + horizontal LinesIrregular fluted glass.
+// The radial sibling indexes rays and ribs by angle; this one indexes them by the
+// across-axis coordinate, so there is no atan seam and no origin singularity.
 
 #define PI 3.14159265359
 #define TAU 6.28318530718
@@ -32,14 +31,16 @@ uniform float uGodraySpeed;
 uniform float uFrameOffsetMs;
 uniform float uRayScale;
 uniform float uRayRotation;
-uniform float uSweepSpeed;
-uniform float uRadialFalloff;
-uniform float uRadialFlowSpeed;
+uniform float uAxisFalloff;
+uniform float uFlowSpeed;
+uniform float uPaletteShift;
+uniform float uPaletteDrift;
 uniform float uPulseIntensity;
 uniform float uPulseSpeed;
 uniform float uPulseDensity;
 uniform float uPulseWidth;
 uniform float uGlassSize;
+uniform float uRibCurve;
 uniform float uGlassAngle;
 uniform vec2 uGlassOriginOffset;
 uniform float uGlassOffset;
@@ -52,14 +53,12 @@ uniform float uGlassBlur;
 uniform float uGlassScattering;
 uniform float uGlassHighlights;
 uniform float uGlassShadows;
-uniform vec2 uGlassSourceFade;
 uniform int uDistortionShape;
 
 // ------------------------------------------------------------
 // Controls
 // ------------------------------------------------------------
 
-// Paper God Rays-compatible controls
 #define GODRAY_COLOR_1 uRayColor1
 #define GODRAY_COLOR_2 uRayColor2
 #define GODRAY_COLOR_3 uRayColor3
@@ -76,15 +75,18 @@ uniform int uDistortionShape;
 #define GODRAY_SCALE uRayScale
 #define GODRAY_ROTATION uRayRotation
 
-#define SWEEP_SPEED uSweepSpeed
-#define RADIAL_FALLOFF uRadialFalloff
-#define RADIAL_FLOW_SPEED uRadialFlowSpeed
-#define BEAM_INTENSITY uPulseIntensity
-#define BEAM_SPEED uPulseSpeed
-#define BEAM_DENSITY uPulseDensity
-#define BEAM_WIDTH uPulseWidth
+#define AXIS_FALLOFF uAxisFalloff
+#define FLOW_SPEED uFlowSpeed
+#define PALETTE_SHIFT uPaletteShift
+#define PALETTE_DRIFT uPaletteDrift
+#define PULSE_INTENSITY uPulseIntensity
+#define PULSE_SPEED uPulseSpeed
+#define PULSE_DENSITY uPulseDensity
+#define PULSE_WIDTH uPulseWidth
 
-// 0 = many narrow ribs, 1 = fewer wide ribs
+// uGlassSize: 0 = many narrow ribs, 1 = fewer wide ribs
+// RIB_CURVE: <1 narrow to wide, 1 uniform, >1 wide to narrow
+#define RIB_CURVE uRibCurve
 #define GLASS_ANGLE uGlassAngle
 #define GLASS_ORIGIN_OFFSET_X uGlassOriginOffset.x
 #define GLASS_ORIGIN_OFFSET_Y uGlassOriginOffset.y
@@ -100,9 +102,6 @@ uniform int uDistortionShape;
 #define GLASS_SCATTERING uGlassScattering
 #define GLASS_HIGHLIGHTS uGlassHighlights
 #define GLASS_SHADOWS uGlassShadows
-
-#define GLASS_SOURCE_FADE_START uGlassSourceFade.x
-#define GLASS_SOURCE_FADE_END uGlassSourceFade.y
 
 #define GLASS_CASCADE 0
 #define GLASS_FLAT 1
@@ -148,14 +147,15 @@ float fbm(vec2 p) {
     return value;
 }
 
+vec2 rotate(vec2 v, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
 vec2 sourcePoint() {
     float aspect = iResolution.x / iResolution.y;
     return vec2(uSource.x * 0.5 * aspect, uSource.y * 0.5);
-}
-
-float angleDistance(float a, float b) {
-    float d = a - b;
-    return abs(atan(sin(d), cos(d)));
 }
 
 vec3 rayPalette(float value) {
@@ -167,21 +167,18 @@ vec3 rayPalette(float value) {
     return mix(GODRAY_COLOR_4, GODRAY_COLOR_5, x - 3.0);
 }
 
+// \`across\` separates the shafts, \`travel\` runs along them.
 vec3 rayLayer(
-    float angle,
-    float radius,
-    float rayCountValue,
+    float across,
+    float travel,
+    float laneDensity,
     float seed,
     float speed,
     float width,
     float intensity,
     float time
 ) {
-    float rayCount = max(1.0, floor(rayCountValue + 0.5));
-
-    // Integer rayCount closes the pattern exactly around atan's seam.
-    float rawLane = angle * rayCount / TAU + seed * 0.137;
-    float lane = mod(rawLane, rayCount);
+    float lane = across * laneDensity + seed * 0.137;
     float id = floor(lane);
     float local = fract(lane) - 0.5;
     float d = abs(local);
@@ -191,12 +188,7 @@ vec3 rayLayer(
     float randomC = hash11(id * 3.11 + seed * 8.73);
 
     float rayWidth = min(0.43, width * mix(0.56, 1.0, randomA));
-
-    // Derivative of cos/sin is continuous across atan's branch cut.
-    float aa = max(
-        length(fwidth(vec2(cos(angle), sin(angle)))) * rayCount / TAU * 1.5,
-        0.001
-    );
+    float aa = max(fwidth(across) * laneDensity * 1.5, 0.001);
 
     float face = 1.0 - smoothstep(rayWidth, rayWidth + aa, d);
     float glow = 1.0 - smoothstep(rayWidth, min(0.499, rayWidth + 0.15), d);
@@ -209,8 +201,8 @@ vec3 rayLayer(
         clamp(local / max(rayWidth, 0.001) * 0.5 + 0.5, 0.0, 1.0)
     );
 
-    float travel = radius * mix(2.0, 4.8, randomB) - time * speed;
-    float flow = noise(vec2(travel, id * 0.19 + seed));
+    float flowTravel = travel * mix(2.0, 4.8, randomB) - time * speed;
+    float flow = noise(vec2(flowTravel, id * 0.19 + seed));
     float visibility = smoothstep(0.12, 0.34, randomC);
 
     // spotty=0 gives short broken shafts, spotty=1 gives long continuous shafts.
@@ -220,7 +212,14 @@ vec3 rayLayer(
         clamp(GODRAY_SPOTTY, 0.0, 1.0)
     );
 
-    vec3 material = rayPalette(fract(randomA * 0.58 + randomB * 0.42));
+    // Palette walks along the across-axis so every layer agrees on one top-to-bottom
+    // direction; a random index per lane reads as noise, not as a direction.
+    // Ping-pong instead of fract() keeps the ramp seam-free where the phase wraps.
+    float laneCenter = (id + 0.5 - seed * 0.137) / max(laneDensity, 0.001);
+    float palettePhase = laneCenter * PALETTE_SHIFT
+        - time * PALETTE_DRIFT
+        + randomA * 0.12;
+    vec3 material = rayPalette(abs(fract(palettePhase * 0.5) * 2.0 - 1.0));
     vec3 highlight = mix(
         material,
         GODRAY_COLOR_5,
@@ -237,96 +236,75 @@ vec3 rayLayer(
 
 vec3 godRaysScene(vec2 p, vec2 origin, float time) {
     vec2 delta = (p - origin) / max(GODRAY_SCALE, 0.01);
-    float radius = max(length(delta), 0.0001);
-    vec2 direction = delta / radius;
+    vec2 q = rotate(delta, -radians(GODRAY_ROTATION));
+    float travel = q.x;
+    float across = q.y;
 
-    // The whole ray field turns around the source; per-frame the offset is constant,
-    // so atan's seam still cancels wherever the lane math uses an integer count.
-    float angle = atan(delta.y, delta.x)
-        - radians(GODRAY_ROTATION)
-        - time * SWEEP_SPEED;
-
-    // One broad bend keeps the motion organic without creating water ripples.
+    // One broad bend keeps the shafts organic without creating water ripples.
     float broadBend = (
-        fbm(vec2(
-            radius * 0.34 - time * 0.015,
-            dot(direction, vec2(0.38, 0.92)) * 0.80 + 2.4
-        )) - 0.5
-    ) * 0.080;
+        fbm(vec2(travel * 0.34 - time * 0.015, across * 0.80 + 2.4)) - 0.5
+    ) * 0.040;
 
     float detailBend = (
-        fbm(direction * 1.25 + vec2(
-            radius * 0.45 - time * 0.025,
-            -radius * 0.21
-        )) - 0.5
-    ) * 0.010;
+        fbm(vec2(travel * 0.45 - time * 0.025, across * 1.25 - travel * 0.21)) - 0.5
+    ) * 0.006;
 
-    float warpedAngle = angle + broadBend + detailBend;
+    float warpedAcross = across + broadBend + detailBend;
 
-    float atmosphere = fbm(direction * 0.85 + vec2(
-        radius * 0.33 - time * 0.025,
-        -radius * 0.16
+    float atmosphere = fbm(vec2(
+        travel * 0.33 - time * 0.025,
+        across * 0.85 - travel * 0.16
     ));
 
-    float radialNoise = fbm(direction * 1.35 + vec2(
-        radius * 0.55 - time * RADIAL_FLOW_SPEED,
-        -radius * 0.31
+    float flowNoise = fbm(vec2(
+        travel * 0.55 - time * FLOW_SPEED,
+        across * 1.35 - travel * 0.31
     ));
 
-    float radialHaze = exp(-radius * RADIAL_FALLOFF)
-        * mix(0.38, 1.0, radialNoise);
+    // Brightness decays away from the ray axis instead of away from a point.
+    float haze = exp(-abs(across) * AXIS_FALLOFF * 3.0)
+        * mix(0.38, 1.0, flowNoise);
 
-    // Angular beam sectors sweeping around the source — the conic form of the
-    // radial sibling's expanding rings. Integer beamCount keeps atan's seam closed.
-    float beamCount = max(1.0, floor(BEAM_DENSITY * 4.0 + 0.5));
-    float beamPhase = fract(angle * beamCount / TAU - time * BEAM_SPEED);
-    float beam = exp(-pow(
-        (beamPhase - 0.5) / max(BEAM_WIDTH, 0.001),
+    // Wide bands sweeping along the shafts, the linear form of expanding rings.
+    float pulsePhase = fract(travel * PULSE_DENSITY - time * PULSE_SPEED);
+    float pulse = exp(-pow(
+        (pulsePhase - 0.5) / max(PULSE_WIDTH, 0.001),
         2.0
     ));
-    beam *= smoothstep(0.03, 0.18, radius)
-        * exp(-radius * 0.35)
-        * mix(0.60, 1.0, radialNoise);
+    pulse *= exp(-abs(across) * 0.9) * mix(0.60, 1.0, flowNoise);
 
     vec3 color = GODRAY_COLOR_BACK;
 
-    color += uBloomColor
-        * radialHaze
-        * GODRAY_BLOOM
-        * 0.72;
+    color += uBloomColor * haze * GODRAY_BLOOM * 0.72;
     color += uBloomColor
         * (0.18 + atmosphere * 0.55)
-        * exp(-radius * 0.16)
+        * exp(-abs(across) * 0.5)
         * GODRAY_BLOOM
         * 0.12;
 
     // Back, middle and foreground layers.
     float density = mix(0.45, 1.75, clamp(uGodrayDensity, 0.0, 1.0));
     vec3 rays = vec3(0.0);
-    rays += rayLayer(warpedAngle, radius, 11.0 * density, 43.2, 0.32, 0.47, 0.28, time);
-    rays += rayLayer(warpedAngle, radius, 25.0 * density, 3.1, 0.55, 0.43, 0.70, time);
-    rays += rayLayer(warpedAngle, radius, 47.0 * density, 11.7, 0.82, 0.33, 0.58, time);
-    rays += rayLayer(warpedAngle, radius, 88.0 * density, 23.4, 1.15, 0.18, 0.20, time);
+    rays += rayLayer(warpedAcross, travel, 3.0 * density, 43.2, 0.32, 0.47, 0.28, time);
+    rays += rayLayer(warpedAcross, travel, 7.0 * density, 3.1, 0.55, 0.43, 0.70, time);
+    rays += rayLayer(warpedAcross, travel, 15.0 * density, 11.7, 0.82, 0.33, 0.58, time);
+    rays += rayLayer(warpedAcross, travel, 29.0 * density, 23.4, 1.15, 0.18, 0.20, time);
 
-    // The beam brightens the ray field it passes through instead of one dotted ray.
-    rays *= 1.0 + beam * BEAM_INTENSITY * 0.36;
-    rays += uBloomColor
-        * beam
-        * BEAM_INTENSITY
-        * 0.30;
+    rays *= 1.0 + pulse * PULSE_INTENSITY * 0.36;
+    rays += uBloomColor * pulse * PULSE_INTENSITY * 0.30;
 
-    // The key rays live in swept space, so they turn with the field.
-    float keyRayA = exp(-pow(angleDistance(angle, 0.18) * 12.0, 2.0));
-    float keyRayB = exp(-pow(angleDistance(angle, -0.25) * 16.0, 2.0));
-    float keyFlow = 0.42 + noise(vec2(radius * 1.55 - time * 0.65, 7.3)) * 0.58;
+    // Two bright shafts anchor the frame like the radial key rays.
+    float keyRayA = exp(-pow((across - 0.11) * 26.0, 2.0));
+    float keyRayB = exp(-pow((across + 0.17) * 34.0, 2.0));
+    float keyFlow = 0.42 + noise(vec2(travel * 1.55 - time * 0.65, 7.3)) * 0.58;
 
     rays += GODRAY_COLOR_4 * keyRayA * keyFlow * 0.72;
     rays += GODRAY_COLOR_5 * keyRayB * keyFlow * 0.60;
 
     color += rays * clamp(uGodrayIntensity, 0.0, 1.0);
 
-    float midRadius = mix(0.035, 0.62, clamp(GODRAY_MID_SIZE, 0.0, 1.0));
-    float midGlow = exp(-pow(radius / max(midRadius, 0.001), 2.0));
+    float midWidth = mix(0.012, 0.34, clamp(GODRAY_MID_SIZE, 0.0, 1.0));
+    float midGlow = exp(-pow(across / max(midWidth, 0.001), 2.0));
     color += uBloomColor
         * midGlow
         * clamp(GODRAY_MID_INTENSITY, 0.0, 1.0)
@@ -350,6 +328,12 @@ float distortionProfile(float local, float cellID) {
     return wave;
 }
 
+// Uneven rib widths are what separate real fluted glass from a plain stripe pattern.
+float ribIrregularity(float across) {
+    return sin(across * 7.0 + 0.8) * 0.30
+        + sin(across * 21.0 - 1.2) * 0.09;
+}
+
 vec3 flutedGlass(vec2 p, vec2 rayOrigin, float time) {
     vec2 glassMotion = vec2(
         sin(time * GLASS_DRIFT_SPEED_X),
@@ -361,81 +345,69 @@ vec3 flutedGlass(vec2 p, vec2 rayOrigin, float time) {
         GLASS_ORIGIN_OFFSET_Y
     ) + glassMotion;
 
-    vec2 delta = p - glassOrigin;
-    float radius = max(length(delta), 0.0001);
-    vec2 direction = delta / radius;
-    vec2 tangent = vec2(-direction.y, direction.x);
-    float physicalAngle = atan(delta.y, delta.x);
-    float gridAngle = physicalAngle - radians(GLASS_ANGLE);
+    float angle = radians(GLASS_ANGLE);
+    vec2 q = rotate(p - glassOrigin, -angle);
+    vec2 ribDirection = rotate(vec2(1.0, 0.0), angle);
+    vec2 ribNormal = rotate(vec2(0.0, 1.0), angle);
 
-    // Integer total count and integer harmonics make the glass seam-free.
-    float ribCount = floor(mix(290.0, 75.0, clamp(uGlassSize, 0.0, 1.0)) + 0.5);
-    float irregularity = sin(gridAngle * 3.0 + 0.8) * 0.30
-        + sin(gridAngle * 9.0 - 1.2) * 0.09;
+    float ribCount = mix(64.0, 7.0, clamp(uGlassSize, 0.0, 1.0));
 
-    float rawGrid = gridAngle * ribCount / TAU
-        + irregularity
+    // The rib index walks an easing curve instead of the across-axis directly, so rib
+    // width — the inverse of the curve's slope — trends along the axis.
+    // RIB_CURVE < 1 runs narrow to wide, 1 is uniform, > 1 runs wide to narrow.
+    // 0.5 makes width grow linearly: boundaries land on 1, 4, 9, 16 ... so the ribs
+    // read as 1, 3, 5, 7 units wide.
+    float aspect = iResolution.x / iResolution.y;
+    float ribSpan = abs(cos(angle)) + aspect * abs(sin(angle));
+    float ribProgress = clamp(q.y / max(ribSpan, 0.001) + 0.5, 0.0, 1.0);
+    float curved = pow(ribProgress, max(RIB_CURVE, 0.05));
+
+    // Irregularity lives in rib space, not view space, so its slope stays a fixed
+    // fraction of the curve's slope and the ribs can never fold back on themselves.
+    float grid = curved * ribCount
+        + ribIrregularity(curved * ribCount * 0.125)
         + GLASS_OFFSET
         + time * GLASS_SPEED;
 
-    float grid = mod(rawGrid, ribCount);
     float cellID = floor(grid);
     float cell = fract(grid);
     float local = cell * 2.0 - 1.0;
     float edgeDistance = min(cell, 1.0 - cell);
 
-    float angularAA = max(
-        length(fwidth(direction)) * ribCount / TAU,
-        0.0001
-    );
+    // Derivative of the warped index, not of q.y — otherwise the narrow end aliases.
+    float ribAA = max(fwidth(grid), 0.0001);
 
     float edgeWidth = mix(0.012, 0.075, clamp(GLASS_EDGE_SOFTNESS, 0.0, 1.0))
-        + angularAA * 1.5;
+        + ribAA * 1.5;
     float edgeFade = smoothstep(0.0, edgeWidth, edgeDistance);
     float edgeMask = 1.0 - edgeFade;
 
-    float sourceFade = smoothstep(
-        GLASS_SOURCE_FADE_START,
-        GLASS_SOURCE_FADE_END,
-        length(p - rayOrigin)
-    );
-
-    float profile = distortionProfile(local, cellID) * edgeFade * sourceFade;
+    float profile = distortionProfile(local, cellID) * edgeFade;
     float distortion = clamp(uGlassDistortion, 0.0, 1.0);
 
     // max() guards pow(arch, ...) below: fast-math cos can dip past -1, and a
     // negative pow base is undefined in GLSL — NaN paints a 1px black scanline.
     float arch = max(0.0, 0.5 + 0.5 * cos(local * PI)) * edgeFade;
 
-    // Tangential displacement makes the glass bend the radial ray field.
-    float refractionAmount = mix(0.002, 0.034, distortion) * sourceFade;
-    vec2 refractionOffset = tangent * profile * refractionAmount;
+    // Displacement across the ribs is what bends the shafts into the fluted look.
+    float refractionAmount = mix(0.002, 0.034, distortion);
+    vec2 refractionOffset = ribNormal * profile * refractionAmount;
 
-    // A small radial bulge adds magnification inside each rib.
-    vec2 bulgeOffset = direction
+    // A small lengthwise bulge adds magnification inside each rib.
+    vec2 bulgeOffset = ribDirection
         * (arch - edgeFade * 0.5)
-        * mix(0.0, 0.012, distortion)
-        * sourceFade;
+        * mix(0.0, 0.012, distortion);
 
     vec2 refractedUV = p + refractionOffset + bulgeOffset;
 
     float dispersion = mix(0.0002, 0.0042, distortion)
-        * (0.35 + abs(profile) * 0.65)
-        * sourceFade;
-    float blurSpread = mix(
-        0.0001,
-        0.0028,
-        clamp(GLASS_BLUR, 0.0, 1.0)
-    ) * sourceFade;
+        * (0.35 + abs(profile) * 0.65);
+    float blurSpread = mix(0.0001, 0.0028, clamp(GLASS_BLUR, 0.0, 1.0));
     float sampleSpread = dispersion + blurSpread;
 
-    vec2 uvNegative = refractedUV - tangent * sampleSpread;
-    vec2 uvCenter = refractedUV;
-    vec2 uvPositive = refractedUV + tangent * sampleSpread;
-
-    vec3 negativeSample = godRaysScene(uvNegative, rayOrigin, time);
-    vec3 centerSample = godRaysScene(uvCenter, rayOrigin, time);
-    vec3 positiveSample = godRaysScene(uvPositive, rayOrigin, time);
+    vec3 negativeSample = godRaysScene(refractedUV - ribNormal * sampleSpread, rayOrigin, time);
+    vec3 centerSample = godRaysScene(refractedUV, rayOrigin, time);
+    vec3 positiveSample = godRaysScene(refractedUV + ribNormal * sampleSpread, rayOrigin, time);
 
     vec3 refracted = vec3(
         positiveSample.r,
@@ -456,25 +428,18 @@ vec3 flutedGlass(vec2 p, vec2 rayOrigin, float time) {
     float ribVariation = hash11(cellID * 1.37 + 4.2);
     float whiteRib = smoothstep(0.72, 0.97, ribVariation);
 
-    color *= 1.0 - darkEdge
-        * (0.10 + GLASS_SHADOWS * 0.30)
-        * sourceFade;
-    color *= 1.0 - edgeMask
-        * (0.025 + GLASS_SHADOWS * 0.08)
-        * sourceFade;
-    color *= 1.0 + pow(arch, 2.2)
-        * (0.05 + GLASS_HIGHLIGHTS * 0.18)
-        * sourceFade;
+    color *= 1.0 - darkEdge * (0.10 + GLASS_SHADOWS * 0.30);
+    color *= 1.0 - edgeMask * (0.025 + GLASS_SHADOWS * 0.08);
+    color *= 1.0 + pow(arch, 2.2) * (0.05 + GLASS_HIGHLIGHTS * 0.18);
 
     // A few ribs reach near-white, like a photographed glass highlight.
     color += vec3(0.76, 1.0, 0.89)
         * pow(arch, 6.0)
         * (0.06 + whiteRib * 0.46)
-        * GLASS_HIGHLIGHTS
-        * sourceFade;
+        * GLASS_HIGHLIGHTS;
 
     vec3 normal = normalize(vec3(
-        tangent * profile * mix(0.20, 1.05, distortion),
+        ribNormal * profile * mix(0.20, 1.05, distortion),
         1.0
     ));
     vec3 lightDirection = normalize(vec3(
@@ -491,15 +456,13 @@ vec3 flutedGlass(vec2 p, vec2 rayOrigin, float time) {
     color += vec3(0.22, 0.78, 0.45)
         * pow(reflected, 14.0)
         * GLASS_HIGHLIGHTS
-        * 0.13
-        * sourceFade;
+        * 0.13;
     color += vec3(0.88, 1.0, 0.95)
         * pow(reflected, 52.0)
         * GLASS_HIGHLIGHTS
-        * 0.58
-        * sourceFade;
+        * 0.58;
 
-    return mix(centerSample, color, sourceFade);
+    return color;
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {

@@ -80,12 +80,29 @@ function GraphicPreviewCanvas({
 	const [previewSize, setPreviewSize] = useState(DEFAULT_PREVIEW_SIZE)
 	const outputWidth = output.draft?.width
 	const outputHeight = output.draft?.height
+	/**
+	 * 런타임을 다시 세워야 하는 값들의 지문.
+	 *
+	 * 🔴 대부분의 컨트롤은 살아 있는 런타임에 흘려 넣으면 되지만, 「모양」처럼 셰이더 프로그램을
+	 *    갈아끼우는 축은 update로 반영되지 않는다 — 컴파일된 프로그램에 없는 uniform은 조용히
+	 *    무시되고 화면만 옛 모양으로 남는다. 어느 컨트롤이 그런지는 런타임이 선언한다.
+	 *    문자열로 만드는 이유는 effect 의존성이라 값 비교가 되어야 하기 때문이다.
+	 */
+	const remountKey = (config.controller.remountOn ?? [])
+		.map((id) => `${id}=${String(controls.values[id])}`)
+		.join('&')
 
 	useEffect(() => {
 		valuesRef.current = controls.values
 		runtimeRef.current?.update(controls.values)
 	}, [controls.values])
 
+	/*
+	 * `remountKey`는 본문에 이름이 보이지 않는다 — 런타임은 `valuesRef.current`로 모양을 읽는다.
+	 * 그래도 의존성이어야 한다: 그 값이 바뀌면 다른 셰이더 프로그램을 컴파일해야 하므로 effect가
+	 * 다시 돌아야 한다.
+	 */
+	// biome-ignore lint/correctness/useExhaustiveDependencies(remountKey): 위 주석 — 재마운트 트리거다
 	useEffect(() => {
 		let runtime: GraphicRuntime | undefined
 		let disposed = false
@@ -130,7 +147,7 @@ function GraphicPreviewCanvas({
 			registerArtifacts(null)
 			controls.registerBindings({})
 		}
-	}, [config, controls.registerBindings, controls.update, registerArtifacts, type])
+	}, [config, controls.registerBindings, controls.update, registerArtifacts, remountKey, type])
 
 	useEffect(() => {
 		const stage = stageRef.current

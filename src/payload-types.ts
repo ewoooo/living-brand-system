@@ -1618,13 +1618,7 @@ export interface GraphicProfile {
   /**
    * 실행 구현은 코드 registry가 소유합니다. 프로파일은 해당 runtime의 편집 범위만 좁힙니다.
    */
-  runtime:
-    | 'forward-straight'
-    | 'key-visual-pattern'
-    | 'linear-fluted-glass'
-    | 'radial-fluted-glass'
-    | 'sweep-fluted-glass'
-    | 'vertical-fluted-glass';
+  runtime: 'fluted-glass' | 'forward-straight' | 'key-visual-pattern';
   /**
    * 스튜디오에서 이 항목을 고를 때 카드에 표시할 이미지입니다.
    */
