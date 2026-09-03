@@ -541,15 +541,24 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 			'bloomColor',
 		],
 		/**
-		 * 오른쪽 패널의 공용 4축 — 밀도·속도·기준점·두께. 세 그래픽 런타임이 같은 것을 세운다.
+		 * 오른쪽 패널의 축 — 세기·밀도·두께·속도·기준점. 무엇이 남을지는 **재서 정했다**:
+		 * 각 축을 최소·최대로 렌더해 평균 픽셀차를 비교했다(`.scratch/axis-survey/`).
 		 *
-		 * 🔴 여기 없는 축(광선 11 · 유리 12 · 유리모션 6 · 스윕 7)은 창작자 화면에서 내려가고
-		 *    Payload admin에만 남는다. 지운 것이 아니다 — 후처리로 manager가 조정한다.
-		 * 🔑 `speed`가 마스터 시계라 나머지 속도 8개는 그것에 딸려 스케일된다. 그래서 속도 축은
-		 *    이 하나로 충분하다(`shader.*.ts`의 `iTime * uGodraySpeed`).
-		 * 광원 오프셋은 여기 없다 — 판 밖 소실점은 모양이 정하고, 창작자는 판 안에서 옮긴다.
+		 * | 남긴 축 | 픽셀차 | 뜻 |
+		 * | --- | --- | --- |
+		 * | `rayIntensity` | 0.235 | 세기 — 전체에서 가장 큰 축이다 |
+		 * | `rayScale` | 0.229 | 두께 — 광선이 굵어지고 가늘어진다 |
+		 * | `speed` | 0.142 | 속도 — 마스터 시계라 나머지 속도가 여기 딸린다 |
+		 * | `rayDensity` | 0.068 | 밀도 — 광선 수 |
+		 * | `source` | 0.153 | 기준점 — 소실점을 판 안에서 옮긴다 |
+		 *
+		 * 🔴 `rayRotation`은 0.217로 여기 든 것보다 큰데도 뺐다. 세로형을 세로로 만드는 값이
+		 *    바로 그것이라(`rayRotation: -90`) 창작자가 만지면 왼쪽의 「모양」 축과 충돌한다.
+		 *    모양의 정체를 이루는 값은 모양이 소유한다.
+		 * 🔴 여기에도 왼쪽에도 없는 축은 창작자 화면에서 내려가고 Payload admin의 「기본값 재정의」로
+		 *    manager가 조정한다. 지운 것이 아니다 — 코드에 박으면 배포 없이 못 고친다.
 		 */
-		right: ['rayDensity', 'rayMidSize', 'speed', 'source'],
+		right: ['rayIntensity', 'rayScale', 'speed', 'rayDensity', 'source'],
 		// 모양은 셰이더 프로그램을 갈아끼운다 — 살아 있는 런타임에 흘려 넣을 수 없다.
 		remountOn: ['shape'],
 		groups: [
