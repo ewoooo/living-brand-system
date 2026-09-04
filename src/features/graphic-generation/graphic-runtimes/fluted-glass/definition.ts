@@ -109,6 +109,8 @@ const FLUTED_GLASS_LINEAR_INPUT = {
 	sourceOffsetX: 0,
 	sourceOffsetY: 0,
 	zoom: 1,
+	tilt: 0,
+	vignette: 1,
 	bloomColor: '#2ad97a',
 	rayColor1: '#001a0b',
 	rayColor2: '#06381b',
@@ -157,6 +159,8 @@ const FLUTED_GLASS_VERTICAL_INPUT = {
 	sourceOffsetX: 0,
 	sourceOffsetY: 0,
 	zoom: 1,
+	tilt: 0,
+	vignette: 1,
 	bloomColor: '#2ad97a',
 	rayColor1: '#001a0b',
 	rayColor2: '#06381b',
@@ -207,6 +211,8 @@ const FLUTED_GLASS_SWEEP_INPUT = {
 	sourceOffsetX: 0,
 	sourceOffsetY: 0,
 	zoom: 1,
+	tilt: 0,
+	vignette: 1,
 	// 색 조합은 모양이 아니라 팔레트가 소유한다 — 스윕·방사가 첫 팔레트를 그대로 쓴다.
 	...FLUTED_GLASS_PALETTES.green.colors,
 	rayBloom: 0.2,
@@ -251,6 +257,8 @@ const FLUTED_GLASS_RADIAL_INPUT = {
 	sourceOffsetX: 0,
 	sourceOffsetY: 0,
 	zoom: 1,
+	tilt: 0,
+	vignette: 1,
 	// 색 조합은 모양이 아니라 팔레트가 소유한다 — 스윕·방사가 첫 팔레트를 그대로 쓴다.
 	...FLUTED_GLASS_PALETTES.green.colors,
 	rayBloom: 0.2,
@@ -606,27 +614,48 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 			'bloomColor',
 		],
 		/**
-		 * 오른쪽 패널의 축 — 세기·두께·속도·기준점. 무엇이 남을지는 **재서 정했다**:
-		 * 각 축을 최소·최대로 렌더해 평균 픽셀차를 비교했다(`.scratch/axis-survey/`).
+		 * 오른쪽 패널의 축.
 		 *
-		 * | 남긴 축 | 픽셀차 | 뜻 |
+		 * 🔑 **기준은 픽셀차가 아니라 「무엇이 달라지는지 읽히는가」다.** 그리고 읽히려면 축마다
+		 *    **일어나는 일의 종류가 달라야** 한다 — 같은 종류가 둘이면 둘 다 안 읽힌다.
+		 *    `rayBloom`(0.114)을 세웠다가 걷은 이유가 그것이다: 매끈한 안개를 곱할 뿐이라
+		 *    「광선 강도」와 종류가 같아 슬라이더를 만지는 사람에게는 둘 다 그냥 밝기였다.
+		 *
+		 * | 축 | 종류 | 픽셀차 |
 		 * | --- | --- | --- |
-		 * | `rayIntensity` | 0.235 | 세기 — 전체에서 가장 큰 축이다 |
-		 * | `rayScale` | 0.229 | 두께 — 광선이 굵어지고 가늘어진다 |
-		 * | `source` | 0.153 | 기준점 — 소실점을 판 밖까지 옮긴다 |
-		 * | `speed` | 0.142 | 속도 — 마스터 시계라 나머지 속도가 여기 딸린다 |
+		 * | `rayIntensity` | 빛의 세기 | 0.235 |
+		 * | `raySpotty` | 광선의 짜임 — 끊긴 다발이냐 이어진 줄기냐 | 0.083 |
+		 * | `rayScale` | 광선의 두께 | 0.229 |
+		 * | `speed` | 시간 — 마스터 시계라 나머지 속도가 여기 딸린다 | 0.142 |
+		 * | `glassSize` | 유리의 결 — 줄이 굵어지고 가늘어진다 | 0.076 |
+		 * | `glassDistortion` | 굴절 — 결이 빛을 얼마나 휘게 하나 | 0.057 |
+		 * | `zoom`·`tilt`·`vignette` | 틀 — 판을 어떻게 보여주나 | 새 축 |
+		 * | `source` | 기준점 — 소실점을 판 밖까지 옮긴다 | 0.153 |
 		 *
-		 * 🔴 `rayRotation`은 0.217로 여기 든 것보다 큰데도 뺐다. 세로형을 세로로 만드는 값이
+		 * 픽셀차는 각 축을 최소·최대로 렌더해 잰 평균 절대 픽셀차다(`.scratch/axis-survey/`).
+		 * 「새 축」 셋은 재서 고른 것이 아니라 **없던 축**이다 — 판을 담는 틀을 창작자가 정할 수
+		 * 없었다. `source`는 사거리를 `FLUTED_GLASS_SOURCE_SPAN`만큼 넓혀 판 밖까지 닿는다.
+		 *
+		 * 🔴 `rayRotation`은 0.217로 여기 든 것 대부분보다 큰데도 뺐다. 세로형을 세로로 만드는 값이
 		 *    바로 그것이라(`rayRotation: -90`) 창작자가 만지면 왼쪽의 「모양」 축과 충돌한다.
-		 *    모양의 정체를 이루는 값은 모양이 소유한다.
-		 * 🔴 `rayDensity`(광선 밀도)도 뺐다 — 0.068로 남긴 축 중 가장 약했고, 무엇이 달라지는지
-		 *    화면에서 읽히지 않는다는 판단이다. 크기가 아니라 **읽히는가**가 기준이다.
-		 * `zoom`(확대)은 재서 고른 축이 아니라 없던 축이다 — 판을 채우는 배율을 창작자가 정할 수
-		 * 없어서 넣었다. `source`는 사거리를 `FLUTED_GLASS_SOURCE_SPAN`만큼 넓혀 판 밖까지 닿는다.
+		 *    모양의 정체를 이루는 값은 모양이 소유한다. 구도를 기울이는 것은 `tilt`가 갖는다 —
+		 *    그쪽은 광원까지 함께 돌려 모양의 정체를 건드리지 않는다.
+		 * 🔴 `rayDensity`(광선 밀도)는 뺐다 — 0.068이면서 무엇이 달라지는지 화면에서 읽히지 않았다.
 		 * 🔴 여기에도 왼쪽에도 없는 축은 창작자 화면에서 내려가고 Payload admin의 「기본값 재정의」로
 		 *    manager가 조정한다. 지운 것이 아니다 — 코드에 박으면 배포 없이 못 고친다.
 		 */
-		right: ['rayIntensity', 'rayScale', 'speed', 'zoom', 'source'],
+		right: [
+			'rayIntensity',
+			'raySpotty',
+			'rayScale',
+			'speed',
+			'glassSize',
+			'glassDistortion',
+			'zoom',
+			'tilt',
+			'vignette',
+			'source',
+		],
 		// 모양은 셰이더 프로그램을 갈아끼운다 — 살아 있는 런타임에 흘려 넣을 수 없다.
 		remountOn: ['shape'],
 		groups: [
@@ -761,16 +790,11 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 				id: 'glass',
 				title: 'Glass',
 				controls: [
-					rangeControl('glassSize', '플루트 크기', CONTROL_DEFAULTS.glassSize, 0, 1),
+					// 「플루트」는 전문용어다 — 창작자에게는 줄이 굵어지고 가늘어지는 것으로 보인다.
+					rangeControl('glassSize', '줄 굵기', CONTROL_DEFAULTS.glassSize, 0, 1),
 					// 가로 계열만 읽는다(스윕·방사 셰이더에는 uRibCurve가 없다).
 					rangeControl('ribCurve', '플루트 폭 커브', CONTROL_DEFAULTS.ribCurve, 0.2, 3),
-					rangeControl(
-						'glassDistortion',
-						'유리 왜곡',
-						CONTROL_DEFAULTS.glassDistortion,
-						0,
-						1,
-					),
+					rangeControl('glassDistortion', '굴절', CONTROL_DEFAULTS.glassDistortion, 0, 1),
 					{
 						id: 'distortionShape',
 						kind: 'select' as const,
@@ -867,10 +891,23 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 				],
 			},
 			{
+				// 판을 어떻게 보여주는가 — 그림의 내용이 아니라 그것을 담는 틀의 축이다.
+				id: 'frame',
+				title: 'Frame',
+				controls: [
+					rangeControl('zoom', '확대', CONTROL_DEFAULTS.zoom, 0.5, 3),
+					rangeControl('tilt', '기울기', CONTROL_DEFAULTS.tilt, -45, 45, 1, {
+						unit: '°',
+						precision: 0,
+					}),
+					// 「비네트」는 전문용어다 — 화면에서 일어나는 일을 그대로 적는다.
+					rangeControl('vignette', '모서리 어둡기', CONTROL_DEFAULTS.vignette, 0, 1),
+				],
+			},
+			{
 				id: 'position',
 				title: 'Position',
 				controls: [
-					rangeControl('zoom', '확대', CONTROL_DEFAULTS.zoom, 0.5, 3),
 					{
 						id: 'source',
 						kind: 'pad' as const,

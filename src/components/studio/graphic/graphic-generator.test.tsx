@@ -321,16 +321,23 @@ describe('GraphicGenerator', () => {
 		expect(within(left).getByText('Shape')).toBeInTheDocument()
 		expect(within(left).getByText('Style')).toBeInTheDocument()
 		expect(within(left).getByRole('button', { name: 'Ray Palette' })).toBeInTheDocument()
-		// 오른쪽은 네 축만 — 세기·두께·속도가 Rays에, 기준점이 Position에 남는다.
+		// 🔑 오른쪽 축은 **종류가 서로 달라야** 읽힌다 — 빛·짜임·결·굴절·틀·기준점.
 		expect(within(right).getByRole('slider', { name: '광선 강도' })).toBeInTheDocument()
+		expect(within(right).getByRole('slider', { name: '광선 연속성' })).toBeInTheDocument()
 		expect(within(right).getByRole('slider', { name: '속도' })).toBeInTheDocument()
+		expect(within(right).getByRole('slider', { name: '줄 굵기' })).toBeInTheDocument()
+		expect(within(right).getByRole('slider', { name: '굴절' })).toBeInTheDocument()
+		expect(within(right).getByRole('slider', { name: '확대' })).toBeInTheDocument()
+		expect(within(right).getByRole('slider', { name: '기울기' })).toBeInTheDocument()
+		expect(within(right).getByRole('slider', { name: '모서리 어둡기' })).toBeInTheDocument()
+		expect(within(right).getByText('Position')).toBeInTheDocument()
 		// 밀도는 뺐다 — 무엇이 달라지는지 화면에서 읽히지 않는다.
 		expect(screen.queryByRole('slider', { name: '광선 밀도' })).toBeNull()
-		expect(within(right).getByText('Position')).toBeInTheDocument()
-		expect(within(right).getByRole('slider', { name: '확대' })).toBeInTheDocument()
-		// 셰이더 고유 축은 admin 전용으로 내려가 창작자 화면에 없다.
+		// 🔴 블룸은 세웠다가 걷었다 — 「광선 강도」와 종류가 같아 둘 다 밝기로만 읽혔다.
+		expect(screen.queryByRole('slider', { name: /블룸/ })).toBeNull()
+		// 모양의 정체를 이루는 값과 마스터 시계에 딸린 속도는 admin 전용으로 남는다.
+		expect(screen.queryByRole('slider', { name: '광선 회전' })).toBeNull()
 		expect(screen.queryByRole('button', { name: 'Sweep' })).toBeNull()
-		expect(screen.queryByRole('button', { name: 'Glass' })).toBeNull()
 		expect(screen.queryByRole('button', { name: 'Glass Motion' })).toBeNull()
 		expect(screen.getByRole('spinbutton', { name: 'Width' })).toHaveValue(1920)
 		expect(screen.getByRole('spinbutton', { name: 'Height' })).toHaveValue(1080)

@@ -16,6 +16,8 @@ export default `// Shadertoy-style fragment shader; the Graphic Studio host supp
 
 uniform vec2 uSource;
 uniform float uZoom;
+uniform float uTilt;
+uniform float uVignette;
 uniform vec3 uBloomColor;
 uniform vec3 uRayColor1;
 uniform vec3 uRayColor2;
@@ -507,6 +509,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 resolution = iResolution.xy;
     vec2 screenUV = fragCoord / resolution;
     vec2 p = (fragCoord - resolution * 0.5) / resolution.y / uZoom;
+    // 판 중앙을 축으로 좌표를 돌린다 — 광원도 함께 돌아 구도 전체가 기울어진다.
+    float tilt = radians(uTilt);
+    p = mat2(cos(tilt), -sin(tilt), sin(tilt), cos(tilt)) * p;
     float time = iTime * uGodraySpeed + GODRAY_FRAME * 0.001;
 
     vec3 color = flutedGlass(p, sourcePoint(), time);
@@ -517,7 +522,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         0.0
     ), 0.17);
 
-    color *= 0.56 + vignette * 0.54;
+    color *= mix(1.0, 0.56 + vignette * 0.54, uVignette);
     // 프레임마다 바뀌는 그레인은 H.264가 압축할 수 없어 비트를 형태 대신 노이즈에 쓴다.
     // 미리보기와 결과를 어긋나게 두지 않으려 export 전용 분기 대신 진폭 자체를 낮춘다.
     color += (hash21(fragCoord + fract(iTime) * 173.0) - 0.5) * 0.003;

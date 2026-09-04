@@ -37,6 +37,8 @@ function bindSharedUniforms(gl: WebGLRenderingContext, program: WebGLProgram) {
 	const uniforms = {
 		source: gl.getUniformLocation(program, 'uSource'),
 		zoom: gl.getUniformLocation(program, 'uZoom'),
+		tilt: gl.getUniformLocation(program, 'uTilt'),
+		vignette: gl.getUniformLocation(program, 'uVignette'),
 		bloomColor: gl.getUniformLocation(program, 'uBloomColor'),
 		rayColor1: gl.getUniformLocation(program, 'uRayColor1'),
 		rayColor2: gl.getUniformLocation(program, 'uRayColor2'),
@@ -88,6 +90,8 @@ function bindSharedUniforms(gl: WebGLRenderingContext, program: WebGLProgram) {
 			sourceY * FLUTED_GLASS_SOURCE_SPAN,
 		)
 		gl.uniform1f(uniforms.zoom, input.zoom)
+		gl.uniform1f(uniforms.tilt, input.tilt)
+		gl.uniform1f(uniforms.vignette, input.vignette)
 		gl.uniform3f(uniforms.bloomColor, ...flutedGlassColorToRgb(input.bloomColor))
 		gl.uniform3f(uniforms.rayColor1, ...flutedGlassColorToRgb(input.rayColor1))
 		gl.uniform3f(uniforms.rayColor2, ...flutedGlassColorToRgb(input.rayColor2))
