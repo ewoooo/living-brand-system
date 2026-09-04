@@ -148,7 +148,7 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 
 `BLOCK_SPACING`은 블록 종류별 위쪽 여백(`[&:not(:first-child)]:mt-*`)입니다 — 부모 `gap` 하나가 아닌 이유는 한 스택 안에 섹션 사이(288)와 그 밖의 블록 사이(32) 두 리듬이 섞이기 때문이고, 최상위 스택(`components/guideline-blocks.tsx`)과 섹션 안의 스택(`blocks/section`)이 같은 값을 읽습니다. 본문 텍스트가 앉는 오른쪽 반칸도 같은 파일의 `RIGHT_HALF`가 소유합니다 — 섹션 제목·콜아웃·단일 컬럼 텍스트가 한 열에 서야 세로선이 맞습니다.
 
-값을 바꿀 때는 이 두 자리만 고칩니다. 개별 블록이 자기 패딩·마진·열 배치를 다시 잡는 것은 이 통일을 깨므로 지양합니다.
+값을 바꿀 때는 이 두 자리만 고칩니다. 개별 블록이 자기 패딩·마진·열 배치를 다시 잡는 것은 이 통일을 깨므로 지양합니다. 페이지의 상하 여백도 라우트 layout이 따로 주지 않습니다 — 첫·마지막 프레임의 self-padding이 그 자리이고, 둘을 겹치면 상단 여백이 두 곳의 합이 됩니다.
 
 헤딩 계층은 `GuidelineHeader`가 `variant`(`topic` h1 / `section` h2 / `block` h3)로 분기해 소유합니다(`guideline-header.tsx`). 인덱스 화면의 h1은 히어로 락업이, 챕터 카드 제목은 `PanelCard`가 그립니다. 랜드마크는 셸이 `main`을(`section-layout.tsx`), 토픽 화면이 `article` 하나를(`pages/guideline-topic.tsx`) 갖고, 블록 프레임과 섹션 안쪽은 랜드마크를 만들지 않습니다.
 

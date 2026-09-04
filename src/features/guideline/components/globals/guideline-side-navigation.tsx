@@ -35,16 +35,16 @@ export function GuidelineSideNavigation({
 					{chapters.map((chapter) => {
 						// 🔴 챕터는 자기 화면이 없다(2026-08-26). 분류일 뿐이라 인덱스로 보낸다 —
 						//    인덱스가 전 챕터의 카드와 토픽 칩을 이미 그린다.
-						const chapterCurrent = pathname === '/guideline'
-
+						// 🔴 현재 위치로 강조하지 않는다(2026-09-04). 인덱스에서는 모든 챕터가 같은 링크라
+						//    전부 "현재"가 되어 버린다. 챕터는 늘 같은 톤의 링크다.
 						return (
 							<Sidebar.Item
 								key={chapter.id}
-								current={chapterCurrent}
+								current={false}
 								depth={0}
 								href="/guideline"
 								label={chapter.title}
-								tone={chapterCurrent ? 'emphasized' : 'subtle'}
+								tone="subtle"
 							>
 								<Sidebar.Children>
 									{chapter.topics.map((topic) => {
