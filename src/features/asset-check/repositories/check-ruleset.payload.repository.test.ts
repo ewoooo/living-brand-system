@@ -63,15 +63,6 @@ describe('getCheckSourceDocuments', () => {
 			updatedAt: '2026-07-17',
 			createdAt: '2026-07-17',
 		}
-		const image = {
-			id: 7,
-			name: 'Logo reference',
-			alt: 'Logo',
-			url: '/api/application-images/file/logo.png',
-			mimeType: 'image/png',
-			updatedAt: '2026-07-17',
-			createdAt: '2026-07-17',
-		}
 		const find = vi.fn(() =>
 			Promise.resolve({
 				docs: [
@@ -86,8 +77,8 @@ describe('getCheckSourceDocuments', () => {
 							{
 								id: 'logo-examples',
 								blockName: 'Logo examples',
-								blockType: 'contentColumns',
-								columns: [{ image }],
+								blockType: 'block',
+								children: [],
 								rules: [
 									{
 										id: 91,
@@ -128,20 +119,8 @@ describe('getCheckSourceDocuments', () => {
 						messages: { pass: '통과' },
 					},
 					source: { documentId: 30 },
-					evidence: {
-						type: 'contentColumns',
-						columns: [{ heading: undefined, body: undefined }],
-					},
-					referenceAssets: [
-						{
-							asset: {
-								name: 'Logo reference',
-								url: '/api/application-images/file/logo.png',
-								mimeType: 'image/png',
-							},
-							role: 'context',
-						},
-					],
+					evidence: { type: 'block', childCount: 0 },
+					referenceAssets: [],
 				},
 			],
 		})

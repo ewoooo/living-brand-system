@@ -98,6 +98,8 @@ import * as migration_20260831_071102_add_graphic_profile_presets from './202608
 import * as migration_20260831_084134_presets_as_json from './20260831_084134_presets_as_json';
 import * as migration_20260902_091453_drop_graphic_profile_presets from './20260902_091453_drop_graphic_profile_presets';
 import * as migration_20260903_055351_merge_fluted_runtimes from './20260903_055351_merge_fluted_runtimes';
+import * as migration_20260904_051623_guideline_slug_unlocalized_drop_label from './20260904_051623_guideline_slug_unlocalized_drop_label';
+import * as migration_20260904_053342_drop_unused_guideline_blocks from './20260904_053342_drop_unused_guideline_blocks';
 
 export const migrations = [
   {
@@ -598,6 +600,16 @@ export const migrations = [
   {
     up: migration_20260903_055351_merge_fluted_runtimes.up,
     down: migration_20260903_055351_merge_fluted_runtimes.down,
-    name: '20260903_055351_merge_fluted_runtimes'
+    name: '20260903_055351_merge_fluted_runtimes',
+  },
+  {
+    up: migration_20260904_051623_guideline_slug_unlocalized_drop_label.up,
+    down: migration_20260904_051623_guideline_slug_unlocalized_drop_label.down,
+    name: '20260904_051623_guideline_slug_unlocalized_drop_label',
+  },
+  {
+    up: migration_20260904_053342_drop_unused_guideline_blocks.up,
+    down: migration_20260904_053342_drop_unused_guideline_blocks.down,
+    name: '20260904_053342_drop_unused_guideline_blocks'
   },
 ];

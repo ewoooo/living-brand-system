@@ -2,8 +2,6 @@
 
 import type { Block } from 'payload'
 import BlockSchema from '../blocks/block/schema'
-import CalloutSchema from '../blocks/callout/schema'
-import ContentColumnsSchema from '../blocks/content-columns/schema'
 import SectionSchema from '../blocks/section/schema'
 import type { GuidelineBlock } from '../blocks/types'
 
@@ -12,10 +10,8 @@ type SchemaMap = {
 }
 
 export const guidelineBlockSchemas = {
-	contentColumns: ContentColumnsSchema,
-	callout: CalloutSchema,
-	block: BlockSchema,
 	section: SectionSchema,
+	block: BlockSchema,
 } satisfies SchemaMap
 
 export const guidelineBlocks = Object.values(guidelineBlockSchemas)

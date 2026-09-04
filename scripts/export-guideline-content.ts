@@ -49,7 +49,6 @@ const content = {
 	documents: selected.map((doc) => ({
 		slug: doc.slug,
 		title: doc.title,
-		label: doc.label ?? null,
 		chapter: chapterSlug(doc.chapter),
 		order: doc.displayOrder ?? 0,
 		headerImage: toPortable(doc.headerImage ?? null),

@@ -40,7 +40,7 @@ grep -rl "Badge\|Card\|Typography" src/components src/features
 | className 병합 | `@/lib/utils`의 `cn` |
 | 색 파생(전경색·RGB) | `@/lib/color` (`hexToRgb`, `getContrastingForeground`) |
 | 콘텐츠 최대 폭 | `ContentFrame` (`src/components/shared/content-frame.tsx`) |
-| 블록 표면색(배경) | `GuidelineBlockFrame` |
+| 블록 표면색(배경) | `guideline-surface.ts`의 `surfaceStyle`/`surfaceScopeClass` (admin의 `background`·`backgroundTone` 데이터를 얹는다) |
 
 shadcn 4.12의 공식 아이콘 목록에는 Carbon이 없어 `components.json`은 `radix-mira`가 지원하는 `hugeicons` 값을 유지합니다. 이 값은 생성기 호환용일 뿐 저장소의 아이콘 정책이 아닙니다. shadcn 컴포넌트를 추가한 같은 변경에서 생성된 아이콘을 `@carbon/icons-react`로 바꾸고, `@hugeicons/*` import가 0건인지 확인한 뒤 커밋합니다. `iconLibrary`를 임의의 `carbon` 문자열로 바꾸면 레지스트리의 `IconPlaceholder`가 변환되지 않으므로 금지합니다.
 
@@ -297,10 +297,10 @@ className과 style에는 시맨틱 토큰만 씁니다(닫힌 토큰 규칙 전�
 
 | ✅ Do | ❌ Don't | ❌를 본 자리 |
 | --- | --- | --- |
-| `border-border` | `border border-neutral-200` | `blocks/callout/component.tsx` |
+| `border-border` | `border border-neutral-200` | 옛 `blocks/callout`(2026-09-04 삭제) |
 | `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `widgets/type-specimen/component.tsx` — ✅ 2026-08-12에 `THEME_PANEL`로 고침 |
-| 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | `blocks/content-columns/component.tsx:21` |
-| 심볼 + 텍스트로 상태 구분 | 색만으로 판정 구분 | `blocks/callout/component.tsx` (kind별 badge) |
+| 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | 옛 `blocks/content-columns`(2026-09-04 삭제) |
+| 심볼 + 텍스트로 상태 구분 | 색만으로 판정 구분 | 옛 `blocks/callout`의 kind별 badge(삭제됨) |
 | 상태 토큰 `bg-success/15 text-success` | 유채 팔레트 `bg-emerald-500/15 text-emerald-700 …` | `studio/review/result/check-status.ts` — ✅ 고쳐짐(이제 Badge variant 키만 갖는다) |
 | `Typography` 재사용 | `font-body text-sm font-normal` 수기 반복 | studio 10개 파일 25회 실측 |
 | `@carbon/icons-react` | `@hugeicons/*` | repo 컨벤션(정책) |
@@ -324,10 +324,10 @@ grep -rn 'oklch(' src --include='*.tsx'
 
 ### 동적 Tailwind 클래스 금지
 
-`grid-cols-${n}`처럼 문자열 보간으로 클래스를 만들면 Tailwind가 빌드 타임에 그 클래스를 인식하지 못해 스타일이 유실됩니다. `blocks/content-columns/component.tsx:21`이 이 위반입니다. 조건부로 완전한 클래스를 룩업합니다.
+`grid-cols-${n}`처럼 문자열 보간으로 클래스를 만들면 Tailwind가 빌드 타임에 그 클래스를 인식하지 못해 스타일이 유실됩니다. 옛 `blocks/content-columns`가 이 위반이었습니다(다른 파일의 리터럴 덕에 우연히 동작하고 있었고, 블록 자체가 2026-09-04에 삭제됐습니다). 조건부로 완전한 클래스를 룩업합니다.
 
 ```tsx
-// ❌ blocks/content-columns/component.tsx:21
+// ❌ 옛 blocks/content-columns (삭제됨)
 GRID_CLASS = `grid gap-4 md:grid-cols-${variant}`
 
 // ✅ 완전 클래스 룩업
@@ -347,8 +347,8 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 ### 폭·표면색·세로 리듬은 프레임이 소유
 
 - 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1540px]`). 예외는 프리미티브의 **내재 콘텐츠 폭**뿐입니다 — `dialog`의 `max-w-sm`, `tooltip`의 `max-w-xs`, `bubble`의 `max-w-[80%]`처럼 오버레이·말풍선이 자기 판형을 갖는 것은 페이지 폭 소유가 아닙니다. 금지 대상은 화면·블록 컴포넌트가 페이지 폭을 스스로 좁히는 것(`<Card className="max-w-2xl">` 등)입니다.
-- 표면 배경색은 컴포넌트 안에 칠하지 않고 `GuidelineBlockFrame`의 `variant`(`normal`/`secondary`/`inverted`)로 받습니다.
-- 블록 간 세로 리듬도 프레임이 소유합니다(`content-frame.tsx:21`의 `py-8`). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
+- 표면 배경색은 컴포넌트 안에 칠하지 않습니다. 블록·섹션의 면은 admin 데이터(`background`·`backgroundTone`)를 `guideline-surface.ts`의 `surfaceStyle`/`surfaceScopeClass`로 얹습니다(`docs/09` §5). `GuidelineBlockFrame`은 면을 칠하지 않는 폭 껍질입니다.
+- 블록 간 세로 리듬은 프레임 패딩(`content-frame.tsx`의 `py-8`)과 `blocks/shared/rhythm.ts`의 `BLOCK_SPACING`이 소유합니다(`docs/09` §7). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
 
 ## 5. 브랜드 무관
 
@@ -368,7 +368,7 @@ const MAIN: Swatch[] = [
 ]
 ```
 
-기존에 남아 있는 생 팔레트 클래스(위젯 5종 · `blocks/content-columns/component.tsx`의 동적 클래스 1건)는 POC를 위한 **의도적 부채**이며 이 규칙과 별개입니다. 새 컴포넌트가 그 부채를 늘리지 않습니다.
+기존에 남아 있는 생 팔레트 클래스(위젯 일부)는 POC를 위한 **의도적 부채**이며 이 규칙과 별개입니다. 새 컴포넌트가 그 부채를 늘리지 않습니다.
 
 ## 6. 접근성
 
@@ -376,7 +376,7 @@ const MAIN: Swatch[] = [
 
 - **키보드 조작**: 커스텀 인터랙션 요소는 `role`과 `aria-*`, 화살표 키 이동을 갖춥니다. 슬라이더면 `role="slider"` + `aria-valuenow`처럼 역할에 맞는 속성을 붙입니다.
 - **focus 가시성**: `focus-visible:ring` 계열로 포커스를 시각적으로 드러냅니다. `badge.tsx`의 `focus-visible:ring-[3px] focus-visible:ring-ring/50`이 참고입니다.
-- **색만으로 상태 구분 금지**: 판정·상태는 심볼 + 텍스트를 함께 씁니다. `blocks/callout/component.tsx`는 kind별로 심볼(`✓`/`△`/`✕`)과 라벨(`반드시`/`권장`/`금지`)을 같이 노출합니다.
+- **색만으로 상태 구분 금지**: 판정·상태는 심볼 + 텍스트를 함께 씁니다. 검수 결과 배지처럼 kind별 심볼과 라벨을 같이 노출합니다.
 - **label 연결**: 입력 요소는 `label`/`aria-label`/`aria-labelledby`로 접근 가능한 이름을 갖습니다. `widgets/type-specimen/component.tsx`의 textarea는 `aria-label="타입 견본 입력"`을 답니다.
 - **실패 상태 텍스트 설명**: 검수 실패·저장 실패 같은 조치가 필요한 상태는 텍스트로 원인과 다음 행동을 설명합니다(`docs/08` §2).
 
@@ -413,7 +413,7 @@ PR을 올리기 전 자기 점검용입니다.
 - [ ] §4의 팔레트 탐지 grep(무채 + 유채 전체) 결과가 이 컴포넌트에서 0이다. 판정·상태 색은 상태 토큰(`success`/`info`/`warning`/`destructive`)이다.
 - [ ] `grep -rE 'className=.*#[0-9a-fA-F]{6}'`에 걸리는 생 hex가 없다(색 데이터 props는 예외).
 - [ ] `grep -rE '(grid-cols|col-span|gap)-\$\{'`에 걸리는 동적 클래스가 없다. 조건부 완전 클래스로 바꿨다.
-- [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`, 표면색은 `GuidelineBlockFrame`이 소유한다.
+- [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`이, 표면색은 `guideline-surface.ts`가 소유한다.
 - [ ] 아이콘은 `@carbon/icons-react`다. `@hugeicons`가 없다.
 - [ ] 색·폰트·로고를 props로 받는다. 하드코딩은 개발용 default 값뿐이다.
 - [ ] 색·전경색은 저장하지 않고 `@/lib/color`로 런타임 파생한다.

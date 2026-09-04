@@ -2,7 +2,7 @@ import { type FieldHook, ValidationError } from 'payload'
 import { hasGuidelineDocumentSlugConflict } from '../services/validate-guideline-document-slug.service'
 import { relationshipId } from '../utils/block-text'
 
-/** Guideline 토픽 slug가 같은 locale과 챕터 안에서만 고유하도록 검증한다. */
+/** Guideline 토픽 slug가 같은 챕터 안에서 고유하도록 검증한다. slug는 언어 공통이다. */
 export const validateGuidelineDocumentSlug: FieldHook = async ({
 	collection,
 	data,

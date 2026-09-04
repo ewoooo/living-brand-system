@@ -40,7 +40,7 @@ export function GuidelineOnboard({ navigation }: { navigation: GetGuidelineNavig
 						<Image alt="HD" height={32} src="/logos/logo_wht.svg" width={77} />
 						<div aria-hidden className="h-8 w-px bg-foreground/40" />
 						{/* CI(32px)와 짝을 이루는 히어로 락업이라 UI 타이포그래피 단계를 따르지 않는다(docs/09 §6의 lockup 예외). */}
-						<p className="font-medium text-[34px] leading-8">{title}</p>
+						<h1 className="font-medium text-[34px] leading-8">{title}</h1>
 					</div>
 				</PageHero>
 

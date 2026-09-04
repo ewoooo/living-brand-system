@@ -14,7 +14,6 @@ export function buildGuidelineSearchText(
 ): string {
 	return compact([
 		document.title,
-		document.label,
 		document.slug,
 		typeof document.chapter === 'object' && document.chapter ? document.chapter.title : null,
 		...(document.blocks?.map(formatBlockForAgent) ?? []),

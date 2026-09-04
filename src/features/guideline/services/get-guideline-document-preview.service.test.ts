@@ -17,7 +17,6 @@ const topic = {
 	headerImage: null,
 	blocks: [],
 	displayOrder: 1,
-	label: null,
 }
 
 describe('guideline document preview', () => {

@@ -15,15 +15,15 @@ import type { GuidelineCheckSource } from '@/features/guideline/checks/collect-g
  */
 export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 	const { documents } = await getCheckSourceDocuments()
-	// 🔴 배치 단위는 문서가 아니라 **꼭지**다. 2026-08-26 이관으로 꼭지가 문서에서 블록이 되면서
+	// 🔴 배치 단위는 문서가 아니라 **섹션**이다. 2026-08-26 이관으로 섹션이 문서에서 블록이 되면서
 	//    한 토픽의 Check가 전부 한 덩어리로 뭉쳤고, 검수 화면의 딥링크가 토픽까지만 갔다.
-	//    근거가 지목하는 꼭지(`source.section`)로 다시 가른다. 꼭지가 없는 것은 문서 자신의 rule이다.
+	//    근거가 지목하는 섹션(`source.section`)으로 다시 가른다. 섹션이 없는 것은 문서 자신의 rule이다.
 	const items = documents.flatMap((document) =>
 		groupChecksBySection(document.checks).map(({ section, checks }) => ({
 			documentOrder: section?.order ?? -1,
 			item: {
 				title: section?.title ?? document.title,
-				// 🔴 꼭지의 slug 자리에 앵커를 넣는다 — `toGuidelineHref`가 slug와 topicSlug가
+				// 🔴 섹션의 slug 자리에 앵커를 넣는다 — `toGuidelineHref`가 slug와 topicSlug가
 				//    다를 때 `#앵커`를 붙이므로, 문서 자신의 rule은 앵커 없이 토픽으로 남는다.
 				slug: section?.anchor ?? document.slug,
 				...toCheckPlacement(document),
@@ -44,7 +44,7 @@ export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 })
 
 /**
- * Check를 근거가 놓인 꼭지별로 가른다. 문서 자신의 rule은 꼭지 없는 한 덩어리로 남는다.
+ * Check를 근거가 놓인 섹션별로 가른다. 문서 자신의 rule은 섹션 없는 한 덩어리로 남는다.
  * 순서는 첫 등장 순 — `collectGuidelineCheckSources`가 문서 본문 순서로 수집한다.
  */
 function groupChecksBySection(

@@ -154,9 +154,9 @@ describe('getCheckRuleset', () => {
 		])
 	})
 
-	// 🔴 배치 단위는 문서가 아니라 꼭지다. 2026-08-26 이관으로 3단계 문서가 section 블록이 됐고,
-	//    한 토픽의 Check가 전부 한 덩어리로 뭉치지 않도록 근거가 지목하는 꼭지로 다시 가른다.
-	it('꼭지별로 배치를 가르고 지면 순서를 적용하며 요청된 Check key 순서를 보존한다', async () => {
+	// 🔴 배치 단위는 문서가 아니라 섹션이다. 2026-08-26 이관으로 3단계 문서가 section 블록이 됐고,
+	//    한 토픽의 Check가 전부 한 덩어리로 뭉치지 않도록 근거가 지목하는 섹션으로 다시 가른다.
+	it('섹션별로 배치를 가르고 지면 순서를 적용하며 요청된 Check key 순서를 보존한다', async () => {
 		const topic = document(
 			20,
 			[
@@ -184,7 +184,7 @@ describe('getCheckRuleset', () => {
 		expect(selected.map(({ key }) => key)).toEqual(['check.second', 'check.first'])
 	})
 
-	it('꼭지 없는 문서 자신의 rule은 토픽 단위로 남는다', async () => {
+	it('섹션 없는 문서 자신의 rule은 토픽 단위로 남는다', async () => {
 		const topic = document(20, [source('check.doc')], {
 			title: 'Topic',
 			slug: 'topic',
@@ -204,7 +204,7 @@ describe('getCheckRuleset', () => {
 		documentPlacement.evidence = {
 			type: 'document',
 			description: 'Doc A',
-			blocks: [{ type: 'callout', kind: 'must', title: undefined, items: [] }],
+			blocks: [{ type: 'block', childCount: 1 }],
 		}
 		documentPlacement.referenceAssets = [referenceAsset('a', '/a.png', 'context')]
 		const blockPlacement = source('shared')
@@ -224,7 +224,7 @@ describe('getCheckRuleset', () => {
 			type: 'document',
 			description: 'Doc A',
 			blocks: [
-				{ type: 'callout', kind: 'must', title: undefined, items: [] },
+				{ type: 'block', childCount: 1 },
 				{ type: 'block', childCount: 2 },
 			],
 		})
