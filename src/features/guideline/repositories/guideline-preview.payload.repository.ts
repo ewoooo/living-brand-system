@@ -9,7 +9,6 @@ export interface DraftGuidelineDocumentData {
 	displayOrder: number
 	headerImage: GuidelineDocument['headerImage']
 	id: number
-	label: string | null
 	slug: string
 	title: string
 }
@@ -44,7 +43,6 @@ function toDraftGuidelineDocument(document: GuidelineDocument): DraftGuidelineDo
 		displayOrder: typeof document.displayOrder === 'number' ? document.displayOrder : -1,
 		headerImage: document.headerImage ?? null,
 		id: document.id,
-		label: document.label || null,
 		slug: document.slug,
 		title: document.title,
 	}

@@ -38,9 +38,9 @@ export const GuidelineChapters: CollectionConfig = {
 			localized: true,
 			admin: { description: '사이드바와 인덱스 카드의 제목으로 표시됩니다.' },
 		},
+		// 🔴 slug는 localized가 아니다(2026-09-04) — URL은 언어를 가리지 않는다(GuidelineDocuments 참조).
 		slugField({
 			useAsSlug: 'title',
-			localized: true,
 			required: true,
 		}),
 		{

@@ -63,19 +63,12 @@ export const GuidelineDocuments: CollectionConfig = {
 			required: true,
 			localized: true,
 		},
-		{
-			name: 'label',
-			type: 'text',
-			localized: true,
-			admin: {
-				hidden: true,
-				description: '제목 위에 표시할 선택 라벨입니다.',
-			},
-		},
+		// 🔴 slug는 localized가 아니다(2026-09-04). URL은 언어를 가리지 않는다 — 섹션 앵커와 같은
+		//    이유로, 로케일마다 slug가 갈리면 공유한 링크가 언어를 바꾸는 순간 끊긴다.
+		//    (제목 위 라벨 `label` 필드는 같은 날 지웠다 — 어디에서도 그리지 않았다.)
 		slugField({
 			disableUnique: true,
 			useAsSlug: 'title',
-			localized: true,
 			required: true,
 			overrides: (field) => {
 				const slug = field.fields[1]

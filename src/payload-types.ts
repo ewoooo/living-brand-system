@@ -233,7 +233,7 @@ export interface GuidelineChapter {
   createdAt: string;
 }
 /**
- * 챕터에 속한 가이드라인 문서입니다. 본문의 섹션는 섹션 블록입니다.
+ * 챕터에 속한 토픽 한 장입니다. 본문은 섹션 블록으로 나눕니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-documents".
@@ -246,16 +246,12 @@ export interface GuidelineDocument {
   chapter: number | GuidelineChapter;
   title: string;
   /**
-   * 제목 위에 표시할 선택 라벨입니다.
-   */
-  label?: string | null;
-  /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
   slug: string;
   /**
-   * 문서 헤더에 표시할 선택 이미지입니다.
+   * 토픽 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
   blocks?: (ContentColumnsBlock | CalloutBlock | LayoutBlock | SectionBlock)[] | null;
@@ -264,7 +260,7 @@ export interface GuidelineDocument {
    */
   rules?: (number | Rule)[] | null;
   /**
-   * 숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.
+   * 숫자가 낮을수록 같은 챕터 안에서 먼저 표시됩니다.
    */
   displayOrder: number;
   updatedAt: string;
@@ -1348,7 +1344,7 @@ export interface SectionBlock {
    */
   backgroundTone?: ('solid' | 'tint') | null;
   /**
-   * 이 섹션가 품는 레이아웃 블록들입니다.
+   * 이 섹션이 품는 레이아웃 블록들입니다.
    */
   blocks?: LayoutBlock[] | null;
   /**
@@ -2569,7 +2565,6 @@ export interface GuidelineChaptersSelect<T extends boolean = true> {
 export interface GuidelineDocumentsSelect<T extends boolean = true> {
   chapter?: T;
   title?: T;
-  label?: T;
   generateSlug?: T;
   slug?: T;
   headerImage?: T;
