@@ -83,31 +83,24 @@ function toSources(
 }
 
 /**
- * 섹션(section)이 품은 자식 블록까지 한 줄로 펴되, 각 블록이 **어느 섹션에 속하는지**를 달고 나온다.
- *
- * 🔴 내려가지 않으면 자식 블록의 rule이 **조용히 소멸한다.** 2026-08-26에 섹션이 문서에서 블록이
- *    되면서 rules를 가진 컨테이너가 한 겹 깊어졌다 — docs/11 §4의 provenance 불변식이 그대로
- *    성립하려면 수집도 같이 내려가야 한다.
- * 🔴 재귀가 아니라 고정 깊이다 — section > block에서 끝난다. 블록의 자식은 leaf(위젯·이미지)뿐이다.
+ * 루트 블록에 **어느 섹션에 속하는지**를 달아 내놓는다. 지금 루트는 섹션뿐이고 섹션의 자식은 leaf(위젯·이미지)라
+ * rules를 갖지 않으므로 내려가지 않는다 — 기계가 읽는 텍스트와 rules는 섹션이 소유한다(docs/11 §4).
  */
 function flattenBlocks(
 	blocks: GuidelineCheckDocument['blocks'],
 ): { block: GuidelineBlock; section: GuidelineCheckSection | null }[] {
-	type Entry = { block: GuidelineBlock; section: GuidelineCheckSection | null }
-	return (blocks ?? []).flatMap<Entry>((block, order) => {
-		if (block.blockType !== 'section') return [{ block, section: null }]
-
-		const section: GuidelineCheckSection = {
-			// 앵커는 저장 시 제목에서 자동으로 채워지지만(section/schema.ts) 타입은 선택이다.
-			anchor: block.anchor ?? '',
-			title: block.title,
-			order,
-		}
-		return [
-			{ block, section },
-			...(block.blocks ?? []).map((child) => ({ block: child as GuidelineBlock, section })),
-		]
-	})
+	return (blocks ?? []).map((block, order) => ({
+		block,
+		section:
+			block.blockType === 'section' && block.title
+				? {
+						// 앵커는 저장 시 제목에서 자동으로 채워지지만(section/schema.ts) 타입은 선택이다.
+						anchor: block.anchor ?? '',
+						title: block.title,
+						order,
+					}
+				: null,
+	}))
 }
 
 function collectApplicationImages(document: GuidelineCheckDocument): Map<number, ApplicationImage> {

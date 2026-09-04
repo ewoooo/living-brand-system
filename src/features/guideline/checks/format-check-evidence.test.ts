@@ -13,11 +13,20 @@ describe('formatCheckEvidence', () => {
 						anchor: 'minimum-size',
 						title: 'Minimum size',
 						description: 'Use at least 24 px.',
-						blocks: [{ type: 'block', childCount: 2 }],
 					},
 				],
 			}),
-		).toBe('Logo usage\n\nMinimum size\n\nUse at least 24 px.\n\nleaf 2개를 담은 블록')
+		).toBe('Logo usage\n\nMinimum size\n\nUse at least 24 px.')
+	})
+
+	it('동결 스냅샷의 섹션 근거가 블록 층의 blocks를 갖고 있으면 함께 읽는다', () => {
+		expect(
+			formatCheckEvidence({
+				type: 'section',
+				title: 'Minimum size',
+				blocks: [{ type: 'block', childCount: 2 }],
+			} as never),
+		).toBe('Minimum size\n\nleaf 2개를 담은 블록')
 	})
 
 	it('기존 CheckSession의 문자열 evidence를 그대로 유지한다', () => {

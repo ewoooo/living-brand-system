@@ -59,7 +59,7 @@ const RAW_COLOR = new RegExp(
  * `dark:` 변형.
  *
  * 🔴 위젯은 다크 모드를 스스로 분기하지 않는다. 색을 주입한 블록 면은 그 면에서 토큰 스코프를
- *    `light`/`dark`로 다시 선언하는데(`blocks/block/component.tsx`), Tailwind의 `dark:`는
+ *    `light`/`dark`로 다시 선언하는데(`components/pages/guideline-topic.tsx`의 히어로), Tailwind의 `dark:`는
  *    `.dark *` 후손 선택자라 **다크 페이지 안의 밝은 섬에서도 여전히 걸린다.** 토큰만 쓰면
  *    스코프가 알아서 따라오므로 분기가 필요하지 않다.
  */

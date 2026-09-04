@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 const REQUIRED_FILES = ['schema.ts', 'projection.ts', 'component.tsx'] as const
 const RESERVED_DIRECTORIES = new Set(['catalog', 'runtime', 'shared'])
 // Payload Admin의 블록 선택 순서. 앞에 둘 블록을 여기 적고, 나머지는 이름순으로 뒤에 붙는다.
-const COMPATIBLE_BLOCK_ORDER = ['section', 'block'] as const
+const COMPATIBLE_BLOCK_ORDER = ['section'] as const
 const GENERATED_HEADER =
 	'// 이 파일은 scripts/generate-guideline-block-catalogs.ts로 생성됩니다. 직접 수정하지 마세요.\n\n'
 

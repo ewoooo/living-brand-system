@@ -40,7 +40,7 @@ grep -rl "Badge\|Card\|Typography" src/components src/features
 | className 병합 | `@/lib/utils`의 `cn` |
 | 색 파생(전경색·RGB) | `@/lib/color` (`hexToRgb`, `getContrastingForeground`) |
 | 콘텐츠 최대 폭 | `ContentFrame` (`src/components/shared/content-frame.tsx`) |
-| 블록 표면색(배경) | `guideline-surface.ts`의 `surfaceStyle`/`surfaceScopeClass` (admin의 `background`·`backgroundTone` 데이터를 얹는다) |
+| leaf 폭·섹션 간격 | `blocks/shared/rhythm.ts` (`LEAF_GRID`·`LEAF_SPAN`·`SECTION_STACK`) |
 
 shadcn 4.12의 공식 아이콘 목록에는 Carbon이 없어 `components.json`은 `radix-mira`가 지원하는 `hugeicons` 값을 유지합니다. 이 값은 생성기 호환용일 뿐 저장소의 아이콘 정책이 아닙니다. shadcn 컴포넌트를 추가한 같은 변경에서 생성된 아이콘을 `@carbon/icons-react`로 바꾸고, `@hugeicons/*` import가 0건인지 확인한 뒤 커밋합니다. `iconLibrary`를 임의의 `carbon` 문자열로 바꾸면 레지스트리의 `IconPlaceholder`가 변환되지 않으므로 금지합니다.
 
@@ -347,7 +347,7 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 ### 폭·표면색·세로 리듬은 프레임이 소유
 
 - 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1540px]`). 예외는 프리미티브의 **내재 콘텐츠 폭**뿐입니다 — `dialog`의 `max-w-sm`, `tooltip`의 `max-w-xs`, `bubble`의 `max-w-[80%]`처럼 오버레이·말풍선이 자기 판형을 갖는 것은 페이지 폭 소유가 아닙니다. 금지 대상은 화면·블록 컴포넌트가 페이지 폭을 스스로 좁히는 것(`<Card className="max-w-2xl">` 등)입니다.
-- 표면 배경색은 컴포넌트 안에 칠하지 않습니다. 블록·섹션의 면은 admin 데이터(`background`·`backgroundTone`)를 `guideline-surface.ts`의 `surfaceStyle`/`surfaceScopeClass`로 얹습니다(`docs/09` §5). `GuidelineBlockFrame`은 면을 칠하지 않는 폭 껍질입니다.
+- 표면 배경색은 컴포넌트 안에 칠하지 않습니다. 가이드라인 섹션·leaf는 배경 설정을 갖지 않습니다(2026-09-04에 걷음). 브랜드 면(흰 판·검은 판)은 위젯이 `widgets/surface.ts`의 선언으로 그립니다(`docs/11` §8).
 - 블록 간 세로 리듬은 프레임 패딩(`content-frame.tsx`의 `py-8`)과 `blocks/shared/rhythm.ts`의 `BLOCK_SPACING`이 소유합니다(`docs/09` §7). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
 
 ## 5. 브랜드 무관
@@ -395,7 +395,7 @@ const MAIN: Swatch[] = [
 - **`@payloadcms/ui` 유지 목록**: 동작을 소유한 컴포넌트는 shadcn으로 갈아끼우지 않습니다 — `RelationshipField`(관계 검색·페이지네이션), `PublishButton`(저장 파이프라인), `Gutter`(admin 폭), `Popup`(admin 포털·z-index), `toast`. 그 밖의 표현은 `src/components/ui` 프리미티브를 씁니다(`template-layer-editors.tsx` 원형).
 - **토큰 원천**: admin의 라이트/다크는 Payload가 `--theme-*`로 소유하고, `src/app/(payload)/admin-tailwind.css`의 `@theme inline`이 시맨틱 토큰을 `--theme-*`에 재매핑합니다. 따라서 admin 컴포넌트도 `bg-muted`/`border-border` 같은 **시맨틱 토큰 클래스를 그대로** 씁니다. 새 코드가 `--theme-elevation-*`를 인라인으로 직접 참조하지 않습니다.
 - **`data-slot` 미부여**: admin 컴포넌트 루트에는 자체 `data-slot`을 붙이지 않습니다. `custom.scss`가 `[data-slot=…]` 셀렉터를 프리미티브 외부 스타일링 훅으로 쓰고 있어, 화면 컴포넌트까지 부여하면 SCSS 축소 방향과 상충합니다.
-- **프레임 계약 미적용**: 폭·표면색은 Payload 레이아웃이 소유하므로 `ContentFrame`/`GuidelineBlockFrame`을 쓰지 않습니다.
+- **프레임 계약 미적용**: 폭·표면색은 Payload 레이아웃이 소유하므로 `ContentFrame`을 쓰지 않습니다.
 - **cva·`asChild` 해당 없음**: admin 에디터는 시각 variant가 없는 일회성 화면이라 적용 대상이 없습니다. 억지로 만들지 않습니다.
 - **기하 계산 inline style 허용**: iframe scale, 오버레이 핸들 좌표, depth 인덴트, CSS mask처럼 런타임 계산값은 inline `style`이 정당합니다. 색·간격 상수는 여기 넣지 않습니다.
 - **dialkit**: 레이아웃 수치 튜닝 노브는 `useDialKit` + `admin-dialkit-provider`로 admin에만 둡니다. Creator UI에 들이지 않습니다.
@@ -413,7 +413,7 @@ PR을 올리기 전 자기 점검용입니다.
 - [ ] §4의 팔레트 탐지 grep(무채 + 유채 전체) 결과가 이 컴포넌트에서 0이다. 판정·상태 색은 상태 토큰(`success`/`info`/`warning`/`destructive`)이다.
 - [ ] `grep -rE 'className=.*#[0-9a-fA-F]{6}'`에 걸리는 생 hex가 없다(색 데이터 props는 예외).
 - [ ] `grep -rE '(grid-cols|col-span|gap)-\$\{'`에 걸리는 동적 클래스가 없다. 조건부 완전 클래스로 바꿨다.
-- [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`이, 표면색은 `guideline-surface.ts`가 소유한다.
+- [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`이 소유하고, 배경 설정은 갖지 않는다.
 - [ ] 아이콘은 `@carbon/icons-react`다. `@hugeicons`가 없다.
 - [ ] 색·폰트·로고를 props로 받는다. 하드코딩은 개발용 default 값뿐이다.
 - [ ] 색·전경색은 저장하지 않고 `@/lib/color`로 런타임 파생한다.

@@ -40,7 +40,7 @@ export function GuidelineTopic({
 				 * Section Heading — 제목이 이미지 **위에** 정중앙으로 얹힌다(Figma 61:3503).
 				 * 🔴 제목 자리에 `dark` 스코프를 선언한다. 히어로는 어두운 브랜드 이미지라
 				 *    라이트 팔레트의 near-black 제목이 그대로 묻힌다. 색 이름을 직접 쓰지 않고
-				 *    스코프를 뒤집는 것이 색을 주입한 면의 관용이다(blocks/block `surfaceScopeClass`).
+				 *    스코프를 뒤집는 것이 색을 주입한 면의 관용이다(docs/09 §5).
 				 */}
 				<ContentFrame>
 					<div className="relative">

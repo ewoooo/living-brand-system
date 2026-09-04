@@ -94,7 +94,7 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|or
 
 §4의 색-데이터 예외로 면에 hex를 주입할 때, 배경만 넣으면 그 면의 전경·테두리·muted가 바깥 스코프에 남습니다. 라이트 모드 페이지에 어두운 브랜드 색을 깐 면은 배경만 어두워지고 안쪽 컴포넌트는 라이트 팔레트의 near-black 컨트롤을 그대로 그려 면에 묻힙니다(반대 방향도 같습니다). 전경색 한 개를 짝지어 주는 것으로는 부족합니다 — 안쪽이 쓰는 것은 색이 아니라 토큰이기 때문입니다.
 
-그러므로 hex를 주입하는 자리에서 그 밝기로 `light`/`dark`를 골라 같은 요소에 선언합니다. 선례는 `blocks/block/component.tsx`의 `surfaceScopeClass`이고, `text-foreground`를 함께 주는 이유도 거기 적혀 있습니다(색 클래스가 없는 면은 바깥에서 **계산된** 색을 상속하므로 토큰 재선언만으로는 글자 색이 따라오지 않습니다).
+그러므로 hex를 주입하는 자리에서 그 밝기로 `light`/`dark`를 골라 같은 요소에 선언합니다. 선례는 토픽 히어로(`pages/guideline-topic.tsx`)의 `dark` 스코프이고, `text-foreground`를 함께 주는 이유도 거기 적혀 있습니다(색 클래스가 없는 면은 바깥에서 **계산된** 색을 상속하므로 토큰 재선언만으로는 글자 색이 따라오지 않습니다).
 
 🔴 이 스코프 전환은 토큰만 되돌립니다. `dark:` 유틸은 `.dark *` **후손** 선택자라 다크 페이지 안의 밝은 섬에서도 여전히 걸립니다. §4가 컴포넌트에서 `dark:` 팔레트 클래스를 금지하는 이유가 여기서 한 번 더 성립합니다.
 
@@ -135,18 +135,16 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|or
 
 ## 7. 공통 셸과 프레임 골격
 
-guideline 블록은 두 겹의 프레임으로 감쌉니다.
+guideline 섹션은 머리(제목·설명)와 leaf 격자를 각각 `ContentFrame` 하나로 감쌉니다.
 
 | 겹 | 컴포넌트 | 소유 책임 |
 | --- | --- | --- |
-| 전체 폭 껍질 | `GuidelineBlockFrame`(`<div>`) | 전체 폭과 전경색. 면은 칠하지 않는다 — 배경은 `guideline-surface.ts`가 데이터로 얹는다 |
 | 폭 프레임 | `ContentFrame` | 최대 폭과 가로 여백(`max-w-[1540px] px-4 md:px-8`) |
+| leaf 격자 | `blocks/shared/rhythm.ts`의 `LEAF_GRID`·`LEAF_SPAN` | 6열 격자와 leaf 폭(전폭 6·절반 3·삼분 2). 좁은 화면은 한 열 |
 
-`GuidelineBlockFrame`(`guideline-block-frame.tsx`)은 전경색만 정하고 즉시 `ContentFrame`을 감쌉니다. 폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
+폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx`). 개별 섹션·leaf는 자기 `max-width`를 선언하지 않습니다 — leaf의 폭은 admin의 `span`이고, 그 값이 몇 열인지는 `LEAF_SPAN` 한 곳이 정합니다. 배경(면) 설정은 2026-09-04에 전 계층에서 걷었습니다 — 브랜드 면(흰 판·검은 판)은 위젯이 `widgets/surface.ts`의 선언으로 그립니다(`docs/11` §8).
 
-세로 리듬은 두 층이 담당합니다. 프레임의 self-padding(`content-frame.tsx`의 `py-8`)은 요소 **안쪽**의 대칭 여백이고, 요소 **사이**의 간격은 `blocks/shared/rhythm.ts`의 `BLOCK_SPACING`이 소유합니다. 요소 사이 실제 간격은 `패딩 + BLOCK_SPACING + 패딩`의 합입니다.
-
-`BLOCK_SPACING`은 블록 종류별 위쪽 여백(`[&:not(:first-child)]:mt-*`)입니다 — 부모 `gap` 하나가 아닌 이유는 한 스택 안에 섹션 사이(288)와 그 밖의 블록 사이(32) 두 리듬이 섞이기 때문이고, 최상위 스택(`components/guideline-blocks.tsx`)과 섹션 안의 스택(`blocks/section`)이 같은 값을 읽습니다. 본문 텍스트가 앉는 오른쪽 반칸도 같은 파일의 `RIGHT_HALF`가 소유합니다 — 섹션 제목·콜아웃·단일 컬럼 텍스트가 한 열에 서야 세로선이 맞습니다.
+세로 리듬은 두 층이 담당합니다. 프레임의 self-padding(`content-frame.tsx`의 `py-8`)은 요소 **안쪽**의 대칭 여백이고, 섹션 **사이**의 간격은 `blocks/shared/rhythm.ts`의 `SECTION_STACK`(부모 `gap`)이 소유합니다. 루트에는 섹션만 오므로 리듬은 하나입니다. 섹션 안에서 제목과 격자 사이는 섹션 컴포넌트의 `gap-12`이고, 실제 간격은 `패딩 + gap + 패딩`의 합입니다. 본문 텍스트가 앉는 오른쪽 반칸은 같은 파일의 `RIGHT_HALF`가 소유합니다.
 
 값을 바꿀 때는 이 두 자리만 고칩니다. 개별 블록이 자기 패딩·마진·열 배치를 다시 잡는 것은 이 통일을 깨므로 지양합니다. 페이지의 상하 여백도 라우트 layout이 따로 주지 않습니다 — 첫·마지막 프레임의 self-padding이 그 자리이고, 둘을 겹치면 상단 여백이 두 곳의 합이 됩니다.
 

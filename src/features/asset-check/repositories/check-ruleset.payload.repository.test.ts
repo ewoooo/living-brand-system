@@ -77,7 +77,9 @@ describe('getCheckSourceDocuments', () => {
 							{
 								id: 'logo-examples',
 								blockName: 'Logo examples',
-								blockType: 'block',
+								blockType: 'section',
+								anchor: 'logo-examples',
+								title: 'Logo examples',
 								children: [],
 								rules: [
 									{
@@ -119,7 +121,7 @@ describe('getCheckSourceDocuments', () => {
 						messages: { pass: '통과' },
 					},
 					source: { documentId: 30 },
-					evidence: { type: 'block', childCount: 0 },
+					evidence: { type: 'section', anchor: 'logo-examples', title: 'Logo examples' },
 					referenceAssets: [],
 				},
 			],
