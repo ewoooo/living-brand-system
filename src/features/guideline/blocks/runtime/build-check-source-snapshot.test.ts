@@ -7,7 +7,7 @@ const lexical = (text: string) =>
 	({ root: { children: [{ type: 'paragraph', children: [{ text }] }] } }) as never
 
 describe('buildCheckSourceSnapshot', () => {
-	it('blockId가 있으면 해당 블록의 evidence만 반환한다', () => {
+	it('blockId가 있으면 해당 섹션의 evidence만 반환한다', () => {
 		const page = {
 			title: 'Logo',
 			blocks: [
@@ -17,15 +17,9 @@ describe('buildCheckSourceSnapshot', () => {
 					anchor: 'digital',
 					title: 'Digital',
 					description: lexical('Use 24 px.'),
-					blocks: [
-						{
-							id: 'inner',
-							blockType: 'block',
-							children: [{ id: 'w', blockType: 'iconGridWidget' }],
-						},
-					],
+					children: [{ id: 'w', blockType: 'iconGridWidget' }],
 				},
-				{ id: 'other', blockType: 'block', children: [] },
+				{ id: 'other', blockType: 'section', title: 'Other', children: [] },
 			],
 		} as unknown as GuidelineDocument
 
@@ -35,55 +29,49 @@ describe('buildCheckSourceSnapshot', () => {
 				anchor: 'digital',
 				title: 'Digital',
 				description: 'Use 24 px.',
-				blocks: [{ type: 'block', childCount: 1 }],
 			},
 			referenceAssets: [],
 		})
 	})
 
-	it('토픽 전체 snapshot은 섹션과 루트 블록을 순서대로 합친다', () => {
-		const page = {
-			title: 'Logo usage',
+	it('토픽 전체 snapshot은 섹션을 순서대로 합치고 header image만 참조 자산으로 갖는다', () => {
+		const topic = {
+			title: 'Brand Core',
+			headerImage: { id: 3, name: 'Core', alt: 'Core visual' },
 			blocks: [
 				{
 					id: 'hero',
-					blockType: 'block',
+					blockType: 'section',
 					children: [{ id: 'w', blockType: 'ciLockupHeroWidget' }],
 				},
 				{
 					id: 'sec',
 					blockType: 'section',
-					anchor: 'clear-space',
-					title: 'Clear space',
-					blocks: [{ id: 'inner', blockType: 'block', children: [] }],
+					anchor: 'main-colors',
+					title: 'Main colors',
+					children: [],
 				},
 			],
-		} as unknown as GuidelineDocument
-
-		expect(buildCheckSourceSnapshot(page)?.evidence).toEqual({
-			type: 'document',
-			blocks: [
-				{ type: 'block', childCount: 1 },
-				{
-					type: 'section',
-					anchor: 'clear-space',
-					title: 'Clear space',
-					description: undefined,
-					blocks: [{ type: 'block', childCount: 0 }],
-				},
-			],
-		})
-	})
-
-	it('토픽 전체 snapshot은 header image만 참조 자산으로 갖는다', () => {
-		const topic = {
-			title: 'Brand Core',
-			headerImage: { id: 3, name: 'Core', alt: 'Core visual' },
-			blocks: [{ id: 'note', blockType: 'block', title: 'Main colors', children: [] }],
 		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(topic)).toEqual({
-			evidence: { type: 'document', blocks: [{ type: 'block', childCount: 0 }] },
+			evidence: {
+				type: 'document',
+				blocks: [
+					{
+						type: 'section',
+						anchor: undefined,
+						title: undefined,
+						description: undefined,
+					},
+					{
+						type: 'section',
+						anchor: 'main-colors',
+						title: 'Main colors',
+						description: undefined,
+					},
+				],
+			},
 			referenceAssets: [{ id: 3, role: 'context' }],
 		})
 	})
@@ -98,7 +86,8 @@ describe('buildCheckSourceSnapshot', () => {
 		const blocks = [
 			{
 				id: 'usage',
-				blockType: 'block',
+				blockType: 'section',
+				anchor: 'minimum',
 				title: 'Minimum',
 				description: lexical('Use 24 px.'),
 				children: [],

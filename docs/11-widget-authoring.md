@@ -12,7 +12,7 @@
 3. component.tsx 작성 (서버). 인터랙션이 있으면 view.tsx 추가 (클라이언트)
 4. 등록 3곳을 손으로 고친다 (§3)
 5. /guideline/widgets 에서 렌더 확인
-6. admin에서 Block 안에 넣어 실제 페이지로 확인
+6. admin에서 섹션 안에 넣어 실제 페이지로 확인
 ```
 
 자동 카탈로그(`pnpm generate:block-catalogs`)는 **`blocks/`만 스캔합니다.** 위젯은 자동 등록되지 않고, CI의 `check:block-catalogs`도 위젯 등록 누락을 잡아주지 못합니다.
@@ -51,8 +51,8 @@
 
 | 파일 | 무엇을 등록하나 |
 |---|---|
-`blocks/block/schema.ts` | **`LEAVES` 배열**에 스키마 추가 (CMS 저작용) |
-`blocks/block/component.tsx` | 렌더 디스패치에 분기 추가 |
+`leaves/registry.ts` | **`LEAVES` 배열**에 스키마 추가 (CMS 저작용). 공통 `span` 필드는 여기서 붙는다 |
+`leaves/render-leaf.tsx` | 렌더 디스패치에 분기 추가 |
 `components/widgets/gallery.tsx` | `/guideline/widgets` 미리보기 목록 |
 `controllers/registry.ts` | (컨트롤러를 여는 위젯만) `blockType` → 매니페스트 (§4.1) |
 
@@ -62,35 +62,37 @@
 
 한계에 실제로 닿는 것은 **FK 제약명**입니다. 최신 드리즐 스냅샷 실측으로 66~93자 제약명이 6개 있고(최장 90자대), 인덱스명은 최장 62자로 아직 아래에 있습니다. 🔴 **여기에 개수를 적어 두지 마십시오** — 스키마가 바뀔 때마다 낡습니다. 지금 값은 `migrations/`의 최신 `.json` 스냅샷에서 세십시오.
 
-이 한계는 `blocks/block/alias-length.test.ts`가 막고 있지만 **갤러리 통과 ≠ 페이지 통과**입니다 — 잘림은 조회 SQL의 별칭에서 일어납니다.
+이 한계는 `leaves/alias-length.test.ts`가 막고 있지만 **갤러리 통과 ≠ 페이지 통과**입니다 — 잘림은 조회 SQL의 별칭에서 일어납니다.
 
-## 4. Block과 Widget의 책임
+## 4. Section과 Widget의 책임
 
-**Block이 소유하는 것** — 전체폭 면(`background`)·배치 영역 면(`innerBackground`)·배치(`arrangement`·`columns`·`aspectRatio`)·제목·본문(`title`·`description`)·`rules`. 그리고 자식에게 값 스코프를 제공할 수 있습니다. 🔴 **폭은 갖지 않습니다** — 블록별 `width`(중간폭/전체폭) 선택은 2026-08-26에 걷어냈고 프레임 폭은 중간폭 하나입니다.
+**Section이 소유하는 것** — 앵커·제목·설명(`anchor`·`title`·`description`)·`rules`, 그리고 leaf 목록(`children`). 자식에게 컨트롤 값 스코프를 제공합니다. 🔴 **폭과 면은 갖지 않습니다** — 폭은 leaf의 `span`이 말하고, 배경 설정은 2026-09-04에 전 계층에서 걷었습니다.
 
-중첩은 **블록만** 합니다: `section` > `block` > leaf. 위젯은 잎이라 다른 위젯을 품지 않습니다. 🔴 **자기 참조 블록은 만들 수 없습니다** — Payload 스키마 생성기가 무한 재귀에 빠집니다. 깊이를 늘려야 하면 slug를 하나 더 만들어 고정합니다(`subBlock`이 그 방식이었고, 쓰이지 않아 2026-09-04에 지웠습니다).
+**leaf가 소유하는 것** — 자기 폭(`span`: 전폭·절반·삼분). 6열 격자에 얹혀 줄바꿈이 폭에서 나오므로 행(블록)이라는 층이 없습니다(`blocks/shared/rhythm.ts`).
 
-**Widget이 소유하는 것** — 자기 셀 안의 콘텐츠. **셀 안에서는 `w-full`과 배경색을 자유롭게 씁니다**(판형·스와치·패널의 면은 위젯 콘텐츠입니다). 금지는 Block의 전체폭 면과 폭 결정권을 가져가는 것입니다. 인터랙션 컨트롤의 폭은 위젯이 아니라 컨트롤러 킷이 갖습니다(§4.1).
+중첩은 **한 겹**입니다: `section` > leaf. 위젯은 잎이라 다른 위젯을 품지 않습니다. 🔴 **자기 참조 블록은 만들 수 없습니다** — Payload 스키마 생성기가 무한 재귀에 빠집니다. 옛 `block`·`subBlock` 층은 쓰이지 않아 2026-09-04에 지웠습니다. 위젯 여럿을 한 판으로 묶어야 하는 요구가 생기면 그때 slug 하나로 층을 다시 세웁니다.
 
-폭·표면색·세로 리듬은 프레임이 소유합니다 — 위젯은 자기 `max-width`를 갖지 않습니다([09 §7](09-design-system.md)).
+**Widget이 소유하는 것** — 자기 셀 안의 콘텐츠. **셀 안에서는 `w-full`과 배경색을 자유롭게 씁니다**(판형·스와치·패널의 면은 위젯 콘텐츠입니다). 금지는 섹션의 폭 결정권을 가져가는 것입니다. 인터랙션 컨트롤의 폭은 위젯이 아니라 컨트롤러 킷이 갖습니다(§4.1).
 
-### 🔴 rules는 Block에만 둡니다 (provenance 불변식)
+폭·세로 리듬은 프레임과 격자가 소유합니다 — 위젯은 자기 `max-width`를 갖지 않습니다([09 §7](09-design-system.md)).
 
-`checks/collect-guideline-check-sources.ts`가 `document.blocks[].rules`만 훑고 **자식으로 내려가지 않습니다.** rules를 위젯으로 내리면 rule이 조용히 소멸합니다. 위젯은 rule·projection·evidence를 갖지 않습니다(표현 전용).
+### 🔴 rules는 Section에만 둡니다 (provenance 불변식)
 
-### 🔴 기계가 읽는 텍스트는 Block이 소유합니다
+`checks/collect-guideline-check-sources.ts`가 `document.blocks[].rules`(섹션)만 훑고 **leaf로 내려가지 않습니다.** rules를 위젯으로 내리면 rule이 조용히 소멸합니다. 위젯은 rule·projection·evidence를 갖지 않습니다(표현 전용).
 
-위젯·이미지는 **사람이 보는 표현**입니다. AI 챗·가이드라인 검색·검수가 읽는 평문은 Block의 `title`·`description`·`rules` 셋에서만 나옵니다. 그래서 위젯에 `projection.ts`를 만들지 않는 것(§2)이 누락이 아니라 계약입니다.
+### 🔴 기계가 읽는 텍스트는 Section이 소유합니다
 
-대신 **Block이 그 셋을 실제로 투영해야 합니다.** `blocks/block/projection.ts`가 한동안 `children` 수만 세고 `title`·`description`을 버려서, 사람이 admin에 쓴 글이 조회 계층에 도달하지 못했습니다(2026-08-10 수정, `projection.test.ts`가 지킵니다). 위젯을 늘려도 이 평문은 두꺼워지지 않으므로, 검색·챗에 걸려야 하는 설명은 Block의 본문에 씁니다.
+위젯·이미지는 **사람이 보는 표현**입니다. AI 챗·가이드라인 검색·검수가 읽는 평문은 Section의 `title`·`description`·`rules` 셋에서만 나옵니다. 그래서 위젯에 `projection.ts`를 만들지 않는 것(§2)이 누락이 아니라 계약입니다.
 
-### 값 공유는 Block이 provider
+대신 **Section이 그 셋을 실제로 투영해야 합니다.** 옛 `blocks/block/projection.ts`가 한동안 `children` 수만 세고 `title`·`description`을 버려서, 사람이 admin에 쓴 글이 조회 계층에 도달하지 못했습니다(2026-08-10 수정, `projection.test.ts`가 지킵니다). 위젯을 늘려도 이 평문은 두꺼워지지 않으므로, 검색·챗에 걸려야 하는 설명은 Section의 본문에 씁니다.
 
-형제 위젯이 값을 공유해야 하면 **Block이 context provider가 됩니다**(`controllers/provider.tsx` + `blocks/block/component.tsx`). 위젯이 자기 스토어를 따로 만들지 않습니다 — 공유 값은 전부 컨트롤러 계약을 탑니다(§4.1).
+### 값 공유는 Section이 provider
+
+형제 위젯이 값을 공유해야 하면 **Section이 context provider가 됩니다**(`controllers/provider.tsx` + `blocks/section/component.tsx`). 한 섹션의 판형들이 슬라이더 하나를 공유합니다. 위젯이 자기 스토어를 따로 만들지 않습니다 — 공유 값은 전부 컨트롤러 계약을 탑니다(§4.1).
 
 🔴 **모듈 스코프 스토어는 금지입니다.** 토픽 라우트가 여러 섹션을 한 화면에 렌더하므로, 섹션마다 놓인 패널이 전부 같은 값을 물어 슬라이더 하나가 판형 12개를 함께 움직입니다(실측된 사고). `set`은 `useCallback`으로 안정화해 소비자가 effect 의존에 넣을 수 있게 합니다.
 
-Block은 특정 자식을 배치에서 걷어내 **다른 자리에 렌더**할 수 있습니다 — 컨트롤 패널이 배치 셀을 차지하면 안 되기 때문입니다(`splitControls`). 지금 그 자리는 화면 하단의 **Floating Controller**입니다(§4.1).
+Section은 특정 leaf를 격자에서 걷어내 **다른 자리에 렌더**할 수 있습니다 — 컨트롤 패널이 배치 셀을 차지하면 안 되기 때문입니다(`splitControls`). 지금 그 자리는 화면 하단의 **Floating Controller**입니다(§4.1).
 
 ### 4.1 컨트롤은 매니페스트가 정하고 하단 Floating Controller에 뜹니다
 
@@ -123,7 +125,7 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 
 그래서 정본 지면 구성이 그대로 나옵니다: 가로형·세로형을 수평 병행, 표현 3종을 나란히. `layout-grid`는 같은 문제를 `override ?? 값`과 lock 플래그로 풉니다(`docs/11` 인스턴스 오버라이드 3형태).
 
-🔴 **dispatch가 인스턴스 필드를 props로 넘기지 않으면 두 번째 판의 admin 값이 조용히 버려집니다.** `blocks/block/component.tsx`의 case마다 `child.<필드>`를 넘겨야 합니다 — 에러도 경고도 없이 「저장했는데 안 바뀐다」로 나타납니다.
+🔴 **dispatch가 인스턴스 필드를 props로 넘기지 않으면 두 번째 판의 admin 값이 조용히 버려집니다.** `leaves/render-leaf.tsx`의 case마다 `leaf.<필드>`를 넘겨야 합니다 — 에러도 경고도 없이 「저장했는데 안 바뀐다」로 나타납니다.
 
 🔴 **`select` 초기값이 options에 없으면 렌더가 던져 페이지가 죽습니다.** 선택지를 데이터에서 파생하는 위젯은 registry에서 값의 유효성을 확인하고 버려야 합니다(`ci-lockup`의 `usable`).
 
@@ -187,8 +189,8 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 
 ## 7. 알려진 결함
 
-- ✅ **컨테이너 Block의 자식 위젯 이미지는 AI 검수에 넣지 않습니다 — 결함이 아니라 결정입니다**(2026-08-12). 기계(AI 챗·검색·검수)가 읽는 것은 Block이 소유한 title·description·rule 셋뿐이고, 자식 위젯과 그 이미지는 사람이 보는 표현입니다(§4). 그래서 `blocks/block/projection.ts`의 `projectBlock`은 `referenceAssets: []`를 돌려주고, `checks/collect-guideline-check-sources.ts`도 컨테이너 자식 이미지를 모으지 않습니다. 🔴 **위젯별 projection을 만들어 이 경로를 "복구"하지 마십시오.**
-- 구 flat 블록 18종은 2026-08-10에, 한 번도 쓰이지 않은 `content-columns`·`callout`·`subBlock`은 2026-09-04에 삭제됐습니다. 토픽에 배치할 수 있는 것은 `section`과 `block` 컨테이너 둘뿐이고, 나머지 시각 요소는 전부 컨테이너의 자식 위젯입니다. 동결된 CheckSession 스냅샷에 남은 옛 근거는 `checks/format-check-evidence.ts`가 읽기만 합니다.
+- ✅ **섹션의 자식 위젯 이미지는 AI 검수에 넣지 않습니다 — 결함이 아니라 결정입니다**(2026-08-12). 기계(AI 챗·검색·검수)가 읽는 것은 섹션이 소유한 title·description·rule 셋뿐이고, 자식 위젯과 그 이미지는 사람이 보는 표현입니다(§4). 그래서 `blocks/section/projection.ts`는 `referenceAssets: []`를 돌려주고, `checks/collect-guideline-check-sources.ts`도 leaf 이미지를 모으지 않습니다. 🔴 **위젯별 projection을 만들어 이 경로를 "복구"하지 마십시오.**
+- 구 flat 블록 18종은 2026-08-10에, 한 번도 쓰이지 않은 `content-columns`·`callout`·`subBlock`은 2026-09-04에 삭제됐습니다. 같은 날 블록 층(`block`) 자체도 걷어 **섹션이 leaf(이미지·위젯)를 직접 품습니다.** 토픽에 배치할 수 있는 것은 `section` 하나이고, 나머지 시각 요소는 전부 섹션의 자식 leaf입니다. 동결된 CheckSession 스냅샷에 남은 옛 근거는 `checks/format-check-evidence.ts`가 읽기만 합니다.
 - 🔴 **CI 락업 도판의 치수 라벨이 H를 따라오지 않습니다.** 라벨 글자는 고정 크기(`text-xs`)라 좁은 간격 트랙에서 서로를 지우고(해외지사 가로형A에서 기본 H=100에도 인접 라벨이 겹칩니다), 게이지 라벨의 오프셋도 고정 px이라 H를 낮추면 치수선에 붙고 높이면 멀어집니다. 라벨을 H 배수로 조판하거나 겹칠 때 자리를 옮기는 규칙이 필요합니다(`ci-lockup/diagram.tsx`).
 - 🔴 **CI 락업의 치수 도판에서, 셀 안에 가운데 정렬된 글자·심볼이 셀 폭이 바뀔 때 그 절반만큼 순간이동합니다.** 세로형에서 드러납니다. 도판은 요소의 이동을 FLIP으로 잇는데 기준이 **셀 상자**이고, 상자 안의 내용은 상자 폭에서 파생된 자리에 놓이므로 상자만 되돌려서는 내용이 제자리에 오지 않습니다. 고치려면 잉크를 기준으로 재야 하고, 그러려면 셀을 꽉 채우는 래퍼를 없애 상자가 곧 잉크가 되게 해야 합니다(`ci-lockup/diagram.tsx`).
 - 🔴 **CI 락업의 치수 도판을 키보드로 열 수 없습니다.** hover(pointer)로만 열립니다. focus로 열면 도판이 내보내기 버튼을 판에서 밀어내는데, 그 버튼이 곧 포커스를 쥔 요소라 포커스가 body로 튑니다. 여는 길과 내보내기 자리를 겹치지 않게 다시 잡아야 풀립니다(`ci-lockup/view.tsx`).

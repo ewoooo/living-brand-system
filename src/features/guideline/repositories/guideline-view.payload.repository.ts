@@ -120,7 +120,8 @@ export async function listPublishedGuidelineNavigationTopics(): Promise<
 		chapterId: relationshipId(document.chapter),
 		id: document.id,
 		sections: (document.blocks ?? []).flatMap((block) =>
-			block.blockType === 'section' && block.anchor
+			// 제목 없는 섹션(히어로)은 앵커도 목차 항목도 없다.
+			block.blockType === 'section' && block.anchor && block.title
 				? [{ anchor: block.anchor, title: block.title }]
 				: [],
 		),
