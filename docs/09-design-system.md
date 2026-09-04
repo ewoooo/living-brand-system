@@ -146,11 +146,11 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 
 세로 리듬은 두 층이 담당합니다. 프레임의 self-padding(`content-frame.tsx`의 `py-8`)은 요소 **안쪽**의 대칭 여백이고, 요소 **사이**의 간격은 `blocks/shared/rhythm.ts`의 `BLOCK_SPACING`이 소유합니다. 요소 사이 실제 간격은 `패딩 + BLOCK_SPACING + 패딩`의 합입니다.
 
-`BLOCK_SPACING`은 블록 종류별 위쪽 여백(`[&:not(:first-child)]:mt-*`)입니다 — 부모 `gap` 하나가 아닌 이유는 한 스택 안에 꼭지 사이(288)와 그 밖의 블록 사이(32) 두 리듬이 섞이기 때문이고, 최상위 스택(`components/guideline-blocks.tsx`)과 꼭지 안의 스택(`blocks/section`)이 같은 값을 읽습니다. 본문 텍스트가 앉는 오른쪽 반칸도 같은 파일의 `RIGHT_HALF`가 소유합니다 — 꼭지 제목·콜아웃·단일 컬럼 텍스트가 한 열에 서야 세로선이 맞습니다.
+`BLOCK_SPACING`은 블록 종류별 위쪽 여백(`[&:not(:first-child)]:mt-*`)입니다 — 부모 `gap` 하나가 아닌 이유는 한 스택 안에 섹션 사이(288)와 그 밖의 블록 사이(32) 두 리듬이 섞이기 때문이고, 최상위 스택(`components/guideline-blocks.tsx`)과 섹션 안의 스택(`blocks/section`)이 같은 값을 읽습니다. 본문 텍스트가 앉는 오른쪽 반칸도 같은 파일의 `RIGHT_HALF`가 소유합니다 — 섹션 제목·콜아웃·단일 컬럼 텍스트가 한 열에 서야 세로선이 맞습니다.
 
 값을 바꿀 때는 이 두 자리만 고칩니다. 개별 블록이 자기 패딩·마진·열 배치를 다시 잡는 것은 이 통일을 깨므로 지양합니다.
 
-헤딩 계층은 `GuidelineHeader`가 `variant`(`topic` h1 / `section` h2 / `block` h3)로 분기해 소유합니다(`guideline-header.tsx`). 인덱스 화면의 h1은 히어로 락업이, 챕터 카드 제목은 `PanelCard`가 그립니다. 랜드마크는 셸이 `main`을(`section-layout.tsx`), 토픽 화면이 `article` 하나를(`pages/guideline-topic.tsx`) 갖고, 블록 프레임과 꼭지 안쪽은 랜드마크를 만들지 않습니다.
+헤딩 계층은 `GuidelineHeader`가 `variant`(`topic` h1 / `section` h2 / `block` h3)로 분기해 소유합니다(`guideline-header.tsx`). 인덱스 화면의 h1은 히어로 락업이, 챕터 카드 제목은 `PanelCard`가 그립니다. 랜드마크는 셸이 `main`을(`section-layout.tsx`), 토픽 화면이 `article` 하나를(`pages/guideline-topic.tsx`) 갖고, 블록 프레임과 섹션 안쪽은 랜드마크를 만들지 않습니다.
 
 ### 가이드라인 계층 이름은 Figma 정본과 다릅니다
 
@@ -160,7 +160,7 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 | --- | --- | --- |
 | 챕터 chapter | — | 최상위 문서. 토픽 카드 목록 화면 |
 | 토픽 topic | **Section Heading**(61:3503) | URL을 가진 문서 한 장. 히어로 + 제목 |
-| 섹션 section | **Article**(61:3299·61:3376) | 토픽 본문 안의 꼭지. 문서가 아니라 블록이고 `#앵커`만 가집니다 |
+| 섹션 section | **Article**(61:3299·61:3376) | 토픽 본문 안의 섹션. 문서가 아니라 블록이고 `#앵커`만 가집니다 |
 
 🔴 코드 주석이 인용하는 Figma 노드 id는 그대로 둡니다 — 이름을 코드 어휘로 바꿔 적으면 Figma에서 그 노드를 찾을 수 없게 됩니다.
 

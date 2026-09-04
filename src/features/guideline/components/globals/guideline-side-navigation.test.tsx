@@ -64,7 +64,7 @@ const chapters: GetGuidelineNavigationOutput['chapters'] = [
 ]
 
 describe('GuidelineSideNavigation', () => {
-	it('활성 경로를 chapter → topic → 꼭지 depth로 표시한다', () => {
+	it('활성 경로를 chapter → topic → 섹션 depth로 표시한다', () => {
 		const { container } = render(
 			<TooltipProvider>
 				<SidebarProvider>

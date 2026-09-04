@@ -109,7 +109,7 @@ export async function listPublishedGuidelineNavigationTopics(): Promise<
 			slug: true,
 			displayOrder: true,
 			chapter: true,
-			// 🔴 꼭지 목차는 `section` 블록에서 나온다. blockType별로 골라 담으면 나머지 블록
+			// 🔴 섹션 목차는 `section` 블록에서 나온다. blockType별로 골라 담으면 나머지 블록
 			//    테이블(blk·img·위젯 20종)은 조인 자체가 일어나지 않는다
 			//    (`@payloadcms/drizzle` find/traverseFields.js — 목록에 없는 블록은 빈 select로 접힌다).
 			blocks: { section: { anchor: true, title: true } },
@@ -157,8 +157,8 @@ export async function findPublishedTopicBySlug(
 	topicSlug: string,
 ): Promise<GuidelineTopicData | null> {
 	const payload = await getPayload({ config })
-	// depth 1: 꼭지(section) 블록이 품은 이미지(application-images)·색상(brand-colors) 관계를
-	// populate해야 렌더된다. 꼭지 자신의 면(background)도 같은 depth로 hex까지 채워진다.
+	// depth 1: 섹션(section) 블록이 품은 이미지(application-images)·색상(brand-colors) 관계를
+	// populate해야 렌더된다. 섹션 자신의 면(background)도 같은 depth로 hex까지 채워진다.
 	const topics = await payload.find({
 		collection: 'guideline-documents',
 		depth: 1,

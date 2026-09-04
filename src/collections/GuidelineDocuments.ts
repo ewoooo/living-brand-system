@@ -15,17 +15,17 @@ export const GuidelineDocuments: CollectionConfig = {
 	dbName: 'guideline_docs',
 	access: managerManagedAccess,
 	labels: {
-		singular: '가이드라인 문서',
-		plural: '가이드라인 문서',
+		singular: '가이드라인 토픽',
+		plural: '가이드라인 토픽',
 	},
 	admin: {
 		group: '가이드라인',
 		useAsTitle: 'title',
 		// 표시 순서가 목록의 정렬 기준이므로 열로 내놓는다 — 안 보이면 왜 이 순서인지 알 수 없다.
 		defaultColumns: ['title', 'chapter', 'slug', '_status', 'displayOrder', 'updatedAt'],
-		description: '챕터에 속한 가이드라인 문서입니다. 본문의 꼭지는 섹션 블록입니다.',
+		description: '챕터에 속한 토픽 한 장입니다. 본문은 섹션 블록으로 나눕니다.',
 		// 🔴 문서는 설명·면(배경색·톤)을 갖지 않는다(2026-08-26 제거). 설명은 전 문서에서 값이 하나도
-		//    없었고 토픽 화면이 그리지도 않았다. 면은 꼭지(section 블록) 전용이다 — 문서 레벨 면은
+		//    없었고 토픽 화면이 그리지도 않았다. 면은 섹션(section 블록) 전용이다 — 문서 레벨 면은
 		//    렌더 어디에서도 읽히지 않는 채 어드민 사이드바만 차지하고 있었다.
 		// 🔴 커스텀 목록 뷰는 폐기했다(2026-08-26). 계층을 재귀 트리로 그리려고 만든 것인데
 		//    챕터가 별도 컬렉션이 되면서 그릴 계층이 없어졌다 — Payload 기본 목록이 열 몇 개로
@@ -97,7 +97,7 @@ export const GuidelineDocuments: CollectionConfig = {
 			relationTo: 'application-images',
 			admin: {
 				position: 'sidebar',
-				description: '문서 헤더에 표시할 선택 이미지입니다.',
+				description: '토픽 헤더에 표시할 선택 이미지입니다.',
 			},
 		},
 		{
@@ -115,7 +115,7 @@ export const GuidelineDocuments: CollectionConfig = {
 			min: 0,
 			admin: {
 				position: 'sidebar',
-				description: '숫자가 낮을수록 같은 부모 아래에서 먼저 표시됩니다.',
+				description: '숫자가 낮을수록 같은 챕터 안에서 먼저 표시됩니다.',
 			},
 		},
 	],

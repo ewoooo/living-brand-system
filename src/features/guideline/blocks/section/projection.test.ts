@@ -9,7 +9,7 @@ const section = {
 }
 
 describe('projectSection', () => {
-	// 🔴 꼭지가 문서였을 때는 slug가 검색에 걸렸다. 블록이 된 뒤에도 앵커로 찾을 수 있어야 한다.
+	// 🔴 섹션가 문서였을 때는 slug가 검색에 걸렸다. 블록이 된 뒤에도 앵커로 찾을 수 있어야 한다.
 	it('제목·앵커·자식 블록 텍스트를 평문에 담는다', () => {
 		const { text } = projectSection(section as never)
 
@@ -18,7 +18,7 @@ describe('projectSection', () => {
 		expect(text).toContain('판형')
 	})
 
-	it('evidence에 앵커를 남겨 근거가 꼭지를 지목할 수 있게 한다', () => {
+	it('evidence에 앵커를 남겨 근거가 섹션를 지목할 수 있게 한다', () => {
 		expect(projectSection(section as never).evidence).toMatchObject({
 			type: 'section',
 			anchor: 'key-layout',

@@ -23,7 +23,7 @@ import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/schem
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
 import { backgroundToneField, baseBlockFields } from '../shared/fields'
 
-// 꼭지(section) 바로 하위의 레이아웃 컨테이너. widget/image(leaf)들을 품고
+// 섹션(section) 바로 하위의 레이아웃 컨테이너. widget/image(leaf)들을 품고
 // 배치(arrangement·columns)를 소유한다. 폭은 갖지 않는다 — 프레임 폭은 항상 중간폭이다.
 // 🔴 rules는 컨테이너(Block)에만 = provenance 불변식(collectGuidelineCheckSources가 block.rules를 훑음).
 // dbName 짧게(blk)로 중첩 테이블명 63자 방어. enum은 전역 이름 공유.

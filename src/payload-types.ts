@@ -233,7 +233,7 @@ export interface GuidelineChapter {
   createdAt: string;
 }
 /**
- * 챕터에 속한 가이드라인 문서입니다. 본문의 꼭지는 섹션 블록입니다.
+ * 챕터에 속한 가이드라인 문서입니다. 본문의 섹션는 섹션 블록입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "guideline-documents".
@@ -1314,11 +1314,11 @@ export interface SubLayoutBlock {
  */
 export interface SectionBlock {
   /**
-   * 이 꼭지의 URL 앵커입니다(예: key-layout). 비우면 제목에서 자동 생성합니다. 토픽 안에서 유일해야 합니다.
+   * 이 섹션의 URL 앵커입니다(예: key-layout). 비우면 제목에서 자동 생성합니다. 토픽 안에서 유일해야 합니다.
    */
   anchor?: string | null;
   /**
-   * 목차에 표시되는 꼭지 제목입니다.
+   * 목차에 표시되는 섹션 제목입니다.
    */
   title: string;
   /**
@@ -1340,7 +1340,7 @@ export interface SectionBlock {
     [k: string]: unknown;
   } | null;
   /**
-   * 꼭지 전체(제목·본문·블록)를 덮는 배경색입니다. 비우면 기본.
+   * 섹션 전체(제목·본문·블록)를 덮는 배경색입니다. 비우면 기본.
    */
   background?: (number | null) | BrandColor;
   /**
@@ -1348,7 +1348,7 @@ export interface SectionBlock {
    */
   backgroundTone?: ('solid' | 'tint') | null;
   /**
-   * 이 꼭지가 품는 레이아웃 블록들입니다.
+   * 이 섹션가 품는 레이아웃 블록들입니다.
    */
   blocks?: LayoutBlock[] | null;
   /**

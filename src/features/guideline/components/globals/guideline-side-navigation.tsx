@@ -5,10 +5,9 @@ import { Sidebar } from '@/components/global/sidebar/sidebar'
 import { CopyPageLink } from '@/components/shared/copy-page-link'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 import { scrollToGuidelineSection, useActiveSectionAnchor } from './guideline-section-navigation'
-import { getGuidelineTopicSections } from './guideline-topic-sections'
 
 /**
- * 좌측 가이드라인 탐색 — chapter → topic → 현재 topic의 꼭지 앵커를 표시한다.
+ * 좌측 가이드라인 탐색 — chapter → topic → 현재 topic의 섹션 앵커를 표시한다.
  * 🔴 **이것이 유일한 목차다.** 우측에 따로 있던 "On this page"는 2026-08-18에 지웠다 —
  *    같은 앵커를 같은 scroll-spy(`guideline-section-navigation`)로 두 곳에 그리고 있었다.
  */
@@ -21,7 +20,7 @@ export function GuidelineSideNavigation({
 	const currentTopic = chapters
 		.flatMap((chapter) => chapter.topics)
 		.find((topic) => pathname === topic.href || pathname.startsWith(`${topic.href}/`))
-	const currentSections = currentTopic ? getGuidelineTopicSections(currentTopic) : []
+	const currentSections = currentTopic?.sections ?? []
 	const activeAnchor = useActiveSectionAnchor(currentSections.map((section) => section.anchor))
 
 	return (
@@ -52,7 +51,7 @@ export function GuidelineSideNavigation({
 										const topicActive =
 											pathname === topic.href ||
 											pathname.startsWith(`${topic.href}/`)
-										const sections = getGuidelineTopicSections(topic)
+										const { sections } = topic
 
 										return (
 											<Sidebar.Item

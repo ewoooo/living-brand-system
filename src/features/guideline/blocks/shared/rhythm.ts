@@ -5,9 +5,9 @@ import type { GuidelineBlock } from '../types'
  * 바뀌면 이 파일만 고친다(docs/09 §7).
  *
  * 🔴 블록 사이 간격을 부모의 `gap`이 아니라 **자식의 위쪽 여백**으로 준다. 한 목록 안에 두 리듬이
- *    섞이기 때문이다 — 꼭지(section) 사이는 288, 그 밖의 블록 사이는 32(Figma 61:3376의 Article
+ *    섞이기 때문이다 — 섹션(section) 사이는 288, 그 밖의 블록 사이는 32(Figma 61:3376의 Article
  *    스택). gap 하나로는 표현할 수 없고, 종류별로 배열을 갈라 그리면 admin이 섞어 넣은 순서가
- *    뒤집힌다. 최상위 스택(`components/guideline-blocks.tsx`)과 꼭지 안의 스택(`section`)이
+ *    뒤집힌다. 최상위 스택(`components/guideline-blocks.tsx`)과 섹션 안의 스택(`section`)이
  *    같은 값을 읽는다.
  */
 export const BLOCK_SPACING: Record<GuidelineBlock['blockType'], string> = {
@@ -18,7 +18,7 @@ export const BLOCK_SPACING: Record<GuidelineBlock['blockType'], string> = {
 }
 
 /**
- * 본문 텍스트가 앉는 **오른쪽 반칸**(Figma 61:3299·61:3376의 Article 텍스트 열). 꼭지 제목·콜아웃·
+ * 본문 텍스트가 앉는 **오른쪽 반칸**(Figma 61:3299·61:3376의 Article 텍스트 열). 섹션 제목·콜아웃·
  * 단일 컬럼 텍스트가 같은 열에 서야 한 페이지 안에서 세로선이 맞는다. 좁은 화면에서는 한 열이다.
  */
 export const RIGHT_HALF = {
