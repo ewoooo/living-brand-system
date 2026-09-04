@@ -321,9 +321,11 @@ describe('GraphicGenerator', () => {
 		expect(within(left).getByText('Shape')).toBeInTheDocument()
 		expect(within(left).getByText('Style')).toBeInTheDocument()
 		expect(within(left).getByRole('button', { name: 'Ray Palette' })).toBeInTheDocument()
-		// 오른쪽은 공용 4축만 — 밀도·두께·속도가 Rays에, 기준점이 Position에 남는다.
-		expect(within(right).getByRole('slider', { name: '광선 밀도' })).toBeInTheDocument()
+		// 오른쪽은 네 축만 — 세기·두께·속도가 Rays에, 기준점이 Position에 남는다.
+		expect(within(right).getByRole('slider', { name: '광선 강도' })).toBeInTheDocument()
 		expect(within(right).getByRole('slider', { name: '속도' })).toBeInTheDocument()
+		// 밀도는 뺐다 — 무엇이 달라지는지 화면에서 읽히지 않는다.
+		expect(screen.queryByRole('slider', { name: '광선 밀도' })).toBeNull()
 		expect(within(right).getByText('Position')).toBeInTheDocument()
 		// 셰이더 고유 축은 admin 전용으로 내려가 창작자 화면에 없다.
 		expect(screen.queryByRole('button', { name: 'Sweep' })).toBeNull()
