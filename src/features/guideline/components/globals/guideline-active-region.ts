@@ -1,5 +1,5 @@
 // 하단 Floating Controller("Helper")의 활성 판정 규칙. 컴포넌트와 파일을 가르는 이유는
-// `guideline-page-navigation.ts`와 같다 — 순수 로직을 컴포넌트 파일에 두면 Fast Refresh가
+// `guideline-section-navigation.ts`와 같다 — 순수 로직을 컴포넌트 파일에 두면 Fast Refresh가
 // 매 편집마다 전체 리로드를 하고, 테스트가 렌더 트리를 끌고 들어와야 한다.
 
 /** 면적 비교의 흔들림 허용치(px²). 이 안이면 같은 크기로 보고 문서 순서로 가른다. */

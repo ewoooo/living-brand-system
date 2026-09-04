@@ -128,7 +128,7 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|or
 | --- | --- |
 | `--font-body`(Pretendard)는 `body`에 배선되어 기본 폰트로 동작 | `src/app/(frontend)/theme.css`, `src/app/(frontend)/styles.css` |
 | `--font-title`은 값이 정해지지 않아 Pretendard로 폴백하며, `.font-title` 클래스는 정의되어 있으나 상위 guideline 헤더에 미배선 | `src/app/(frontend)/theme.css` |
-| 그래서 `GuidelineHeader`의 `ChapterHeader`/`SectionHeader` 등은 `font-title` 없이 렌더되어 기본 body 폰트로 폴백 | `guideline-header.tsx` |
+| 그래서 `GuidelineHeader`의 모든 variant는 `font-title` 없이 렌더되어 기본 body 폰트로 폴백 | `guideline-header.tsx` |
 | `--font-heading`/`--font-mono`는 어디에도 정의되지 않아 `.typeset`의 `code`/`pre`는 브라우저 monospace로 폴백 | `src/app/(frontend)/typeset.css` (참조만, 정의 없음) |
 
 `font-title`을 헤더에 붙이거나 `--font-mono`를 정의하는 것은 파운데이션 변경(09)이지 컴포넌트 작업이 아닙니다. 상세한 텍스트 저작 규칙은 `docs/10`이 소유합니다.
@@ -139,10 +139,10 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 
 | 겹 | 컴포넌트 | 소유 책임 |
 | --- | --- | --- |
-| 표면색 껍질 | `GuidelineBlockFrame`(`<div>`, 랜드마크는 토픽의 `<article>` 하나) | 전체 폭 배경/전경(`normal`/`secondary`/`inverted`) |
+| 전체 폭 껍질 | `GuidelineBlockFrame`(`<div>`) | 전체 폭과 전경색. 면은 칠하지 않는다 — 배경은 `guideline-surface.ts`가 데이터로 얹는다 |
 | 폭 프레임 | `ContentFrame` | 최대 폭과 가로 여백(`max-w-[1540px] px-4 md:px-8`) |
 
-`GuidelineBlockFrame`(`guideline-block-frame.tsx`)은 표면색만 정하고 즉시 `ContentFrame`을 감쌉니다. 폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
+`GuidelineBlockFrame`(`guideline-block-frame.tsx`)은 전경색만 정하고 즉시 `ContentFrame`을 감쌉니다. 폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
 
 세로 리듬은 두 층이 담당합니다. 프레임의 self-padding(`content-frame.tsx`의 `py-8`)은 요소 **안쪽**의 대칭 여백이고, 요소 **사이**의 간격은 `blocks/shared/rhythm.ts`의 `BLOCK_SPACING`이 소유합니다. 요소 사이 실제 간격은 `패딩 + BLOCK_SPACING + 패딩`의 합입니다.
 
@@ -150,7 +150,7 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 
 값을 바꿀 때는 이 두 자리만 고칩니다. 개별 블록이 자기 패딩·마진·열 배치를 다시 잡는 것은 이 통일을 깨므로 지양합니다.
 
-최상위 헤더 계층은 `GuidelineHeader`가 `variant`(`onboard`/`chapter`/`section`/`page`/`block`)로 분기해 소유합니다(`guideline-header.tsx`). page 헤더는 `GuidelinePageHeading`으로 분리되어 있습니다. 앱 셸의 `main` 랜드마크는 layout이 아니라 각 라우트 본문이 소유합니다(`layout.tsx`).
+헤딩 계층은 `GuidelineHeader`가 `variant`(`topic` h1 / `section` h2 / `block` h3)로 분기해 소유합니다(`guideline-header.tsx`). 인덱스 화면의 h1은 히어로 락업이, 챕터 카드 제목은 `PanelCard`가 그립니다. 랜드마크는 셸이 `main`을(`section-layout.tsx`), 토픽 화면이 `article` 하나를(`pages/guideline-topic.tsx`) 갖고, 블록 프레임과 꼭지 안쪽은 랜드마크를 만들지 않습니다.
 
 ### 가이드라인 계층 이름은 Figma 정본과 다릅니다
 

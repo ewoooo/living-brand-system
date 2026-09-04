@@ -4,8 +4,6 @@ import { GuidelineImage } from './guideline-image'
 import type { GuidelineVariant } from './guideline-variant'
 
 const HEADER_STYLE = {
-	onboard: { level: 1, size: '6xl', weight: 'bold' },
-	chapter: { level: 1, size: '6xl', weight: 'semibold' },
 	// Figma 61:3509는 64px SemiBold다. 공유 어휘의 가장 가까운 칸이 6xl(60px)이라 4px 모자라고,
 	// 그 4px 때문에 `text-[64px]`를 들이지는 않는다 — 크기를 어휘 밖에서 말하기 시작하면 다음
 	// 제목도 같은 이유로 어휘를 벗어난다. 정확히 64가 필요하면 theme.css의 `--text-6xl`을 옮긴다.
@@ -16,11 +14,11 @@ const HEADER_STYLE = {
 
 export function GuidelineHeader({
 	title,
-	variant = 'chapter',
+	variant,
 	className,
 }: {
 	title?: string | null
-	variant?: GuidelineVariant
+	variant: GuidelineVariant
 	className?: string
 }) {
 	if (!title) return null
@@ -50,7 +48,6 @@ export function GuidelineHeaderImage({ image }: { image?: GuidelineDocument['hea
 
 	return (
 		<GuidelineImage
-			variant="topic"
 			image={value}
 			// 비율은 Figma(61:3503)의 프레임 실측이라 `ratio` 어휘에 없다 — admin이 고르는 값이
 			// 아니고 이 자리 하나에만 쓰이므로 목록을 늘리지 않고 여기서 직접 준다.

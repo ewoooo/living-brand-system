@@ -6,8 +6,6 @@ afterEach(cleanup)
 
 describe('GuidelineHeader', () => {
 	it.each([
-		['onboard', 1, '6xl'],
-		['chapter', 1, '6xl'],
 		['topic', 1, '6xl'],
 		['section', 2, '2xl'],
 		['block', 3, 'base'],

@@ -75,7 +75,6 @@ function SingleColumnItem({
 	return (
 		<figure className="flex flex-col gap-2">
 			<GuidelineImage
-				variant="block"
 				image={column.image}
 				alt={column.heading || ''}
 				backgroundColor={column.imageBackgroundColor}
@@ -107,7 +106,6 @@ function MutlipleColumnItem({
 		<figure className="flex flex-col gap-2">
 			{hasImage(column) && (
 				<GuidelineImage
-					variant="block"
 					image={column.image}
 					alt={column.heading || ''}
 					backgroundColor={column.imageBackgroundColor}

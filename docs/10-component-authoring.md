@@ -40,7 +40,7 @@ grep -rl "Badge\|Card\|Typography" src/components src/features
 | className 병합 | `@/lib/utils`의 `cn` |
 | 색 파생(전경색·RGB) | `@/lib/color` (`hexToRgb`, `getContrastingForeground`) |
 | 콘텐츠 최대 폭 | `ContentFrame` (`src/components/shared/content-frame.tsx`) |
-| 블록 표면색(배경) | `GuidelineBlockFrame` |
+| 블록 표면색(배경) | `guideline-surface.ts`의 `surfaceStyle`/`surfaceScopeClass` (admin의 `background`·`backgroundTone` 데이터를 얹는다) |
 
 shadcn 4.12의 공식 아이콘 목록에는 Carbon이 없어 `components.json`은 `radix-mira`가 지원하는 `hugeicons` 값을 유지합니다. 이 값은 생성기 호환용일 뿐 저장소의 아이콘 정책이 아닙니다. shadcn 컴포넌트를 추가한 같은 변경에서 생성된 아이콘을 `@carbon/icons-react`로 바꾸고, `@hugeicons/*` import가 0건인지 확인한 뒤 커밋합니다. `iconLibrary`를 임의의 `carbon` 문자열로 바꾸면 레지스트리의 `IconPlaceholder`가 변환되지 않으므로 금지합니다.
 
@@ -347,7 +347,7 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 ### 폭·표면색·세로 리듬은 프레임이 소유
 
 - 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1540px]`). 예외는 프리미티브의 **내재 콘텐츠 폭**뿐입니다 — `dialog`의 `max-w-sm`, `tooltip`의 `max-w-xs`, `bubble`의 `max-w-[80%]`처럼 오버레이·말풍선이 자기 판형을 갖는 것은 페이지 폭 소유가 아닙니다. 금지 대상은 화면·블록 컴포넌트가 페이지 폭을 스스로 좁히는 것(`<Card className="max-w-2xl">` 등)입니다.
-- 표면 배경색은 컴포넌트 안에 칠하지 않고 `GuidelineBlockFrame`의 `variant`(`normal`/`secondary`/`inverted`)로 받습니다.
+- 표면 배경색은 컴포넌트 안에 칠하지 않습니다. 블록·꼭지의 면은 admin 데이터(`background`·`backgroundTone`)를 `guideline-surface.ts`의 `surfaceStyle`/`surfaceScopeClass`로 얹습니다(`docs/09` §5). `GuidelineBlockFrame`은 면을 칠하지 않는 폭 껍질입니다.
 - 블록 간 세로 리듬은 프레임 패딩(`content-frame.tsx`의 `py-8`)과 `blocks/shared/rhythm.ts`의 `BLOCK_SPACING`이 소유합니다(`docs/09` §7). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
 
 ## 5. 브랜드 무관
@@ -413,7 +413,7 @@ PR을 올리기 전 자기 점검용입니다.
 - [ ] §4의 팔레트 탐지 grep(무채 + 유채 전체) 결과가 이 컴포넌트에서 0이다. 판정·상태 색은 상태 토큰(`success`/`info`/`warning`/`destructive`)이다.
 - [ ] `grep -rE 'className=.*#[0-9a-fA-F]{6}'`에 걸리는 생 hex가 없다(색 데이터 props는 예외).
 - [ ] `grep -rE '(grid-cols|col-span|gap)-\$\{'`에 걸리는 동적 클래스가 없다. 조건부 완전 클래스로 바꿨다.
-- [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`, 표면색은 `GuidelineBlockFrame`이 소유한다.
+- [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`이, 표면색은 `guideline-surface.ts`가 소유한다.
 - [ ] 아이콘은 `@carbon/icons-react`다. `@hugeicons`가 없다.
 - [ ] 색·폰트·로고를 props로 받는다. 하드코딩은 개발용 default 값뿐이다.
 - [ ] 색·전경색은 저장하지 않고 `@/lib/color`로 런타임 파생한다.

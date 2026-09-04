@@ -1,7 +1,7 @@
 import { isLightColor, isValidHex } from '@/lib/color'
 
 /**
- * 색을 **데이터로 주입한 면**의 공용 계약. 블록(`blocks/block`)과 페이지(`pages/guideline-page`)가
+ * 색을 **데이터로 주입한 면**의 공용 계약. 블록(`blocks/block`)과 꼭지(`blocks/section`)가
  * 같은 면을 그리므로 여기 한 곳이 소유한다 — 두 곳에 같은 계산을 두면 톤이 조용히 갈라진다.
  *
  * 톤 어휘의 정의는 `blocks/shared/fields.ts`의 `backgroundToneField()`에 있다.
