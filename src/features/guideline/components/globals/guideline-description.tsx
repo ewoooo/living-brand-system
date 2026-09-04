@@ -19,7 +19,7 @@ export function GuidelineDescription({
 	if (!description) return <GuidelineDescriptionFallback variant={variant} />
 
 	return (
-		<section className="text-balance">
+		<div className="text-balance">
 			{variant === 'onboard' && <OnboardDescription description={description} />}
 			{variant === 'chapter' && <ChapterDescription description={description} />}
 			{/*
@@ -30,7 +30,7 @@ export function GuidelineDescription({
 			 */}
 			{variant === 'section' && <SectionDescription description={description} />}
 			{variant === 'block' && <BlockDescription description={description} />}
-		</section>
+		</div>
 	)
 }
 

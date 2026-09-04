@@ -26,7 +26,8 @@ export function GuidelineBlocks({
 	betterEditor?: boolean
 }) {
 	return (
-		<article className="flex flex-col">
+		// 랜드마크는 토픽 화면(`pages/guideline-topic.tsx`)의 <article> 하나가 갖는다 — 여기는 스택일 뿐이다.
+		<div className="flex flex-col">
 			{blocks?.map((block) => {
 				const content = renderBlock(block)
 
@@ -40,6 +41,6 @@ export function GuidelineBlocks({
 					</div>
 				)
 			})}
-		</article>
+		</div>
 	)
 }

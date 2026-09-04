@@ -17,7 +17,6 @@ type GuidelineBlockFrameProps = React.ComponentProps<'div'> & {
 	layout: ContentFrameVariant
 	variant?: GuidelineBlockFrameVariant
 	contentClassName?: string
-	label?: string
 }
 
 /** 블록의 전체 폭 표면과 내부 콘텐츠 폭을 한 경계에서 정의한다. */
@@ -27,20 +26,20 @@ export function GuidelineBlockFrame({
 	className,
 	contentClassName,
 	children,
-	label,
 	...props
 }: GuidelineBlockFrameProps) {
 	return (
-		<section
+		// <section>이 아니다 — 제목 없는 블록도 있어 이름 없는 랜드마크만 늘고, 제목이 있는 블록은
+		// 헤딩이 이미 아웃라인을 만든다. 랜드마크는 토픽의 <article> 하나가 갖는다.
+		<div
 			data-slot="guideline-block-frame"
 			data-variant={variant}
 			className={cn(variantClassNames[variant], className)}
-			aria-label={label}
 			{...props}
 		>
 			<ContentFrame variant={layout} className={contentClassName}>
 				{children}
 			</ContentFrame>
-		</section>
+		</div>
 	)
 }

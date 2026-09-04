@@ -32,7 +32,7 @@ export function SectionBlock({ block }: { block: SectionBlockType }) {
 		//
 		// 🔴 꼭지의 면은 여기서 칠한다 — Figma(61:3299)의 Article 면은 제목·본문까지 덮는다.
 		//    자식 블록이 자기 면을 갖고 있지만 그것은 배치 영역에서 끊기므로 이 자리를 대신 못 한다.
-		<article
+		<section
 			id={block.anchor ?? undefined}
 			className={cn(
 				'flex flex-col gap-12',
@@ -42,10 +42,10 @@ export function SectionBlock({ block }: { block: SectionBlockType }) {
 		>
 			<ContentFrame>
 				<div className="grid md:grid-cols-2">
-					<section className="flex flex-col gap-8 order-2 col-start-2">
+					<div className="flex flex-col gap-8 order-2 col-start-2">
 						<GuidelineHeader variant={variant} title={block.title} />
 						<GuidelineDescription variant={variant} description={block.description} />
-					</section>
+					</div>
 				</div>
 			</ContentFrame>
 			<div className="flex flex-col gap-8">
@@ -53,7 +53,7 @@ export function SectionBlock({ block }: { block: SectionBlockType }) {
 					<LayoutBlockComponent key={child.id} block={child} />
 				))}
 			</div>
-		</article>
+		</section>
 	)
 }
 

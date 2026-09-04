@@ -27,7 +27,7 @@ export function ContentColumnsBlock({ block }: { block: ContentColumns }) {
 
 	return (
 		<GuidelineBlockFrame layout="padded">
-			<section className={GRID_CLASS}>
+			<div className={GRID_CLASS}>
 				{variant === 1 &&
 					columns.map((column) => (
 						<SingleColumnItem
@@ -44,7 +44,7 @@ export function ContentColumnsBlock({ block }: { block: ContentColumns }) {
 							ratio={block.imageRatio}
 						/>
 					))}
-			</section>
+			</div>
 		</GuidelineBlockFrame>
 	)
 }

@@ -1,3 +1,4 @@
+import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
 
@@ -38,9 +39,7 @@ export function CalloutBlock({ block }: { block: Callout }) {
 						>
 							{style.symbol}
 						</span>
-						<h4 className="font-body text-base font-semibold text-foreground">
-							{block.title || style.label}
-						</h4>
+						<GuidelineHeader variant="block" title={block.title || style.label} />
 					</div>
 					<ul className="mt-2 flex flex-col gap-2">
 						{items.map((item) => (

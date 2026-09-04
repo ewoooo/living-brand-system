@@ -139,7 +139,7 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 
 | 겹 | 컴포넌트 | 소유 책임 |
 | --- | --- | --- |
-| 표면색 껍질 | `GuidelineBlockFrame`(`<section>`) | 전체 폭 배경/전경(`normal`/`secondary`/`inverted`) |
+| 표면색 껍질 | `GuidelineBlockFrame`(`<div>`, 랜드마크는 토픽의 `<article>` 하나) | 전체 폭 배경/전경(`normal`/`secondary`/`inverted`) |
 | 폭 프레임 | `ContentFrame` | 최대 폭과 가로 여백(`max-w-[1540px] px-4 md:px-8`) |
 
 `GuidelineBlockFrame`(`guideline-block-frame.tsx`)은 표면색만 정하고 즉시 `ContentFrame`을 감쌉니다. 폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
