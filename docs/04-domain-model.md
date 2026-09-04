@@ -249,7 +249,7 @@ Rule은 자체 draft/publish 생명주기를 가지며 문서 발행과 독립�
       │         └── 도메인 이벤트
       │              ├── GuidelineDraftCreated, GuidelineSubmittedForReview, GuidelineApproved
       │              ├── GuidelinePublished, GuidelineScheduled, GuidelineDeprecated
-      │              ├── GuidelinePageUpdated, GuidelineBlockUpdated, GuidelineCheckUpdated, PageAssetLinked
+      │              ├── GuidelineTopicUpdated, GuidelineBlockUpdated, GuidelineCheckUpdated, PageAssetLinked
       │              └── GuidelineVersionStaged, GuidelineVersionPublished, GuidelineVersionArchived
       ├── [바운디드 컨텍스트] 브랜드 자원 관리
       │    └── [도메인 모델]
@@ -347,7 +347,7 @@ TemplateSourceRef는 Figma node 또는 업로드 파일 원본을 가리키고, 
 ImageProfile은 제작 화면이 소비할 완전한 Controller Definition과 Image Service가 지원하는 feature를 발행합니다. GraphicProfile은 코드에 등록된 GraphicRuntimeRef의 Definition을 kind-free sparse Override로 좁힙니다. Template도 HTML 슬롯에서 파생한 Definition에 같은 Override를 적용합니다. Override는 stable control ID와 기본값·선택지·범위·정적 availability만 가지며 실행 구현이나 화면 배치를 소유하지 않습니다. 세 Studio의 `output.formats`는 Runtime/Service 지원 형식과 Admin 허용 형식의 교집합인 Effective capability입니다.
 Plugin은 Creator가 산출물을 만들 때 사용할 수 있는 공식 제작 기능입니다.
 PluginEntry는 제품에서 호출할 수 있는 Plugin 실행 단위이고, PluginCapability는 Plugin이 제공하는 제작 기능입니다.
-GuidelinePage와 Check는 BrandAsset, Template, Plugin을 참조할 수 있지만, 파일 또는 Official Version 교체와 배포 상태는 브랜드 자원 관리가 담당합니다.
+GuidelineDocument와 Check는 BrandAsset, Template, Plugin을 참조할 수 있지만, 파일 또는 Official Version 교체와 배포 상태는 브랜드 자원 관리가 담당합니다.
 
 ## 5. 제작 관리
 
