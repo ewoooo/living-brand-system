@@ -3,6 +3,7 @@ import { GuidelineHeader } from '@/features/guideline/components/globals/guideli
 import { GuidelineImage } from '@/features/guideline/components/globals/guideline-image'
 import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
+import { RIGHT_HALF } from '../shared/rhythm'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type ContentColumns = Extract<GuidelineBlock, { blockType: 'contentColumns' }>
@@ -58,12 +59,11 @@ function SingleColumnItem({
 	column: Column
 	ratio: ContentColumns['imageRatio']
 }) {
-	// 이미지 없으면 빈 이미지 슬롯은 안 띄우되, 텍스트 정렬은 이미지 있을 때와 동일하게
-	// 오른쪽 열(col-start-2 = 수평 가운데부터)로 맞춘다. 다른 콘텐츠 행과 같은 스타일 유지.
+	// 이미지 없으면 빈 이미지 슬롯은 안 띄우되, 텍스트는 이미지 있을 때와 같은 오른쪽 반칸에 둔다.
 	if (!hasImage(column)) {
 		return (
-			<div className="grid grid-cols-2 gap-4">
-				<div className="col-start-2">
+			<div className={`${RIGHT_HALF.grid} gap-4`}>
+				<div className={RIGHT_HALF.cell}>
 					{column.heading && <GuidelineHeader variant="block" title={column.heading} />}
 					{column.body && (
 						<GuidelineDescription variant="block" description={column.body} />
@@ -84,8 +84,8 @@ function SingleColumnItem({
 				className="w-full bg-fill-muted"
 				imgClassName="h-auto w-full object-contain"
 			/>
-			<figcaption className="grid grid-cols-2 gap-4">
-				<div className="col-start-2">
+			<figcaption className={`${RIGHT_HALF.grid} gap-4`}>
+				<div className={RIGHT_HALF.cell}>
 					{column.heading && <GuidelineHeader variant="block" title={column.heading} />}
 					{column.body && (
 						<GuidelineDescription variant="block" description={column.body} />

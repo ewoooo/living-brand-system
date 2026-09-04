@@ -9,6 +9,7 @@ import type { GuidelineVariant } from '@/features/guideline/components/globals/g
 import { cn } from '@/lib/utils'
 import type { GuidelineDocument } from '@/payload-types'
 import LayoutBlockComponent from '../block/component'
+import { BLOCK_SPACING, RIGHT_HALF } from '../shared/rhythm'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type SectionBlockType = Extract<GuidelineBlock, { blockType: 'section' }>
@@ -41,16 +42,18 @@ export function SectionBlock({ block }: { block: SectionBlockType }) {
 			style={surfaceStyle(block.background, block.backgroundTone)}
 		>
 			<ContentFrame>
-				<div className="grid md:grid-cols-2">
-					<div className="flex flex-col gap-8 order-2 col-start-2">
+				<div className={RIGHT_HALF.grid}>
+					<div className={cn('flex flex-col gap-8', RIGHT_HALF.cell)}>
 						<GuidelineHeader variant={variant} title={block.title} />
 						<GuidelineDescription variant={variant} description={block.description} />
 					</div>
 				</div>
 			</ContentFrame>
-			<div className="flex flex-col gap-8">
+			<div className="flex flex-col">
 				{(block.blocks ?? []).map((child) => (
-					<LayoutBlockComponent key={child.id} block={child} />
+					<div key={child.id} className={BLOCK_SPACING.block}>
+						<LayoutBlockComponent block={child} />
+					</div>
 				))}
 			</div>
 		</section>

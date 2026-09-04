@@ -144,13 +144,11 @@ guideline 블록은 두 겹의 프레임으로 감쌉니다.
 
 `GuidelineBlockFrame`(`guideline-block-frame.tsx`)은 표면색만 정하고 즉시 `ContentFrame`을 감쌉니다. 폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록은 자기 `max-width`를 선언하지 않습니다 — 폭을 바꾸려면 프레임 한 곳만 고칩니다.
 
-세로 리듬은 프레임의 self-padding(`content-frame.tsx`의 `py-8`)과 스택 컨테이너의 `gap`이 함께 담당합니다. 요소 사이 실제 간격은 `패딩 + gap + 패딩`의 합입니다. "블록마다 마진을 흩뿌리지 않는다"의 뜻은 *바꾸지 않는다*가 아니라 *요소마다 제각각 다르게 주지 않는다*이며, 다음 세 불변식으로 리듬을 통일합니다:
+세로 리듬은 두 층이 담당합니다. 프레임의 self-padding(`content-frame.tsx`의 `py-8`)은 요소 **안쪽**의 대칭 여백이고, 요소 **사이**의 간격은 `blocks/shared/rhythm.ts`의 `BLOCK_SPACING`이 소유합니다. 요소 사이 실제 간격은 `패딩 + BLOCK_SPACING + 패딩`의 합입니다.
 
-1. 한 요소의 상하 패딩은 대칭이다(`py-*` 하나로).
-2. 모든 요소의 패딩은 동일하다(프레임 한 곳에서 소유).
-3. 모든 페이지의 요소 간 `gap`은 동일하다(스택 컨테이너 `flex/grid`의 `gap-8`).
+`BLOCK_SPACING`은 블록 종류별 위쪽 여백(`[&:not(:first-child)]:mt-*`)입니다 — 부모 `gap` 하나가 아닌 이유는 한 스택 안에 꼭지 사이(288)와 그 밖의 블록 사이(32) 두 리듬이 섞이기 때문이고, 최상위 스택(`components/guideline-blocks.tsx`)과 꼭지 안의 스택(`blocks/section`)이 같은 값을 읽습니다. 본문 텍스트가 앉는 오른쪽 반칸도 같은 파일의 `RIGHT_HALF`가 소유합니다 — 꼭지 제목·콜아웃·단일 컬럼 텍스트가 한 열에 서야 세로선이 맞습니다.
 
-값을 바꿀 때도 이 세 불변식만 유지하면 됩니다. 개별 블록이 자기 패딩·마진을 오버라이드하는 것은 이 통일을 깨므로 지양합니다.
+값을 바꿀 때는 이 두 자리만 고칩니다. 개별 블록이 자기 패딩·마진·열 배치를 다시 잡는 것은 이 통일을 깨므로 지양합니다.
 
 최상위 헤더 계층은 `GuidelineHeader`가 `variant`(`onboard`/`chapter`/`section`/`page`/`block`)로 분기해 소유합니다(`guideline-header.tsx`). page 헤더는 `GuidelinePageHeading`으로 분리되어 있습니다. 앱 셸의 `main` 랜드마크는 layout이 아니라 각 라우트 본문이 소유합니다(`layout.tsx`).
 

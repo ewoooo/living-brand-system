@@ -1,6 +1,7 @@
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineBlockFrame } from '../shared/guideline-block-frame'
+import { RIGHT_HALF } from '../shared/rhythm'
 
 type GuidelineBlock = NonNullable<GuidelineDocument['blocks']>[number]
 type Callout = Extract<GuidelineBlock, { blockType: 'callout' }>
@@ -30,8 +31,8 @@ export function CalloutBlock({ block }: { block: Callout }) {
 
 	return (
 		<GuidelineBlockFrame layout="padded">
-			<div className="grid grid-cols-2">
-				<div className="col-start-2 border border-neutral-200 p-6">
+			<div className={RIGHT_HALF.grid}>
+				<div className={`${RIGHT_HALF.cell} border border-neutral-200 p-6`}>
 					<div className="flex items-center gap-3">
 						<span
 							aria-hidden
