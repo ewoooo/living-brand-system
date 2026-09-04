@@ -10,7 +10,7 @@ type GuidelineBlockFrameProps = React.ComponentProps<'div'> & {
 /**
  * 블록의 전체 폭 표면과 내부 콘텐츠 폭을 한 경계에서 정의한다.
  *
- * 🔴 면을 **칠하지 않는다.** 기본 바탕 위에서는 `bg-background`와 결과가 같지만, 섹션가 옅은 면을
+ * 🔴 면을 **칠하지 않는다.** 기본 바탕 위에서는 `bg-background`와 결과가 같지만, 섹션이 옅은 면을
  *    깔면 불투명한 흰 면이 그 위를 덮어 제목만 색이 있고 배치는 흰 상태가 된다(실측). 면의 색은
  *    admin 데이터(`background`·`backgroundTone`)를 `surfaceStyle`/`surfaceScopeClass`로 얹는
  *    호출부가 갖는다 — 예전의 `secondary`/`inverted` variant는 그 체계로 대체되어 지웠다.

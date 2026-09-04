@@ -33,7 +33,7 @@ export async function getGuidelineDocumentPreviewTarget(
 
 /**
  * 토픽 preview는 발행 여부와 무관하게 선택한 draft 문서의 본문을 그대로 렌더링한다.
- * 섹션는 그 본문 안의 `section` 블록이라 하위 문서 조회가 없다.
+ * 섹션은 그 본문 안의 `section` 블록이라 하위 문서 조회가 없다.
  * Payload 조회는 guideline-preview repository가 소유한다.
  */
 export async function getGuidelineTopicPreview(

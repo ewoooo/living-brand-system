@@ -15,9 +15,9 @@ import type { GuidelineCheckSource } from '@/features/guideline/checks/collect-g
  */
 export const getCheckRuleset = cache(async (): Promise<CheckSection[]> => {
 	const { documents } = await getCheckSourceDocuments()
-	// 🔴 배치 단위는 문서가 아니라 **섹션**다. 2026-08-26 이관으로 섹션가 문서에서 블록이 되면서
+	// 🔴 배치 단위는 문서가 아니라 **섹션**이다. 2026-08-26 이관으로 섹션이 문서에서 블록이 되면서
 	//    한 토픽의 Check가 전부 한 덩어리로 뭉쳤고, 검수 화면의 딥링크가 토픽까지만 갔다.
-	//    근거가 지목하는 섹션(`source.section`)로 다시 가른다. 섹션가 없는 것은 문서 자신의 rule이다.
+	//    근거가 지목하는 섹션(`source.section`)으로 다시 가른다. 섹션이 없는 것은 문서 자신의 rule이다.
 	const items = documents.flatMap((document) =>
 		groupChecksBySection(document.checks).map(({ section, checks }) => ({
 			documentOrder: section?.order ?? -1,

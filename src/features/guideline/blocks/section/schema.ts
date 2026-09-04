@@ -75,7 +75,7 @@ export const SectionBlock: Block = {
 			type: 'blocks',
 			label: '본문',
 			blocks: [LayoutBlock],
-			admin: { description: '이 섹션가 품는 레이아웃 블록들입니다.' },
+			admin: { description: '이 섹션이 품는 레이아웃 블록들입니다.' },
 		},
 		// rules는 옛 페이지 문서가 갖던 것을 그대로 이어받는다(collectGuidelineCheckSources가 훑는다).
 		...baseBlockFields(),

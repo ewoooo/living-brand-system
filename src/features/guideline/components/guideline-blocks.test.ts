@@ -10,7 +10,7 @@ import { GuidelineBlocks } from './guideline-blocks'
 const blocks: GuidelineDocument['blocks'] = [{ blockType: 'block', id: 'block-1' }]
 
 describe('GuidelineBlocks', () => {
-	// 색을 갖지 않은 블록은 면을 칠하지 않는다 — 칠하면 섹션가 깐 옅은 면을 그 위에서 덮는다
+	// 색을 갖지 않은 블록은 면을 칠하지 않는다 — 칠하면 섹션이 깐 옅은 면을 그 위에서 덮는다
 	// (guideline-block-frame.tsx).
 	it('프레임은 전경만 갖고 면을 칠하지 않는다', () => {
 		const { container } = render(createElement(GuidelineBlockFrame, { layout: 'full' }, '내용'))

@@ -2,7 +2,7 @@ import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { LayoutBlock } from '@/payload-types'
 import type { GuidelineVariant } from './guideline-variant'
 
-// 설명은 블록·섹션가 갖는다 — 토픽 문서의 설명은 2026-08-26에 제거했다(Figma의 Section Heading도
+// 설명은 블록·섹션이 갖는다 — 토픽 문서의 설명은 2026-08-26에 제거했다(Figma의 Section Heading도
 // 제목뿐이고, 14개 토픽 전수 조사에서 값이 하나도 없었다).
 type DescriptionVariant = Extract<GuidelineVariant, 'section' | 'block'>
 

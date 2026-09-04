@@ -20,7 +20,7 @@ type SectionBlockType = Extract<GuidelineBlock, { blockType: 'section' }>
 //    파일을 import하므로 순환이 된다. 자식은 LayoutBlock 하나뿐이라 직접 dispatch하는 편이 맞다.
 //
 // ponytail: Better Editor 표식(`data-better-editor-id`)은 섹션에만 붙고 자식 블록에는 안 붙는다.
-//    플러그인이 클릭 지점에서 위로 걸어 올라가므로 자식을 눌러도 이 섹션가 선택되고, 그 안쪽은
+//    플러그인이 클릭 지점에서 위로 걸어 올라가므로 자식을 눌러도 이 섹션이 선택되고, 그 안쪽은
 //    사이드바 Blocks 탭에서 고른다. 자식까지 집고 싶어지면 렌더러 map 시그니처에 플래그를 더하거나
 //    context를 하나 두면 된다.
 export function SectionBlock({ block }: { block: SectionBlockType }) {
