@@ -50,28 +50,6 @@ export function backgroundToneField({ sidebar = false } = {}): Field {
 	}
 }
 
-export function imageBackgroundColorField(): Field {
-	return {
-		name: 'imageBackgroundColor',
-		type: 'relationship',
-		relationTo: 'brand-colors',
-		admin: {
-			description: '이미지 영역 뒤에 적용할 브랜드 컬러입니다.',
-		},
-	}
-}
-
-export function imageScaleField(): Field {
-	return {
-		name: 'imageScale',
-		type: 'select',
-		defaultValue: '100',
-		// 경로 파생 enum 이름이 Postgres 63자 제한을 넘지 않도록 전역 enum을 공유한다.
-		enumName: 'enum_image_scale',
-		options: Array.from({ length: 10 }, (_, index) => String((index + 1) * 10)),
-	}
-}
-
 // 서체를 다루는 블록이 공유하는 관계 필드. 서체는 brand-typefaces가 폰트 파일과 함께 소유한다.
 export function typefaceField(): Field {
 	return {

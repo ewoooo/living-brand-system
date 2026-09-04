@@ -1,4 +1,4 @@
-import type { Block, Field } from 'payload'
+import type { Block } from 'payload'
 import { ImageLeaf } from '@/features/guideline/leaves/image/schema'
 import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/schema'
 import { CiLockupHeroWidget } from '@/features/guideline/widgets/ci-lockup-hero/schema'
@@ -54,17 +54,17 @@ const LEAVES = [
 	TypeSpecimenWidget,
 ]
 
-/**
- * 레이아웃 컨테이너의 필드. `block`과 `subBlock`이 이것을 공유한다 — 둘은 자식으로 무엇을
- * 받을 수 있는지만 다르다.
- *
- * 🔴 **자기 참조로 만들지 않는다.** Payload 스키마 생성기가 `rawTables` 등록 **전에**
- *    `traverseFields`를 부르므로(`@payloadcms/drizzle` build.js), 블록이 자기 자신을 자식으로
- *    가지면 `blk_2`·`blk_3`… 을 무한히 만들며 스택 오버플로로 죽는다. 깔끔한 에러도 안 난다.
- *    그래서 깊이를 slug로 고정한다 — block > subBlock > leaf, 여기서 끝이다.
- */
-function layoutFields(children: Block[], childDescription: string): Field[] {
-	return [
+// 🔴 **자기 참조로 만들지 않는다.** Payload 스키마 생성기가 `rawTables` 등록 **전에**
+//    `traverseFields`를 부르므로(`@payloadcms/drizzle` build.js), 블록이 자기 자신을 자식으로
+//    가지면 `blk_2`·`blk_3`… 을 무한히 만들며 스택 오버플로로 죽는다. 깔끔한 에러도 안 난다.
+// 🔴 하위 블록은 2026-09-04에 지웠다 — 도입 후 한 번도 쓰이지 않았고(게시 스냅샷 0건) 같은 필드를
+//    한 겹 더 갖고 있었다. 위젯을 묶어 다시 배치할 요구가 생기면 그때 slug 하나로 되살린다.
+export const LayoutBlock: Block = {
+	slug: 'block',
+	dbName: 'blk',
+	interfaceName: 'LayoutBlock',
+	labels: { singular: '블록', plural: '블록' },
+	fields: [
 		{
 			name: 'title',
 			type: 'text',
@@ -145,31 +145,11 @@ function layoutFields(children: Block[], childDescription: string): Field[] {
 		{
 			name: 'children',
 			type: 'blocks',
-			blocks: children,
-			admin: { description: childDescription },
+			blocks: LEAVES,
+			admin: { description: '이 블록이 품는 leaf(이미지·위젯)들입니다.' },
 		},
 		...baseBlockFields(),
-	]
-}
-
-// 하위 레이아웃 컨테이너. 자식으로 leaf만 받으므로 여기서 중첩이 끝난다.
-export const SubLayoutBlock: Block = {
-	slug: 'subBlock',
-	dbName: 'sbk',
-	interfaceName: 'SubLayoutBlock',
-	labels: { singular: '하위 블록', plural: '하위 블록' },
-	fields: layoutFields(LEAVES, '이 하위 블록이 품는 leaf(이미지·위젯)들입니다.'),
-}
-
-export const LayoutBlock: Block = {
-	slug: 'block',
-	dbName: 'blk',
-	interfaceName: 'LayoutBlock',
-	labels: { singular: '블록', plural: '블록' },
-	fields: layoutFields(
-		[...LEAVES, SubLayoutBlock],
-		'이 블록이 품는 leaf(이미지·위젯)와 하위 블록입니다.',
-	),
+	],
 }
 
 export default LayoutBlock

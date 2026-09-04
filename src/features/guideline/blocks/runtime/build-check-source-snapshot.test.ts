@@ -7,77 +7,83 @@ const lexical = (text: string) =>
 	({ root: { children: [{ type: 'paragraph', children: [{ text }] }] } }) as never
 
 describe('buildCheckSourceSnapshot', () => {
-	it('blockId가 있으면 해당 block의 텍스트와 이미지 ID만 반환한다', () => {
+	it('blockId가 있으면 해당 블록의 evidence만 반환한다', () => {
 		const page = {
 			title: 'Logo',
 			blocks: [
 				{
 					id: 'target',
-					blockType: 'contentColumns',
-					columns: [{ heading: 'Digital', body: lexical('Use 24 px.'), image: 7 }],
+					blockType: 'section',
+					anchor: 'digital',
+					title: 'Digital',
+					description: lexical('Use 24 px.'),
+					blocks: [
+						{
+							id: 'inner',
+							blockType: 'block',
+							children: [{ id: 'w', blockType: 'iconGridWidget' }],
+						},
+					],
 				},
-				{ id: 'other', blockType: 'callout', kind: 'must', items: [] },
+				{ id: 'other', blockType: 'block', children: [] },
 			],
 		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(page, 'target')).toEqual({
 			evidence: {
-				type: 'contentColumns',
-				columns: [{ heading: 'Digital', body: 'Use 24 px.' }],
+				type: 'section',
+				anchor: 'digital',
+				title: 'Digital',
+				description: 'Use 24 px.',
+				blocks: [{ type: 'block', childCount: 1 }],
 			},
-			referenceAssets: [{ id: 7, role: 'context' }],
+			referenceAssets: [],
 		})
 	})
 
-	it('Page 전체 snapshot은 모든 block을 합치고 이미지 ID를 중복 제거한다', () => {
+	it('토픽 전체 snapshot은 섹션과 루트 블록을 순서대로 합친다', () => {
 		const page = {
 			title: 'Logo usage',
 			blocks: [
-				{ id: 'one', blockType: 'contentColumns', columns: [{ image: 8 }] },
 				{
-					id: 'two',
-					blockType: 'contentColumns',
-					columns: [{ heading: 'Clear space', image: 8 }, { image: 9 }],
+					id: 'hero',
+					blockType: 'block',
+					children: [{ id: 'w', blockType: 'ciLockupHeroWidget' }],
+				},
+				{
+					id: 'sec',
+					blockType: 'section',
+					anchor: 'clear-space',
+					title: 'Clear space',
+					blocks: [{ id: 'inner', blockType: 'block', children: [] }],
 				},
 			],
 		} as unknown as GuidelineDocument
 
-		const snapshot = buildCheckSourceSnapshot(page)
-
-		expect(snapshot?.evidence).toEqual({
+		expect(buildCheckSourceSnapshot(page)?.evidence).toEqual({
 			type: 'document',
 			blocks: [
-				{ type: 'contentColumns', columns: [{ heading: undefined, body: undefined }] },
+				{ type: 'block', childCount: 1 },
 				{
-					type: 'contentColumns',
-					columns: [
-						{ heading: 'Clear space', body: undefined },
-						{ heading: undefined, body: undefined },
-					],
+					type: 'section',
+					anchor: 'clear-space',
+					title: 'Clear space',
+					description: undefined,
+					blocks: [{ type: 'block', childCount: 0 }],
 				},
 			],
 		})
-		// 같은 이미지가 두 block에 걸쳐 있어도 (id, role) 기준으로 한 번만 남는다.
-		expect(snapshot?.referenceAssets).toEqual([
-			{ id: 8, role: 'context' },
-			{ id: 9, role: 'context' },
-		])
 	})
 
-	it('Topic 전체 snapshot은 header image와 자체 block만 포함한다', () => {
+	it('토픽 전체 snapshot은 header image만 참조 자산으로 갖는다', () => {
 		const topic = {
 			title: 'Brand Core',
 			headerImage: { id: 3, name: 'Core', alt: 'Core visual' },
-			blocks: [
-				{ id: 'note', blockType: 'callout', kind: 'must', title: 'Main colors', items: [] },
-			],
+			blocks: [{ id: 'note', blockType: 'block', title: 'Main colors', children: [] }],
 		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(topic)).toEqual({
-			evidence: {
-				type: 'document',
-				blocks: [{ type: 'callout', kind: 'must', title: 'Main colors', items: [] }],
-			},
+			evidence: { type: 'document', blocks: [{ type: 'block', childCount: 0 }] },
 			referenceAssets: [{ id: 3, role: 'context' }],
 		})
 	})
@@ -92,20 +98,15 @@ describe('buildCheckSourceSnapshot', () => {
 		const blocks = [
 			{
 				id: 'usage',
-				blockType: 'contentColumns',
-				columns: [{ heading: 'Minimum', body: lexical('Use 24 px.') }],
+				blockType: 'block',
+				title: 'Minimum',
+				description: lexical('Use 24 px.'),
+				children: [],
 				rules,
 			},
 		]
-		const legacy = {
-			title: 'Primary Logo',
-			blocks,
-			rules,
-		} as unknown as GuidelineDocument
-		const unified = {
-			...legacy,
-			headerImage: null,
-		} as never
+		const legacy = { title: 'Primary Logo', blocks, rules } as unknown as GuidelineDocument
+		const unified = { ...legacy, headerImage: null } as never
 
 		const legacySources = collectGuidelineCheckSources(legacy)
 		const unifiedSources = collectGuidelineCheckSources(unified)

@@ -88,7 +88,7 @@ function toSources(
  * 🔴 내려가지 않으면 자식 블록의 rule이 **조용히 소멸한다.** 2026-08-26에 섹션이 문서에서 블록이
  *    되면서 rules를 가진 컨테이너가 한 겹 깊어졌다 — docs/11 §4의 provenance 불변식이 그대로
  *    성립하려면 수집도 같이 내려가야 한다.
- * 🔴 재귀가 아니라 고정 깊이다 — section > block > subBlock에서 끝난다(schema.ts의 layoutFields).
+ * 🔴 재귀가 아니라 고정 깊이다 — section > block에서 끝난다. 블록의 자식은 leaf(위젯·이미지)뿐이다.
  */
 function flattenBlocks(
 	blocks: GuidelineCheckDocument['blocks'],
@@ -103,18 +103,9 @@ function flattenBlocks(
 			title: block.title,
 			order,
 		}
-		// 🔴 하위 블록(subBlock)까지 내려간다. 컨테이너는 rules를 가질 수 있고, 안 훑으면
-		//    그 rule이 조용히 소멸한다(docs/11 §4 provenance 불변식).
 		return [
 			{ block, section },
-			...(block.blocks ?? []).flatMap((child) => [
-				{ block: child as GuidelineBlock, section },
-				...(child.children ?? []).flatMap((grandChild) =>
-					grandChild.blockType === 'subBlock'
-						? [{ block: grandChild as unknown as GuidelineBlock, section }]
-						: [],
-				),
-			]),
+			...(block.blocks ?? []).map((child) => ({ block: child as GuidelineBlock, section })),
 		]
 	})
 }
@@ -126,12 +117,8 @@ function collectApplicationImages(document: GuidelineCheckDocument): Map<number,
 	// 🔴 컨테이너 Block의 자식 위젯 이미지는 넣지 않는다 — 검수가 읽는 것은 Block이 소유한
 	//    title·description·rule뿐이고 자식 위젯은 사람이 보는 표현이라는 결정(2026-08-12,
 	//    `blocks/block/projection.ts`가 정본)이다. projectBlock·projectSection이 referenceAssets를
-	//    비워 돌려주므로 여기서 모아 봐야 참조하는 쪽이 없다.
-	for (const { block } of flattenBlocks(document.blocks)) {
-		if (block.blockType === 'contentColumns') {
-			values.push(...(block.columns ?? []).map((column) => column.image))
-		}
-	}
+	//    비워 돌려주므로 여기서 모아 봐야 참조하는 쪽이 없다. 그래서 지금 여기 들어오는 것은
+	//    헤더 이미지 하나뿐이다.
 
 	return new Map(
 		values.flatMap((value): [number, ApplicationImage][] => {

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { GuidelineDocuments } from '@/collections/GuidelineDocuments'
 import { checkKeyFromEnglishTitle } from '@/features/quality-rule/check-key-from-english-title'
 import { IMAGE_RATIO_OPTIONS } from '@/types/image-ratio'
-import { ContentColumnsBlock } from '../blocks/content-columns/schema'
 import { guidelineRulesField } from '../blocks/shared/fields'
 import { DoDontWidget } from '../widgets/do-dont/schema'
 import { guidelineBlockProjectors } from './projection.generated'
@@ -101,18 +100,6 @@ describe('guideline rules field', () => {
 			'2:3',
 			'9:16',
 		])
-	})
-
-	it('다른 이미지 블록도 공용 비율 계약을 사용한다', () => {
-		for (const [block, defaultValue] of [[ContentColumnsBlock, '4:3']] as const) {
-			const imageRatio = block.fields.find(
-				(field) => 'name' in field && field.name === 'imageRatio',
-			)
-			if (imageRatio?.type !== 'select') throw new Error('imageRatio select is missing')
-
-			expect(imageRatio.options).toEqual(IMAGE_RATIO_OPTIONS)
-			expect(imageRatio.defaultValue).toBe(defaultValue)
-		}
 	})
 
 	it('영문 제목에서 namespace 없는 안정적인 key를 만든다', () => {

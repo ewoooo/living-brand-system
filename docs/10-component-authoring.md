@@ -297,10 +297,10 @@ className과 style에는 시맨틱 토큰만 씁니다(닫힌 토큰 규칙 전�
 
 | ✅ Do | ❌ Don't | ❌를 본 자리 |
 | --- | --- | --- |
-| `border-border` | `border border-neutral-200` | `blocks/callout/component.tsx` — ✅ 2026-09-04에 고침 |
+| `border-border` | `border border-neutral-200` | 옛 `blocks/callout`(2026-09-04 삭제) |
 | `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `widgets/type-specimen/component.tsx` — ✅ 2026-08-12에 `THEME_PANEL`로 고침 |
-| 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | `blocks/content-columns/component.tsx` — ✅ 2026-09-04에 `GRID_BY_COLUMNS`로 고침 |
-| 심볼 + 텍스트로 상태 구분 | 색만으로 판정 구분 | `blocks/callout/component.tsx` (kind별 badge) |
+| 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | 옛 `blocks/content-columns`(2026-09-04 삭제) |
+| 심볼 + 텍스트로 상태 구분 | 색만으로 판정 구분 | 옛 `blocks/callout`의 kind별 badge(삭제됨) |
 | 상태 토큰 `bg-success/15 text-success` | 유채 팔레트 `bg-emerald-500/15 text-emerald-700 …` | `studio/review/result/check-status.ts` — ✅ 고쳐짐(이제 Badge variant 키만 갖는다) |
 | `Typography` 재사용 | `font-body text-sm font-normal` 수기 반복 | studio 10개 파일 25회 실측 |
 | `@carbon/icons-react` | `@hugeicons/*` | repo 컨벤션(정책) |
@@ -324,10 +324,10 @@ grep -rn 'oklch(' src --include='*.tsx'
 
 ### 동적 Tailwind 클래스 금지
 
-`grid-cols-${n}`처럼 문자열 보간으로 클래스를 만들면 Tailwind가 빌드 타임에 그 클래스를 인식하지 못해 스타일이 유실됩니다. `blocks/content-columns/component.tsx`가 이 위반이었습니다(2026-09-04에 고침 — 다른 파일의 리터럴 덕에 우연히 동작하고 있었습니다). 조건부로 완전한 클래스를 룩업합니다.
+`grid-cols-${n}`처럼 문자열 보간으로 클래스를 만들면 Tailwind가 빌드 타임에 그 클래스를 인식하지 못해 스타일이 유실됩니다. 옛 `blocks/content-columns`가 이 위반이었습니다(다른 파일의 리터럴 덕에 우연히 동작하고 있었고, 블록 자체가 2026-09-04에 삭제됐습니다). 조건부로 완전한 클래스를 룩업합니다.
 
 ```tsx
-// ❌ blocks/content-columns/component.tsx (고쳐짐)
+// ❌ 옛 blocks/content-columns (삭제됨)
 GRID_CLASS = `grid gap-4 md:grid-cols-${variant}`
 
 // ✅ 완전 클래스 룩업
@@ -368,7 +368,7 @@ const MAIN: Swatch[] = [
 ]
 ```
 
-기존에 남아 있는 생 팔레트 클래스(위젯 5종 · `blocks/content-columns/component.tsx`의 동적 클래스 1건)는 POC를 위한 **의도적 부채**이며 이 규칙과 별개입니다. 새 컴포넌트가 그 부채를 늘리지 않습니다.
+기존에 남아 있는 생 팔레트 클래스(위젯 일부)는 POC를 위한 **의도적 부채**이며 이 규칙과 별개입니다. 새 컴포넌트가 그 부채를 늘리지 않습니다.
 
 ## 6. 접근성
 
@@ -376,7 +376,7 @@ const MAIN: Swatch[] = [
 
 - **키보드 조작**: 커스텀 인터랙션 요소는 `role`과 `aria-*`, 화살표 키 이동을 갖춥니다. 슬라이더면 `role="slider"` + `aria-valuenow`처럼 역할에 맞는 속성을 붙입니다.
 - **focus 가시성**: `focus-visible:ring` 계열로 포커스를 시각적으로 드러냅니다. `badge.tsx`의 `focus-visible:ring-[3px] focus-visible:ring-ring/50`이 참고입니다.
-- **색만으로 상태 구분 금지**: 판정·상태는 심볼 + 텍스트를 함께 씁니다. `blocks/callout/component.tsx`는 kind별로 심볼(`✓`/`△`/`✕`)과 라벨(`반드시`/`권장`/`금지`)을 같이 노출합니다.
+- **색만으로 상태 구분 금지**: 판정·상태는 심볼 + 텍스트를 함께 씁니다. 검수 결과 배지처럼 kind별 심볼과 라벨을 같이 노출합니다.
 - **label 연결**: 입력 요소는 `label`/`aria-label`/`aria-labelledby`로 접근 가능한 이름을 갖습니다. `widgets/type-specimen/component.tsx`의 textarea는 `aria-label="타입 견본 입력"`을 답니다.
 - **실패 상태 텍스트 설명**: 검수 실패·저장 실패 같은 조치가 필요한 상태는 텍스트로 원인과 다음 행동을 설명합니다(`docs/08` §2).
 

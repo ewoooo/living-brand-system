@@ -13,13 +13,11 @@ import type { GuidelineBlock } from '../types'
 export const BLOCK_SPACING: Record<GuidelineBlock['blockType'], string> = {
 	section: '[&:not(:first-child)]:mt-72',
 	block: '[&:not(:first-child)]:mt-8',
-	callout: '[&:not(:first-child)]:mt-8',
-	contentColumns: '[&:not(:first-child)]:mt-8',
 }
 
 /**
- * 본문 텍스트가 앉는 **오른쪽 반칸**(Figma 61:3299·61:3376의 Article 텍스트 열). 섹션 제목·콜아웃·
- * 단일 컬럼 텍스트가 같은 열에 서야 한 페이지 안에서 세로선이 맞는다. 좁은 화면에서는 한 열이다.
+ * 본문 텍스트가 앉는 **오른쪽 반칸**(Figma 61:3299·61:3376의 Article 텍스트 열). 지금은 섹션 제목이
+ * 쓴다. 본문 텍스트 자리가 늘면 같은 열에 세워야 한 페이지 안에서 세로선이 맞는다. 좁은 화면에서는 한 열이다.
  */
 export const RIGHT_HALF = {
 	grid: 'grid md:grid-cols-2',

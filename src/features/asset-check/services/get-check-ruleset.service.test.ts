@@ -204,7 +204,7 @@ describe('getCheckRuleset', () => {
 		documentPlacement.evidence = {
 			type: 'document',
 			description: 'Doc A',
-			blocks: [{ type: 'callout', kind: 'must', title: undefined, items: [] }],
+			blocks: [{ type: 'block', childCount: 1 }],
 		}
 		documentPlacement.referenceAssets = [referenceAsset('a', '/a.png', 'context')]
 		const blockPlacement = source('shared')
@@ -224,7 +224,7 @@ describe('getCheckRuleset', () => {
 			type: 'document',
 			description: 'Doc A',
 			blocks: [
-				{ type: 'callout', kind: 'must', title: undefined, items: [] },
+				{ type: 'block', childCount: 1 },
 				{ type: 'block', childCount: 2 },
 			],
 		})

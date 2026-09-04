@@ -31,19 +31,15 @@ afterEach(async () => {
 describe('guideline catalog generator', () => {
 	it('기존 노출 순서를 보존하고 새 블록은 뒤에 이름순으로 등록한다', async () => {
 		const blocksDirectory = await createTemporaryBlocksDirectory()
-		await createBlock(blocksDirectory, 'callout')
-		await createBlock(blocksDirectory, 'content-columns')
+		await createBlock(blocksDirectory, 'block')
+		await createBlock(blocksDirectory, 'section')
 		await createBlock(blocksDirectory, 'zeta-new')
 		await createBlock(blocksDirectory, 'alpha-new')
 		await mkdir(path.join(blocksDirectory, 'shared'))
 
 		await expect(discoverBlockRegistrations(blocksDirectory)).resolves.toEqual([
-			{
-				directory: 'content-columns',
-				key: 'contentColumns',
-				symbol: 'ContentColumns',
-			},
-			{ directory: 'callout', key: 'callout', symbol: 'Callout' },
+			{ directory: 'section', key: 'section', symbol: 'Section' },
+			{ directory: 'block', key: 'block', symbol: 'Block' },
 			{ directory: 'alpha-new', key: 'alphaNew', symbol: 'AlphaNew' },
 			{ directory: 'zeta-new', key: 'zetaNew', symbol: 'ZetaNew' },
 		])

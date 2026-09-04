@@ -4,12 +4,6 @@ import { collectGuidelineCheckSources } from './collect-guideline-check-sources'
 
 describe('collectGuidelineCheckSources', () => {
 	it('문서 Rule과 Block Rule에 서로 다른 evidence snapshot을 붙인다', () => {
-		const image = {
-			id: 7,
-			name: 'Logo reference',
-			url: '/api/application-images/file/logo.png',
-			mimeType: 'image/png',
-		}
 		const page = {
 			id: 12,
 			title: 'Logo usage',
@@ -18,8 +12,8 @@ describe('collectGuidelineCheckSources', () => {
 				{
 					id: 'logo-block',
 					blockName: 'Logo examples',
-					blockType: 'contentColumns',
-					columns: [{ image }],
+					blockType: 'block',
+					children: [{ id: 'w', blockType: 'logoDisplayWidget' }],
 					rules: [{ id: 2, key: 'logo.block', title: 'Block Rule', checker: 1 }],
 				},
 			],
@@ -34,15 +28,45 @@ describe('collectGuidelineCheckSources', () => {
 		expect(sources.map(({ blockName }) => blockName)).toEqual([null, 'Logo examples'])
 		expect(sources[0]?.evidence).toEqual({
 			type: 'document',
+			blocks: [{ type: 'block', childCount: 1 }],
+		})
+		expect(sources[1]?.evidence).toEqual({ type: 'block', childCount: 1 })
+	})
+
+	it('섹션 안 블록의 Rule도 섹션 위치를 달고 수집한다', () => {
+		const page = {
+			id: 12,
+			title: 'Logo usage',
 			blocks: [
-				{ type: 'contentColumns', columns: [{ heading: undefined, body: undefined }] },
+				{
+					id: 'sec',
+					blockType: 'section',
+					anchor: 'clear-space',
+					title: 'Clear space',
+					blocks: [
+						{
+							id: 'inner',
+							blockType: 'block',
+							children: [],
+							rules: [
+								{
+									id: 2,
+									key: 'logo.clear-space',
+									title: 'Clear Space',
+									checker: 1,
+								},
+							],
+						},
+					],
+				},
 			],
-		})
-		expect(sources[1]?.evidence).toEqual({
-			type: 'contentColumns',
-			columns: [{ heading: undefined, body: undefined }],
-		})
-		expect(sources[1]?.referenceAssets).toEqual([{ asset: image, role: 'context' }])
+		} as unknown as GuidelineDocument
+
+		const sources = collectGuidelineCheckSources(page)
+
+		expect(sources.map(({ rule, source }) => [rule.key, source.section?.anchor])).toEqual([
+			['logo.clear-space', 'clear-space'],
+		])
 	})
 
 	it('populate되지 않은 Rule 관계(ID)는 실행 대상에서 제외한다', () => {
@@ -58,7 +82,7 @@ describe('collectGuidelineCheckSources', () => {
 		expect(sources.map(({ rule }) => rule.key)).toEqual(['logo.page'])
 	})
 
-	it('Block Rule에서 동일한 기준 이미지를 중복 제거한다', () => {
+	it('문서 Rule의 참조 자산은 헤더 이미지다 — 자식 위젯의 이미지는 넣지 않는다', () => {
 		const image = {
 			id: 66,
 			name: 'Brand Guideline Reference p.37',
@@ -68,20 +92,12 @@ describe('collectGuidelineCheckSources', () => {
 		const page = {
 			id: 46,
 			title: 'Incorrect Usage',
+			headerImage: image,
+			rules: [
+				{ id: 3, key: 'typography.misuse', title: '타이포그래피 오용 금지', checker: 1 },
+			],
 			blocks: [
-				{
-					id: 'incorrect-usage',
-					blockType: 'contentColumns',
-					columns: [{ image }, { image }],
-					rules: [
-						{
-							id: 3,
-							key: 'typography.misuse',
-							title: '타이포그래피 오용 금지',
-							checker: 1,
-						},
-					],
-				},
+				{ id: 'b', blockType: 'block', children: [{ id: 'i', blockType: 'image', image }] },
 			],
 		} as unknown as GuidelineDocument
 

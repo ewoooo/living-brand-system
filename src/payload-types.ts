@@ -254,7 +254,7 @@ export interface GuidelineDocument {
    * 토픽 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
-  blocks?: (ContentColumnsBlock | CalloutBlock | LayoutBlock | SectionBlock)[] | null;
+  blocks?: (SectionBlock | LayoutBlock)[] | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
    */
@@ -300,49 +300,54 @@ export interface ApplicationImage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ContentColumnsBlock".
+ * via the `definition` "SectionBlock".
  */
-export interface ContentColumnsBlock {
+export interface SectionBlock {
   /**
-   * 열 이미지의 표시 비율입니다.
+   * 이 섹션의 URL 앵커입니다(예: key-layout). 비우면 제목에서 자동 생성합니다. 토픽 안에서 유일해야 합니다.
    */
-  imageRatio?:
-    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
-    | null;
-  columns?:
-    | {
-        heading?: string | null;
-        body?: {
-          root: {
-            type: string;
-            children: {
-              type: any;
-              version: number;
-              [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        } | null;
-        image?: (number | null) | ApplicationImage;
-        /**
-         * 이미지 영역 뒤에 적용할 브랜드 컬러입니다.
-         */
-        imageBackgroundColor?: (number | null) | BrandColor;
-        imageScale?: ('10' | '20' | '30' | '40' | '50' | '60' | '70' | '80' | '90' | '100') | null;
-        id?: string | null;
-      }[]
-    | null;
+  anchor?: string | null;
+  /**
+   * 목차에 표시되는 섹션 제목입니다.
+   */
+  title: string;
+  /**
+   * 제목 아래에 표시할 선택 설명입니다.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 섹션 전체(제목·본문·블록)를 덮는 배경색입니다. 비우면 기본.
+   */
+  background?: (number | null) | BrandColor;
+  /**
+   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
+   */
+  backgroundTone?: ('solid' | 'tint') | null;
+  /**
+   * 이 섹션이 품는 레이아웃 블록들입니다.
+   */
+  blocks?: LayoutBlock[] | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
    */
   rules?: (number | Rule)[] | null;
   id?: string | null;
   blockName?: string | null;
-  blockType: 'contentColumns';
+  blockType: 'section';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -387,127 +392,6 @@ export interface BrandColor {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
-}
-/**
- * 문서와 블록이 참조해 적용하는 검수 규칙 정의입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rules".
- */
-export interface Rule {
-  id: number;
-  title: string;
-  titleKo?: string | null;
-  /**
-   * 최초 저장 시 영문 제목을 기준으로 자동 생성되는 안정적인 식별자입니다.
-   */
-  key: string;
-  tier: 'required' | 'recommended';
-  executor: 'deterministic' | 'heuristic' | 'manual';
-  /**
-   * 검수 실행 방식과 구현체를 선택합니다.
-   */
-  checker: number | RuleChecker;
-  /**
-   * 이 Rule에서 결정론적 Checker에 전달할 설정입니다.
-   */
-  options?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * AI가 관측할 질문과 통과 기준을 행 단위로 입력합니다.
-   */
-  criteria?:
-    | {
-        question: string;
-        kind: 'presence' | 'measure';
-        expected?: ('present' | 'absent') | null;
-        operator?: ('gte' | 'lte' | 'between') | null;
-        expectedValue?: number | null;
-        max?: number | null;
-        unit?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * AI가 이 Rule을 판단할 때 추가로 적용할 기준입니다. 선택 입력, 최대 2,000자.
-   */
-  heuristicPrompt?: string | null;
-  /**
-   * 결정론적 또는 수동 검수 결과에 표시할 메시지입니다.
-   */
-  messages?: {
-    pass?: string | null;
-    ok?: string | null;
-    needsReview?: string | null;
-    fail?: string | null;
-  };
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * Rule을 실행할 도구와 호출 계약입니다.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "rule-checkers".
- */
-export interface RuleChecker {
-  id: number;
-  /**
-   * 목록과 Check의 checker 선택에 표시할 이름입니다.
-   */
-  name: string;
-  /**
-   * 검사 도구의 안정적인 식별자입니다.
-   */
-  key: string;
-  executor: 'deterministic' | 'heuristic' | 'manual';
-  /**
-   * 결정론적 checker registry에서 사용할 키입니다.
-   */
-  checkerKey?: string | null;
-  /**
-   * AI 검수에 사용할 Anthropic 모델입니다. Advisory는 미설정 시 브랜드 담당자 확인으로 폴백합니다.
-   */
-  model?: ('claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5') | null;
-  /**
-   * AI에게 전달할 관찰·조언 지침입니다. Advisory는 이 프롬프트가 조언 관점을 정의합니다 (예: 타이포그래피 위계 관점에서 디자이너처럼 조언). 출력 형식과 판정 금지 규칙은 시스템이 강제합니다.
-   */
-  prompt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CalloutBlock".
- */
-export interface CalloutBlock {
-  kind: 'must' | 'recommended' | 'dont';
-  /**
-   * 생략하면 판정 기본 라벨(반드시/권장/금지)이 제목이 됩니다.
-   */
-  title?: string | null;
-  items?:
-    | {
-        text: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * 이 문서 단위에 적용할 검수 규칙입니다.
-   */
-  rules?: (number | Rule)[] | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'callout';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -567,7 +451,7 @@ export interface LayoutBlock {
     | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
     | null;
   /**
-   * 이 블록이 품는 leaf(이미지·위젯)와 하위 블록입니다.
+   * 이 블록이 품는 leaf(이미지·위젯)들입니다.
    */
   children?:
     | (
@@ -592,7 +476,6 @@ export interface LayoutBlock {
         | TypeScrambleWidget
         | TypeWeightWidget
         | TypeSpecimenWidget
-        | SubLayoutBlock
       )[]
     | null;
   /**
@@ -1212,148 +1095,101 @@ export interface TypeSpecimenWidget {
   blockType: 'typeSpecimenWidget';
 }
 /**
+ * 문서와 블록이 참조해 적용하는 검수 규칙 정의입니다.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "SubLayoutBlock".
+ * via the `definition` "rules".
  */
-export interface SubLayoutBlock {
+export interface Rule {
+  id: number;
+  title: string;
+  titleKo?: string | null;
   /**
-   * 블록 상단에 표시할 선택 제목입니다.
+   * 최초 저장 시 영문 제목을 기준으로 자동 생성되는 안정적인 식별자입니다.
    */
-  title?: string | null;
+  key: string;
+  tier: 'required' | 'recommended';
+  executor: 'deterministic' | 'heuristic' | 'manual';
   /**
-   * 제목 아래에 표시할 선택 본문입니다.
+   * 검수 실행 방식과 구현체를 선택합니다.
    */
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
+  checker: number | RuleChecker;
+  /**
+   * 이 Rule에서 결정론적 Checker에 전달할 설정입니다.
+   */
+  options?:
+    | {
         [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * 블록 전체(전체 폭) 배경색입니다. 비우면 기본.
-   */
-  background?: (number | null) | BrandColor;
-  /**
-   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
-   */
-  backgroundTone?: ('solid' | 'tint') | null;
-  /**
-   * 자식 레이아웃(그리드/캐러셀 등) 영역 배경색입니다. 비우면 없음.
-   */
-  innerBackground?: (number | null) | BrandColor;
-  /**
-   * 위젯 배치 방식입니다. 피처드 둘은 첫 자식만 크게 두고 나머지를 남은 칸에 흘립니다 — 윗줄이냐 왼쪽 열이냐만 다릅니다.
-   */
-  arrangement?: ('grid' | 'carousel' | 'featured' | 'featuredSide' | 'masonry') | null;
-  /**
-   * grid 열 수입니다(행은 자식 개수로 자동).
-   */
-  columns?: number | null;
-  /**
-   * 맞붙이면 셀 사이가 1px 선 하나만 남습니다. 셀마다 테두리를 두면 맞닿은 자리가 2px이 되므로 선은 그리드가 그립니다. grid 배치에만 적용됩니다.
-   */
-  gap?: ('default' | 'none') | null;
-  /**
-   * 이미지 셀 비율(모든 이미지 균일). masonry에선 무시하고 원본 비율.
-   */
-  aspectRatio?:
-    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
     | null;
   /**
-   * 이 하위 블록이 품는 leaf(이미지·위젯)들입니다.
+   * AI가 관측할 질문과 통과 기준을 행 단위로 입력합니다.
    */
-  children?:
-    | (
-        | ImageLeaf
-        | CiLockupWidget
-        | CiLockupHeroWidget
-        | ClearspaceOverlayWidget
-        | ClearspaceViewerWidget
-        | DoDontWidget
-        | HdColorPaletteWidget
-        | IconGridWidget
-        | StemClearSpaceWidget
-        | LayoutGridWidget
-        | LayoutGridControlsWidget
-        | LayoutGridOverlayWidget
-        | LogoColorVariantWidget
-        | LogoBgPickerWidget
-        | LogoDisplayWidget
-        | LogoOnBackgroundWidget
-        | TypeHierarchyWidget
-        | TypeLanguageWidget
-        | TypeScrambleWidget
-        | TypeWeightWidget
-        | TypeSpecimenWidget
-      )[]
+  criteria?:
+    | {
+        question: string;
+        kind: 'presence' | 'measure';
+        expected?: ('present' | 'absent') | null;
+        operator?: ('gte' | 'lte' | 'between') | null;
+        expectedValue?: number | null;
+        max?: number | null;
+        unit?: string | null;
+        id?: string | null;
+      }[]
     | null;
   /**
-   * 이 문서 단위에 적용할 검수 규칙입니다.
+   * AI가 이 Rule을 판단할 때 추가로 적용할 기준입니다. 선택 입력, 최대 2,000자.
    */
-  rules?: (number | Rule)[] | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'subBlock';
+  heuristicPrompt?: string | null;
+  /**
+   * 결정론적 또는 수동 검수 결과에 표시할 메시지입니다.
+   */
+  messages?: {
+    pass?: string | null;
+    ok?: string | null;
+    needsReview?: string | null;
+    fail?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
+ * Rule을 실행할 도구와 호출 계약입니다.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "SectionBlock".
+ * via the `definition` "rule-checkers".
  */
-export interface SectionBlock {
+export interface RuleChecker {
+  id: number;
   /**
-   * 이 섹션의 URL 앵커입니다(예: key-layout). 비우면 제목에서 자동 생성합니다. 토픽 안에서 유일해야 합니다.
+   * 목록과 Check의 checker 선택에 표시할 이름입니다.
    */
-  anchor?: string | null;
+  name: string;
   /**
-   * 목차에 표시되는 섹션 제목입니다.
+   * 검사 도구의 안정적인 식별자입니다.
    */
-  title: string;
+  key: string;
+  executor: 'deterministic' | 'heuristic' | 'manual';
   /**
-   * 제목 아래에 표시할 선택 설명입니다.
+   * 결정론적 checker registry에서 사용할 키입니다.
    */
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
+  checkerKey?: string | null;
   /**
-   * 섹션 전체(제목·본문·블록)를 덮는 배경색입니다. 비우면 기본.
+   * AI 검수에 사용할 Anthropic 모델입니다. Advisory는 미설정 시 브랜드 담당자 확인으로 폴백합니다.
    */
-  background?: (number | null) | BrandColor;
+  model?: ('claude-opus-4-8' | 'claude-sonnet-5' | 'claude-haiku-4-5') | null;
   /**
-   * 배경색을 그대로 쓸지 10%로 옅게 깔지 정합니다. 배경색이 없으면 무시됩니다.
+   * AI에게 전달할 관찰·조언 지침입니다. Advisory는 이 프롬프트가 조언 관점을 정의합니다 (예: 타이포그래피 위계 관점에서 디자이너처럼 조언). 출력 형식과 판정 금지 규칙은 시스템이 강제합니다.
    */
-  backgroundTone?: ('solid' | 'tint') | null;
-  /**
-   * 이 섹션이 품는 레이아웃 블록들입니다.
-   */
-  blocks?: LayoutBlock[] | null;
-  /**
-   * 이 문서 단위에 적용할 검수 규칙입니다.
-   */
-  rules?: (number | Rule)[] | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'section';
+  prompt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2571,10 +2407,8 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
   blocks?:
     | T
     | {
-        contentColumns?: T | ContentColumnsBlockSelect<T>;
-        callout?: T | CalloutBlockSelect<T>;
-        block?: T | LayoutBlockSelect<T>;
         section?: T | SectionBlockSelect<T>;
+        block?: T | LayoutBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
@@ -2584,36 +2418,18 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "ContentColumnsBlock_select".
+ * via the `definition` "SectionBlock_select".
  */
-export interface ContentColumnsBlockSelect<T extends boolean = true> {
-  imageRatio?: T;
-  columns?:
-    | T
-    | {
-        heading?: T;
-        body?: T;
-        image?: T;
-        imageBackgroundColor?: T;
-        imageScale?: T;
-        id?: T;
-      };
-  rules?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CalloutBlock_select".
- */
-export interface CalloutBlockSelect<T extends boolean = true> {
-  kind?: T;
+export interface SectionBlockSelect<T extends boolean = true> {
+  anchor?: T;
   title?: T;
-  items?:
+  description?: T;
+  background?: T;
+  backgroundTone?: T;
+  blocks?:
     | T
     | {
-        text?: T;
-        id?: T;
+        block?: T | LayoutBlockSelect<T>;
       };
   rules?: T;
   id?: T;
@@ -2657,7 +2473,6 @@ export interface LayoutBlockSelect<T extends boolean = true> {
         typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
         typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
         typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
-        subBlock?: T | SubLayoutBlockSelect<T>;
       };
   rules?: T;
   id?: T;
@@ -2904,68 +2719,6 @@ export interface TypeWeightWidgetSelect<T extends boolean = true> {
  * via the `definition` "TypeSpecimenWidget_select".
  */
 export interface TypeSpecimenWidgetSelect<T extends boolean = true> {
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "SubLayoutBlock_select".
- */
-export interface SubLayoutBlockSelect<T extends boolean = true> {
-  title?: T;
-  description?: T;
-  background?: T;
-  backgroundTone?: T;
-  innerBackground?: T;
-  arrangement?: T;
-  columns?: T;
-  gap?: T;
-  aspectRatio?: T;
-  children?:
-    | T
-    | {
-        image?: T | ImageLeafSelect<T>;
-        ciLockupWidget?: T | CiLockupWidgetSelect<T>;
-        ciLockupHeroWidget?: T | CiLockupHeroWidgetSelect<T>;
-        clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
-        clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
-        doDontWidget?: T | DoDontWidgetSelect<T>;
-        hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
-        iconGridWidget?: T | IconGridWidgetSelect<T>;
-        stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
-        layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
-        layoutGridControlsWidget?: T | LayoutGridControlsWidgetSelect<T>;
-        layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
-        logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
-        logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
-        logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
-        logoOnBgWidget?: T | LogoOnBackgroundWidgetSelect<T>;
-        typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
-        typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
-        typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
-        typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
-        typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
-      };
-  rules?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "SectionBlock_select".
- */
-export interface SectionBlockSelect<T extends boolean = true> {
-  anchor?: T;
-  title?: T;
-  description?: T;
-  background?: T;
-  backgroundTone?: T;
-  blocks?:
-    | T
-    | {
-        block?: T | LayoutBlockSelect<T>;
-      };
-  rules?: T;
   id?: T;
   blockName?: T;
 }
