@@ -297,9 +297,9 @@ className과 style에는 시맨틱 토큰만 씁니다(닫힌 토큰 규칙 전�
 
 | ✅ Do | ❌ Don't | ❌를 본 자리 |
 | --- | --- | --- |
-| `border-border` | `border border-neutral-200` | `blocks/callout/component.tsx` |
+| `border-border` | `border border-neutral-200` | `blocks/callout/component.tsx` — ✅ 2026-09-04에 고침 |
 | `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `widgets/type-specimen/component.tsx` — ✅ 2026-08-12에 `THEME_PANEL`로 고침 |
-| 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | `blocks/content-columns/component.tsx:21` |
+| 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | `blocks/content-columns/component.tsx` — ✅ 2026-09-04에 `GRID_BY_COLUMNS`로 고침 |
 | 심볼 + 텍스트로 상태 구분 | 색만으로 판정 구분 | `blocks/callout/component.tsx` (kind별 badge) |
 | 상태 토큰 `bg-success/15 text-success` | 유채 팔레트 `bg-emerald-500/15 text-emerald-700 …` | `studio/review/result/check-status.ts` — ✅ 고쳐짐(이제 Badge variant 키만 갖는다) |
 | `Typography` 재사용 | `font-body text-sm font-normal` 수기 반복 | studio 10개 파일 25회 실측 |
@@ -324,10 +324,10 @@ grep -rn 'oklch(' src --include='*.tsx'
 
 ### 동적 Tailwind 클래스 금지
 
-`grid-cols-${n}`처럼 문자열 보간으로 클래스를 만들면 Tailwind가 빌드 타임에 그 클래스를 인식하지 못해 스타일이 유실됩니다. `blocks/content-columns/component.tsx:21`이 이 위반입니다. 조건부로 완전한 클래스를 룩업합니다.
+`grid-cols-${n}`처럼 문자열 보간으로 클래스를 만들면 Tailwind가 빌드 타임에 그 클래스를 인식하지 못해 스타일이 유실됩니다. `blocks/content-columns/component.tsx`가 이 위반이었습니다(2026-09-04에 고침 — 다른 파일의 리터럴 덕에 우연히 동작하고 있었습니다). 조건부로 완전한 클래스를 룩업합니다.
 
 ```tsx
-// ❌ blocks/content-columns/component.tsx:21
+// ❌ blocks/content-columns/component.tsx (고쳐짐)
 GRID_CLASS = `grid gap-4 md:grid-cols-${variant}`
 
 // ✅ 완전 클래스 룩업

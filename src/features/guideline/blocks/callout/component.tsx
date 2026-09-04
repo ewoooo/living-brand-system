@@ -32,7 +32,7 @@ export function CalloutBlock({ block }: { block: Callout }) {
 	return (
 		<GuidelineBlockFrame layout="padded">
 			<div className={RIGHT_HALF.grid}>
-				<div className={`${RIGHT_HALF.cell} border border-neutral-200 p-6`}>
+				<div className={`${RIGHT_HALF.cell} border border-border p-6`}>
 					<div className="flex items-center gap-3">
 						<span
 							aria-hidden

@@ -14,21 +14,24 @@ function hasImage(column: Column): boolean {
 	return typeof column.image === 'object' && column.image !== null && Boolean(column.image.url)
 }
 
+// 열 수별 완전 클래스 — 문자열 보간(`md:grid-cols-${n}`)은 Tailwind가 빌드 타임에 못 본다(docs/10 §4).
+// 열은 admin 스키마가 1~3으로 막는다. 그 밖의 수는 3열 그리드로 흘린다.
+const GRID_BY_COLUMNS: Record<number, string> = {
+	1: 'flex flex-col gap-10',
+	2: 'grid gap-4 md:grid-cols-2',
+	3: 'grid gap-4 md:grid-cols-3',
+}
+
 // 본문 워크호스: 이미지 + 텍스트 유닛. 1열은 스택, 2~3열은 그리드로 표시한다.
 export function ContentColumnsBlock({ block }: { block: ContentColumns }) {
 	const columns = block.columns ?? []
-	let variant = 0
-	let GRID_CLASS = 'flex flex-col gap-10'
+	const variant = columns.length
 
-	if (columns.length === 0) return null
-	else variant = columns.length
-
-	if (variant === 1) GRID_CLASS = 'flex flex-col gap-10'
-	else GRID_CLASS = `grid gap-4 md:grid-cols-${variant}`
+	if (variant === 0) return null
 
 	return (
 		<GuidelineBlockFrame layout="padded">
-			<div className={GRID_CLASS}>
+			<div className={GRID_BY_COLUMNS[variant] ?? GRID_BY_COLUMNS[3]}>
 				{variant === 1 &&
 					columns.map((column) => (
 						<SingleColumnItem
