@@ -625,12 +625,21 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 		 * | --- | --- | --- |
 		 * | `rayIntensity` | 빛의 세기 | 0.235 |
 		 * | `raySpotty` | 광선의 짜임 — 끊긴 다발이냐 이어진 줄기냐 | 0.083 |
+		 * | `rayMidSize` | 광원 자리의 빛무리 크기 | 0.079 |
 		 * | `rayScale` | 광선의 두께 | 0.229 |
-		 * | `speed` | 시간 — 마스터 시계라 나머지 속도가 여기 딸린다 | 0.142 |
+		 * | `speed` | 시간의 빠르기 — 마스터 시계라 나머지 속도가 여기 딸린다 | 0.142 |
+		 * | `frameOffsetMs` | 시간의 **한 지점** — 루프의 어느 순간에서 시작하나 | 0.153 |
+		 * | `pulseIntensity`·`pulseWidth` | 스쳐 지나가는 빛과 그 두께 | 0.093·0.043 |
 		 * | `glassSize` | 유리의 결 — 줄이 굵어지고 가늘어진다 | 0.076 |
 		 * | `glassDistortion` | 굴절 — 결이 빛을 얼마나 휘게 하나 | 0.057 |
+		 * | `glassHighlights` | 유리 표면의 반사 — 흰 줄이 서느냐 | 0.052 |
+		 * | `glassSpeed` | 무엇이 움직이나 — 0이면 유리가 멈추고 광선만 움직인다 | 0.108 |
 		 * | `zoom`·`tilt`·`vignette` | 틀 — 판을 어떻게 보여주나 | 새 축 |
 		 * | `source` | 기준점 — 소실점을 판 밖까지 옮긴다 | 0.153 |
+		 *
+		 * 🔑 축이 열여섯인 것은 **덜 쳐낸 것이 아니라 고르게 하려고 세운 것이다.** 사용자 말:
+		 *    「있을 때 빼는 건 간단해. 없는 것을 상상해서 추가하기는 어렵고」 — 후보를 말로 설명하지
+		 *    않고 화면에 세운다. 여기서 빠지는 축은 지워지지 않고 admin으로 내려간다.
 		 *
 		 * 픽셀차는 각 축을 최소·최대로 렌더해 잰 평균 절대 픽셀차다(`.scratch/axis-survey/`).
 		 * 「새 축」 셋은 재서 고른 것이 아니라 **없던 축**이다 — 판을 담는 틀을 창작자가 정할 수
@@ -647,10 +656,16 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 		right: [
 			'rayIntensity',
 			'raySpotty',
+			'rayMidSize',
 			'rayScale',
 			'speed',
+			'frameOffsetMs',
+			'pulseIntensity',
+			'pulseWidth',
 			'glassSize',
 			'glassDistortion',
+			'glassHighlights',
+			'glassSpeed',
 			'zoom',
 			'tilt',
 			'vignette',
@@ -730,10 +745,10 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 					rangeControl('rayIntensity', '광선 강도', CONTROL_DEFAULTS.rayIntensity, 0, 1),
 					rangeControl('rayDensity', '광선 밀도', CONTROL_DEFAULTS.rayDensity, 0, 1),
 					rangeControl('raySpotty', '광선 연속성', CONTROL_DEFAULTS.raySpotty, 0, 1),
-					rangeControl('rayMidSize', '중앙광 크기', CONTROL_DEFAULTS.rayMidSize, 0, 1),
+					rangeControl('rayMidSize', '빛무리 크기', CONTROL_DEFAULTS.rayMidSize, 0, 1),
 					rangeControl(
 						'rayMidIntensity',
-						'중앙광 강도',
+						'빛무리 세기',
 						CONTROL_DEFAULTS.rayMidIntensity,
 						0,
 						1,
@@ -751,7 +766,7 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 					),
 					rangeControl(
 						'frameOffsetMs',
-						'프레임 오프셋',
+						'시작 시점',
 						CONTROL_DEFAULTS.frameOffsetMs,
 						0,
 						1000,
@@ -774,16 +789,24 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 						0,
 						1,
 					),
+				],
+			},
+			{
+				// 🔴 빔은 「스윕」 그룹에 있었는데 그 제목이 우측에 뜨면 왼쪽의 「모양 = 스윕」과
+				//    같은 말이 되어 헷갈린다. 축은 그대로고 자리만 옮겼다.
+				id: 'beam',
+				title: 'Beam',
+				controls: [
 					rangeControl(
 						'pulseIntensity',
-						'빔 강도',
+						'빔 세기',
 						CONTROL_DEFAULTS.pulseIntensity,
 						0,
 						2,
 					),
+					rangeControl('pulseWidth', '빔 폭', CONTROL_DEFAULTS.pulseWidth, 0.01, 0.5),
 					rangeControl('pulseSpeed', '빔 위상 속도', CONTROL_DEFAULTS.pulseSpeed, 0, 2),
 					rangeControl('pulseDensity', '빔 밀도', CONTROL_DEFAULTS.pulseDensity, 0.1, 4),
-					rangeControl('pulseWidth', '빔 폭', CONTROL_DEFAULTS.pulseWidth, 0.01, 0.5),
 				],
 			},
 			{
@@ -827,11 +850,13 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 					rangeControl('glassScattering', '산란', CONTROL_DEFAULTS.glassScattering, 0, 1),
 					rangeControl(
 						'glassHighlights',
-						'하이라이트',
+						'유리 반짝임',
 						CONTROL_DEFAULTS.glassHighlights,
 						0,
 						1,
 					),
+					// 결이 스스로 도는 속도 — 0이면 유리가 멈추고 광선만 움직인다.
+					rangeControl('glassSpeed', '결 흐름', CONTROL_DEFAULTS.glassSpeed, -1, 1),
 					rangeControl('glassShadows', '그림자', CONTROL_DEFAULTS.glassShadows, 0, 1),
 					// 스윕·방사 계열만 읽는다.
 					rangeControl(
@@ -867,7 +892,6 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 						-2,
 						2,
 					),
-					rangeControl('glassSpeed', '플루트 속도', CONTROL_DEFAULTS.glassSpeed, -1, 1),
 					{
 						id: 'glassDrift',
 						kind: 'pad' as const,
