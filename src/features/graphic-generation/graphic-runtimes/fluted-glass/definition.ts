@@ -48,6 +48,61 @@ const plate = (x: number, y: number) => ({
 	y: y / FLUTED_GLASS_SOURCE_SPAN,
 })
 
+/**
+ * 색 조합의 칸 — **순서가 계약이다.** 팔레트 선택지의 `colors`가 이 순서로 칸을 채운다.
+ *
+ * 배경과 블룸도 여기 있다 — 광선 5색만 묶으면 조합을 바꿔도 이 둘이 초록으로 남는다.
+ */
+const FLUTED_GLASS_PALETTE_CONTROLS = [
+	['rayColor1', '광선 색상 1'],
+	['rayColor2', '광선 색상 2'],
+	['rayColor3', '광선 색상 3'],
+	['rayColor4', '광선 색상 4'],
+	['rayColor5', '광선 색상 5'],
+	['rayBackgroundColor', '배경 색상'],
+	['bloomColor', '블룸 색상'],
+] as const
+
+type FlutedGlassPaletteKey = (typeof FLUTED_GLASS_PALETTE_CONTROLS)[number][0]
+
+/**
+ * 색 조합 — 창작자가 왼쪽에서 다루는 큰 축 하나. 고르면 색 칸 일곱이 함께 채워진다.
+ *
+ * 🔑 **조합 안의 조화는 첫 팔레트가 정본이다.** 두 번째는 채도와 명도 계단(3 → 13 → 26 → 52 → 94)을
+ *    그대로 두고 **색상만** 옮겼다 — 밝아질수록 차가워지는 첫 팔레트의 드리프트(146°→151°)를
+ *    파랑까지 늘린 것이라(150°→205°) 광선의 깊은 곳은 초록으로 남고 심과 블룸이 파랑으로 간다.
+ * 🔴 계단을 다시 만들지 말 것. 명도가 흐트러지면 광선이 띠가 아니라 색 얼룩으로 읽힌다.
+ */
+export const FLUTED_GLASS_PALETTES = {
+	green: {
+		label: '그린',
+		colors: {
+			rayColor1: '#000e06',
+			rayColor2: '#004218',
+			rayColor3: '#008533',
+			rayColor4: '#1af087',
+			rayColor5: '#e0fff0',
+			rayBackgroundColor: '#000302',
+			bloomColor: '#3dff8a',
+		},
+	},
+	greenBlue: {
+		label: '그린 · 블루',
+		colors: {
+			rayColor1: '#000e07',
+			rayColor2: '#004221',
+			rayColor3: '#00856a',
+			rayColor4: '#1ab7f0',
+			rayColor5: '#e0f2ff',
+			rayBackgroundColor: '#000302',
+			bloomColor: '#3de5ff',
+		},
+	},
+} as const satisfies Record<
+	string,
+	{ label: string; colors: Record<FlutedGlassPaletteKey, string> }
+>
+
 /** 모양이 정하는 감춘 값 묶음 — 합치기 전 네 프로파일의 기본값을 그대로 옮겨 왔다. */
 const FLUTED_GLASS_LINEAR_INPUT = {
 	source: plate(-0.62, 0.04),
@@ -152,13 +207,8 @@ const FLUTED_GLASS_SWEEP_INPUT = {
 	sourceOffsetX: 0,
 	sourceOffsetY: 0,
 	zoom: 1,
-	bloomColor: '#3dff8a',
-	rayColor1: '#000e06',
-	rayColor2: '#004218',
-	rayColor3: '#008533',
-	rayColor4: '#1af087',
-	rayColor5: '#e0fff0',
-	rayBackgroundColor: '#000302',
+	// 색 조합은 모양이 아니라 팔레트가 소유한다 — 스윕·방사가 첫 팔레트를 그대로 쓴다.
+	...FLUTED_GLASS_PALETTES.green.colors,
 	rayBloom: 0.2,
 	rayIntensity: 0.95,
 	rayDensity: 1,
@@ -201,13 +251,8 @@ const FLUTED_GLASS_RADIAL_INPUT = {
 	sourceOffsetX: 0,
 	sourceOffsetY: 0,
 	zoom: 1,
-	bloomColor: '#3dff8a',
-	rayColor1: '#000e06',
-	rayColor2: '#004218',
-	rayColor3: '#008533',
-	rayColor4: '#1af087',
-	rayColor5: '#e0fff0',
-	rayBackgroundColor: '#000302',
+	// 색 조합은 모양이 아니라 팔레트가 소유한다 — 스윕·방사가 첫 팔레트를 그대로 쓴다.
+	...FLUTED_GLASS_PALETTES.green.colors,
 	rayBloom: 0.2,
 	rayIntensity: 0.95,
 	rayDensity: 1,
@@ -551,6 +596,7 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 		left: [
 			'shape',
 			'preset',
+			'palette',
 			'rayColor1',
 			'rayColor2',
 			'rayColor3',
@@ -621,19 +667,21 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 				id: 'ray-palette',
 				title: 'Ray Palette',
 				controls: [
-					colorControl('rayColor1', '광선 색상 1', CONTROL_DEFAULTS.rayColor1),
-					colorControl('rayColor2', '광선 색상 2', CONTROL_DEFAULTS.rayColor2),
-					colorControl('rayColor3', '광선 색상 3', CONTROL_DEFAULTS.rayColor3),
-					colorControl('rayColor4', '광선 색상 4', CONTROL_DEFAULTS.rayColor4),
-					colorControl('rayColor5', '광선 색상 5', CONTROL_DEFAULTS.rayColor5),
-					// 배경과 블룸도 색이다 — 광선 5색만 열어 두면 브랜드 색조를 바꿔도 이 둘이 초록으로 남는다.
-					colorControl(
-						'rayBackgroundColor',
-						'배경 색상',
-						CONTROL_DEFAULTS.rayBackgroundColor,
+					// 조합을 고르는 축과 그 조합을 이룬 색 칸이 한 그룹에 있다 — 고르면 칸이 채워진다.
+					{
+						id: 'palette',
+						kind: 'select' as const,
+						label: '팔레트',
+						defaultValue: 'green',
+						options: Object.entries(FLUTED_GLASS_PALETTES).map(([value, palette]) => ({
+							value,
+							label: palette.label,
+							colors: FLUTED_GLASS_PALETTE_CONTROLS.map(([id]) => palette.colors[id]),
+						})),
+					},
+					...FLUTED_GLASS_PALETTE_CONTROLS.map(([id, label]) =>
+						colorControl(id, label, CONTROL_DEFAULTS[id]),
 					),
-					// 블룸도 색이다 — 색 조합이 한 그룹에 다 모여야 그룹 하나가 통째로 왼쪽에 선다.
-					colorControl('bloomColor', '블룸 색상', CONTROL_DEFAULTS.bloomColor),
 				],
 			},
 			{

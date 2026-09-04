@@ -229,6 +229,75 @@ describe('ControllerRenderer', () => {
 		expect(onChange).toHaveBeenCalledWith('c2', null)
 	})
 
+	it('조합을 고르는 select이 색 칸 앞에 서면 칩이 띠를 채운다', () => {
+		const groups = [
+			{
+				id: 'palette',
+				title: 'Ray Palette',
+				controls: [
+					{
+						id: 'palette',
+						kind: 'select',
+						label: '팔레트',
+						defaultValue: 'green',
+						options: [
+							{ value: 'green', label: '그린', colors: ['#000000', '#ffffff'] },
+							{ value: 'blue', label: '블루', colors: ['#001133', '#e0f2ff'] },
+						],
+					},
+					{ id: 'c1', kind: 'color', label: '광선 색상 1', defaultValue: '#000000' },
+					{ id: 'c2', kind: 'color', label: '광선 색상 2', defaultValue: '#ffffff' },
+				],
+			},
+		] satisfies readonly ControllerGroupDefinition[]
+		const onChange = vi.fn()
+
+		const { container } = render(
+			<ControllerRenderer groups={groups} values={{}} onChange={onChange} />,
+		)
+		// 고르기(칩)와 편집(띠)이 한 그룹에 함께 선다 — 둘 중 하나만 남기면 조합을 볼 수 없다.
+		expect(container.querySelector('[data-slot="controller-color-chips"]')).not.toBeNull()
+		expect(container.querySelector('[data-slot="controller-color-strip"]')).not.toBeNull()
+
+		// 🔴 고른 조합이 칸을 **순서대로** 채운다 — 띠가 화면의 색과 어긋나면 조합을 읽을 수 없다.
+		fireEvent.click(screen.getByRole('radio', { name: '블루' }))
+		expect(onChange).toHaveBeenCalledWith('palette', 'blue')
+		expect(onChange).toHaveBeenCalledWith('c1', '#001133')
+		expect(onChange).toHaveBeenCalledWith('c2', '#e0f2ff')
+
+		// 되돌리기는 칸을 비우지 않고 기본 조합으로 채운다 — null은 「미설정」이라 띠가 흐려진다.
+		onChange.mockClear()
+		fireEvent.click(screen.getByRole('button', { name: /되돌리기/ }))
+		expect(onChange).toHaveBeenCalledWith('palette', null)
+		expect(onChange).toHaveBeenCalledWith('c1', '#000000')
+		expect(onChange).toHaveBeenCalledWith('c2', '#ffffff')
+	})
+
+	it('🔴 색 개수가 칸 수와 어긋나는 선택지는 조합이 아니다 — 채울 짝이 없다', () => {
+		const groups = [
+			{
+				id: 'palette',
+				title: 'Ray Palette',
+				controls: [
+					{
+						id: 'palette',
+						kind: 'select',
+						label: '팔레트',
+						defaultValue: 'green',
+						options: [{ value: 'green', label: '그린', colors: ['#000000'] }],
+					},
+					{ id: 'c1', kind: 'color', label: '광선 색상 1', defaultValue: '#000000' },
+					{ id: 'c2', kind: 'color', label: '광선 색상 2', defaultValue: '#ffffff' },
+				],
+			},
+		] satisfies readonly ControllerGroupDefinition[]
+
+		const { container } = render(
+			<ControllerRenderer groups={groups} values={{}} onChange={vi.fn()} />,
+		)
+		expect(container.querySelector('[data-slot="controller-color-strip"]')).toBeNull()
+	})
+
 	it('🔴 허용 색 목록이 있는 색은 띠가 되지 않는다 — 라디오 묶음을 피커로 바꾸면 계약이 넓어진다', () => {
 		const groups = [
 			{

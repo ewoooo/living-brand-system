@@ -49,9 +49,12 @@ export function ControllerRenderer({
 	return (
 		<>
 			{groups.map((group, index) => {
-				const content = isColorOnlyGroup(group) ? (
+				const combination = resolveColorCombinationGroup(group)
+				const content = combination ? (
 					<ColorStripGroup
-						group={group}
+						palette={combination.palette}
+						colors={combination.colors}
+						title={group.title}
 						values={values}
 						bindings={bindings}
 						onChange={onChange}
@@ -85,33 +88,53 @@ export function ControllerRenderer({
 	)
 }
 
+type ColorControl = Extract<ControllerControlDefinition, { kind: 'color' }>
+type SelectControl = Extract<ControllerControlDefinition, { kind: 'select' }>
+
 /**
  * 🔑 그룹의 컨트롤이 전부 색이면 그 그룹은 「색 조합」이다 — 행으로 쌓지 않고 한 띠로 그린다.
  *
  * 데이터 모양으로 판정하는 것은 「선택지가 전부 색이면 칩 그리드」와 같은 방식이다(아래 select).
  * 계약에 표현 플래그를 더하지 않는 이유가 그것이다 — 색만 모인 그룹은 이미 조합을 뜻한다.
  * 칸이 하나뿐이면 띠가 될 것이 없으므로 평소의 색 행으로 떨어진다.
+ *
+ * 🔑 색 칸 앞에 **조합을 고르는 select 하나**가 서 있어도 같은 그룹이다. 그때는 칩 그리드가 띠 위에
+ *    서고, 고르면 선택지의 `colors`가 **칸 순서대로** 띠를 채운다 — 고르기와 편집이 한 자리에 있고
+ *    띠는 언제나 화면에 그려지는 색을 보여준다. 선택지의 색 개수가 칸 수와 어긋나면 채울 짝이
+ *    없으므로 조합으로 보지 않는다(평소의 행으로 떨어진다).
  */
-function isColorOnlyGroup(group: ControllerGroupDefinition) {
-	return (
-		group.controls.length > 1 &&
-		group.controls.every((control) => control.kind === 'color' && !control.values?.length)
+function resolveColorCombinationGroup(group: ControllerGroupDefinition) {
+	const colors = group.controls.filter(
+		(control): control is ColorControl => control.kind === 'color' && !control.values?.length,
 	)
+	if (colors.length < 2) return null
+	const rest = group.controls.filter((control) => !colors.includes(control as ColorControl))
+	if (rest.length === 0) return { palette: null, colors }
+	if (rest.length > 1) return null
+	const [palette] = rest
+	if (palette.kind !== 'select') return null
+	return palette.options.every((option) => option.colors?.length === colors.length)
+		? { palette: palette as SelectControl, colors }
+		: null
 }
 
-/** 색만 모인 그룹을 한 띠로 투영한다. 되돌리기는 띠 전체를 한 번에 비운다. */
+/** 색 조합 그룹을 「팔레트 칩 + 한 띠」로 투영한다. 되돌리기는 조합을 한 번에 비운다. */
 function ColorStripGroup({
-	group,
+	palette,
+	colors,
+	title,
 	values,
 	bindings,
 	onChange,
 }: {
-	group: ControllerGroupDefinition
+	palette: SelectControl | null
+	colors: readonly ColorControl[]
+	title: string
 	values: ControllerValues
 	bindings?: ControllerRuntimeBindings
 	onChange: (controlId: string, value: ControllerControlValue) => void
 }) {
-	const resolved = group.controls.map((control) => {
+	const resolved = colors.map((control) => {
 		const value = control.id in values ? values[control.id] : control.defaultValue
 		return {
 			control,
@@ -125,27 +148,75 @@ function ColorStripGroup({
 	// 한 칸이라도 잠기면 띠를 통째로 잠근다 — 칸마다 다른 잠금은 띠 안에서 읽히지 않는다.
 	const disabled = resolved.some(({ availability }) => availability === 'disabled')
 	const readonly = resolved.some(({ availability }) => availability === 'readonly')
+	const selected = palette && typeof values[palette.id] === 'string' ? values[palette.id] : null
+	const selectedPalette =
+		palette && (selected ?? palette.defaultValue) !== null
+			? ((selected ?? palette.defaultValue) as string)
+			: undefined
 	if (!disabled && readonly) {
-		return resolved.map(({ control, color }) => (
-			<ReadonlyRow key={control.id} label={control.label} value={color ?? '—'} />
-		))
+		return (
+			<>
+				{palette && (
+					<ReadonlyRow
+						label={palette.label}
+						value={
+							palette.options.find((option) => option.value === selectedPalette)
+								?.label ?? '—'
+						}
+					/>
+				)}
+				{resolved.map(({ control, color }) => (
+					<ReadonlyRow key={control.id} label={control.label} value={color ?? '—'} />
+				))}
+			</>
+		)
 	}
 
 	return (
-		<Controller.ColorStrip
-			label={group.title}
-			disabled={disabled}
-			swatches={resolved.map(({ control, color }) => ({
-				id: control.id,
-				label: control.label,
-				value: color ?? '#000000',
-				isEmpty: color === null,
-			}))}
-			onChange={(id, hex) => onChange(id, hex)}
-			onReset={() => {
-				for (const { control } of resolved) onChange(control.id, null)
-			}}
-		/>
+		<>
+			{palette && (
+				<Controller.ColorChips
+					label={palette.label}
+					options={palette.options}
+					value={selectedPalette}
+					disabled={disabled}
+					onChange={(value) => {
+						onChange(palette.id, value)
+						// 고른 조합이 칸을 순서대로 채운다 — 띠가 화면의 색과 어긋나지 않는다.
+						const option = palette.options.find(
+							(candidate) => candidate.value === value,
+						)
+						for (const [index, hex] of (option?.colors ?? []).entries()) {
+							const control = colors[index]
+							if (control) onChange(control.id, hex)
+						}
+					}}
+				/>
+			)}
+			<Controller.ColorStrip
+				label={title}
+				disabled={disabled}
+				swatches={resolved.map(({ control, color }) => ({
+					id: control.id,
+					label: control.label,
+					value: color ?? '#000000',
+					isEmpty: color === null,
+				}))}
+				onChange={(id, hex) => onChange(id, hex)}
+				onReset={() => {
+					// 조합이 한 단위이므로 고른 조합까지 함께 되돌린다.
+					// 🔴 팔레트가 있으면 칸을 비우지 않고 **기본 조합으로 채운다** — null은 「미설정」이라
+					//    띠가 흐린 검정으로 비는데, 화면에는 기본 조합이 그려져 띠가 거짓말을 한다.
+					if (palette) onChange(palette.id, null)
+					const fallback = palette?.options.find(
+						(option) => option.value === palette.defaultValue,
+					)?.colors
+					for (const [index, { control }] of resolved.entries()) {
+						onChange(control.id, fallback?.[index] ?? null)
+					}
+				}}
+			/>
+		</>
 	)
 }
 

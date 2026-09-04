@@ -145,6 +145,20 @@ describe('flutedGlass', () => {
 		expect(flutedGlassColorToRgb('#3dff8a')).toEqual([61 / 255, 1, 138 / 255])
 	})
 
+	it('🔴 팔레트 선택지의 색이 색 칸의 순서와 개수를 그대로 맞춘다', () => {
+		// 칩이 띠를 순서대로 채우므로 순서가 어긋나면 배경색이 광선색 칸에 들어간다.
+		const palette = controls.find((control) => control.id === 'palette')
+		if (!palette || !('options' in palette)) throw new Error('팔레트 컨트롤이 없다')
+		const colorIds = controls.filter((control) => control.kind === 'color').map((c) => c.id)
+		const declared = defaults()
+		for (const option of palette.options) {
+			expect(option.colors, option.value).toHaveLength(colorIds.length)
+		}
+		const green = palette.options.find((option) => option.value === 'green')
+		// 기본 조합은 선언된 색 칸의 기본값과 같은 것이어야 한다 — 첫 화면이 팔레트와 어긋나지 않는다.
+		expect(green?.colors).toEqual(colorIds.map((id) => declared[id]))
+	})
+
 	it('광원 pad는 판 밖까지 닿는다 — pad ±1이 판의 세 배다', () => {
 		// 합치기 전 스윕은 판 밖으로 나가려 admin 전용 오프셋(-0.35)을 썼다. 이제 pad 값 하나로 닿는다.
 		const { input } = toFlutedGlassInput({ ...defaults(), shape: 'sweep' })
