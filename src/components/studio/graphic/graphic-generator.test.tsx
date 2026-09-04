@@ -326,26 +326,32 @@ describe('GraphicGenerator', () => {
 		expect(within(right).getByRole('slider', { name: '광선 연속성' })).toBeInTheDocument()
 		expect(within(right).getByRole('slider', { name: '속도' })).toBeInTheDocument()
 		expect(within(right).getByRole('slider', { name: '빛무리 크기' })).toBeInTheDocument()
-		expect(within(right).getByRole('slider', { name: '시작 시점' })).toBeInTheDocument()
-		expect(within(right).getByRole('slider', { name: '빔 세기' })).toBeInTheDocument()
 		expect(within(right).getByRole('slider', { name: '줄 굵기' })).toBeInTheDocument()
-		expect(within(right).getByRole('slider', { name: '굴절' })).toBeInTheDocument()
-		expect(within(right).getByRole('slider', { name: '유리 반짝임' })).toBeInTheDocument()
 		expect(within(right).getByRole('slider', { name: '결 흐름' })).toBeInTheDocument()
 		expect(within(right).getByRole('slider', { name: '확대' })).toBeInTheDocument()
 		expect(within(right).getByRole('slider', { name: '기울기' })).toBeInTheDocument()
-		expect(within(right).getByRole('slider', { name: '모서리 어둡기' })).toBeInTheDocument()
 		expect(within(right).getByText('Position')).toBeInTheDocument()
-		// 밀도는 뺐다 — 무엇이 달라지는지 화면에서 읽히지 않는다.
-		expect(screen.queryByRole('slider', { name: '광선 밀도' })).toBeNull()
-		// 🔴 블룸은 세웠다가 걷었다 — 「광선 강도」와 종류가 같아 둘 다 밝기로만 읽혔다.
-		expect(screen.queryByRole('slider', { name: /블룸/ })).toBeNull()
+		// 🔴 세웠다가 사용자가 「체감 불가」로 내린 축들 — 픽셀차가 있어도 창작자는 알아보지 못했다.
+		//    선언은 남아 있어 manager가 Payload에서 조정한다. 다시 올리지 말 것.
+		for (const axis of [
+			'광선 밀도',
+			'블룸 강도',
+			'시작 시점',
+			'빔 세기',
+			'빔 폭',
+			'굴절',
+			'유리 반짝임',
+			'모서리 어둡기',
+		]) {
+			expect(screen.queryByRole('slider', { name: axis }), axis).toBeNull()
+		}
 		// 모양의 정체를 이루는 값과 마스터 시계에 딸린 속도는 admin 전용으로 남는다.
 		expect(screen.queryByRole('slider', { name: '광선 회전' })).toBeNull()
 		// 🔴 「Sweep」은 왼쪽 모양의 이름이기도 하다 — 그 제목이 오른쪽에 뜨면 같은 말이 두 뜻이 된다.
 		expect(screen.queryByRole('button', { name: 'Sweep' })).toBeNull()
 		expect(screen.queryByRole('button', { name: 'Glass Motion' })).toBeNull()
-		expect(within(right).getByRole('button', { name: 'Beam' })).toBeInTheDocument()
+		// 남은 컨트롤이 없는 그룹은 그 쪽 패널에서 제목째 사라진다.
+		expect(screen.queryByRole('button', { name: 'Beam' })).toBeNull()
 		expect(screen.getByRole('spinbutton', { name: 'Width' })).toHaveValue(1920)
 		expect(screen.getByRole('spinbutton', { name: 'Height' })).toHaveValue(1080)
 		expect(screen.getByRole('combobox', { name: 'FPS' })).toHaveTextContent('30')
