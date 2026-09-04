@@ -12,6 +12,7 @@ export default `// Shadertoy-style fragment shader; the Graphic Studio host supp
 #define TAU 6.28318530718
 
 uniform vec2 uSource;
+uniform float uZoom;
 uniform vec3 uBloomColor;
 uniform vec3 uRayColor1;
 uniform vec3 uRayColor2;
@@ -496,7 +497,7 @@ vec3 flutedGlass(vec2 p, vec2 rayOrigin, float time) {
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 resolution = iResolution.xy;
     vec2 screenUV = fragCoord / resolution;
-    vec2 p = (fragCoord - resolution * 0.5) / resolution.y;
+    vec2 p = (fragCoord - resolution * 0.5) / resolution.y / uZoom;
     float time = iTime * uGodraySpeed + GODRAY_FRAME * 0.001;
 
     vec3 color = flutedGlass(p, sourcePoint(), time);

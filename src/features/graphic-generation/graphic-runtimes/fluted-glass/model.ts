@@ -26,6 +26,7 @@ const sharedFields = {
 	source: unitPointSchema,
 	sourceOffsetX: z.number().min(-2).max(2),
 	sourceOffsetY: z.number().min(-2).max(2),
+	zoom: z.number().min(0.5).max(3),
 	bloomColor: hexColorSchema,
 	rayColor1: hexColorSchema,
 	rayColor2: hexColorSchema,

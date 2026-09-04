@@ -327,6 +327,7 @@ describe('GraphicGenerator', () => {
 		// 밀도는 뺐다 — 무엇이 달라지는지 화면에서 읽히지 않는다.
 		expect(screen.queryByRole('slider', { name: '광선 밀도' })).toBeNull()
 		expect(within(right).getByText('Position')).toBeInTheDocument()
+		expect(within(right).getByRole('slider', { name: '확대' })).toBeInTheDocument()
 		// 셰이더 고유 축은 admin 전용으로 내려가 창작자 화면에 없다.
 		expect(screen.queryByRole('button', { name: 'Sweep' })).toBeNull()
 		expect(screen.queryByRole('button', { name: 'Glass' })).toBeNull()

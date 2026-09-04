@@ -33,11 +33,27 @@ export const FLUTED_GLASS_SHAPE_FAMILIES = {
 	radial: 'radial',
 } as const satisfies Record<FlutedGlassShape, 'linear' | 'sweep' | 'radial'>
 
+/**
+ * 광원 pad의 ±1이 판의 몇 배까지 닿는가.
+ *
+ * pad는 -1~1로 고정이고 셰이더는 ±1을 판 가장자리로 읽는다 — 그래서 판 밖으로 광원을 내보내려면
+ * admin 전용 오프셋 축을 써야 했다(스윕이 `sourceOffsetX: -0.35`로 그랬다). uniform 배선에서 이
+ * 배수를 곱해 pad 한 칸이 판 세 칸을 덮는다. 저장·표시는 pad 값이고 판 좌표는 `plate()`가 나른다.
+ */
+export const FLUTED_GLASS_SOURCE_SPAN = 3
+
+/** 판 좌표(±1 = 판 가장자리)를 광원 pad 값으로 바꾼다. */
+const plate = (x: number, y: number) => ({
+	x: x / FLUTED_GLASS_SOURCE_SPAN,
+	y: y / FLUTED_GLASS_SOURCE_SPAN,
+})
+
 /** 모양이 정하는 감춘 값 묶음 — 합치기 전 네 프로파일의 기본값을 그대로 옮겨 왔다. */
 const FLUTED_GLASS_LINEAR_INPUT = {
-	source: { x: -0.62, y: 0.04 },
+	source: plate(-0.62, 0.04),
 	sourceOffsetX: 0,
 	sourceOffsetY: 0,
+	zoom: 1,
 	bloomColor: '#2ad97a',
 	rayColor1: '#001a0b',
 	rayColor2: '#06381b',
@@ -82,9 +98,10 @@ const FLUTED_GLASS_LINEAR_INPUT = {
 } as const
 
 const FLUTED_GLASS_VERTICAL_INPUT = {
-	source: { x: 0, y: -0.62 },
+	source: plate(0, -0.62),
 	sourceOffsetX: 0,
 	sourceOffsetY: 0,
+	zoom: 1,
 	bloomColor: '#2ad97a',
 	rayColor1: '#001a0b',
 	rayColor2: '#06381b',
@@ -130,10 +147,11 @@ const FLUTED_GLASS_VERTICAL_INPUT = {
 
 const FLUTED_GLASS_SWEEP_INPUT = {
 	// 🔑 스윕의 소실점은 판 **밖**에 있다 — 그것이 방사와 가르는 축이다. 광선 밭이 판 밖의 한
-	//    점을 축으로 돌아 등대처럼 판을 스쳐 지나간다. `source`는 -1~1이라 판 밖은 오프셋이 만든다.
-	source: { x: -1, y: 0 },
-	sourceOffsetX: -0.35,
+	//    점을 축으로 돌아 등대처럼 판을 스쳐 지나간다.
+	source: plate(-1.35, 0),
+	sourceOffsetX: 0,
 	sourceOffsetY: 0,
+	zoom: 1,
 	bloomColor: '#3dff8a',
 	rayColor1: '#000e06',
 	rayColor2: '#004218',
@@ -179,9 +197,10 @@ const FLUTED_GLASS_SWEEP_INPUT = {
 
 const FLUTED_GLASS_RADIAL_INPUT = {
 	// 🔑 방사의 소실점은 판 **정중앙**이다 — 스윕(판 밖)과 가르는 축이 소실점의 자리다.
-	source: { x: 0, y: 0 },
+	source: plate(0, 0),
 	sourceOffsetX: 0,
 	sourceOffsetY: 0,
+	zoom: 1,
 	bloomColor: '#3dff8a',
 	rayColor1: '#000e06',
 	rayColor2: '#004218',
@@ -252,7 +271,7 @@ export type FlutedGlassStyleId = (typeof FLUTED_GLASS_STYLE_IDS)[number]
 const FLUTED_GLASS_LINEAR_STYLES = {
 	basic: {},
 	focused: {
-		source: { x: -0.62, y: 0 },
+		source: plate(-0.62, 0),
 		axisFalloff: 2.6,
 		rayDensity: 0.45,
 		rayMidIntensity: 0.22,
@@ -268,7 +287,7 @@ const FLUTED_GLASS_LINEAR_STYLES = {
 		glassDrift: { x: 0, y: 0.01 },
 	},
 	diffused: {
-		source: { x: -0.62, y: 0.1 },
+		source: plate(-0.62, 0.1),
 		axisFalloff: 0.7,
 		rayDensity: 0.08,
 		rayMidIntensity: 0.55,
@@ -286,7 +305,7 @@ const FLUTED_GLASS_LINEAR_STYLES = {
 	},
 	// 광원 축을 크게 올려 밝은 대역을 위로 몰고 아래를 비운다. uSource.y = -source.y라 음수가 위다.
 	axisStart: {
-		source: { x: -0.62, y: -0.7 },
+		source: plate(-0.62, -0.7),
 		axisFalloff: 1.1,
 		rayDensity: 0.3,
 		rayMidIntensity: 0.4,
@@ -301,7 +320,7 @@ const FLUTED_GLASS_LINEAR_STYLES = {
 		flowSpeed: 0.08,
 	},
 	axisEnd: {
-		source: { x: -0.62, y: 0.7 },
+		source: plate(-0.62, 0.7),
 		axisFalloff: 1.1,
 		rayDensity: 0.3,
 		rayMidIntensity: 0.4,
@@ -320,7 +339,7 @@ const FLUTED_GLASS_LINEAR_STYLES = {
 const FLUTED_GLASS_VERTICAL_STYLES = {
 	basic: {},
 	focused: {
-		source: { x: 0, y: -0.62 },
+		source: plate(0, -0.62),
 		axisFalloff: 2.6,
 		rayDensity: 0.45,
 		rayMidIntensity: 0.22,
@@ -336,7 +355,7 @@ const FLUTED_GLASS_VERTICAL_STYLES = {
 		glassDrift: { x: 0.01, y: 0 },
 	},
 	diffused: {
-		source: { x: 0.1, y: -0.62 },
+		source: plate(0.1, -0.62),
 		axisFalloff: 0.7,
 		rayDensity: 0.08,
 		rayMidIntensity: 0.55,
@@ -353,7 +372,7 @@ const FLUTED_GLASS_VERTICAL_STYLES = {
 		flowSpeed: 0.12,
 	},
 	axisStart: {
-		source: { x: -0.7, y: -0.62 },
+		source: plate(-0.7, -0.62),
 		axisFalloff: 1.1,
 		rayDensity: 0.3,
 		rayMidIntensity: 0.4,
@@ -368,7 +387,7 @@ const FLUTED_GLASS_VERTICAL_STYLES = {
 		flowSpeed: 0.08,
 	},
 	axisEnd: {
-		source: { x: 0.7, y: -0.62 },
+		source: plate(0.7, -0.62),
 		axisFalloff: 1.1,
 		rayDensity: 0.3,
 		rayMidIntensity: 0.4,
@@ -548,7 +567,7 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 		 * | --- | --- | --- |
 		 * | `rayIntensity` | 0.235 | 세기 — 전체에서 가장 큰 축이다 |
 		 * | `rayScale` | 0.229 | 두께 — 광선이 굵어지고 가늘어진다 |
-		 * | `source` | 0.153 | 기준점 — 소실점을 판 안에서 옮긴다 |
+		 * | `source` | 0.153 | 기준점 — 소실점을 판 밖까지 옮긴다 |
 		 * | `speed` | 0.142 | 속도 — 마스터 시계라 나머지 속도가 여기 딸린다 |
 		 *
 		 * 🔴 `rayRotation`은 0.217로 여기 든 것보다 큰데도 뺐다. 세로형을 세로로 만드는 값이
@@ -556,10 +575,12 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 		 *    모양의 정체를 이루는 값은 모양이 소유한다.
 		 * 🔴 `rayDensity`(광선 밀도)도 뺐다 — 0.068로 남긴 축 중 가장 약했고, 무엇이 달라지는지
 		 *    화면에서 읽히지 않는다는 판단이다. 크기가 아니라 **읽히는가**가 기준이다.
+		 * `zoom`(확대)은 재서 고른 축이 아니라 없던 축이다 — 판을 채우는 배율을 창작자가 정할 수
+		 * 없어서 넣었다. `source`는 사거리를 `FLUTED_GLASS_SOURCE_SPAN`만큼 넓혀 판 밖까지 닿는다.
 		 * 🔴 여기에도 왼쪽에도 없는 축은 창작자 화면에서 내려가고 Payload admin의 「기본값 재정의」로
 		 *    manager가 조정한다. 지운 것이 아니다 — 코드에 박으면 배포 없이 못 고친다.
 		 */
-		right: ['rayIntensity', 'rayScale', 'speed', 'source'],
+		right: ['rayIntensity', 'rayScale', 'speed', 'zoom', 'source'],
 		// 모양은 셰이더 프로그램을 갈아끼운다 — 살아 있는 런타임에 흘려 넣을 수 없다.
 		remountOn: ['shape'],
 		groups: [
@@ -801,6 +822,7 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 				id: 'position',
 				title: 'Position',
 				controls: [
+					rangeControl('zoom', '확대', CONTROL_DEFAULTS.zoom, 0.5, 3),
 					{
 						id: 'source',
 						kind: 'pad' as const,

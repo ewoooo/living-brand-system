@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import flutedGlassRuntimeManifest, {
 	FLUTED_GLASS_SHAPE_INPUTS,
 	FLUTED_GLASS_SHAPES,
+	FLUTED_GLASS_SOURCE_SPAN,
 	FLUTED_GLASS_STYLE_IDS,
 	FLUTED_GLASS_STYLES,
 } from '@/features/graphic-generation/graphic-runtimes/fluted-glass/definition'
@@ -142,6 +143,13 @@ describe('flutedGlass', () => {
 			expect(input.rayColor1, shape).toBe(FLUTED_GLASS_SHAPE_INPUTS.sweep.rayColor1)
 		}
 		expect(flutedGlassColorToRgb('#3dff8a')).toEqual([61 / 255, 1, 138 / 255])
+	})
+
+	it('광원 pad는 판 밖까지 닿는다 — pad ±1이 판의 세 배다', () => {
+		// 합치기 전 스윕은 판 밖으로 나가려 admin 전용 오프셋(-0.35)을 썼다. 이제 pad 값 하나로 닿는다.
+		const { input } = toFlutedGlassInput({ ...defaults(), shape: 'sweep' })
+		expect(input.source.x * FLUTED_GLASS_SOURCE_SPAN).toBeCloseTo(-1.35)
+		expect(input.sourceOffsetX).toBe(0)
 	})
 
 	it('Controller 화면 좌표의 Y축을 WebGL 좌표로 반전한다', () => {
