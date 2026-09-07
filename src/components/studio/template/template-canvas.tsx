@@ -88,7 +88,11 @@ export function TemplateCanvas() {
 	}, [height, width])
 
 	return (
-		<div ref={stageRef} className="relative grid h-full min-h-0 min-w-0 overflow-hidden">
+		// 🔴 하단 예약의 근거는 graphic-canvas.tsx와 같다 — 떠 있는 바가 프리뷰를 덮지 않게.
+		<div
+			ref={stageRef}
+			className="relative grid h-full min-h-0 min-w-0 overflow-hidden lg:pb-28"
+		>
 			<div
 				data-slot="template-preview"
 				className="m-auto shrink-0 overflow-hidden shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none lg:[transform:scale(var(--preview-scale))]"

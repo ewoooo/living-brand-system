@@ -172,9 +172,12 @@ function GraphicPreviewCanvas({
 
 	return (
 		<figure data-slot="graphic-canvas" className="relative flex min-h-0 flex-1 flex-col">
+			{/* 🔴 하단 예약: 플로팅 바가 bottom-10(40px)에 높이 60px으로 떠 있어서, 예약이 없으면
+			    기본 100% 배율의 프리뷰 아래쪽이 바 뒤로 들어간다. 바는 `lg:`에서만 보이므로 예약도
+			    그쪽만 한다. 실측 bounds가 그만큼 줄어 프리뷰가 바 위에 딱 맞는다. */}
 			<div
 				ref={stageRef}
-				className="flex min-h-96 flex-1 items-center justify-center overflow-hidden lg:min-h-0"
+				className="flex min-h-96 flex-1 items-center justify-center overflow-hidden lg:min-h-0 lg:pb-28"
 			>
 				<div
 					ref={containerRef}

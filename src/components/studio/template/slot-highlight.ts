@@ -63,8 +63,8 @@ function cssColor(color: string | null | undefined): string {
  * 오버레이의 생김새. 오버레이는 **캔버스 좌표계** 안에 놓이므로 두께도 캔버스 px로 줘야 한다.
  *
  * 🔴 캔버스는 두 번 축소된다 — `fitPreviewSize`가 정한 `scale`과 Preview Size 컨트롤의
- *    `--preview-scale`이 곱해진다. 앞쪽만 보정하면 기본값(`DEFAULT_PREVIEW_SIZE = 50`)에서 선이
- *    절반 두께로 찍힌다(2026-08-24 실측).
+ *    `--preview-scale`이 곱해진다. 앞쪽만 보정하면 배율을 내린 만큼 선이 얇게 찍힌다
+ *    (2026-08-24에 당시 기본값 50%에서 절반 두께로 실측했다).
  * 🔑 `--preview-scale`은 미리보기 판에 인라인으로 걸려 후손이 상속한다. 그것을 CSS에서 그대로 읽으면
  *    슬라이더를 끌 때 `calc`가 저절로 다시 풀리므로 리렌더도 재측정도 없다.
  * 🔴 그 배율의 transform은 `lg:`에서만 걸리는데 변수는 항상 있다 — 좁은 화면에서는 선이 그만큼
