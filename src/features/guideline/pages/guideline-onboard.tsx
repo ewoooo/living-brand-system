@@ -4,7 +4,7 @@ import { ContentFrame } from '@/components/shared/content-frame'
 import { PageHero } from '@/components/shared/page-hero'
 import { PanelCard, PanelChip } from '@/components/shared/panel-card'
 import { cn } from '@/lib/utils'
-import type { GetGuidelineNavigationOutput } from '../../services/get-guideline-navigation.service'
+import type { GetGuidelineNavigationOutput } from '../services/get-guideline-navigation.service'
 
 /** 🔴 모듈 상수여야 한다 — 렌더마다 새 객체면 히어로 shader가 계속 다시 마운트된다. */
 const GUIDELINE_HERO_VALUES = { shape: 'linear' } as const

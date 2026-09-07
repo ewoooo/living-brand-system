@@ -254,7 +254,7 @@ export interface GuidelineDocument {
    * 토픽 헤더에 표시할 선택 이미지입니다.
    */
   headerImage?: (number | null) | ApplicationImage;
-  blocks?: SectionBlock[] | null;
+  blocks?: (SectionBlock | BaseBlock | OverviewBlock | ExamplesBlock)[] | null;
   /**
    * 이 문서 단위에 적용할 검수 규칙입니다.
    */
@@ -1197,6 +1197,289 @@ export interface RuleChecker {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BaseBlock".
+ */
+export interface BaseBlock {
+  title?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 카드를 어떻게 놓을지입니다.
+   */
+  layout: 'grid' | 'carousel';
+  /**
+   * 카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   */
+  rowHeight: 'low' | 'medium' | 'high';
+  /**
+   * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
+   */
+  cards?:
+    | {
+        /**
+         * 카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.
+         */
+        ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
+        /**
+         * 판에 무엇을 그릴지입니다. 이미지 하나 또는 위젯 하나.
+         */
+        display?:
+          | (
+              | StaticDisplay
+              | CiLockupHeroWidget
+              | ClearspaceOverlayWidget
+              | LogoBgPickerWidget
+              | LogoDisplayWidget
+              | TypeScrambleWidget
+              | TypeWeightWidget
+              | TypeSpecimenWidget
+              | LayoutGridOverlayWidget
+            )[]
+          | null;
+        caption?: {
+          title?: string | null;
+          /**
+           * 텍스트 또는 표. 2열 표는 라벨·값 스펙 리스트로 그립니다.
+           */
+          description?: {
+            root: {
+              type: string;
+              children: {
+                type: any;
+                version: number;
+                [k: string]: unknown;
+              }[];
+              direction: ('ltr' | 'rtl') | null;
+              format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+              indent: number;
+              version: number;
+            };
+            [k: string]: unknown;
+          } | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 블록에 연관 에셋 다운로드를 붙입니다.
+   */
+  assetDownload?: boolean | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'base';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StaticDisplay".
+ */
+export interface StaticDisplay {
+  /**
+   * 카드 판을 배경으로 채우는 이미지입니다. 판 비율에 맞춰 잘립니다.
+   */
+  image: number | ApplicationImage;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'staticDisplay';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "OverviewBlock".
+ */
+export interface OverviewBlock {
+  title?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 카드를 어떻게 놓을지입니다.
+   */
+  layout: 'grid' | 'carousel';
+  /**
+   * 카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   */
+  rowHeight: 'low' | 'medium' | 'high';
+  /**
+   * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
+   */
+  cards?:
+    | {
+        /**
+         * 카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.
+         */
+        ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
+        /**
+         * 판에 무엇을 그릴지입니다. 이미지 하나 또는 위젯 하나.
+         */
+        display?:
+          | (
+              | StaticDisplay
+              | CiLockupHeroWidget
+              | ClearspaceOverlayWidget
+              | LogoBgPickerWidget
+              | LogoDisplayWidget
+              | TypeScrambleWidget
+              | TypeWeightWidget
+              | TypeSpecimenWidget
+              | LayoutGridOverlayWidget
+            )[]
+          | null;
+        caption?: {
+          title?: string | null;
+          /**
+           * 텍스트 또는 표. 2열 표는 라벨·값 스펙 리스트로 그립니다.
+           */
+          description?: {
+            root: {
+              type: string;
+              children: {
+                type: any;
+                version: number;
+                [k: string]: unknown;
+              }[];
+              direction: ('ltr' | 'rtl') | null;
+              format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+              indent: number;
+              version: number;
+            };
+            [k: string]: unknown;
+          } | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 블록에 연관 에셋 다운로드를 붙입니다.
+   */
+  assetDownload?: boolean | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'overview';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ExamplesBlock".
+ */
+export interface ExamplesBlock {
+  title?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 카드를 어떻게 놓을지입니다.
+   */
+  layout: 'grid' | 'carousel';
+  /**
+   * 카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   */
+  rowHeight: 'low' | 'medium' | 'high';
+  /**
+   * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
+   */
+  cards?:
+    | {
+        /**
+         * 카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.
+         */
+        ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
+        /**
+         * 판에 무엇을 그릴지입니다. 이미지 하나 또는 위젯 하나.
+         */
+        display?:
+          | (
+              | StaticDisplay
+              | CiLockupHeroWidget
+              | ClearspaceOverlayWidget
+              | LogoBgPickerWidget
+              | LogoDisplayWidget
+              | TypeScrambleWidget
+              | TypeWeightWidget
+              | TypeSpecimenWidget
+              | LayoutGridOverlayWidget
+            )[]
+          | null;
+        caption?: {
+          title?: string | null;
+          /**
+           * 텍스트 또는 표. 2열 표는 라벨·값 스펙 리스트로 그립니다.
+           */
+          description?: {
+            root: {
+              type: string;
+              children: {
+                type: any;
+                version: number;
+                [k: string]: unknown;
+              }[];
+              direction: ('ltr' | 'rtl') | null;
+              format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+              indent: number;
+              version: number;
+            };
+            [k: string]: unknown;
+          } | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * 이 블록에 연관 에셋 다운로드를 붙입니다.
+   */
+  assetDownload?: boolean | null;
+  /**
+   * 이 문서 단위에 적용할 검수 규칙입니다.
+   */
+  rules?: (number | Rule)[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'examples';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2415,6 +2698,9 @@ export interface GuidelineDocumentsSelect<T extends boolean = true> {
     | T
     | {
         section?: T | SectionBlockSelect<T>;
+        base?: T | BaseBlockSelect<T>;
+        overview?: T | OverviewBlockSelect<T>;
+        examples?: T | ExamplesBlockSelect<T>;
       };
   rules?: T;
   displayOrder?: T;
@@ -2721,6 +3007,132 @@ export interface TypeWeightWidgetSelect<T extends boolean = true> {
  */
 export interface TypeSpecimenWidgetSelect<T extends boolean = true> {
   span?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BaseBlock_select".
+ */
+export interface BaseBlockSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  layout?: T;
+  rowHeight?: T;
+  cards?:
+    | T
+    | {
+        ratio?: T;
+        display?:
+          | T
+          | {
+              staticDisplay?: T | StaticDisplaySelect<T>;
+              ciLockupHeroWidget?: T | CiLockupHeroWidgetSelect<T>;
+              clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
+              logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
+              logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
+              typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
+              typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
+              typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
+              layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
+            };
+        caption?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        id?: T;
+      };
+  assetDownload?: T;
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StaticDisplay_select".
+ */
+export interface StaticDisplaySelect<T extends boolean = true> {
+  image?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "OverviewBlock_select".
+ */
+export interface OverviewBlockSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  layout?: T;
+  rowHeight?: T;
+  cards?:
+    | T
+    | {
+        ratio?: T;
+        display?:
+          | T
+          | {
+              staticDisplay?: T | StaticDisplaySelect<T>;
+              ciLockupHeroWidget?: T | CiLockupHeroWidgetSelect<T>;
+              clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
+              logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
+              logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
+              typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
+              typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
+              typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
+              layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
+            };
+        caption?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        id?: T;
+      };
+  assetDownload?: T;
+  rules?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ExamplesBlock_select".
+ */
+export interface ExamplesBlockSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  layout?: T;
+  rowHeight?: T;
+  cards?:
+    | T
+    | {
+        ratio?: T;
+        display?:
+          | T
+          | {
+              staticDisplay?: T | StaticDisplaySelect<T>;
+              ciLockupHeroWidget?: T | CiLockupHeroWidgetSelect<T>;
+              clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
+              logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
+              logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
+              typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
+              typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
+              typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
+              layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
+            };
+        caption?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+        id?: T;
+      };
+  assetDownload?: T;
+  rules?: T;
   id?: T;
   blockName?: T;
 }

@@ -149,7 +149,10 @@ src/
       services/
     <feature>/
       blocks/
-        <block>/
+        registry.ts
+        registry.render.tsx
+        projection.ts
+        section/
           schema.ts
           projection.ts
           component.tsx
@@ -158,11 +161,15 @@ src/
           build-check-source-snapshot.ts
         shared/
         types.ts
-      catalog/
-        schema.generated.ts
-        projection.generated.ts
-        renderer.generated.tsx
-        catalog.test.ts
+      cards/
+        schema.ts
+        component.tsx
+        caption/
+        displays/
+          registry.ts
+          registry.render.tsx
+          static/
+      pages/
       hooks/
       repositories/
       services/
@@ -190,7 +197,6 @@ tests/
   helpers/
 docs/
 scripts/
-  generate-guideline-block-catalogs.ts
 ```
 
 - `page.tsx`와 `layout.tsx`는 라우팅과 화면 조합만 담당합니다.
@@ -204,7 +210,7 @@ scripts/
 - 기능 전용 read service의 Payload 접근도 같은 기능의 `src/features/*/repositories`에 둡니다.
 - 기능 안의 순수 도메인 계산 계층(예: `review/checkers`)과 정적 시나리오 데이터(예: `review/scenarios`)는 승인된 기능 하위 폴더 확장입니다. 새 하위 폴더는 표준 폴더(`components`, `contexts`, `hooks`, `providers`, `repositories`, `services`, `utils`)로 표현할 수 없을 때만 추가합니다.
 - Feature 디렉터리는 `template-core`, `graphic-generation`, `image-generation`, `template-customization`, `template-import`처럼 `<object>-<capability>`로 이름 짓습니다. 여러 기능이 소비하는 Template 도메인 정본은 `src/features/template-core`, UI 비종속 Controller 계약은 `src/modules/studio-controller`, 공통 출력 실행은 `src/features/studio-export`가 소유합니다. 각 기능의 직렬화 계약과 순수 계산은 `domain`, Context 값 계약은 `contexts`, 화면 세션은 `providers`, Context 소비는 `hooks`, 실행 adapter는 `runtime`, 조회 유즈케이스는 `services`, Payload 접근은 `repositories`에 둡니다. Provider와 소비 훅은 서로 import하지 않고 같은 Context 계약에 의존합니다. Studio 표현 컴포넌트와 라우트는 화면 표면 이름이므로 `src/components/studio`, `/studio`를 유지합니다.
-- 기능 전용 Payload block은 `src/features/<feature>/blocks/<block>`에 schema, projection, component를 함께 둡니다. 생성된 schema/projection catalog는 서버에서 안전하게 사용하고 React renderer catalog는 별도 파일로 유지해 client component가 Payload config에 포함되지 않게 합니다.
+- 가이드라인 블록은 `src/features/guideline/blocks/registry.ts`의 항목으로 정의합니다. 레지스트리·투영(`projection.ts`)은 Payload config가 Node에서 읽으므로 서버 안전해야 하고, React 렌더는 `registry.render.tsx`가 같은 id로 갈라 그립니다. client component가 Payload config에 포함되지 않게 하는 경계입니다.
 - Agent는 별도 사용자 역할이 아니라 `src/modules/agents`의 실행 모듈입니다.
 - 실제 폴더 구조를 개선할 때는 `src/features`, `src/modules`, `src/components`, `src/lib`, `src/services`, `src/repositories`, `src/types`를 이 순서로 추가합니다.
 
@@ -248,15 +254,39 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 
 ### 가이드라인 블록 등록
 
-새 블록은 `src/features/guideline/blocks/<kebab-case-name>` 폴더 하나를 만들고 아래 세 파일을 기본 export로 제공합니다.
+블록 종류는 `src/features/guideline/blocks/registry.ts`의 `BLOCKS` 배열 **항목 하나**로 정의합니다(2026-09-07). 폴더도 3파일 계약도 생성기도 없습니다.
 
-| 파일 | 최소 계약 |
+```ts
+{ id: 'overview', dbName: 'ovw', name: '한 눈에 보기', description: '…', presets: { layout: 'carousel', rowHeight: 'medium' } }
+```
+
+| 항목 | 뜻 |
 | --- | --- |
-| `schema.ts` | Payload `Block`을 기본 export하고 `slug`는 폴더명에서 변환한 camelCase key와 일치시킵니다. |
-| `projection.ts` | 해당 블록을 `BlockProjection`으로 변환하는 함수를 기본 export합니다. |
-| `component.tsx` | 해당 블록 데이터를 받는 React component를 기본 export합니다. |
+| `id` | Payload `slug`이자 `blockType`. `interfaceName`은 `<Pascal id>Block`으로 파생 |
+| `dbName` | 중첩 테이블명 63자 방어용 짧은 별칭. 테이블 이름이므로 한 번 정하면 바꾸지 않습니다 |
+| `name` | admin 라벨. 슈거 블록에서는 고정 제목이 됩니다 |
+| `description` | 사람이 읽는 정의. Payload 블록 선택기에는 슬롯이 없어 화면에 나오지 않습니다 |
+| `presets` | 있으면 슈거 — 값과 제목이 고정되고 admin에서 숨겨집니다 |
+| `anchor` | URL 앵커를 남기고 좌측 TOC에 오릅니다. `section`만 |
 
-`pnpm generate:block-catalogs`는 기존 Admin 노출 순서를 보존하고 새 블록 폴더는 뒤에 이름순으로 붙여 `src/features/guideline/catalog/*.generated.*`의 정적 import와 map을 갱신합니다. 생성 파일은 커밋하되 직접 수정하지 않습니다. `pnpm check:block-catalogs`는 생성 결과가 최신인지 검사하며 CI의 정적 검사에서 실행합니다.
+스키마 팩토리(`blockSchema`)·투영(`projection.ts`)·렌더(`registry.render.tsx`)는 각각 **하나**이고 전 블록이 공유합니다. 문서 `blocks` 필드는 `guidelineBlocks`(레지스트리 배열 그대로)를 받고, 배열 순서가 admin 선택기 순서입니다. `registry.test.ts`가 id·dbName 유일성과 문서 필드가 레지스트리를 그대로 받는지 지킵니다.
+
+🔴 **임시 예외 — `section`.** 아직 leaf `children`을 갖는 옛 스키마라 `blocks/section/`의 3파일이 남아 있고, `blockSchema`가 그 id만 옛 스키마로 돌려줍니다. 기존 문서의 leaf를 카드로 이관한 뒤 앵커 필드 + 카드 필드로 바뀌면 폴더와 분기가 함께 사라집니다.
+
+#### 카드 블록과 슈거 블록
+
+블록은 카드(디스플레이 + 캡션)의 **레이아웃과 줄 높이**, 제목·설명, 에셋 다운로드 유무, rules만 책임집니다(2026-09-07 모델). 배치는 높이 기준이라 카드 폭은 각 카드의 비율에서 나옵니다. 카드 안은 `src/features/guideline/cards/`가 소유합니다.
+
+| 자리 | 소유 |
+| --- | --- |
+| `blocks/shared/base-fields.ts` | 기본 블록 필드(`baseContentFields`)와 슈거용 `presetFields` |
+| `blocks/shared/card-block.tsx` · `card-projection.ts` | 카드 블록 공용 렌더·투영. 각 블록의 3파일은 이것을 부르는 얇은 껍데기 |
+| `cards/schema.ts` | 카드 필드 — 규격 비율, 디스플레이 1개, 캡션(제목·설명). 폭 필드는 없다 |
+| `cards/displays/registry.ts` · `registry.render.tsx` | 디스플레이 레지스트리 — 판에 그릴 수 있는 것은 여기 항목(`id·name·description·schema`) 하나로 정의하고, 렌더는 짝 파일이 같은 id로 갈라 그립니다. 정적 디스플레이 1종 + 전환 가능 위젯 8종. 위젯 폴더는 이곳으로 이관될 예정 |
+| `cards/displays/static/` | 정적 디스플레이(배경 이미지)의 스키마·컴포넌트 |
+| `cards/caption/` | 캡션 렌더. 설명 richText의 표를 스펙 리스트로 바꾸는 컨버터 자리 |
+
+🔴 슈거 블록(`overview`·`examples`)은 **새 필드를 만들지 않습니다.** `presetFields`로 기본 필드에 고정값을 덧씌우고 숨길 뿐입니다 — 저작 편의를 위한 사전 정의 블록이고, 데이터 모델과 렌더 규칙은 기본 블록과 같습니다. `base-fields.test.ts`가 필드 집합이 같은지 지킵니다.
 
 `runtime`은 생성 map을 사용하는 동작만 소유합니다. `project-guideline-block.ts`는 Agent/Check projection, `build-check-source-snapshot.ts`는 문서 snapshot을 담당합니다. React 렌더 진입점은 `components/guideline-blocks.tsx`에 둡니다. 둘 이상의 블록이 실제로 공유하는 필드나 UI만 `shared`에 둡니다.
 

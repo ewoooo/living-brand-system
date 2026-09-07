@@ -1,10 +1,13 @@
 import { ContentFrame } from '@/components/shared/content-frame'
-import type { GetGuidelineTopicOutput } from '../../services/get-guideline-topic.service'
-import { GuidelineHeader, GuidelineHeaderImage } from '../globals/guideline-header'
-import { GuidelineHelperProvider, GuidelineHelperSlot } from '../globals/guideline-helper'
-import type { GuidelineVariant } from '../globals/guideline-variant'
-import { GuidelineBlocks } from '../guideline-blocks'
-import { RefreshRouteOnSave } from '../refresh-route-on-save'
+import { GuidelineHeader, GuidelineHeaderImage } from '../components/globals/guideline-header'
+import {
+	GuidelineHelperProvider,
+	GuidelineHelperSlot,
+} from '../components/globals/guideline-helper'
+import type { GuidelineVariant } from '../components/globals/guideline-variant'
+import { GuidelineBlocks } from '../components/guideline-blocks'
+import { RefreshRouteOnSave } from '../components/refresh-route-on-save'
+import type { GetGuidelineTopicOutput } from '../services/get-guideline-topic.service'
 
 /**
  * 토픽 한 화면 — 머리(이미지 + 제목)와 본문 블록. 디자인 정본은 Figma HD_LBS_UI 61:3376.

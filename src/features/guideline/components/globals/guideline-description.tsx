@@ -1,7 +1,9 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { SectionBlock } from '@/payload-types'
+import { guidelineRichTextConverters } from './spec-table-converters'
 
-// 설명은 섹션이 갖는다 — 토픽 문서의 설명은 2026-08-26에, 블록 층은 2026-09-04에 제거했다.
+// 설명은 섹션·카드 블록·카드 캡션이 갖는다 — 토픽 문서의 설명은 2026-08-26에 제거했다.
+// 표는 스펙 리스트로 그린다(spec-table-converters.tsx). 세 자리가 같은 컨버터를 타야 표기가 갈리지 않는다.
 export function GuidelineDescription({
 	description,
 }: {
@@ -12,7 +14,11 @@ export function GuidelineDescription({
 
 	return (
 		<div className="text-balance">
-			<RichText className="font-body font-normal text-sm space-y-2 pr-8" data={description} />
+			<RichText
+				className="font-body font-normal text-sm space-y-2 pr-8"
+				converters={guidelineRichTextConverters}
+				data={description}
+			/>
 		</div>
 	)
 }

@@ -1,13 +1,6 @@
-import type { ReactNode } from 'react'
 import type { GuidelineDocument } from '@/payload-types'
+import { renderBlock } from '../blocks/registry.render'
 import { SECTION_STACK } from '../blocks/shared/rhythm'
-import type { GuidelineBlock } from '../blocks/types'
-import { guidelineBlockRenderers } from '../catalog/renderer.generated'
-
-function renderBlock(block: GuidelineBlock): ReactNode {
-	const renderer = guidelineBlockRenderers[block.blockType]
-	return renderer(block as never)
-}
 
 export function GuidelineBlocks({
 	blocks,

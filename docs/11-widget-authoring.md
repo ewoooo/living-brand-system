@@ -15,7 +15,7 @@
 6. admin에서 섹션 안에 넣어 실제 페이지로 확인
 ```
 
-자동 카탈로그(`pnpm generate:block-catalogs`)는 **`blocks/`만 스캔합니다.** 위젯은 자동 등록되지 않고, CI의 `check:block-catalogs`도 위젯 등록 누락을 잡아주지 못합니다.
+블록은 `blocks/registry.ts`에 손으로 등록하지만 위젯은 그 레지스트리에 있지 않습니다. 등록 누락은 아래 §3의 세 곳을 직접 확인해야 하고, CI가 잡아주지 않습니다.
 
 ## 2. 폴더 계약
 

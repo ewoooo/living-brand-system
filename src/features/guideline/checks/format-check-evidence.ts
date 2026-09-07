@@ -1,4 +1,5 @@
 import type { CheckEvidence } from '../blocks/runtime/project-guideline-block'
+import { formatCardBlockEvidence } from '../blocks/shared/card-projection'
 import { compact } from '../utils/block-text'
 
 /**
@@ -57,5 +58,9 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 					formatCheckEvidence,
 				),
 			]).join('\n\n')
+		case 'base':
+		case 'overview':
+		case 'examples':
+			return formatCardBlockEvidence(evidence)
 	}
 }

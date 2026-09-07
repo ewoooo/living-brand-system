@@ -1,7 +1,4 @@
-import {
-	type CheckBlockEvidence,
-	guidelineBlockProjectors,
-} from '../../catalog/projection.generated'
+import { type CheckBlockEvidence, projectBlock } from '../projection'
 import type { BlockProjection, CheckReferenceAssetRef, GuidelineBlock } from '../types'
 
 export type CheckEvidence =
@@ -26,8 +23,7 @@ export interface BlockCheckSourceSnapshot {
 
 /** 등록된 블록을 Agent/Search와 Check가 공유하는 표현으로 변환한다. */
 export function projectGuidelineBlock(block: GuidelineBlock): BlockProjection<CheckBlockEvidence> {
-	const projector = guidelineBlockProjectors[block.blockType]
-	return projector(block as never)
+	return projectBlock(block)
 }
 
 /** 블록 하나를 agent 컨텍스트용 평문으로 변환한다. 빈 문자열은 호출측에서 걸러낸다. */
