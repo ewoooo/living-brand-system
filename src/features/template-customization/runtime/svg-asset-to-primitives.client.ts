@@ -133,8 +133,14 @@ function collectShapes(root: Element, tint?: string): { d: string; fill: string 
 function shapeToPath(element: Element): string | null {
 	const number = (name: string) => Number.parseFloat(element.getAttribute(name) ?? '0') || 0
 	switch (element.tagName) {
-		case 'path':
-			return element.getAttribute('d')
+		case 'path': {
+			const d = element.getAttribute('d')
+			// 🔴 pdf-lib의 path 파서는 숫자 구분자를 공백·콤마로만 안다 — 개행이 들어 있으면
+			//    `M10\n20`이 좌표 1020 하나로 붙어 인쇄 PDF에서만 도형이 뒤틀린다.
+			//    브라우저·Illustrator는 정상 파싱하므로 SVG 미리보기로는 안 잡힌다.
+			//    polygon 쪽이 이미 쓰는 처방과 같다.
+			return d === null ? null : d.replace(/\s+/g, ' ').trim()
+		}
 		case 'rect': {
 			const [x, y, width, height] = ['x', 'y', 'width', 'height'].map(number)
 			return width > 0 && height > 0 ? `M${x} ${y}H${x + width}V${y + height}H${x}Z` : null

@@ -25,9 +25,15 @@ describe('vectorSceneToSvg', () => {
 			},
 		} as const
 
-		const svg = vectorSceneToSvg(artifact)
-		expect(vectorSceneToSvg(artifact)).toBe(svg)
-		expect(svg).toContain('width="100" height="80" viewBox="0 0 100 80"')
+		const svg = vectorSceneToSvg(artifact, 300)
+		expect(vectorSceneToSvg(artifact, 300)).toBe(svg)
+		// 🔴 물리 크기는 mm로 적는다 — 단위가 없으면 뷰어가 pt로 읽어(72dpi) 판이 12배 크게 열린다.
+		//    좌표계는 viewBox가 px로 유지한다.
+		expect(svg).toContain('width="8.47mm" height="6.77mm" viewBox="0 0 100 80"')
+		// 해상도를 낮추면 같은 판이 더 큰 물리 크기로 나간다 — mm가 실제로 ppi를 타는지 잠근다.
+		expect(vectorSceneToSvg(artifact, 150)).toContain('width="16.93mm" height="13.55mm"')
+		// Illustrator가 `xlink:href`를 요구하므로 네임스페이스 선언이 있어야 한다.
+		expect(svg).toContain('xmlns:xlink="http://www.w3.org/1999/xlink"')
 		expect(svg).toContain('<rect width="100" height="80" fill="#000000" />')
 		expect(svg).toContain(
 			'<line x1="1.00" y1="2.00" x2="3.00" y2="4.00" stroke="#ffffff" stroke-width="2.00" stroke-linecap="square" />',
@@ -80,16 +86,19 @@ describe('vectorSceneToSvg', () => {
 			},
 		} as const
 
-		const svg = vectorSceneToSvg(artifact)
+		const svg = vectorSceneToSvg(artifact, 300)
 		// 같은 장면은 항상 같은 문서여야 한다 — clip id가 호출 횟수를 타면 안 된다.
-		expect(vectorSceneToSvg(artifact)).toBe(svg)
+		expect(vectorSceneToSvg(artifact, 300)).toBe(svg)
 		expect(svg).toContain('<clipPath id="clip-0">')
 		expect(svg).toContain('clip-path="url(#clip-0)"')
 		expect(svg).toContain('data-name="Background"')
 		expect(svg).toContain(
 			'<rect x="10.00" y="20.00" width="30.00" height="40.00" rx="4.00" fill="#eeeeee" />',
 		)
-		expect(svg).toContain('href="data:image/png;base64,AAA" preserveAspectRatio="none"')
+		// 🔴 `xlink:href`가 없으면 Illustrator에서 사진이 통째로 안 보인다 — 둘 다 적는다.
+		expect(svg).toContain(
+			'xlink:href="data:image/png;base64,AAA" href="data:image/png;base64,AAA" preserveAspectRatio="none"',
+		)
 		expect(svg).toContain('font-family="Pretendard" font-size="24.00" font-weight="700"')
 		// 글자로 남긴다 — 받는 쪽에서 문구를 고칠 수 있어야 한다.
 		expect(svg).toContain('>HD &amp; &lt;현대&gt;</text>')

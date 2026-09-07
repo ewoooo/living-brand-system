@@ -2,6 +2,7 @@ import type {
 	VectorPrimitive,
 	VectorSceneArtifact,
 } from '@/modules/studio-artifact/studio-artifact'
+import { type PrintPpi, pixelsToMillimeters } from '../print-policy'
 
 /**
  * 파일 형식과 무관한 Vector Scene을 SVG 문서로 직렬화한다.
@@ -11,13 +12,19 @@ import type {
  * 🔑 글자는 `<text>`로 남긴다. 받는 쪽에서 문구를 고칠 수 있어야 하고, 서체는 디자인 툴이
  *    로컬 설치본으로 잇는다(아웃라인이 필요하면 별도 옵션이지 기본이 아니다).
  */
-export function vectorSceneToSvg(artifact: VectorSceneArtifact): string {
+export function vectorSceneToSvg(artifact: VectorSceneArtifact, ppi: PrintPpi): string {
 	const { background, height, primitives, width } = artifact.source
 	const body = primitives
 		.map((primitive, index) => serialize(primitive, '  ', `${index}`))
 		.join('\n')
 
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+	// 🔴 단위 없는 width·height는 뷰어가 pt로 읽는다(72dpi) — A4 판이 874×1237mm로 열렸다.
+	//    물리 크기는 mm로 적고 좌표계는 viewBox가 px로 유지한다.
+	const widthMm = fixed(pixelsToMillimeters(width, ppi))
+	const heightMm = fixed(pixelsToMillimeters(height, ppi))
+
+	// 🔴 `xmlns:xlink`를 선언하지 않으면 `xlink:href`가 든 문서를 Illustrator가 거부한다.
+	return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${width} ${height}">
   <rect width="${width}" height="${height}" fill="${attribute(background)}" />
 ${body}
 </svg>`
@@ -35,7 +42,10 @@ function serialize(primitive: VectorPrimitive, indent: string, path: string): st
 		case 'text':
 			return `${indent}<text x="${fixed(primitive.x)}" y="${fixed(primitive.y)}" font-family="${attribute(primitive.fontFamily)}" font-size="${fixed(primitive.fontSize)}"${optionalInt('font-weight', primitive.fontWeight)}${optional('letter-spacing', primitive.letterSpacing)} fill="${attribute(primitive.fill)}"${optionalText('text-anchor', primitive.textAnchor)}${optional('opacity', primitive.opacity)}>${text(primitive.text)}</text>`
 		case 'image':
-			return `${indent}<image x="${fixed(primitive.x)}" y="${fixed(primitive.y)}" width="${fixed(primitive.width)}" height="${fixed(primitive.height)}" href="${attribute(primitive.href)}" preserveAspectRatio="${attribute(primitive.preserveAspectRatio ?? 'none')}"${optional('opacity', primitive.opacity)} />`
+			// 🔴 `href`만 적으면 Illustrator에서 **사진이 통째로 안 보인다** — SVG 1.1만 읽는 경로가
+			//    `xlink:href`를 요구한다. 브라우저는 `href`로 정상 표시되므로 눈으로는 안 잡힌다.
+			//    둘 다 적는다(SVG 2는 `href`가 이기고, 1.1 경로는 `xlink:href`를 본다).
+			return `${indent}<image x="${fixed(primitive.x)}" y="${fixed(primitive.y)}" width="${fixed(primitive.width)}" height="${fixed(primitive.height)}" xlink:href="${attribute(primitive.href)}" href="${attribute(primitive.href)}" preserveAspectRatio="${attribute(primitive.preserveAspectRatio ?? 'none')}"${optional('opacity', primitive.opacity)} />`
 		case 'path':
 			return `${indent}<path d="${attribute(primitive.d)}"${transformOf(primitive.x, primitive.y, primitive.scale)}${optionalText('fill', primitive.fill)}${optionalText('stroke', primitive.stroke)}${optional('stroke-width', primitive.strokeWidth)}${optionalText('fill-rule', primitive.fillRule)}${optional('opacity', primitive.opacity)} />`
 		case 'group':

@@ -62,7 +62,11 @@ export async function executeArtifactExport({
 						artifact as VectorSceneArtifact,
 						request.options.ppi,
 					)
-				: exportVectorArtifactAsSvg(fileName, artifact as VectorSceneArtifact)
+				: exportVectorArtifactAsSvg(
+						fileName,
+						artifact as VectorSceneArtifact,
+						request.options.ppi,
+					)
 		case 'video':
 			return exportVideoArtifactAsMp4(
 				fileName,
@@ -76,9 +80,10 @@ export async function executeArtifactExport({
 export function exportVectorArtifactAsSvg(
 	fileName: string,
 	artifact: VectorSceneArtifact,
+	ppi: PrintPpi,
 ): ExportResult {
 	return {
-		data: new Blob([vectorSceneToSvg(artifact)], { type: 'image/svg+xml' }),
+		data: new Blob([vectorSceneToSvg(artifact, ppi)], { type: 'image/svg+xml' }),
 		filename: `${fileName}.svg`,
 		mimeType: 'image/svg+xml',
 	}
@@ -98,7 +103,15 @@ export async function exportVectorArtifactAsPrintPdf(
 		headers: { 'Content-Type': 'application/json' },
 		method: 'POST',
 	})
-	if (!response.ok) throw new Error('인쇄용 PDF를 만들지 못했습니다.')
+	if (!response.ok) {
+		// 🔴 서버는 이유를 구분해서 주는데 여기서 한 문구로 접으면 「잠시 후 다시」가 거짓말이 된다.
+		const body = (await response.json().catch(() => null)) as { code?: string } | null
+		throw new Error(
+			body?.code === 'text-not-outlined'
+				? '윤곽선으로 바꾸지 못한 글자가 있어 PDF를 만들지 않았습니다 — 그대로 내보내면 그 글자가 PDF에서 빠집니다.'
+				: '인쇄용 PDF를 만들지 못했습니다.',
+		)
+	}
 	return {
 		data: await response.blob(),
 		filename: `${fileName}.pdf`,

@@ -4,6 +4,7 @@ import { parsePrintPpi } from '@/features/studio-export/print-policy'
 import {
 	exportVectorPrint,
 	VectorPrintInputError,
+	VectorPrintTextError,
 } from '@/features/studio-export/services/export-vector-print.service'
 import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
@@ -68,6 +69,13 @@ export async function POST(request: Request) {
 			},
 		})
 	} catch (error) {
+		if (error instanceof VectorPrintTextError) {
+			// 🔑 code를 함께 준다 — 클라이언트가 이 원인만 다른 문구로 올린다.
+			return Response.json(
+				{ code: 'text-not-outlined', message: 'Text is not outlined.' },
+				{ status: 422 },
+			)
+		}
 		if (error instanceof VectorPrintInputError) {
 			return Response.json({ message: 'Scene is too complex.' }, { status: 413 })
 		}

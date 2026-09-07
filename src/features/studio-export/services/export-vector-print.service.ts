@@ -9,6 +9,13 @@ import type { PrintPpi } from '../print-policy'
 
 export class VectorPrintInputError extends Error {}
 
+/**
+ * 윤곽선으로 바꾸지 못한 글줄이 씬에 남아 있다.
+ * 🔴 PDF 어댑터는 서체를 임베드하지 않는 계약이라 `text`를 **아무것도 그리지 않고 넘어간다** —
+ *    막지 않으면 제목이 통째로 빠진 파일이 인쇄로 나간다. 인쇄물은 되돌릴 수 없으므로 여기서 끊는다.
+ */
+export class VectorPrintTextError extends Error {}
+
 /** 판 하나가 가질 수 있는 도형 수 상한. 넘으면 템플릿이 아니라 잘못된 입력이다. */
 const MAX_PRIMITIVES = 20_000
 
@@ -29,6 +36,8 @@ export async function exportVectorPrint({
 	scene: VectorScene
 }): Promise<Buffer> {
 	if (countPrimitives(scene) > MAX_PRIMITIVES) throw new VectorPrintInputError()
+	const unoutlined = countTextPrimitives(scene)
+	if (unoutlined > 0) throw new VectorPrintTextError(String(unoutlined))
 
 	const iccPath = resolveCmykIccProfilePath(colorProfile)
 	// 🔑 도형만 잉크로 바꾸면 사진이 RGB로 남아 같은 판에서 색이 갈린다 — 둘 다 같은 ICC를 탄다.
@@ -41,6 +50,19 @@ export async function exportVectorPrint({
 		iccProfileName: colorProfile,
 		ppi,
 	})
+}
+
+/** 아웃라인 단계를 통과하지 못해 `text`로 남은 글줄 수. 0이 아니면 PDF를 만들지 않는다. */
+function countTextPrimitives(scene: VectorScene): number {
+	const count = (primitives: readonly VectorScene['primitives'][number][]): number =>
+		primitives.reduce(
+			(total, primitive) =>
+				total +
+				(primitive.kind === 'text' ? 1 : 0) +
+				(primitive.kind === 'group' ? count(primitive.children) : 0),
+			0,
+		)
+	return count(scene.primitives)
 }
 
 function countPrimitives(scene: VectorScene): number {

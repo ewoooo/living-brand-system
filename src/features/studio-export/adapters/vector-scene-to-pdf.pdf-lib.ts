@@ -1,13 +1,17 @@
 import {
 	type Color,
 	cmyk,
+	LineCapStyle,
 	PDFDocument,
 	PDFName,
 	type PDFPage,
 	PDFRawStream,
 	type PDFRef,
 	PDFString,
+	popGraphicsState,
+	pushGraphicsState,
 	rgb,
+	setGraphicsState,
 } from 'pdf-lib'
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
 import { type PrintPpi, pixelsToPdfPoints } from '../print-policy'
@@ -109,6 +113,13 @@ function resolveColor(
 	return parseColor(value)
 }
 
+/** 씬 계약의 lineCap 어휘를 pdf-lib enum으로 옮긴다. SVG 직렬화기는 문자열을 그대로 쓴다. */
+const PDF_LINE_CAP = {
+	butt: LineCapStyle.Butt,
+	round: LineCapStyle.Round,
+	square: LineCapStyle.Projecting,
+} as const satisfies Record<string, LineCapStyle>
+
 async function draw(
 	pdf: PDFDocument,
 	page: PDFPage,
@@ -122,9 +133,21 @@ async function draw(
 
 	switch (primitive.kind) {
 		case 'group': {
-			// 그룹은 인쇄물에서 의미가 없다 — 자식만 순서대로 그린다(레이어 구조는 SVG가 갖는다).
+			// 레이어 구조는 SVG가 갖는다(PDF에는 OCG를 만들지 않는다). 다만 **불투명도는 옮겨야 한다** —
+			// 흘리면 40% 딤 레이어가 100%로 인쇄된다.
+			// 🔑 자식마다 곱하지 않고 그룹 전체를 감싼다. 곱하면 겹친 자식끼리 서로 비쳐 보인다.
+			const opacity = primitive.opacity
+			const grouped = opacity !== undefined && opacity < 1
+			if (grouped) {
+				const state = pdf.context.obj({ Type: 'ExtGState', ca: opacity, CA: opacity })
+				page.pushOperators(
+					pushGraphicsState(),
+					setGraphicsState(page.node.newExtGState('GS', state)),
+				)
+			}
 			for (const child of primitive.children)
 				await draw(pdf, page, child, sceneHeight, color, profileRef)
+			if (grouped) page.pushOperators(popGraphicsState())
 			return
 		}
 		case 'path':
@@ -192,6 +215,9 @@ async function draw(
 						PDFName.of('ColorSpace'),
 						pdf.context.obj([PDFName.of('ICCBased'), profileRef]),
 					)
+					// 🔴 ColorSpace만 덮으면 pdf-lib이 심은 반전 보정이 남아 이중 반전이 된다 —
+					//    자세한 근거는 `cmyk-jpeg-to-pdf`의 같은 자리에 있다.
+					stream.dict.delete(PDFName.of('Decode'))
 				}
 			}
 			page.drawImage(embedded, {
@@ -209,6 +235,11 @@ async function draw(
 				end: { x: primitive.x2, y: flip(primitive.y2) },
 				start: { x: primitive.x1, y: flip(primitive.y1) },
 				thickness: primitive.strokeWidth,
+				// 🔴 흘리면 PDF 기본값 butt가 되어 대시가 굵기만큼 짧아지고 간격이 벌어진다 —
+				//    그리드형 그래픽 런타임들이 `square`로 대시를 그리므로 패턴 밀도가 눈에 보이게 달라진다.
+				...(primitive.lineCap === undefined
+					? {}
+					: { lineCap: PDF_LINE_CAP[primitive.lineCap] }),
 			})
 			return
 		case 'circle':

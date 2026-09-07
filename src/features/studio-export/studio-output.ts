@@ -394,7 +394,8 @@ function validRequestOptions(request: ExportRequest): boolean {
 				request.options.width > 0 &&
 				Number.isInteger(request.options.height) &&
 				request.options.height > 0 &&
-				typeof request.options.outlineText === 'boolean'
+				typeof request.options.outlineText === 'boolean' &&
+				isPrintPpi(request.options.ppi)
 			)
 		case 'video':
 			return validVideoExportSpec(request.options)

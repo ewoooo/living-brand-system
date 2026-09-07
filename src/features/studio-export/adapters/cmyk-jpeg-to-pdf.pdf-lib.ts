@@ -41,6 +41,12 @@ export async function createPrintPdf({
 		PDFName.of('ColorSpace'),
 		pdf.context.obj([PDFName.of('ICCBased'), profileRef]),
 	)
+	// 🔴 pdf-lib은 4채널 JPEG에 조건 없이 `Decode [1 0 1 0 1 0 1 0]`을 심는다(자기 주석에 「hedge」).
+	//    Adobe가 만든 CMYK JPEG이 값을 뒤집어 저장하는 관행을 되돌리려는 보정인데, ICCBased(N=4)의
+	//    기본 Decode는 [0 1]×4라서 그 보정만 남는다. sharp가 붙인 APP14 Adobe 마커를 보고 Illustrator·
+	//    Acrobat이 스스로 한 번 반전하므로 이중 반전 → 초록이 마젠타로 열렸다(실물 확인).
+	//    macOS Preview는 마커를 그렇게 대접하지 않아 정상으로 보인다 — 뷰어마다 다른 것이 이 버그의 지문이다.
+	imageStream.dict.delete(PDFName.of('Decode'))
 	const page = pdf.addPage([millimetersToPdfPoints(widthMm), millimetersToPdfPoints(heightMm)])
 	const { height, width } = page.getSize()
 

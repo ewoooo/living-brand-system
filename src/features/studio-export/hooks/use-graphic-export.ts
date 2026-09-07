@@ -247,7 +247,7 @@ function createGraphicExportRequest(
 				space: 'rgb',
 				icc: config.output.colorProfiles?.rgb?.[0] ?? 'srgb',
 			},
-			options: { width: draft.width, height: draft.height, outlineText: false },
+			options: { width: draft.width, height: draft.height, outlineText: false, ppi },
 		}
 	}
 	if (
