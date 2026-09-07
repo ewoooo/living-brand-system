@@ -18,10 +18,10 @@ import { helperLabel } from './guideline-helper-label'
 /**
  * 하단 Floating Controller("Helper") — 지금 보고 있는 블록의 컨트롤만 화면 아래 알약에 띄운다.
  *
- * 🔴 **이 바는 값을 갖지 않는다.** 값은 그대로 블록이 소유하고(`widgets/layout-grid/store.tsx`),
+ * 🔴 **이 바는 값을 갖지 않는다.** 값은 그대로 블록이 소유하고(`controllers/provider.tsx`),
  *    여기는 빈 자리(slot)와 "누가 활성인가"만 안다. 바가 값을 중계하면 화면에 하나뿐인 바가
  *    블록마다 다른 값을 하나로 합쳐 버려, 슬라이더 하나가 여러 블록의 판형을 함께 움직인다
- *    (2026-08-04에 실제로 12개가 함께 움직였다 — `store.tsx`의 주석이 같은 사고를 가리킨다).
+ *    (2026-08-04에 실제로 12개가 함께 움직였다 — `provider.tsx`의 주석이 같은 사고를 가리킨다).
  *    그래서 컨트롤은 자기 블록의 React 트리 안에서 렌더되고 **DOM만** portal로 내려온다.
  *    context는 트리를 따라가므로 portal 너머에서도 자기 블록의 스코프를 그대로 읽는다.
  */

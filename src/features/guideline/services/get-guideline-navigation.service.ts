@@ -30,7 +30,7 @@ export interface GetGuidelineNavigationOutput {
 }
 
 /**
- * Creator UI 사이드바와 인덱스는 발행된 가이드라인의 목차 정보만 읽는다(챕터 → 토픽 → 꼭지).
+ * Creator UI 사이드바와 인덱스는 발행된 가이드라인의 목차 정보만 읽는다(챕터 → 토픽 → 섹션).
  * 본문 렌더링은 topic service가 담당한다.
  * Payload 조회는 guideline-view repository가 소유한다.
  */

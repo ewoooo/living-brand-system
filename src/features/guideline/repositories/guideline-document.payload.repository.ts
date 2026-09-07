@@ -1,6 +1,6 @@
 import type { PayloadRequest } from 'payload'
 
-/** 같은 locale·챕터 안에 slug가 이미 있는지 조회한다. */
+/** 같은 챕터 안에 slug가 이미 있는지 조회한다. slug는 언어 공통이라 locale을 가리지 않는다. */
 export async function hasGuidelineDocumentSlugConflict(
 	req: PayloadRequest,
 	{
@@ -17,9 +17,7 @@ export async function hasGuidelineDocumentSlugConflict(
 		collection: 'guideline-documents',
 		depth: 0,
 		draft: true,
-		fallbackLocale: false,
 		limit: 1,
-		locale: req.locale,
 		overrideAccess: true,
 		pagination: false,
 		req,

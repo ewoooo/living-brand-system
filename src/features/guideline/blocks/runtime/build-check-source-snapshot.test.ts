@@ -7,76 +7,70 @@ const lexical = (text: string) =>
 	({ root: { children: [{ type: 'paragraph', children: [{ text }] }] } }) as never
 
 describe('buildCheckSourceSnapshot', () => {
-	it('blockId가 있으면 해당 block의 텍스트와 이미지 ID만 반환한다', () => {
+	it('blockId가 있으면 해당 섹션의 evidence만 반환한다', () => {
 		const page = {
 			title: 'Logo',
 			blocks: [
 				{
 					id: 'target',
-					blockType: 'contentColumns',
-					columns: [{ heading: 'Digital', body: lexical('Use 24 px.'), image: 7 }],
+					blockType: 'section',
+					anchor: 'digital',
+					title: 'Digital',
+					description: lexical('Use 24 px.'),
+					children: [{ id: 'w', blockType: 'iconGridWidget' }],
 				},
-				{ id: 'other', blockType: 'callout', kind: 'must', items: [] },
+				{ id: 'other', blockType: 'section', title: 'Other', children: [] },
 			],
 		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(page, 'target')).toEqual({
 			evidence: {
-				type: 'contentColumns',
-				columns: [{ heading: 'Digital', body: 'Use 24 px.' }],
+				type: 'section',
+				anchor: 'digital',
+				title: 'Digital',
+				description: 'Use 24 px.',
 			},
-			referenceAssets: [{ id: 7, role: 'context' }],
+			referenceAssets: [],
 		})
 	})
 
-	it('Page 전체 snapshot은 모든 block을 합치고 이미지 ID를 중복 제거한다', () => {
-		const page = {
-			title: 'Logo usage',
-			blocks: [
-				{ id: 'one', blockType: 'contentColumns', columns: [{ image: 8 }] },
-				{
-					id: 'two',
-					blockType: 'contentColumns',
-					columns: [{ heading: 'Clear space', image: 8 }, { image: 9 }],
-				},
-			],
-		} as unknown as GuidelineDocument
-
-		const snapshot = buildCheckSourceSnapshot(page)
-
-		expect(snapshot?.evidence).toEqual({
-			type: 'document',
-			blocks: [
-				{ type: 'contentColumns', columns: [{ heading: undefined, body: undefined }] },
-				{
-					type: 'contentColumns',
-					columns: [
-						{ heading: 'Clear space', body: undefined },
-						{ heading: undefined, body: undefined },
-					],
-				},
-			],
-		})
-		// 같은 이미지가 두 block에 걸쳐 있어도 (id, role) 기준으로 한 번만 남는다.
-		expect(snapshot?.referenceAssets).toEqual([
-			{ id: 8, role: 'context' },
-			{ id: 9, role: 'context' },
-		])
-	})
-
-	it('Topic 전체 snapshot은 header image와 자체 block만 포함한다', () => {
+	it('토픽 전체 snapshot은 섹션을 순서대로 합치고 header image만 참조 자산으로 갖는다', () => {
 		const topic = {
 			title: 'Brand Core',
 			headerImage: { id: 3, name: 'Core', alt: 'Core visual' },
 			blocks: [
-				{ id: 'note', blockType: 'callout', kind: 'must', title: 'Main colors', items: [] },
+				{
+					id: 'hero',
+					blockType: 'section',
+					children: [{ id: 'w', blockType: 'ciLockupHeroWidget' }],
+				},
+				{
+					id: 'sec',
+					blockType: 'section',
+					anchor: 'main-colors',
+					title: 'Main colors',
+					children: [],
+				},
 			],
 		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(topic)).toEqual({
 			evidence: {
 				type: 'document',
-				blocks: [{ type: 'callout', kind: 'must', title: 'Main colors', items: [] }],
+				blocks: [
+					{
+						type: 'section',
+						anchor: undefined,
+						title: undefined,
+						description: undefined,
+					},
+					{
+						type: 'section',
+						anchor: 'main-colors',
+						title: 'Main colors',
+						description: undefined,
+					},
+				],
 			},
 			referenceAssets: [{ id: 3, role: 'context' }],
 		})
@@ -92,20 +86,16 @@ describe('buildCheckSourceSnapshot', () => {
 		const blocks = [
 			{
 				id: 'usage',
-				blockType: 'contentColumns',
-				columns: [{ heading: 'Minimum', body: lexical('Use 24 px.') }],
+				blockType: 'section',
+				anchor: 'minimum',
+				title: 'Minimum',
+				description: lexical('Use 24 px.'),
+				children: [],
 				rules,
 			},
 		]
-		const legacy = {
-			title: 'Primary Logo',
-			blocks,
-			rules,
-		} as unknown as GuidelineDocument
-		const unified = {
-			...legacy,
-			headerImage: null,
-		} as never
+		const legacy = { title: 'Primary Logo', blocks, rules } as unknown as GuidelineDocument
+		const unified = { ...legacy, headerImage: null } as never
 
 		const legacySources = collectGuidelineCheckSources(legacy)
 		const unifiedSources = collectGuidelineCheckSources(unified)

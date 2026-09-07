@@ -1,23 +1,10 @@
 import { IMAGE_RATIO_CLASS_NAMES, type ImageRatio } from '@/types/image-ratio'
-import { GuidelineImageFallback } from '../guideline-content-fallbacks'
-import type { GuidelineVariant } from './guideline-variant'
 
 // 특정 Payload 컬렉션에 결합하지 않는다 — url/alt/name(색은 hex)만 있으면 무엇이든 렌더한다.
 type ImageValue = { url?: string | null; alt?: string | null; name?: string | null }
 type ColorValue = { hex?: string | null }
-type ImageVariant = Extract<GuidelineVariant, 'topic' | 'section' | 'block'>
-type ImageProps = {
-	image: ImageValue
-	alt: string
-	backgroundColor?: number | ColorValue | null
-	scale: string | null
-	ratioClassName: string
-	className?: string
-	imgClassName: string
-}
 
 export function GuidelineImage({
-	variant,
 	image,
 	alt = '',
 	backgroundColor,
@@ -26,7 +13,6 @@ export function GuidelineImage({
 	className,
 	imgClassName = 'max-h-full max-w-full object-contain',
 }: {
-	variant?: ImageVariant
 	image?: number | ImageValue | null
 	alt?: string
 	backgroundColor?: number | ColorValue | null
@@ -39,50 +25,15 @@ export function GuidelineImage({
 	const ratioClassName = IMAGE_RATIO_CLASS_NAMES[ratio ?? '16:9']
 
 	if (!imageValue?.url) {
-		return variant ? (
-			<GuidelineImageFallback
-				variant={variant}
-				className={`${ratioClassName || 'aspect-video'} ${className ?? ''}`}
-			/>
-		) : null
+		return (
+			<div
+				className={`grid min-h-40 place-items-center bg-muted ${ratioClassName || 'aspect-video'} ${className ?? ''}`}
+			>
+				<span className="font-body text-sm text-muted-foreground">이미지 없음</span>
+			</div>
+		)
 	}
 
-	const imageProps = {
-		image: imageValue,
-		alt,
-		backgroundColor,
-		scale,
-		ratioClassName,
-		className,
-		imgClassName,
-	} satisfies ImageProps
-
-	return (
-		<>
-			{variant === 'topic' && <TopicImage {...imageProps} />}
-			{variant === 'section' && <SectionImage {...imageProps} />}
-			{(variant === 'block' || !variant) && <BlockImage {...imageProps} />}
-		</>
-	)
-}
-
-function TopicImage(props: ImageProps) {
-	return <BlockImage {...props} />
-}
-
-function SectionImage(props: ImageProps) {
-	return <BlockImage {...props} />
-}
-
-function BlockImage({
-	image,
-	alt,
-	backgroundColor,
-	scale,
-	ratioClassName,
-	className,
-	imgClassName,
-}: ImageProps) {
 	const backgroundColorHex = getColorHex(backgroundColor)
 
 	return (
@@ -92,8 +43,8 @@ function BlockImage({
 		>
 			{/* biome-ignore lint/performance/noImgElement: Payload upload URLs may be local or S3. */}
 			<img
-				src={image.url ?? undefined}
-				alt={image.alt || image.name || alt}
+				src={imageValue.url}
+				alt={imageValue.alt || imageValue.name || alt}
 				className={imgClassName}
 				style={{ width: `${scale || '100'}%` }}
 			/>

@@ -1,6 +1,6 @@
 import type { Block, Field } from 'payload'
 import { describe, expect, it } from 'vitest'
-import { LayoutBlock } from './schema'
+import { SectionBlock } from '../blocks/section/schema'
 
 // Postgres 식별자 한계. 넘으면 에러가 아니라 **조용히 잘린다** — 그래서 서로 다른 별칭이 같아진다.
 const PG_IDENTIFIER_MAX = 63
@@ -37,7 +37,7 @@ function levels(fields: Field[], segment = ''): Level[] {
 }
 
 describe('중첩 위젯의 SQL 별칭 길이', () => {
-	const children = LayoutBlock.fields.find((f) => 'name' in f && f.name === 'children') as {
+	const children = SectionBlock.fields.find((f) => 'name' in f && f.name === 'children') as {
 		blocks: Block[]
 	}
 

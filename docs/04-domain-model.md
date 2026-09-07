@@ -90,6 +90,7 @@ flowchart LR
 flowchart LR
   subgraph GuidelineEdit["브랜드 가이드라인 편집 및 발행"]
     BrandGuideline["BrandGuideline"]
+    GuidelineChapter["GuidelineChapter"]
     GuidelineDocument["GuidelineDocument"]
     GuidelineBlock["GuidelineBlock"]
     PageAssetRef["PageAssetRef"]
@@ -141,7 +142,7 @@ flowchart LR
   end
 
   BrandGuideline -.->|"공통 표시 설정"| GuidelineDocument
-  GuidelineDocument -->|"상위 문서 참조"| GuidelineDocument
+  GuidelineChapter -->|"토픽 묶음"| GuidelineDocument
   GuidelineDocument -->|"소유"| GuidelineBlock
   GuidelineDocument -->|"적용(참조)"| Rule
   GuidelineBlock -->|"적용(참조)"| Rule
@@ -193,7 +194,7 @@ flowchart LR
 | 관계 | 의미 |
 | --- | --- |
 | BrandGuideline -> GuidelineDocument | `BrandGuideline`은 공통 표시 설정만 제공합니다. 문서의 생성·발행·삭제 생명주기를 소유하지 않습니다. |
-| GuidelineDocument -> GuidelineDocument | 챕터·토픽 계층은 상위 문서 관계로 연결합니다. 각 문서는 독립 애그리거트입니다. 토픽 안의 꼭지는 문서가 아니라 `section` 블록입니다. |
+| GuidelineChapter -> GuidelineDocument | 챕터는 토픽을 묶는 분류이고, 토픽(GuidelineDocument)이 챕터를 필수로 참조합니다. 챕터는 자기 화면과 본문을 갖지 않습니다. 각 토픽은 독립 애그리거트입니다. 토픽 안의 섹션은 문서가 아니라 `section` 블록입니다. |
 | GuidelineDocument -> GuidelineBlock | 문서는 Block을 임베디드 엔티티로 소유합니다. Block 식별자는 부모 문서 안에서만 유효합니다. |
 | GuidelineDocument / GuidelineBlock -> Rule | 각 문서 단위는 적용할 Rule을 관계로 선택합니다. Rule 정의는 공유 가능하며 source는 참조하는 쪽의 위치가 결정합니다. |
 | Rule -> RuleChecker | Rule은 실행 유형에 따라 결정론적 options 또는 AI 추가 판단 기준을 선언하고 RuleChecker 실행 계약을 참조합니다. |
@@ -213,7 +214,7 @@ flowchart LR
 
 품질 규칙 관리는 Rule, RuleChecker, CheckScenario의 정의와 생명주기를 소유하는 독립 바운디드 컨텍스트입니다.
 가이드라인 관리는 브랜드 가이드라인, 공식 자원, Official Version을 관리하며 Rule을 배치하고 문서 근거를 제공합니다.
-현재 구현의 편집·발행 애그리거트는 `GuidelineDocument`입니다. 문서 깊이와 상위 문서 관계로 챕터·토픽 2단계를 표현하며, 각 문서는 독립적으로 초안·발행·버전 생명주기를 가집니다. 토픽 화면의 꼭지는 본문 블록(`section`)이라 토픽과 발행 단위를 공유합니다.
+현재 구현의 편집·발행 애그리거트는 `GuidelineDocument`(토픽)입니다. 챕터는 별도 컬렉션 `GuidelineChapter`의 분류 항목이고 토픽이 이를 필수 관계로 참조합니다(2026-08-26까지는 문서 자기참조·깊이로 표현했습니다). 각 토픽은 독립적으로 초안·발행·버전 생명주기를 가집니다. 토픽 화면의 섹션은 본문 블록(`section`)이라 토픽과 발행 단위를 공유합니다.
 `GuidelineBlock`은 `GuidelineDocument`가 소유한 임베디드 엔티티이며 식별자는 부모 문서 안에서만 유효합니다.
 `BrandGuideline`은 회사명, 문서 제목, 테마 같은 단일 공통 설정입니다. 모든 `GuidelineDocument`를 소유하는 루트가 아닙니다.
 
@@ -243,12 +244,12 @@ Rule은 자체 draft/publish 생명주기를 가지며 문서 발행과 독립�
       │         │    └── 값 객체: CompanyName, DocumentTitle, Theme
       │         ├── 애그리거트(관리 단위): GuidelineDocument
       │         │    ├── 엔티티: GuidelineBlock, PageAssetRef
-      │         │    └── 값 객체: DocumentDepth, ParentDocumentRef, PageBlockType, DisplayOrder
+      │         │    └── 값 객체: ChapterRef, PageBlockType, DisplayOrder
       │         ├── 도메인 서비스: GuidelinePublishService, VersionPublishService, VersionCompareService
       │         └── 도메인 이벤트
       │              ├── GuidelineDraftCreated, GuidelineSubmittedForReview, GuidelineApproved
       │              ├── GuidelinePublished, GuidelineScheduled, GuidelineDeprecated
-      │              ├── GuidelinePageUpdated, GuidelineBlockUpdated, GuidelineCheckUpdated, PageAssetLinked
+      │              ├── GuidelineTopicUpdated, GuidelineBlockUpdated, GuidelineCheckUpdated, PageAssetLinked
       │              └── GuidelineVersionStaged, GuidelineVersionPublished, GuidelineVersionArchived
       ├── [바운디드 컨텍스트] 브랜드 자원 관리
       │    └── [도메인 모델]
@@ -284,6 +285,7 @@ Rule은 자체 draft/publish 생명주기를 가지며 문서 발행과 독립�
 flowchart LR
   subgraph Edit["브랜드 가이드라인 편집 및 발행"]
     BrandGuideline["BrandGuideline"]
+    Chapter["GuidelineChapter"]
     Document["GuidelineDocument"]
     Block["GuidelineBlock"]
     PageAssetRefNode["PageAssetRef"]
@@ -302,7 +304,7 @@ flowchart LR
   end
 
   BrandGuideline -.->|"공통 표시 설정"| Document
-  Document -->|"상위 문서 참조"| Document
+  Chapter -->|"토픽 묶음"| Document
   Document -->|"소유"| Block
   Document -->|"적용(참조)"| Rule
   Block -->|"적용(참조)"| Rule
@@ -324,7 +326,7 @@ flowchart LR
 ```
 
 BrandGuideline은 가이드라인 전체에 적용되는 표시 설정을 관리합니다.
-GuidelineDocument는 문서 깊이와 상위 문서 관계로 챕터·토픽 구조를 만들며, GuidelineBlock을 임베디드 엔티티로 소유합니다. 꼭지(`section` 블록)도 그 블록 중 하나입니다.
+GuidelineDocument는 토픽이며 GuidelineChapter를 필수로 참조해 챕터·토픽 구조를 만들고, GuidelineBlock을 임베디드 엔티티로 소유합니다. 섹션(`section` 블록)도 그 블록 중 하나입니다.
 GuidelineVersionRef는 발행된 GuidelineDocument revision을 CheckBasis가 참조하기 위해 저장하는 값 객체입니다.
 
 GuidelineDocument는 GuidelineBlock 목록을 소유합니다. GuidelineBlock은 column unit, media showcase처럼 화면에 렌더링되는 최소 콘텐츠 단위입니다.
@@ -345,7 +347,7 @@ TemplateSourceRef는 Figma node 또는 업로드 파일 원본을 가리키고, 
 ImageProfile은 제작 화면이 소비할 완전한 Controller Definition과 Image Service가 지원하는 feature를 발행합니다. GraphicProfile은 코드에 등록된 GraphicRuntimeRef의 Definition을 kind-free sparse Override로 좁힙니다. Template도 HTML 슬롯에서 파생한 Definition에 같은 Override를 적용합니다. Override는 stable control ID와 기본값·선택지·범위·정적 availability만 가지며 실행 구현이나 화면 배치를 소유하지 않습니다. 세 Studio의 `output.formats`는 Runtime/Service 지원 형식과 Admin 허용 형식의 교집합인 Effective capability입니다.
 Plugin은 Creator가 산출물을 만들 때 사용할 수 있는 공식 제작 기능입니다.
 PluginEntry는 제품에서 호출할 수 있는 Plugin 실행 단위이고, PluginCapability는 Plugin이 제공하는 제작 기능입니다.
-GuidelinePage와 Check는 BrandAsset, Template, Plugin을 참조할 수 있지만, 파일 또는 Official Version 교체와 배포 상태는 브랜드 자원 관리가 담당합니다.
+GuidelineDocument와 Check는 BrandAsset, Template, Plugin을 참조할 수 있지만, 파일 또는 Official Version 교체와 배포 상태는 브랜드 자원 관리가 담당합니다.
 
 ## 5. 제작 관리
 

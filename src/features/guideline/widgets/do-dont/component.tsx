@@ -129,7 +129,6 @@ function Figure({
 	if (example.image) {
 		return (
 			<GuidelineImage
-				variant="block"
 				image={example.image}
 				alt={example.caption || ''}
 				ratio={ratio}

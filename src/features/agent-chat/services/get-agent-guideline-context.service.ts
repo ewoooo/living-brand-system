@@ -106,7 +106,7 @@ function formatGuidelineDocument(
 	const document = result.document
 	const formattedChecks = checks.map((check) => `- ${check.key}: ${check.title}`)
 
-	// 🔴 문서는 전부 토픽이다(2026-08-26). 깊이로 종류를 가르던 분기가 사라졌고, 꼭지는
+	// 🔴 문서는 전부 토픽이다(2026-08-26). 깊이로 종류를 가르던 분기가 사라졌고, 섹션은
 	//    본문 블록이라 `formatBlockForAgent`가 이미 담는다.
 	return compact([
 		document.chapterTitle ? `Chapter: ${document.chapterTitle}` : null,

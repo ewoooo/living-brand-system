@@ -14,7 +14,7 @@ export function scrollToGuidelineSection(event: MouseEvent, slug: string) {
 	history.replaceState(null, '', `#${slug}`)
 }
 
-/** 토픽 스크롤 기준선을 넘어선 마지막 꼭지 앵커를 반환한다. */
+/** 토픽 스크롤 기준선을 넘어선 마지막 섹션 앵커를 반환한다. */
 export function useActiveSectionAnchor(slugs: string[]): string | null {
 	const [active, setActive] = useState<string | null>(null)
 	const key = slugs.join('|')

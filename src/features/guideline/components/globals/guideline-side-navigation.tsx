@@ -5,10 +5,9 @@ import { Sidebar } from '@/components/global/sidebar/sidebar'
 import { CopyPageLink } from '@/components/shared/copy-page-link'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 import { scrollToGuidelineSection, useActiveSectionAnchor } from './guideline-section-navigation'
-import { getGuidelineTopicSections } from './guideline-topic-sections'
 
 /**
- * 좌측 가이드라인 탐색 — chapter → topic → 현재 topic의 꼭지 앵커를 표시한다.
+ * 좌측 가이드라인 탐색 — chapter → topic → 현재 topic의 섹션 앵커를 표시한다.
  * 🔴 **이것이 유일한 목차다.** 우측에 따로 있던 "On this page"는 2026-08-18에 지웠다 —
  *    같은 앵커를 같은 scroll-spy(`guideline-section-navigation`)로 두 곳에 그리고 있었다.
  */
@@ -21,7 +20,7 @@ export function GuidelineSideNavigation({
 	const currentTopic = chapters
 		.flatMap((chapter) => chapter.topics)
 		.find((topic) => pathname === topic.href || pathname.startsWith(`${topic.href}/`))
-	const currentSections = currentTopic ? getGuidelineTopicSections(currentTopic) : []
+	const currentSections = currentTopic?.sections ?? []
 	const activeAnchor = useActiveSectionAnchor(currentSections.map((section) => section.anchor))
 
 	return (
@@ -36,23 +35,23 @@ export function GuidelineSideNavigation({
 					{chapters.map((chapter) => {
 						// 🔴 챕터는 자기 화면이 없다(2026-08-26). 분류일 뿐이라 인덱스로 보낸다 —
 						//    인덱스가 전 챕터의 카드와 토픽 칩을 이미 그린다.
-						const chapterCurrent = pathname === '/guideline'
-
+						// 🔴 현재 위치로 강조하지 않는다(2026-09-04). 인덱스에서는 모든 챕터가 같은 링크라
+						//    전부 "현재"가 되어 버린다. 챕터는 늘 같은 톤의 링크다.
 						return (
 							<Sidebar.Item
 								key={chapter.id}
-								current={chapterCurrent}
+								current={false}
 								depth={0}
 								href="/guideline"
 								label={chapter.title}
-								tone={chapterCurrent ? 'emphasized' : 'subtle'}
+								tone="subtle"
 							>
 								<Sidebar.Children>
 									{chapter.topics.map((topic) => {
 										const topicActive =
 											pathname === topic.href ||
 											pathname.startsWith(`${topic.href}/`)
-										const sections = getGuidelineTopicSections(topic)
+										const { sections } = topic
 
 										return (
 											<Sidebar.Item
