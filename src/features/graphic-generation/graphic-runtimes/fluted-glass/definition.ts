@@ -68,9 +68,13 @@ type FlutedGlassPaletteKey = (typeof FLUTED_GLASS_PALETTE_CONTROLS)[number][0]
 /**
  * 색 조합 — 창작자가 왼쪽에서 다루는 큰 축 하나. 고르면 색 칸 일곱이 함께 채워진다.
  *
- * 🔑 **조합 안의 조화는 첫 팔레트가 정본이다.** 두 번째는 채도와 명도 계단(3 → 13 → 26 → 52 → 94)을
- *    그대로 두고 **색상만** 옮겼다 — 밝아질수록 차가워지는 첫 팔레트의 드리프트(146°→151°)를
- *    파랑까지 늘린 것이라(150°→205°) 광선의 깊은 곳은 초록으로 남고 심과 블룸이 파랑으로 간다.
+ * 🔑 **첫 팔레트가 정본이고, 새 팔레트는 그것의 색조를 통째로 돌린 것이다.**
+ *    채도와 명도 계단(3 → 13 → 26 → 52 → 94)은 한 칸도 건드리지 않고 **일곱 칸의 색조를 같은 각도로**
+ *    돌린다. 그래서 조합 안의 조화가 구조적으로 보존되고, 새 팔레트를 만드는 일이 각도 하나를
+ *    고르는 일이 된다.
+ * 🔴 **칸 몇 개만 바꾸지 말 것.** 색조가 칸마다 다른 각도로 움직이면 한 팔레트 안에 두 계열이
+ *    섞여 「초록에 하늘이 낀」 것처럼 읽힌다(2026-09-04에 그렇게 만들었다가 걷어냈다).
+ *    회전이 균일한지는 `fluted-glass.test.ts`가 지킨다.
  * 🔴 계단을 다시 만들지 말 것. 명도가 흐트러지면 광선이 띠가 아니라 색 얼룩으로 읽힌다.
  */
 export const FLUTED_GLASS_PALETTES = {
@@ -86,16 +90,22 @@ export const FLUTED_GLASS_PALETTES = {
 			bloomColor: '#3dff8a',
 		},
 	},
-	greenBlue: {
-		label: '그린 · 블루',
+	/**
+	 * 첫 팔레트의 색조를 **+76° 통째로** 돌린 것. 그 각도를 고른 이유는 하나다 — 중간 톤
+	 * `rayColor3`이 HD DISCOVERY BLUE(`#003087`)에 앉는다. 브랜드 남색이 팔레트의 중심이 된다.
+	 * 🔑 `rayColor3`만 정본 hex로 스냅했다(회전값 `#002f85`은 채널당 2 차이라 눈으로는 같지만,
+	 *    브랜드 색은 계산값이 아니라 등재된 값이어야 한다).
+	 */
+	navy: {
+		label: '네이비',
 		colors: {
-			rayColor1: '#000e07',
-			rayColor2: '#004221',
-			rayColor3: '#00856a',
-			rayColor4: '#1ab7f0',
-			rayColor5: '#e0f2ff',
-			rayBackgroundColor: '#000302',
-			bloomColor: '#3de5ff',
+			rayColor1: '#00040e',
+			rayColor2: '#001842',
+			rayColor3: '#003087',
+			rayColor4: '#1a4af0',
+			rayColor5: '#e0e7ff',
+			rayBackgroundColor: '#000003',
+			bloomColor: '#3d7eff',
 		},
 	},
 } as const satisfies Record<

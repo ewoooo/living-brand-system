@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import flutedGlassRuntimeManifest, {
+	FLUTED_GLASS_PALETTES,
 	FLUTED_GLASS_SHAPE_INPUTS,
 	FLUTED_GLASS_SHAPES,
 	FLUTED_GLASS_SOURCE_SPAN,
@@ -143,6 +144,55 @@ describe('flutedGlass', () => {
 			expect(input.rayColor1, shape).toBe(FLUTED_GLASS_SHAPE_INPUTS.sweep.rayColor1)
 		}
 		expect(flutedGlassColorToRgb('#3dff8a')).toEqual([61 / 255, 1, 138 / 255])
+	})
+
+	it('🔴 팔레트는 첫 조합의 색조를 통째로 돌린 것이다 — 칸 몇 개만 바꾸면 안 된다', () => {
+		// 한 팔레트 안에서 색조가 칸마다 다른 각도로 움직이면 두 계열이 섞여 「초록에 하늘이 낀」
+		// 것처럼 읽힌다. 조화의 정본은 첫 팔레트이고, 새 팔레트는 그것의 회전이어야 한다.
+		const toHsl = (hex: string) => {
+			const [r, g, b] = flutedGlassColorToRgb(hex)
+			const max = Math.max(r, g, b)
+			const min = Math.min(r, g, b)
+			const lightness = (max + min) / 2
+			if (max === min) return { hue: 0, saturation: 0, lightness }
+			const span = max - min
+			const saturation = lightness > 0.5 ? span / (2 - max - min) : span / (max + min)
+			const hue =
+				max === r
+					? ((g - b) / span + (g < b ? 6 : 0)) * 60
+					: max === g
+						? ((b - r) / span + 2) * 60
+						: ((r - g) / span + 4) * 60
+			return { hue, saturation, lightness }
+		}
+		const base = FLUTED_GLASS_PALETTES.green.colors
+		const ids = Object.keys(base) as (keyof typeof base)[]
+
+		for (const [name, palette] of Object.entries(FLUTED_GLASS_PALETTES)) {
+			if (name === 'green') continue
+			// 🔑 색조 회전각은 한 팔레트 안에서 하나여야 한다. 명도가 거의 0인 칸(배경·최암부)은
+			//    8bit 양자화 때문에 각도가 크게 튀므로 각도 비교에서 뺀다 — 채도·명도는 전부 본다.
+			const angles: number[] = []
+			for (const id of ids) {
+				const from = toHsl(base[id])
+				const to = toHsl(palette.colors[id])
+
+				expect(to.saturation, `${name}.${id} 채도`).toBeCloseTo(from.saturation, 2)
+				expect(to.lightness, `${name}.${id} 명도`).toBeCloseTo(from.lightness, 2)
+				if (from.lightness >= 0.05) angles.push((to.hue - from.hue + 360) % 360)
+			}
+
+			expect(angles.length, `${name}: 각도를 잴 칸`).toBeGreaterThan(3)
+			const spread = Math.max(...angles) - Math.min(...angles)
+			expect(
+				spread,
+				`${name}: 색조 회전각이 칸마다 다르다 (${angles.join(', ')})`,
+			).toBeLessThan(2)
+		}
+	})
+
+	it('네이비 팔레트의 중간 톤이 HD DISCOVERY BLUE다 — 브랜드 남색이 팔레트의 중심이다', () => {
+		expect(FLUTED_GLASS_PALETTES.navy.colors.rayColor3).toBe('#003087')
 	})
 
 	it('🔴 팔레트 선택지의 색이 색 칸의 순서와 개수를 그대로 맞춘다', () => {
