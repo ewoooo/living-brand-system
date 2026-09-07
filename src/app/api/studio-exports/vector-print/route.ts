@@ -43,7 +43,13 @@ export async function POST(request: Request) {
 	if (body.length > MAX_SCENE_BYTES) {
 		return Response.json({ message: 'Scene is too large.' }, { status: 413 })
 	}
-	const parsed = requestSchema.safeParse(JSON.parse(body || 'null'))
+	// 🔴 `JSON.parse`가 try 밖이면 잘린 전송의 SyntaxError가 라우트를 터뜨려 400이 500으로 집계된다.
+	//    다른 두 라우트(outline·print)가 쓰는 처방과 같게 맞춘다.
+	const parsed = requestSchema.safeParse(
+		await Promise.resolve()
+			.then(() => JSON.parse(body || 'null') as unknown)
+			.catch(() => null),
+	)
 	if (!parsed.success) return Response.json({ message: 'Invalid request.' }, { status: 400 })
 
 	const { colorProfile, scene } = parsed.data

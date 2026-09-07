@@ -65,10 +65,11 @@ export async function svgAssetToPrimitives(
 	const shapes = collectShapes(root, options.tint)
 	if (shapes.length === 0) return null
 
-	return shapes.map(({ d, fill }) => ({
+	return shapes.map(({ d, fill, fillRule }) => ({
 		kind: 'path' as const,
 		d,
 		fill: normalizeCssColor(fill),
+		...(fillRule ? { fillRule } : {}),
 		scale,
 		// viewBox의 원점을 빼서 자산 좌표를 판 좌표로 옮긴다.
 		x: offsetX - source.x * scale,
@@ -107,8 +108,11 @@ function viewBoxOf(root: SVGSVGElement | Element): Box | null {
  * 🔴 `transform` 속성이 붙은 노드는 건너뛴다 — 균등 배율 하나만 표현하는 계약이라 회전·기울임을
  *    실을 자리가 없고, 조용히 무시하면 로고가 어긋난 자리에 찍힌다.
  */
-function collectShapes(root: Element, tint?: string): { d: string; fill: string }[] {
-	const shapes: { d: string; fill: string }[] = []
+function collectShapes(
+	root: Element,
+	tint?: string,
+): { d: string; fill: string; fillRule?: 'evenodd' }[] {
+	const shapes: { d: string; fill: string; fillRule?: 'evenodd' }[] = []
 
 	const visit = (element: Element, inheritedFill: string | null) => {
 		if (element.getAttribute('transform')) return
@@ -119,7 +123,15 @@ function collectShapes(root: Element, tint?: string): { d: string; fill: string 
 			const d = shapeToPath(child)
 			if (d) {
 				const childFill = tint ?? child.getAttribute('fill') ?? fill
-				if (childFill && childFill !== 'none') shapes.push({ d, fill: childFill })
+				// 겹친 윤곽을 구멍으로 읽는 규칙. 안 읽으면 도넛·구멍 있는 로고가 메워진다.
+				// nonzero는 기본값이라 실을 필요가 없다.
+				const rule = child.getAttribute('fill-rule')
+				if (childFill && childFill !== 'none')
+					shapes.push({
+						d,
+						fill: childFill,
+						...(rule === 'evenodd' ? { fillRule: 'evenodd' as const } : {}),
+					})
 				continue
 			}
 			if (child.tagName === 'g') visit(child, fill)

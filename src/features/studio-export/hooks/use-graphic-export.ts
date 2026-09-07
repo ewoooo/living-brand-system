@@ -6,7 +6,12 @@ import type { GraphicBrowserArtifacts } from '@/features/graphic-generation/runt
 import { getGraphicStudioVectorArtifact } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../export-contract'
-import { PRINT_PPI_VALUES, type PrintPpi, resolveDefaultPrintPpi } from '../print-policy'
+import {
+	maxPrintSize,
+	PRINT_PPI_VALUES,
+	type PrintPpi,
+	resolveDefaultPrintPpi,
+} from '../print-policy'
 import { createRasterExportRequest } from '../services/create-raster-export-request'
 import { executeArtifactExport } from '../services/export-artifact.client'
 import { acceptsPrintPpi } from '../studio-output'
@@ -106,6 +111,13 @@ export function useGraphicExport({
 					if (!video || size.width > video.maxWidth || size.height > video.maxHeight) {
 						return current
 					}
+				}
+				// 🔴 인쇄 형식은 서버가 픽셀 한도를 판정하고 그 결과가 400 「Invalid PNG」로 온다 —
+				//    화면 문구가 크기 얘기를 못 하므로 렌더는 되고 저장만 실패한다. 여기서 막는다.
+				//    Template은 배율 목록 밖을 애초에 고를 수 없어 같은 실수가 불가능하다.
+				if (current.format === 'tiff' || current.format === 'pdf') {
+					const limit = maxPrintSize(size.width, size.height)
+					if (size.width > limit.width || size.height > limit.height) return current
 				}
 				return { ...current, ...size }
 			})

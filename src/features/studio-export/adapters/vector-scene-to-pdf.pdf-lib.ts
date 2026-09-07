@@ -152,6 +152,9 @@ async function draw(
 		}
 		case 'path':
 			// drawSvgPath는 주어진 점을 좌상단으로 보고 path의 y를 아래로 읽는다.
+			// ponytail: fillRule을 흘린다 — pdf-lib 1.17.1의 drawSvgPath는 `f`(nonzero)만 내보내고
+			// `f*`를 쓸 고수준 API가 없다. 리포 자산 8개 중 evenodd는 0건이라 지금은 잠재 결함이고,
+			// 업로드 자산에서 구멍이 메워지면 operator 목록을 직접 만들어 `f*`로 바꾼다(SVG는 이미 맞다).
 			page.drawSvgPath(primitive.d, {
 				color: color(primitive.fill),
 				...(primitive.stroke ? { borderColor: color(primitive.stroke) } : {}),
