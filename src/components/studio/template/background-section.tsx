@@ -26,6 +26,7 @@ import type {
 	ControllerGroupPresentation,
 	ControllerRuntimeBindings,
 } from '@/modules/studio-controller/controller-definition'
+import { visibleControllerGroups } from '@/modules/studio-controller/controller-definition'
 import {
 	IMAGE_TRANSFORM_DEFAULT,
 	ImageTransformControl,
@@ -103,6 +104,16 @@ export function BackgroundSection({
 	const selectedSample = value.image?.kind === 'sample' ? value.image : undefined
 	const imageContract = imageContracts.find((contract) => contract.config.id === value.profileId)
 	const graphicConfig = graphicConfigs.find((candidate) => candidate.id === value.graphicConfigId)
+	// 🔴 창작자에게 보이는 축만 그린다. 통째로 넘기면 Graphic 스튜디오에서 내린 admin 전용 축까지
+	//    여기서만 되살아나, 같은 런타임이 화면마다 다른 축 수를 보여준다.
+	//    Template에는 좌측 패널이 없으므로 좌·우를 한 자리에 이어 그린다.
+	const visibleGraphicGroups = graphicConfig
+		? visibleControllerGroups(
+				graphicConfig.controller.groups,
+				graphicConfig.controller.left,
+				graphicConfig.controller.right,
+			)
+		: []
 
 	const invalidPrompt = imageContract
 		? !acceptsImagePromptExecution(imageContract.prompt, value.prompt)
@@ -244,7 +255,7 @@ export function BackgroundSection({
 					{/* 선택한 Graphic의 그룹은 Background에 종속된다 — Background를 접으면 함께 닫힌다. */}
 					{graphicConfig && (
 						<ControllerRenderer
-							groups={graphicConfig.controller.groups}
+							groups={visibleGraphicGroups}
 							presentation={graphicConfig.controllerPresentation}
 							values={value.graphicValues}
 							bindings={graphicBindings}

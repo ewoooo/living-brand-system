@@ -171,6 +171,46 @@ export type ControllerGroupDefinition = {
 }
 
 /**
+ * 창작자에게 **보이는** 축만 남긴다 — 좌·우를 한 자리에 이어 그리는 화면이 쓴다.
+ *
+ * 🔑 `splitControllerGroups`로 가른 뒤 두 벌을 잇지 **않는다.** 한 그룹의 컨트롤이 좌·우로
+ *    갈려 있으면 같은 제목의 섹션이 두 번 그려진다. 여기서는 원래 그룹 순서·컨트롤 순서를
+ *    유지하며 걸러내므로 그 일이 없다. 보임 규칙은 `splitControllerGroups`와 같은 것이다.
+ */
+export function visibleControllerGroups(
+	groups: readonly ControllerGroupDefinition[],
+	left: readonly string[] | undefined,
+	right?: readonly string[],
+): readonly ControllerGroupDefinition[] {
+	// 선언이 반쪽이면 전부 보인다 — 선언하지 않은 런타임의 화면이 비지 않게 한다.
+	if (!left || !right) return groups
+	const visible = new Set([...left, ...right])
+	return groups
+		.map((group) => ({
+			...group,
+			controls: group.controls.filter((control) => visible.has(control.id)),
+		}))
+		.filter((group) => group.controls.length > 0)
+}
+
+/**
+ * 셰이더 프로그램을 갈아끼우는 축들의 지문.
+ *
+ * 🔴 대부분의 컨트롤은 살아 있는 런타임에 흘려 넣으면 되지만, 「모양」처럼 프로그램 자체를
+ *    바꾸는 축은 update로 반영되지 않는다 — 컴파일된 프로그램에 없는 uniform은 조용히 무시되고
+ *    화면만 옛 모양으로 남는다. 어느 컨트롤이 그런지는 런타임이 `remountOn`으로 선언한다.
+ * 🔑 문자열인 이유는 effect 의존성이라 값 비교가 되어야 하기 때문이다.
+ * 🔴 런타임을 세우는 화면이 둘 이상이므로(Graphic 캔버스·Template 배경) 지문 계산이 한 곳에 있어야
+ *    한다 — 한쪽만 갖고 있으면 그쪽 화면에서만 모양이 갈린다.
+ */
+export function controllerRemountKey(
+	remountOn: readonly string[] | undefined,
+	values: ControllerValues,
+): string {
+	return (remountOn ?? []).map((id) => `${id}=${String(values[id])}`).join('&')
+}
+
+/**
  * 그룹을 왼쪽/오른쪽 두 벌로 가른다. 그룹 구조는 양쪽에서 그대로 유지되고,
  * 남는 컨트롤이 없는 그룹은 그 쪽에서 빠진다.
  *

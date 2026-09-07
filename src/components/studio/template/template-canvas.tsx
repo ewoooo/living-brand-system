@@ -19,7 +19,10 @@ import {
 	loadGraphicRuntimeAdapter,
 } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
-import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
+import {
+	type ControllerValues,
+	controllerRemountKey,
+} from '@/modules/studio-controller/controller-definition'
 
 /**
  * 템플릿 스튜디오의 작업 공간(미리보기 캔버스) — 사이드바를 모른다.
@@ -166,6 +169,10 @@ function TemplateGraphicBackground({
 	const valuesRef = useRef(values)
 	const updateRef = useRef(background.updateGraphic)
 	const [error, setError] = useState<string | null>(null)
+	// 🔴 「모양」처럼 셰이더 프로그램을 갈아끼우는 축은 update로 반영되지 않는다 — 이 지문이
+	//    바뀌면 런타임을 다시 세운다. Graphic 캔버스와 같은 함수를 쓴다(한쪽만 갖고 있으면
+	//    Template 배경에서만 모양이 안 갈린다).
+	const remountKey = controllerRemountKey(config.controller.remountOn, values)
 	useEffect(() => {
 		valuesRef.current = values
 		runtimeRef.current?.update(values)
@@ -175,6 +182,7 @@ function TemplateGraphicBackground({
 		updateRef.current = background.updateGraphic
 	}, [background.updateGraphic])
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies(remountKey): 위 주석 — 재마운트 트리거다
 	useEffect(() => {
 		const container = containerRef.current
 		if (!container) return
@@ -233,7 +241,14 @@ function TemplateGraphicBackground({
 			runtime?.destroy()
 			runtimeRef.current = null
 		}
-	}, [canvas.registerGraphicFrame, canvas.registerGraphicVideo, config, height, width])
+	}, [
+		canvas.registerGraphicFrame,
+		canvas.registerGraphicVideo,
+		config,
+		height,
+		remountKey,
+		width,
+	])
 
 	return (
 		<div
