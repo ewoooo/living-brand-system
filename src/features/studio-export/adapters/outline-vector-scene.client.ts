@@ -1,6 +1,8 @@
 'use client'
 
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
+// 🔑 `import type`이라 서버 전용 import(fs·fontkit)가 클라이언트 번들에 따라오지 않는다.
+import type { OutlineTextResult } from '../services/outline-text.service'
 
 /**
  * 씬의 글자를 윤곽선 path로 굽는다. 인쇄용 벡터의 마지막 단계다.
@@ -17,15 +19,11 @@ export type OutlineSceneResult = {
 
 type TextPrimitive = Extract<VectorPrimitive, { kind: 'text' }>
 
-type OutlineResponse = {
-	runs: (
-		| { outlined: true; d: string; width: number; family: string }
-		| {
-				outlined: false
-				reason: string
-		  }
-	)[]
-}
+/**
+ * 🔑 서버 타입을 그대로 쓴다 — 손으로 두 번 적으면 `reason` 유니온이 string으로 넓어져,
+ *    서버가 이유를 하나 늘려도 타입으로 못 알아채고 원문이 화면에 새어 나간다.
+ */
+type OutlineResponse = { runs: OutlineTextResult[] }
 
 export async function outlineVectorScene(scene: VectorScene): Promise<OutlineSceneResult> {
 	const texts = collectText(scene.primitives)

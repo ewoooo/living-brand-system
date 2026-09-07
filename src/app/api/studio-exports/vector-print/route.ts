@@ -30,7 +30,9 @@ const requestSchema = z.object({
  * Vector Scene을 인쇄용 CMYK PDF로 바꿔 준다.
  *
  * 🔴 서버에 있는 이유는 두 가지다 — ICC 색 변환(sharp)이 서버 전용이고, pdf-lib을 클라이언트
- *    번들에 넣지 않기 위해서다. SVG는 변환이 필요 없어 브라우저에서 바로 만든다.
+ *    번들에 넣지 않기 위해서다. SVG 직렬화 자체는 브라우저에서 끝난다.
+ * 🔴 다만 Template의 SVG도 `/api/studio-exports/outline` 왕복은 탄다 — 씬을 만드는 단계가
+ *    형식과 무관하게 글자를 윤곽선으로 바꾼다. 「SVG는 서버를 안 탄다」가 아니다.
  */
 export async function POST(request: Request) {
 	if (isCrossOriginRequest(request)) {
