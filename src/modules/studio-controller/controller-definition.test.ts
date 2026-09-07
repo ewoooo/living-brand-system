@@ -91,6 +91,52 @@ describe('splitControllerGroups', () => {
 		expect(visibleControllerGroups(groups, ['rayColor1'], undefined)).toEqual(groups)
 	})
 
+	it('🔴 색 조합 그룹의 색 칸에 허용 색을 걸면 admin 저장에서 거부한다', () => {
+		// 걸면 그 칸이 띠에서 빠져 팔레트 칩이 채울 짝을 잃는다 — 칩은 눌리는데 색이 안 바뀐다.
+		const paletteGroups: readonly ControllerGroupDefinition[] = [
+			{
+				id: 'palette',
+				title: 'Ray Palette',
+				controls: [
+					{
+						id: 'palette',
+						kind: 'select',
+						label: '팔레트',
+						defaultValue: 'green',
+						options: [
+							{ value: 'green', label: '그린', colors: ['#000000', '#ffffff'] },
+						],
+					},
+					{
+						id: 'rayColor1',
+						label: '광선 색상 1',
+						kind: 'color',
+						defaultValue: '#ffffff',
+					},
+					{
+						id: 'rayColor2',
+						label: '광선 색상 2',
+						kind: 'color',
+						defaultValue: '#000000',
+					},
+				],
+			},
+		]
+
+		expect(() =>
+			applyControllerRestrictions(paletteGroups, {
+				controls: [{ controlId: 'rayColor1', colorValues: ['#ffffff', '#000000'] }],
+			}),
+		).toThrow(/허용 색을 지정할 수 없습니다: rayColor1/)
+
+		// 색이 아닌 축의 제한은 그대로 통과한다 — 팔레트를 못 쓰게 만드는 것만 막는다.
+		expect(() =>
+			applyControllerRestrictions(paletteGroups, {
+				controls: [{ controlId: 'palette', defaultValue: 'green' }],
+			}),
+		).not.toThrow()
+	})
+
 	it('🔴 재마운트 지문은 remountOn 축만 담는다 — 두 화면이 같은 값을 봐야 한다', () => {
 		const values = { shape: 'vertical', rayIntensity: 0.9 }
 

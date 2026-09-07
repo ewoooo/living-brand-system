@@ -205,14 +205,15 @@ function ColorStripGroup({
 				onChange={(id, hex) => onChange(id, hex)}
 				onReset={() => {
 					// 조합이 한 단위이므로 고른 조합까지 함께 되돌린다.
-					// 🔴 팔레트가 있으면 칸을 비우지 않고 **기본 조합으로 채운다** — null은 「미설정」이라
-					//    띠가 흐린 검정으로 비는데, 화면에는 기본 조합이 그려져 띠가 거짓말을 한다.
+					// 🔴 칸을 비우지 않고 **원래 색으로 채운다.** null은 「미설정」이라 띠가 흐린 검정이
+					//    되는데 화면에는 기본색이 그려져 띠가 거짓말을 한다. 되돌릴 색은 팔레트가 있으면
+					//    기본 조합이고, 없으면 각 칸이 선언한 기본값이다(팔레트 없는 런타임도 같아야 한다).
 					if (palette) onChange(palette.id, null)
 					const fallback = palette?.options.find(
 						(option) => option.value === palette.defaultValue,
 					)?.colors
 					for (const [index, { control }] of resolved.entries()) {
-						onChange(control.id, fallback?.[index] ?? null)
+						onChange(control.id, fallback?.[index] ?? control.defaultValue)
 					}
 				}}
 			/>

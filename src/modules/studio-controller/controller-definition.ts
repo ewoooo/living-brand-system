@@ -426,6 +426,27 @@ export function applyControllerRestrictions(
 		restrictionsById.set(control.controlId, control)
 	}
 
+	// 🔴 팔레트가 있는 색 조합 그룹의 색 칸에는 「허용 색」을 걸 수 없다. 걸면 그 칸이 띠에서 빠져
+	//    팔레트 칩이 채울 짝을 잃고 — 칩은 눌리고 선택 링도 옮겨가는데 색과 화면이 하나도 안 바뀌는
+	//    조용한 사망이 된다. 창작자 화면에서 조용히 죽는 대신 admin 저장에서 거부한다.
+	for (const group of baseGroups) {
+		const hasPalette = group.controls.some(
+			(control) =>
+				control.kind === 'select' &&
+				control.options.every((option) => option.colors?.length),
+		)
+		if (!hasPalette) continue
+		const restricted = group.controls.find(
+			(control) =>
+				control.kind === 'color' && restrictionsById.get(control.id)?.colorValues?.length,
+		)
+		if (restricted) {
+			throw new Error(
+				`색 조합 그룹의 색 칸에는 허용 색을 지정할 수 없습니다: ${restricted.id}`,
+			)
+		}
+	}
+
 	return baseGroups.map((group) => ({
 		...group,
 		controls: group.controls.map((base) => {

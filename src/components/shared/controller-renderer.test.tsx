@@ -223,10 +223,11 @@ describe('ControllerRenderer', () => {
 		})
 		expect(onChange).toHaveBeenCalledWith('c2', '#123456')
 
-		// 되돌리기는 조합 전체를 한 번에 비운다.
+		// 🔴 되돌리기는 칸을 비우지 않고 원래 색으로 채운다 — 팔레트가 없는 런타임도 같다.
+		//    null은 「미설정」이라 띠가 흐린 검정이 되는데 화면에는 기본색이 그려져 띠가 거짓말을 한다.
 		fireEvent.click(screen.getByRole('button', { name: /되돌리기/ }))
-		expect(onChange).toHaveBeenCalledWith('c1', null)
-		expect(onChange).toHaveBeenCalledWith('c2', null)
+		expect(onChange).toHaveBeenCalledWith('c1', '#000000')
+		expect(onChange).toHaveBeenCalledWith('c2', '#ffffff')
 	})
 
 	it('조합을 고르는 select이 색 칸 앞에 서면 칩이 띠를 채운다', () => {
