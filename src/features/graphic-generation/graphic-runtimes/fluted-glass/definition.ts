@@ -933,7 +933,11 @@ const flutedGlassRuntimeManifest = defineGraphicRuntime({
 					{
 						id: 'source',
 						kind: 'pad' as const,
-						label: '광원',
+						// 🔑 라벨은 「기준점」이다 — 다른 두 런타임의 같은 판이 이미 그 말을 쓴다.
+						//    런타임을 옮겨 다니는 사람에게 같은 것은 같은 말이어야 한다.
+						//    주석에서 「광원」이라 부르는 것은 그 점의 물리적 정체고, 창작자가 고르는
+						//    축의 이름은 세 런타임이 공유한다.
+						label: '기준점',
 						defaultValue: CONTROL_DEFAULTS.source,
 					},
 					rangeControl(
