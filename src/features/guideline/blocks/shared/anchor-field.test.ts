@@ -1,16 +1,10 @@
 import type { TextField } from 'payload'
 import { describe, expect, it } from 'vitest'
-import { SectionBlock } from './schema'
+import { anchorField } from './anchor-field'
 
-const anchorField = SectionBlock.fields.find(
-	(field) => 'name' in field && field.name === 'anchor',
-) as TextField
-
+const field = anchorField() as TextField
 const runHook = (value: unknown, title: unknown) =>
-	anchorField.hooks?.beforeValidate?.[0]?.({
-		siblingData: { title },
-		value,
-	} as never)
+	field.hooks?.beforeValidate?.[0]?.({ siblingData: { title }, value } as never)
 
 describe('section anchor', () => {
 	it('비어 있으면 제목에서 앵커를 만든다', () => {

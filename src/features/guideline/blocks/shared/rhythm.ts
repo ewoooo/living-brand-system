@@ -1,5 +1,3 @@
-import type { LeafSpan } from '../../leaves/registry'
-
 /**
  * 가이드라인 본문의 세로 리듬과 배치 어휘. 값은 전부 여기 한 곳이 소유한다 — 디자인 수치가
  * 바뀌면 이 파일만 고친다(docs/09 §7).
@@ -16,17 +14,6 @@ export const RIGHT_HALF = {
 	grid: 'grid md:grid-cols-2',
 	cell: 'md:col-start-2',
 } as const
-
-/**
- * leaf 격자. 6열 위에 폭(전폭 6·절반 3·삼분 2)을 얹으면 전폭·절반·삼분이 한 격자에서 섞인다.
- * 좁은 화면에서는 한 열이다.
- */
-export const LEAF_GRID = 'grid grid-cols-1 gap-4 md:grid-cols-6'
-export const LEAF_SPAN: Record<LeafSpan, string> = {
-	full: 'md:col-span-6',
-	half: 'md:col-span-3',
-	third: 'md:col-span-2',
-}
 
 /**
  * 카드 **줄 높이**. 카드는 폭이 아니라 높이 기준으로 선다(2026-09-07) — 판이 이 높이를 갖고 폭은 카드의

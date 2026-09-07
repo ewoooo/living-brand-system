@@ -29,8 +29,11 @@ export function Card({ card, panelClassName }: { card: CardData; panelClassName?
 				{display.blockType === 'staticDisplay' ? (
 					renderDisplay(display, { alt: card.caption?.title ?? undefined })
 				) : (
-					<div className="absolute inset-0 grid place-items-center">
-						{renderDisplay(display)}
+					// 콘텐츠 높이형 위젯은 판보다 클 수 있다 — 잘라 버리지 않고 판 안에서 스크롤한다.
+					<div className="absolute inset-0 overflow-auto">
+						<div className="flex min-h-full items-center justify-center">
+							{renderDisplay(display)}
+						</div>
 					</div>
 				)}
 			</div>

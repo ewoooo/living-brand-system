@@ -152,10 +152,6 @@ src/
         registry.ts
         registry.render.tsx
         projection.ts
-        section/
-          schema.ts
-          projection.ts
-          component.tsx
         runtime/
           project-guideline-block.ts
           build-check-source-snapshot.ts
@@ -271,7 +267,7 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 
 스키마 팩토리(`blockSchema`)·투영(`projection.ts`)·렌더(`registry.render.tsx`)는 각각 **하나**이고 전 블록이 공유합니다. 문서 `blocks` 필드는 `guidelineBlocks`(레지스트리 배열 그대로)를 받고, 배열 순서가 admin 선택기 순서입니다. `registry.test.ts`가 id·dbName 유일성과 문서 필드가 레지스트리를 그대로 받는지 지킵니다.
 
-🔴 **임시 예외 — `section`.** 아직 leaf `children`을 갖는 옛 스키마라 `blocks/section/`의 3파일이 남아 있고, `blockSchema`가 그 id만 옛 스키마로 돌려줍니다. 기존 문서의 leaf를 카드로 이관한 뒤 앵커 필드 + 카드 필드로 바뀌면 폴더와 분기가 함께 사라집니다.
+`section`도 같은 팩토리에서 나옵니다 — `anchor: true`가 앵커 필드(`shared/anchor-field.ts`)를 앞에 붙일 뿐입니다. 옛 leaf `children`은 2026-09-07 마이그레이션 `add_guideline_card_blocks`가 카드로 옮겼습니다.
 
 #### 카드 블록과 슈거 블록
 
@@ -282,7 +278,7 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 | `blocks/shared/base-fields.ts` | 기본 블록 필드(`baseContentFields`)와 슈거용 `presetFields` |
 | `blocks/shared/card-block.tsx` · `card-projection.ts` | 카드 블록 공용 렌더·투영. 각 블록의 3파일은 이것을 부르는 얇은 껍데기 |
 | `cards/schema.ts` | 카드 필드 — 규격 비율, 디스플레이 1개, 캡션(제목·설명). 폭 필드는 없다 |
-| `cards/displays/registry.ts` · `registry.render.tsx` | 디스플레이 레지스트리 — 판에 그릴 수 있는 것은 여기 항목(`id·name·description·schema`) 하나로 정의하고, 렌더는 짝 파일이 같은 id로 갈라 그립니다. 정적 디스플레이 1종 + 전환 가능 위젯 8종. 위젯 폴더는 이곳으로 이관될 예정 |
+| `cards/displays/registry.ts` · `registry.render.tsx` | 디스플레이 레지스트리 — 판에 그릴 수 있는 것은 여기 항목(`id·name·description·schema`) 하나로 정의하고, 렌더는 짝 파일이 같은 id로 갈라 그립니다. 정적 디스플레이 1종 + 위젯 20종(컨트롤 전용 layout-grid-controls 제외). 위젯 스키마는 아직 `leaves/registry.ts`에서 빌려 오고, 위젯 폴더는 이곳으로 이관될 예정 |
 | `cards/displays/static/` | 정적 디스플레이(배경 이미지)의 스키마·컴포넌트 |
 | `cards/caption/` | 캡션 렌더. 설명 richText의 표를 스펙 리스트로 바꾸는 컨버터 자리 |
 

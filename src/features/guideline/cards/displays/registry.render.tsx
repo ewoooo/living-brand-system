@@ -29,6 +29,17 @@ export const DISPLAY_RENDERERS: Record<DisplayId, DisplayRenderer> = {
 	typeWeightWidget: widget,
 	typeSpecimenWidget: widget,
 	layoutGridOverlayWidget: widget,
+	ciLockupWidget: widget,
+	clearspaceViewerWidget: widget,
+	layoutGridWidget: widget,
+	doDontWidget: widget,
+	hdColorPaletteWidget: widget,
+	iconGridWidget: widget,
+	stemClearSpaceWidget: widget,
+	logoColorVariantWidget: widget,
+	logoOnBgWidget: widget,
+	typeHierarchyWidget: widget,
+	typeLanguageWidget: widget,
 }
 
 export function renderDisplay(display: DisplayData, context: { alt?: string } = {}): ReactNode {

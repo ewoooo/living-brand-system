@@ -326,7 +326,7 @@ flowchart LR
 ```
 
 BrandGuideline은 가이드라인 전체에 적용되는 표시 설정을 관리합니다.
-GuidelineDocument는 토픽이며 GuidelineChapter를 필수로 참조해 챕터·토픽 구조를 만들고, GuidelineBlock을 임베디드 엔티티로 소유합니다. 섹션(`section` 블록)과 카드 블록(`base`, 그리고 그 사전 정의인 `overview`·`examples`)이 그 블록입니다. 카드 블록은 카드(디스플레이 + 캡션) 목록과 레이아웃을 갖고, 앵커·목차 항목은 섹션만 갖습니다. 2026-09-07부터 섹션의 leaf 목록을 카드로 옮기는 전환이 진행 중입니다.
+GuidelineDocument는 토픽이며 GuidelineChapter를 필수로 참조해 챕터·토픽 구조를 만들고, GuidelineBlock을 임베디드 엔티티로 소유합니다. 섹션(`section` 블록)과 카드 블록(`base`, 그리고 그 사전 정의인 `overview`·`examples`)이 그 블록입니다. 카드 블록은 카드(디스플레이 + 캡션) 목록과 레이아웃을 갖고, 앵커·목차 항목은 섹션만 갖습니다. 섹션이 품던 leaf(이미지·위젯)는 2026-09-07에 카드로 이관됐습니다(마이그레이션 `add_guideline_card_blocks`). 그때 컨트롤러 위젯은 하단 Floating Controller 연결을 잃었고(범위 밖 결정), 컨트롤 전용 layout-grid-controls 4행은 옮길 그림이 없어 사라졌습니다.
 GuidelineVersionRef는 발행된 GuidelineDocument revision을 CheckBasis가 참조하기 위해 저장하는 값 객체입니다.
 
 GuidelineDocument는 GuidelineBlock 목록을 소유합니다. GuidelineBlock은 column unit, media showcase처럼 화면에 렌더링되는 최소 콘텐츠 단위입니다.

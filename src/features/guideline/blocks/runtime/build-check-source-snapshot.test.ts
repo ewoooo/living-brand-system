@@ -17,15 +17,16 @@ describe('buildCheckSourceSnapshot', () => {
 					anchor: 'digital',
 					title: 'Digital',
 					description: lexical('Use 24 px.'),
-					children: [{ id: 'w', blockType: 'iconGridWidget' }],
+					cards: [{ id: 'c', display: [{ id: 'w', blockType: 'iconGridWidget' }] }],
 				},
-				{ id: 'other', blockType: 'section', title: 'Other', children: [] },
+				{ id: 'other', blockType: 'section', title: 'Other', cards: [] },
 			],
 		} as unknown as GuidelineDocument
 
 		expect(buildCheckSourceSnapshot(page, 'target')).toEqual({
 			evidence: {
 				type: 'section',
+				captions: [],
 				anchor: 'digital',
 				title: 'Digital',
 				description: 'Use 24 px.',
@@ -42,14 +43,14 @@ describe('buildCheckSourceSnapshot', () => {
 				{
 					id: 'hero',
 					blockType: 'section',
-					children: [{ id: 'w', blockType: 'ciLockupHeroWidget' }],
+					cards: [{ id: 'c', display: [{ id: 'w', blockType: 'ciLockupHeroWidget' }] }],
 				},
 				{
 					id: 'sec',
 					blockType: 'section',
 					anchor: 'main-colors',
 					title: 'Main colors',
-					children: [],
+					cards: [],
 				},
 			],
 		} as unknown as GuidelineDocument
@@ -60,12 +61,14 @@ describe('buildCheckSourceSnapshot', () => {
 				blocks: [
 					{
 						type: 'section',
+						captions: [],
 						anchor: undefined,
 						title: undefined,
 						description: undefined,
 					},
 					{
 						type: 'section',
+						captions: [],
 						anchor: 'main-colors',
 						title: 'Main colors',
 						description: undefined,
@@ -90,7 +93,7 @@ describe('buildCheckSourceSnapshot', () => {
 				anchor: 'minimum',
 				title: 'Minimum',
 				description: lexical('Use 24 px.'),
-				children: [],
+				cards: [],
 				rules,
 			},
 		]

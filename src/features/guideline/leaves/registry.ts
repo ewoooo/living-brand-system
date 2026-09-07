@@ -7,7 +7,6 @@ import { DoDontWidget } from '@/features/guideline/widgets/do-dont/schema'
 import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/schema'
 import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/schema'
 import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/schema'
-import { LayoutGridControlsWidget } from '@/features/guideline/widgets/layout-grid-controls/schema'
 import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/schema'
 import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/schema'
 import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/schema'
@@ -19,15 +18,15 @@ import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/s
 import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/schema'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/schema'
 import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/schema'
-import { ImageLeaf } from './image/schema'
 
 /**
- * 섹션이 직접 품는 leaf — 이미지(정적)와 위젯(인터랙티브)의 형제 위계. 새 위젯은 이 배열에 넣는다(docs/11 §3).
+ * 위젯 Block 목록. 2026-09-07부터 섹션이 아니라 **카드 디스플레이**(`cards/displays/registry.ts`)가 이것을 읽는다.
+ * 이미지 leaf는 정적 디스플레이(`staticDisplay`)로, 컨트롤 전용 layout-grid-controls는 그릴 것이 없어 뺐다.
+ * 위젯 폴더가 `cards/displays/`로 이관되면 이 파일은 사라진다.
  *
  * 🔴 payload.config가 Node에서 로드하는 모듈이다. react·이미지 import를 섞지 말 것.
  */
 const LEAVES: Block[] = [
-	ImageLeaf,
 	CiLockupWidget,
 	CiLockupHeroWidget,
 	ClearspaceOverlayWidget,
@@ -37,7 +36,6 @@ const LEAVES: Block[] = [
 	IconGridWidget,
 	StemClearSpaceWidget,
 	LayoutGridWidget,
-	LayoutGridControlsWidget,
 	LayoutGridOverlayWidget,
 	LogoColorVariantWidget,
 	LogoBgPickerWidget,

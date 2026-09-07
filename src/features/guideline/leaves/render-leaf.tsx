@@ -18,28 +18,20 @@ import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/c
 import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/component'
 import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
 import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/component'
-import type { SectionBlock } from '@/payload-types'
+import type { BaseBlock } from '@/payload-types'
 
-export type GuidelineLeaf = NonNullable<SectionBlock['children']>[number]
+/** 카드 디스플레이 중 위젯 — 정적 디스플레이는 `cards/displays/static`이 그린다. */
+export type GuidelineLeaf = Exclude<
+	NonNullable<NonNullable<BaseBlock['cards']>[number]['display']>[number],
+	{ blockType: 'staticDisplay' }
+>
 
 /**
- * leaf 하나를 그린다 — 이미지는 원본 비율로, 위젯은 자기 컴포넌트로. 새 위젯은 여기 분기를 더한다(docs/11 §3).
+ * 위젯 하나를 그린다. 새 위젯은 여기 분기를 더한다(docs/11 §3).
  * 위젯은 전부 인스턴스 입력 없이 자족 렌더(brand 컬렉션·폰트를 스스로 조회)이거나 자기 필드만 받는다.
  */
 export function renderLeaf(leaf: GuidelineLeaf): ReactNode {
 	switch (leaf.blockType) {
-		case 'image': {
-			const image = typeof leaf.image === 'object' ? leaf.image : null
-			if (!image?.url) return null
-			return (
-				// biome-ignore lint/performance/noImgElement: Payload upload URL(로컬·S3)이라 next/image 미사용.
-				<img
-					src={image.url}
-					alt={image.alt ?? image.name ?? ''}
-					className="block h-auto w-full"
-				/>
-			)
-		}
 		case 'clearspaceOverlayWidget':
 			return (
 				<ClearspaceOverlayWidget
