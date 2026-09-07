@@ -5,6 +5,7 @@ import {
 	createShaderCanvasRuntime,
 	type ShaderCanvasRuntime,
 } from '@/features/graphic-generation/runtime/client/shader-canvas.client'
+import { FLUTED_GLASS_SOURCE_SPAN } from './definition'
 import {
 	type FlutedGlassInput,
 	type FlutedGlassLinearInput,
@@ -35,6 +36,9 @@ const ARIA_LABELS = {
 function bindSharedUniforms(gl: WebGLRenderingContext, program: WebGLProgram) {
 	const uniforms = {
 		source: gl.getUniformLocation(program, 'uSource'),
+		zoom: gl.getUniformLocation(program, 'uZoom'),
+		tilt: gl.getUniformLocation(program, 'uTilt'),
+		vignette: gl.getUniformLocation(program, 'uVignette'),
 		bloomColor: gl.getUniformLocation(program, 'uBloomColor'),
 		rayColor1: gl.getUniformLocation(program, 'uRayColor1'),
 		rayColor2: gl.getUniformLocation(program, 'uRayColor2'),
@@ -79,7 +83,15 @@ function bindSharedUniforms(gl: WebGLRenderingContext, program: WebGLProgram) {
 		})
 		const [glassOriginX, glassOriginY] = toFlutedGlassShaderPoint(input.glassOriginOffset)
 		const [glassDriftX, glassDriftY] = toFlutedGlassShaderPoint(input.glassDrift)
-		gl.uniform2f(uniforms.source, sourceX, sourceY)
+		// pad의 ±1을 판 밖까지 늘린다 — 셰이더는 ±1을 판 가장자리로 읽는다.
+		gl.uniform2f(
+			uniforms.source,
+			sourceX * FLUTED_GLASS_SOURCE_SPAN,
+			sourceY * FLUTED_GLASS_SOURCE_SPAN,
+		)
+		gl.uniform1f(uniforms.zoom, input.zoom)
+		gl.uniform1f(uniforms.tilt, input.tilt)
+		gl.uniform1f(uniforms.vignette, input.vignette)
 		gl.uniform3f(uniforms.bloomColor, ...flutedGlassColorToRgb(input.bloomColor))
 		gl.uniform3f(uniforms.rayColor1, ...flutedGlassColorToRgb(input.rayColor1))
 		gl.uniform3f(uniforms.rayColor2, ...flutedGlassColorToRgb(input.rayColor2))

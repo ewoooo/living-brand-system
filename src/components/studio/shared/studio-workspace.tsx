@@ -75,10 +75,13 @@ export function StudioWorkspace({ sidebar, leftPanel, children }: StudioWorkspac
 				{children}
 			</div>
 			{/* DOM에서는 캔버스 뒤에 온다 — 좁은 화면에서 이 패널이 캔버스를 밀어내고 맨 위에 서지 않게. */}
+			{/* 🔴 `empty:hidden`: 넘어오는 것은 엘리먼트라 항상 truthy인데 그 컴포넌트가 좌측 축이
+			    없으면 `null`을 반환한다. 그때 이 aside는 내용 없이 `p-4`만 남아 32px 유령 열이
+			    되고 캔버스가 그만큼 줄어든다. `display:none`이면 auto 트랙째 접힌다. */}
 			{leftPanel && (
 				<aside
 					data-slot="studio-workspace-left-panel"
-					className="min-h-0 p-4 lg:order-1 lg:h-full lg:max-h-full"
+					className="min-h-0 p-4 empty:hidden lg:order-1 lg:h-full lg:max-h-full"
 				>
 					{leftPanel}
 				</aside>

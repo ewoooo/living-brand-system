@@ -121,12 +121,19 @@ describe('graphicStudioRuntime', () => {
 		expect(derived.controller.left).toEqual(['lineColor', 'backgroundColor'])
 	})
 
-	it('🔴 모든 런타임이 왼쪽 축을 선언한다 — 일부만 적용된 채로 머지되지 않게', () => {
-		const missing = graphicRuntimeManifests.filter(
-			(manifest) => manifest.controller.left === undefined,
-		)
+	it('🔴 모든 런타임이 좌·우 축을 선언한다 — 일부만 적용된 채로 머지되지 않게', () => {
+		// 🔴 `right` 미선언은 계약상 「왼쪽이 아닌 전부가 오른쪽」이라, admin으로 내려야 할 축이
+		//    조용히 오른쪽 패널에 되살아난다. left만 검사하면 그것을 못 잡는다.
+		for (const side of ['left', 'right'] as const) {
+			const missing = graphicRuntimeManifests.filter(
+				(manifest) => manifest.controller[side] === undefined,
+			)
 
-		expect(missing.map((manifest) => manifest.id)).toEqual([])
+			expect({ side, missing: missing.map((manifest) => manifest.id) }).toEqual({
+				side,
+				missing: [],
+			})
+		}
 	})
 
 	it('선언한 축은 실제로 그 런타임에 있는 control id다', () => {
@@ -136,9 +143,15 @@ describe('graphicStudioRuntime', () => {
 					group.controls.map((control) => control.id),
 				),
 			)
-			const unknown = (manifest.controller.left ?? []).filter((id) => !ids.has(id))
+			for (const side of ['left', 'right'] as const) {
+				const unknown = (manifest.controller[side] ?? []).filter((id) => !ids.has(id))
 
-			expect({ runtime: manifest.id, unknown }).toEqual({ runtime: manifest.id, unknown: [] })
+				expect({ runtime: manifest.id, side, unknown }).toEqual({
+					runtime: manifest.id,
+					side,
+					unknown: [],
+				})
+			}
 		}
 	})
 

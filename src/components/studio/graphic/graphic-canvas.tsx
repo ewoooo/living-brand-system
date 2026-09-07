@@ -16,6 +16,7 @@ import {
 } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { getGraphicStudioRuntimeBindings } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import type { GraphicExportView } from '@/features/studio-export/hooks/use-graphic-export'
+import { controllerRemountKey } from '@/modules/studio-controller/controller-definition'
 
 /** runtime type에 맞는 공용 Canvas를 고른다. 개별 그래픽 id는 Preview registry가 해석한다. */
 export function GraphicCanvas({
@@ -80,17 +81,8 @@ function GraphicPreviewCanvas({
 	const [previewSize, setPreviewSize] = useState(DEFAULT_PREVIEW_SIZE)
 	const outputWidth = output.draft?.width
 	const outputHeight = output.draft?.height
-	/**
-	 * 런타임을 다시 세워야 하는 값들의 지문.
-	 *
-	 * 🔴 대부분의 컨트롤은 살아 있는 런타임에 흘려 넣으면 되지만, 「모양」처럼 셰이더 프로그램을
-	 *    갈아끼우는 축은 update로 반영되지 않는다 — 컴파일된 프로그램에 없는 uniform은 조용히
-	 *    무시되고 화면만 옛 모양으로 남는다. 어느 컨트롤이 그런지는 런타임이 선언한다.
-	 *    문자열로 만드는 이유는 effect 의존성이라 값 비교가 되어야 하기 때문이다.
-	 */
-	const remountKey = (config.controller.remountOn ?? [])
-		.map((id) => `${id}=${String(controls.values[id])}`)
-		.join('&')
+	// 런타임을 다시 세워야 하는 값들의 지문 — 규칙과 근거는 계약이 갖는다.
+	const remountKey = controllerRemountKey(config.controller.remountOn, controls.values)
 
 	useEffect(() => {
 		valuesRef.current = controls.values
@@ -180,9 +172,12 @@ function GraphicPreviewCanvas({
 
 	return (
 		<figure data-slot="graphic-canvas" className="relative flex min-h-0 flex-1 flex-col">
+			{/* 🔴 하단 예약: 플로팅 바가 bottom-10(40px)에 높이 60px으로 떠 있어서, 예약이 없으면
+			    기본 100% 배율의 프리뷰 아래쪽이 바 뒤로 들어간다. 바는 `lg:`에서만 보이므로 예약도
+			    그쪽만 한다. 실측 bounds가 그만큼 줄어 프리뷰가 바 위에 딱 맞는다. */}
 			<div
 				ref={stageRef}
-				className="flex min-h-96 flex-1 items-center justify-center overflow-hidden lg:min-h-0"
+				className="flex min-h-96 flex-1 items-center justify-center overflow-hidden lg:min-h-0 lg:pb-28"
 			>
 				<div
 					ref={containerRef}

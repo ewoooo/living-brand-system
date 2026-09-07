@@ -34,6 +34,7 @@ export function GraphicSidebar({
 	const { right: rightGroups } = splitControllerGroups(
 		config.controller.groups,
 		config.controller.left,
+		config.controller.right,
 	)
 	const format = output.draft?.format
 	const video = format === 'mp4' ? config.output.video?.mp4 : undefined

@@ -41,6 +41,16 @@ export type StudioRuntimeManifest = {
 		 */
 		left?: readonly string[]
 		/**
+		 * 오른쪽 패널에 세울 컨트롤 id — 창작자가 다룰 수는 있으나 다루리라 기대하지 않는 축이다.
+		 *
+		 * 🔑 **여기에도 `left`에도 없는 컨트롤은 창작자 화면에 그려지지 않는다.** 선언은 남아 있어
+		 *    manager가 Payload에서 조정할 수 있다 — 지우는 것이 아니라 후처리 자리로 내리는 것이다.
+		 *
+		 * 🔴 비워 두면 `left`가 아닌 전부가 오른쪽이다. 아직 정하지 않은 런타임의 축이 조용히
+		 *    사라지지 않게 한다 — 빈 배열은 「오른쪽에 아무것도 세우지 않는다」는 뜻이다.
+		 */
+		right?: readonly string[]
+		/**
 		 * 값이 바뀌면 런타임을 **다시 만들어야** 하는 컨트롤 id.
 		 *
 		 * 대부분의 컨트롤은 uniform 하나를 바꾸므로 살아 있는 런타임에 흘려 넣으면 된다. 그런데
@@ -87,6 +97,16 @@ export type ControllerOption<Value extends string = string> = {
 	 * 한 control의 선택지는 전부 갖거나 전부 없어야 한다 — 섞이면 색 칩과 글자 목록이 반쪽으로 그려진다.
 	 */
 	colors?: readonly string[]
+	/**
+	 * 이 선택지가 곧 형태일 때 그 형태를 그리는 선분 목록. 한 선분은 단위 정사각형(0~1) 안의
+	 * `[x1, y1, x2, y2]`이고, 킷이 그것을 SVG로 그려 썸네일을 만든다.
+	 *
+	 * 🔑 이미지가 아니라 **좌표**인 이유: 파일을 두면 이 축이 admin 업로드에 묶여 환경마다 달라지고,
+	 * 아이콘 이름을 두면 킷이 런타임의 어휘를 알아야 한다. 좌표는 런타임이 자기 기하를 그대로
+	 * 적는 것이라 둘 다 피한다.
+	 * `colors`와 마찬가지로 한 control의 선택지는 전부 갖거나 전부 없어야 한다.
+	 */
+	preview?: readonly (readonly [number, number, number, number])[]
 }
 
 type ControllerControlBase = {
@@ -151,26 +171,79 @@ export type ControllerGroupDefinition = {
 }
 
 /**
+ * 창작자에게 **보이는** 축만 남긴다 — 좌·우를 한 자리에 이어 그리는 화면이 쓴다.
+ *
+ * 🔑 `splitControllerGroups`로 가른 뒤 두 벌을 잇지 **않는다.** 한 그룹의 컨트롤이 좌·우로
+ *    갈려 있으면 같은 제목의 섹션이 두 번 그려진다. 여기서는 원래 그룹 순서·컨트롤 순서를
+ *    유지하며 걸러내므로 그 일이 없다. 보임 규칙은 `splitControllerGroups`와 같은 것이다.
+ */
+export function visibleControllerGroups(
+	groups: readonly ControllerGroupDefinition[],
+	left: readonly string[] | undefined,
+	right?: readonly string[],
+): readonly ControllerGroupDefinition[] {
+	// 선언이 반쪽이면 전부 보인다 — 선언하지 않은 런타임의 화면이 비지 않게 한다.
+	if (!left || !right) return groups
+	const visible = new Set([...left, ...right])
+	return groups
+		.map((group) => ({
+			...group,
+			controls: group.controls.filter((control) => visible.has(control.id)),
+		}))
+		.filter((group) => group.controls.length > 0)
+}
+
+/**
+ * 셰이더 프로그램을 갈아끼우는 축들의 지문.
+ *
+ * 🔴 대부분의 컨트롤은 살아 있는 런타임에 흘려 넣으면 되지만, 「모양」처럼 프로그램 자체를
+ *    바꾸는 축은 update로 반영되지 않는다 — 컴파일된 프로그램에 없는 uniform은 조용히 무시되고
+ *    화면만 옛 모양으로 남는다. 어느 컨트롤이 그런지는 런타임이 `remountOn`으로 선언한다.
+ * 🔑 문자열인 이유는 effect 의존성이라 값 비교가 되어야 하기 때문이다.
+ * 🔴 런타임을 세우는 화면이 둘 이상이므로(Graphic 캔버스·Template 배경) 지문 계산이 한 곳에 있어야
+ *    한다 — 한쪽만 갖고 있으면 그쪽 화면에서만 모양이 갈린다.
+ */
+export function controllerRemountKey(
+	remountOn: readonly string[] | undefined,
+	values: ControllerValues,
+): string {
+	return (remountOn ?? []).map((id) => `${id}=${String(values[id])}`).join('&')
+}
+
+/**
  * 그룹을 왼쪽/오른쪽 두 벌로 가른다. 그룹 구조는 양쪽에서 그대로 유지되고,
  * 남는 컨트롤이 없는 그룹은 그 쪽에서 빠진다.
  *
+ * 🔑 **어느 쪽에도 없는 컨트롤은 어느 쪽에도 그려지지 않는다** — 선언은 남으므로 manager는
+ *    Payload에서 그 값을 조정할 수 있다. 창작자 화면에서만 내려가는 세 번째 층이다.
+ *
  * 🔴 `left`가 없으면 전부 왼쪽이다 — 선언하지 않은 런타임의 화면이 비지 않게 한다.
+ * 🔴 `right`가 없으면 왼쪽이 아닌 전부가 오른쪽이다. 빈 배열은 그것과 다르다 —
+ *    「오른쪽에 아무것도 세우지 않는다」는 뜻이다.
  */
 export function splitControllerGroups(
 	groups: readonly ControllerGroupDefinition[],
 	left: readonly string[] | undefined,
+	right?: readonly string[],
 ): { left: readonly ControllerGroupDefinition[]; right: readonly ControllerGroupDefinition[] } {
 	if (!left) return { left: groups, right: [] }
-	const keep = new Set(left)
-	const pick = (wanted: boolean) =>
+	const leftIds = new Set(left)
+	const rightIds = right && new Set(right)
+	const pick = (side: 'left' | 'right') =>
 		groups
 			.map((group) => ({
 				...group,
-				controls: group.controls.filter((control) => keep.has(control.id) === wanted),
+				controls: group.controls.filter((control) =>
+					side === 'left'
+						? leftIds.has(control.id)
+						: rightIds
+							? rightIds.has(control.id)
+							: !leftIds.has(control.id),
+				),
 			}))
 			.filter((group) => group.controls.length > 0)
 
-	return { left: pick(true), right: pick(false) }
+	return { left: pick('left'), right: pick('right') }
 }
 
 export type ControllerGroupPresentation = {
@@ -230,7 +303,7 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	parseStudioArtifactCapabilities(config.artifacts)
 
 	const controller = asRecord(config.controller, 'controller')
-	assertOnlyKeys(controller, ['groups', 'left', 'remountOn'], 'controller')
+	assertOnlyKeys(controller, ['groups', 'left', 'remountOn', 'right'], 'controller')
 	if (!Array.isArray(controller.groups)) invalid('controller.groups', '배열이어야 합니다.')
 
 	const groupIds = new Set<string>()
@@ -251,6 +324,8 @@ export function parseStudioControllerConfig(input: unknown): StudioControllerCon
 	}
 	if (controller.left !== undefined)
 		validateControlIdList(controller.left, controlIds, 'controller.left')
+	if (controller.right !== undefined)
+		validateControlIdList(controller.right, controlIds, 'controller.right')
 	if (controller.remountOn !== undefined)
 		validateControlIdList(controller.remountOn, controlIds, 'controller.remountOn')
 	if (config.controllerPresentation !== undefined) {
@@ -349,6 +424,27 @@ export function applyControllerRestrictions(
 			)
 		}
 		restrictionsById.set(control.controlId, control)
+	}
+
+	// 🔴 팔레트가 있는 색 조합 그룹의 색 칸에는 「허용 색」을 걸 수 없다. 걸면 그 칸이 띠에서 빠져
+	//    팔레트 칩이 채울 짝을 잃고 — 칩은 눌리고 선택 링도 옮겨가는데 색과 화면이 하나도 안 바뀌는
+	//    조용한 사망이 된다. 창작자 화면에서 조용히 죽는 대신 admin 저장에서 거부한다.
+	for (const group of baseGroups) {
+		const hasPalette = group.controls.some(
+			(control) =>
+				control.kind === 'select' &&
+				control.options.every((option) => option.colors?.length),
+		)
+		if (!hasPalette) continue
+		const restricted = group.controls.find(
+			(control) =>
+				control.kind === 'color' && restrictionsById.get(control.id)?.colorValues?.length,
+		)
+		if (restricted) {
+			throw new Error(
+				`색 조합 그룹의 색 칸에는 허용 색을 지정할 수 없습니다: ${restricted.id}`,
+			)
+		}
 	}
 
 	return baseGroups.map((group) => ({
@@ -544,16 +640,21 @@ function validateControl(value: unknown, path: string) {
 			}
 			const optionValues = new Set<string>()
 			let colorOptionCount = 0
+			let previewOptionCount = 0
 			for (const [optionIndex, optionValue] of control.options.entries()) {
 				const optionPath = `${path}.options[${optionIndex}]`
 				const option = asRecord(optionValue, optionPath)
-				assertOnlyKeys(option, ['value', 'label', 'colors'], optionPath)
+				assertOnlyKeys(option, ['colors', 'label', 'preview', 'value'], optionPath)
 				assertNonEmptyString(option.value, `${optionPath}.value`)
 				assertNonEmptyString(option.label, `${optionPath}.label`)
 				// 색 조합 선택지 — 형식·중복 규칙은 color control의 팔레트와 같은 것을 쓴다.
 				if (option.colors !== undefined) {
 					assertColorValues(option.colors, `${optionPath}.colors`)
 					colorOptionCount += 1
+				}
+				if (option.preview !== undefined) {
+					assertPreviewLines(option.preview, `${optionPath}.preview`)
+					previewOptionCount += 1
 				}
 				if (optionValues.has(option.value)) {
 					invalid(`${optionPath}.value`, `중복되었습니다: ${option.value}`)
@@ -563,6 +664,9 @@ function validateControl(value: unknown, path: string) {
 			// 부분 선언은 막는다 — 일부만 색이면 칩 그리드도 목록도 되지 못하고 반쪽으로 그려진다.
 			if (colorOptionCount > 0 && colorOptionCount < control.options.length) {
 				invalid(`${path}.options`, 'colors는 모든 선택지에 있거나 없어야 합니다.')
+			}
+			if (previewOptionCount > 0 && previewOptionCount < control.options.length) {
+				invalid(`${path}.options`, 'preview는 모든 선택지에 있거나 없어야 합니다.')
 			}
 			if (control.defaultValue !== null && !optionValues.has(control.defaultValue)) {
 				invalid(`${path}.defaultValue`, 'options에 포함되어야 합니다.')
@@ -965,7 +1069,7 @@ function asRecord(value: unknown, path: string): Record<string, unknown> {
  * 🔴 **없는 id를 통과시키면 안 된다.** 오타 하나가 「그 컨트롤이 조용히 고급으로 밀린 것」과
  *    구분되지 않고, 화면에서는 컨트롤 하나가 이유 없이 사라진 것으로만 보인다.
  */
-/** 존재하는 control id만 담은 중복 없는 배열인가 — `left`와 `remountOn`이 같은 규칙을 쓴다. */
+/** 존재하는 control id만 담은 중복 없는 배열인가 — `left`·`right`·`remountOn`이 같은 규칙을 쓴다. */
 function validateControlIdList(value: unknown, controlIds: ReadonlySet<string>, field: string) {
 	if (!Array.isArray(value)) invalid(field, '배열이어야 합니다.')
 	const seen = new Set<string>()
@@ -975,6 +1079,21 @@ function validateControlIdList(value: unknown, controlIds: ReadonlySet<string>, 
 		if (seen.has(id)) invalid(path, `중복되었습니다: ${id}`)
 		seen.add(id)
 		if (!controlIds.has(id)) invalid(path, `존재하지 않는 control id입니다: ${id}`)
+	}
+}
+
+/** 단위 정사각형(0~1) 안의 선분 목록인가 — 밖으로 나가면 썸네일이 잘려 무엇인지 안 읽힌다. */
+function assertPreviewLines(value: unknown, path: string) {
+	if (!Array.isArray(value) || value.length === 0) invalid(path, '하나 이상의 선분이 필요합니다.')
+	for (const [index, line] of value.entries()) {
+		const linePath = `${path}[${index}]`
+		if (!Array.isArray(line) || line.length !== 4)
+			invalid(linePath, '[x1, y1, x2, y2] 네 값이어야 합니다.')
+		for (const coordinate of line) {
+			if (typeof coordinate !== 'number' || !Number.isFinite(coordinate))
+				invalid(linePath, '좌표는 유한한 숫자여야 합니다.')
+			if (coordinate < 0 || coordinate > 1) invalid(linePath, '좌표는 0~1이어야 합니다.')
+		}
 	}
 }
 

@@ -5,6 +5,7 @@ import {
 	acceptsControllerExecutionValues,
 	applyControllerRestrictions,
 	type ControllerGroupDefinition,
+	controllerRemountKey,
 	createControllerValues,
 	isControllerPadValue,
 	parseStudioControllerConfig,
@@ -12,6 +13,7 @@ import {
 	resolveControllerPresentation,
 	splitControllerGroups,
 	toStudioPreviewImage,
+	visibleControllerGroups,
 } from './controller-definition'
 
 describe('splitControllerGroups', () => {
@@ -66,6 +68,87 @@ describe('splitControllerGroups', () => {
 		expect(split.right.map((group) => group.id)).toEqual(['palette', 'position'])
 	})
 
+	it('🔴 보이는 축만 남긴다 — 좌·우 어디에도 없는 축은 admin 전용이다', () => {
+		// 좌·우를 한 자리에 이어 그리는 화면(Template 배경)이 쓰는 갈래다.
+		const visible = visibleControllerGroups(groups, ['rayColor1'], ['sourceOffsetX'])
+
+		expect(visible.map((group) => [group.id, group.controls.map((c) => c.id)])).toEqual([
+			['palette', ['rayColor1']],
+			['position', ['sourceOffsetX']],
+		])
+	})
+
+	it('🔴 한 그룹이 좌·우로 갈려도 제목이 두 번 그려지지 않는다', () => {
+		// splitControllerGroups의 두 벌을 이어 붙이면 같은 제목이 두 번 나온다 — 그래서 별 갈래다.
+		const visible = visibleControllerGroups(groups, ['rayColor1'], ['rayColor2'])
+
+		expect(visible.map((group) => group.title)).toEqual(['Ray Palette'])
+		expect(visible[0]?.controls.map((c) => c.id)).toEqual(['rayColor1', 'rayColor2'])
+	})
+
+	it('선언이 반쪽이면 전부 보인다 — 안 정한 런타임의 화면이 비면 안 된다', () => {
+		expect(visibleControllerGroups(groups, undefined, ['sourceOffsetX'])).toEqual(groups)
+		expect(visibleControllerGroups(groups, ['rayColor1'], undefined)).toEqual(groups)
+	})
+
+	it('🔴 색 조합 그룹의 색 칸에 허용 색을 걸면 admin 저장에서 거부한다', () => {
+		// 걸면 그 칸이 띠에서 빠져 팔레트 칩이 채울 짝을 잃는다 — 칩은 눌리는데 색이 안 바뀐다.
+		const paletteGroups: readonly ControllerGroupDefinition[] = [
+			{
+				id: 'palette',
+				title: 'Ray Palette',
+				controls: [
+					{
+						id: 'palette',
+						kind: 'select',
+						label: '팔레트',
+						defaultValue: 'green',
+						options: [
+							{ value: 'green', label: '그린', colors: ['#000000', '#ffffff'] },
+						],
+					},
+					{
+						id: 'rayColor1',
+						label: '광선 색상 1',
+						kind: 'color',
+						defaultValue: '#ffffff',
+					},
+					{
+						id: 'rayColor2',
+						label: '광선 색상 2',
+						kind: 'color',
+						defaultValue: '#000000',
+					},
+				],
+			},
+		]
+
+		expect(() =>
+			applyControllerRestrictions(paletteGroups, {
+				controls: [{ controlId: 'rayColor1', colorValues: ['#ffffff', '#000000'] }],
+			}),
+		).toThrow(/허용 색을 지정할 수 없습니다: rayColor1/)
+
+		// 색이 아닌 축의 제한은 그대로 통과한다 — 팔레트를 못 쓰게 만드는 것만 막는다.
+		expect(() =>
+			applyControllerRestrictions(paletteGroups, {
+				controls: [{ controlId: 'palette', defaultValue: 'green' }],
+			}),
+		).not.toThrow()
+	})
+
+	it('🔴 재마운트 지문은 remountOn 축만 담는다 — 두 화면이 같은 값을 봐야 한다', () => {
+		const values = { shape: 'vertical', rayIntensity: 0.9 }
+
+		expect(controllerRemountKey(['shape'], values)).toBe('shape=vertical')
+		// 선언이 없으면 지문이 비어 재마운트가 걸리지 않는다.
+		expect(controllerRemountKey(undefined, values)).toBe('')
+		// 지문 밖의 축이 바뀌어도 문자열이 같아야 한다(살아 있는 런타임에 흘려 넣는 값이다).
+		expect(controllerRemountKey(['shape'], { ...values, rayIntensity: 0.1 })).toBe(
+			'shape=vertical',
+		)
+	})
+
 	it('한 그룹이 양쪽으로 갈려도 각자 자기 제목을 지킨다', () => {
 		const split = splitControllerGroups(groups, ['rayColor1', 'sourceOffsetX'])
 
@@ -76,6 +159,26 @@ describe('splitControllerGroups', () => {
 		expect(split.right.map((group) => [group.title, group.controls.length])).toEqual([
 			['Ray Palette', 1],
 		])
+	})
+	it('🔴 어느 쪽에도 없는 컨트롤은 어느 쪽에도 그려지지 않는다 — admin 전용 층', () => {
+		const split = splitControllerGroups(groups, ['rayColor1'], ['sourceOffsetX'])
+
+		expect(split.left.flatMap((group) => group.controls.map((c) => c.id))).toEqual([
+			'rayColor1',
+		])
+		expect(split.right.flatMap((group) => group.controls.map((c) => c.id))).toEqual([
+			'sourceOffsetX',
+		])
+		// rayColor2는 두 목록에 없다 — 선언은 남지만 창작자 화면에는 서지 않는다.
+	})
+
+	it('오른쪽 빈 배열과 미선언은 다르다 — 하나는 아무것도, 하나는 나머지 전부', () => {
+		expect(splitControllerGroups(groups, ['rayColor1'], []).right).toEqual([])
+		expect(
+			splitControllerGroups(groups, ['rayColor1'], undefined).right.flatMap((group) =>
+				group.controls.map((c) => c.id),
+			),
+		).toEqual(['rayColor2', 'sourceOffsetX'])
 	})
 })
 

@@ -110,8 +110,10 @@ export default defineGraphicRuntime({
 		 * 🔴 나머지 컨트롤은 **선언에서 빼기만 한다.** 지우지 않는다 — 창작자에게 감추더라도
 		 *    manager는 Payload에서 그 값을 조정할 수 있어야 한다.
 		 */
-		// 왼쪽은 색 조합과 형태 — 방향과 시점이 그림을 통째로 바꾼다. 간격·기준점은 수치라 오른쪽이다.
+		// 왼쪽은 색 조합과 형태 — 방향과 시점이 그림을 통째로 바꾼다.
 		left: ['direction', 'viewpoint', 'colorway'],
+		// 오른쪽은 공용 4축 — 이 런타임은 정지 그래픽이라 속도가 없다.
+		right: ['columnGap', 'rowGap', 'variableWeight', 'minWeight', 'maxWeight', 'origin'],
 		groups: [
 			{
 				id: 'direction',
