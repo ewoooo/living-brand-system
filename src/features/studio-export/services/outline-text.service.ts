@@ -140,13 +140,76 @@ export async function outlineTextRun({
 			const placed = glyph.path
 				.translate(advance / scale + (position.xOffset ?? 0), position.yOffset ?? 0)
 				.scale(scale, -scale)
-			const d = placed.toSVG()
+			const d = pathToCubicSvg(placed)
 			if (d) parts.push(d)
 			advance += position.xAdvance * scale + letterSpacing
 		})
 	}
 
 	return { outlined: true, d: parts.join(' '), width: advance, family }
+}
+
+/** 소수 둘째 자리. 이 path는 이미 px로 줄여 놓았으니 0.01px은 인쇄 해상도 아래다. */
+function round(value: number): string {
+	return String(Math.round(value * 100) / 100)
+}
+
+/**
+ * 글립 path를 **3차 곡선만 쓰는** SVG `d`로 적는다.
+ *
+ * 🔴 `path.toSVG()`를 쓰면 안 된다. TrueType 글립은 전부 2차 곡선이라 `Q`가 나오는데,
+ *    pdf-lib의 `drawSvgPath`는 `Q`를 PDF `v` 연산자로 내보낸다. `v`는 **첫 제어점을 현재점으로
+ *    대체**하는 연산자라 (P0, Q, E)가 (P0, P0, Q, E)로 찍힌다 — 곡선이 한쪽으로 눌리고 시작점에
+ *    각이 생긴다. Pretendard 글립 하나에 `Q`가 48개다. 같은 씬의 SVG는 `Q`를 그대로 실어 정상이라
+ *    SVG와 PDF를 나란히 열면 글자 모양이 서로 다르다.
+ * 🔑 2차→3차는 근사가 아니라 **정확 변환**이다: C1 = P0 + ⅔(Q−P0), C2 = E + ⅔(Q−E).
+ */
+export function pathToCubicSvg(path: {
+	commands: readonly { command: string; args: readonly number[] }[]
+}): string {
+	const parts: string[] = []
+	let x = 0
+	let y = 0
+	// closePath는 현재점을 그 subpath 시작으로 되돌린다.
+	let startX = 0
+	let startY = 0
+
+	for (const { command, args } of path.commands) {
+		switch (command) {
+			case 'moveTo':
+				;[x, y] = [args[0], args[1]]
+				;[startX, startY] = [x, y]
+				parts.push(`M${round(x)} ${round(y)}`)
+				break
+			case 'lineTo':
+				;[x, y] = [args[0], args[1]]
+				parts.push(`L${round(x)} ${round(y)}`)
+				break
+			case 'quadraticCurveTo': {
+				const [qx, qy, ex, ey] = args
+				const c1x = x + (2 / 3) * (qx - x)
+				const c1y = y + (2 / 3) * (qy - y)
+				const c2x = ex + (2 / 3) * (qx - ex)
+				const c2y = ey + (2 / 3) * (qy - ey)
+				parts.push(
+					`C${round(c1x)} ${round(c1y)} ${round(c2x)} ${round(c2y)} ${round(ex)} ${round(ey)}`,
+				)
+				;[x, y] = [ex, ey]
+				break
+			}
+			case 'bezierCurveTo':
+				parts.push(
+					`C${round(args[0])} ${round(args[1])} ${round(args[2])} ${round(args[3])} ${round(args[4])} ${round(args[5])}`,
+				)
+				;[x, y] = [args[4], args[5]]
+				break
+			case 'closePath':
+				parts.push('Z')
+				;[x, y] = [startX, startY]
+				break
+		}
+	}
+	return parts.join('')
 }
 
 /**

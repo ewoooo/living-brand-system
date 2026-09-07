@@ -37,9 +37,10 @@ describe('pngToCmykJpeg', () => {
 
 		const bare = await pngToCmykJpeg(png, icc)
 		expect(bare).not.toBeNull()
+		// 🔑 대조본은 `pngToCmykJpeg`와 **같은 순서**여야 한다 — `toColourspace('cmyk')`를 앞에
+		//    넣으면 이중 변환이 되어 픽셀 자체가 달라진다(그 자체가 별개의 결함이었다).
 		const attached = await sharp(png)
 			.flatten({ background: '#ffffff' })
-			.toColourspace('cmyk')
 			.withIccProfile(icc)
 			.jpeg({ chromaSubsampling: '4:4:4', quality: 100 })
 			.toBuffer()

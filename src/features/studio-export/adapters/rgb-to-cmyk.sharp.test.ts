@@ -22,6 +22,22 @@ describe('convertRgbToCmyk', () => {
 		expect(green?.y).toBeGreaterThan(0.9)
 	})
 
+	/**
+	 * 🔴 `toColourspace('cmyk')`를 먼저 부르면 ICC가 그 CMYK를 또 변환한다(이중 변환).
+	 * 그러면 브랜드 색에 검정이 얹혀 탁해진다 — HD 그린이 K2 대신 K11.8이었다.
+	 */
+	it('브랜드 색에 검정이 얹히지 않는다', async () => {
+		const map = await convertRgbToCmyk(['#00ad45', '#003087'], icc)
+		expect(map.get('#00ad45')?.k).toBeLessThan(0.05)
+		expect(map.get('#003087')?.k).toBeLessThan(0.32)
+	})
+
+	/** 이중 변환은 어두운 톤을 한 값으로 뭉갰다 — #000000과 #1a1a1a가 완전히 같아졌다. */
+	it('어두운 톤끼리 구분이 남는다', async () => {
+		const map = await convertRgbToCmyk(['#1a1a1a', '#262626'], icc)
+		expect(map.get('#1a1a1a')).not.toEqual(map.get('#262626'))
+	})
+
 	it('총 잉크량이 프로파일 상한(300%)을 넘지 않는다', async () => {
 		const map = await convertRgbToCmyk(['#000000', '#003087', '#00ad45', '#333333'], icc)
 		for (const ink of map.values()) {

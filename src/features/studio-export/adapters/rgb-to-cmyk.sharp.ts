@@ -24,13 +24,20 @@ export async function convertRgbToCmyk(
 		rgb[index * 3 + 2] = value & 255
 	})
 
-	const converted = await sharp(rgb, {
+	// 🔴 `toColourspace('cmyk')`를 먼저 부르면 sharp가 자체 변환으로 CMYK를 만들고 ICC가 그것을
+	//    **또** 변환한다(이중 변환). 실측: HD 그린 #00ad45가 K2가 아니라 K11.8이 되어 탁해지고,
+	//    #000000과 #1a1a1a가 완전히 같은 잉크값이 되어 어두운 톤 구분이 사라졌다.
+	const { data: converted, info } = await sharp(rgb, {
 		raw: { channels: 3, height: 1, width: unique.length },
 	})
-		.toColourspace('cmyk')
 		.withIccProfile(icc)
 		.raw()
-		.toBuffer()
+		.toBuffer({ resolveWithObject: true })
+	// 🔴 sharp는 ICC 변환 실패를 삼키고 경고만 남긴다 — 그러면 3채널 sRGB가 그대로 나오는데
+	//    아래 인덱싱이 `*4`를 가정하므로 조용히 NaN 잉크가 된다. 인쇄물은 되돌릴 수 없다.
+	if (info.channels !== 4) {
+		throw new Error(`CMYK 변환이 4채널을 내지 않았습니다: ${info.channels}채널`)
+	}
 
 	return new Map(
 		unique.map((hex, index) => {
