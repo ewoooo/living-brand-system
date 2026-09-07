@@ -38,7 +38,10 @@ function serialize(primitive: VectorPrimitive, indent: string, path: string): st
 		case 'circle':
 			return `${indent}<circle cx="${fixed(primitive.cx)}" cy="${fixed(primitive.cy)}" r="${fixed(primitive.radius)}" fill="${attribute(primitive.fill)}" />`
 		case 'rect':
-			return `${indent}<rect x="${fixed(primitive.x)}" y="${fixed(primitive.y)}" width="${fixed(primitive.width)}" height="${fixed(primitive.height)}"${optional('rx', primitive.radius)}${optionalText('fill', primitive.fill)}${optionalText('stroke', primitive.stroke)}${optional('stroke-width', primitive.strokeWidth)}${optional('opacity', primitive.opacity)} />`
+			// 🔴 `fill`이 없으면 속성을 빼는 게 아니라 `none`을 적는다 — SVG 기본값이 검정이라,
+			//    테두리만 있어야 할 프레임이 검은 덩어리로 채워져 아래 내용을 덮었다.
+			//    PDF 어댑터는 색이 undefined면 안 칠하므로 원래부터 정상이었다.
+			return `${indent}<rect x="${fixed(primitive.x)}" y="${fixed(primitive.y)}" width="${fixed(primitive.width)}" height="${fixed(primitive.height)}"${optional('rx', primitive.radius)} fill="${attribute(primitive.fill ?? 'none')}"${optionalText('stroke', primitive.stroke)}${optional('stroke-width', primitive.strokeWidth)}${optional('opacity', primitive.opacity)} />`
 		case 'text':
 			return `${indent}<text x="${fixed(primitive.x)}" y="${fixed(primitive.y)}" font-family="${attribute(primitive.fontFamily)}" font-size="${fixed(primitive.fontSize)}"${optionalInt('font-weight', primitive.fontWeight)}${optional('letter-spacing', primitive.letterSpacing)} fill="${attribute(primitive.fill)}"${optionalText('text-anchor', primitive.textAnchor)}${optional('opacity', primitive.opacity)}>${text(primitive.text)}</text>`
 		case 'image':

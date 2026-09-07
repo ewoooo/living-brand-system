@@ -95,6 +95,23 @@ describe('vectorSceneToSvg', () => {
 		expect(svg).toContain(
 			'<rect x="10.00" y="20.00" width="30.00" height="40.00" rx="4.00" fill="#eeeeee" />',
 		)
+		// 🔴 fill이 없으면 SVG 기본값이 검정이다 — 테두리만 있어야 할 상자가 검게 채워졌다.
+		expect(
+			vectorSceneToSvg(
+				{
+					kind: 'vector',
+					source: {
+						width: 10,
+						height: 10,
+						background: '#ffffff',
+						primitives: [
+							{ kind: 'rect', x: 0, y: 0, width: 5, height: 5, stroke: '#000000' },
+						],
+					},
+				} as const,
+				300,
+			),
+		).toContain('fill="none"')
 		// 🔴 `xlink:href`가 없으면 Illustrator에서 사진이 통째로 안 보인다 — 둘 다 적는다.
 		expect(svg).toContain(
 			'xlink:href="data:image/png;base64,AAA" href="data:image/png;base64,AAA" preserveAspectRatio="none"',

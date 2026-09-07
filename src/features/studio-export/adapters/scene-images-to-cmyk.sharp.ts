@@ -65,7 +65,11 @@ async function toCmykJpeg(href: string, icc: string): Promise<string | null> {
 		if (hasAlpha) return null
 		const output = await image
 			.toColourspace('cmyk')
-			.withIccProfile(icc)
+			// 🔴 프로파일을 JPEG에 첨부하지 않는다 — 이 JPEG은 PDF 안으로만 들어가고, 프로파일은
+			//    PDF의 `/ColorSpace`(ICCBased)가 이미 문서에 한 벌 싣는다. 첨부하면 같은 3.46MB가
+			//    이미지마다 또 붙는다. 실측: 64×64 한 장이 241바이트 → 3,463,511바이트.
+			//    APP2 세그먼트만 빠지고 나머지 바이트는 완전히 동일하다(픽셀 안 바뀐다).
+			.withIccProfile(icc, { attach: false })
 			.jpeg({ chromaSubsampling: '4:4:4', quality: 95 })
 			.toBuffer()
 		return `data:image/jpeg;base64,${output.toString('base64')}`
