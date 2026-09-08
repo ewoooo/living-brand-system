@@ -1,7 +1,11 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 import { Typography } from '@/components/ui/typography'
-import type { BrandColor, BrandColorGroup } from '@/payload-types'
+import type {
+	BrandColor,
+	BrandColorGroup,
+	HdColorPaletteWidget as HdColorPaletteWidgetRow,
+} from '@/payload-types'
 import { HdColorPaletteView, type PaletteLayout, type PaletteSwatch } from './view'
 
 // 위젯(서버): brand-color-groups를 조회해 색을 한 줄로 늘어놓는다. 인터랙션(복사·hover)은 클라 뷰가 맡는다.
@@ -94,4 +98,7 @@ export async function HdColorPaletteWidget({
 	)
 }
 
-export default HdColorPaletteWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function HdColorPaletteDisplay({ display }: { display: HdColorPaletteWidgetRow }) {
+	return <HdColorPaletteWidget groups={display.groups} layout={display.layout} />
+}

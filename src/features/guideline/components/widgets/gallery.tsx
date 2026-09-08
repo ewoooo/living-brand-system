@@ -16,7 +16,7 @@ import { LogoBgPickerWidget } from '@/features/guideline/cards/displays/dynamics
 import { LogoColorVariantWidget } from '@/features/guideline/cards/displays/dynamics/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/cards/displays/dynamics/logo-display/component'
 import { LogoOnBackgroundWidget } from '@/features/guideline/cards/displays/dynamics/logo-on-background/component'
-import { PresetPanelDisplay } from '@/features/guideline/cards/displays/dynamics/preset-panel/component'
+import { PresetPanel } from '@/features/guideline/cards/displays/dynamics/preset-panel/component'
 import { StemClearSpaceWidget } from '@/features/guideline/cards/displays/dynamics/stem-clear-space/component'
 import { TypeHierarchyWidget } from '@/features/guideline/cards/displays/dynamics/type-hierarchy/component'
 import { TypeLanguageWidget } from '@/features/guideline/cards/displays/dynamics/type-language/component'
@@ -124,7 +124,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 			name: 'preset-panel (컬러 프리셋)',
 			node: (
 				<div className="relative aspect-video overflow-hidden rounded-3xl bg-muted">
-					<PresetPanelDisplay preset="overlay-stack" logo={koLogo} />
+					<PresetPanel preset="overlay-stack" logo={koLogo} />
 				</div>
 			),
 		},
@@ -132,7 +132,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 			name: 'preset-panel (타이포 프리셋)',
 			node: (
 				<div className="relative aspect-video overflow-hidden rounded-3xl bg-muted">
-					<PresetPanelDisplay preset="slanted" />
+					<PresetPanel preset="slanted" />
 				</div>
 			),
 		},

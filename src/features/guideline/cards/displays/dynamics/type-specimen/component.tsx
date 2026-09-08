@@ -122,8 +122,6 @@ export function TypeSpecimenWidget() {
 	)
 }
 
-export default TypeSpecimenWidget
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<div className="flex flex-col gap-2">
@@ -133,4 +131,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 			{children}
 		</div>
 	)
+}
+
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+// 자족 렌더 위젯 — 행의 필드를 읽지 않는다.
+export default function TypeSpecimenDisplay() {
+	return <TypeSpecimenWidget />
 }

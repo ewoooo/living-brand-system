@@ -1,3 +1,4 @@
+import type { TypeWeightWidget as TypeWeightWidgetRow } from '@/payload-types'
 import {
 	AVAILABLE_WEIGHTS,
 	BRAND_FONT_STACK,
@@ -108,4 +109,13 @@ function TypeWeightSpecimen({ lang, weightKey }: { lang: LanguageKey; weightKey:
 	)
 }
 
-export default TypeWeightWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function TypeWeightDisplay({ display }: { display: TypeWeightWidgetRow }) {
+	return (
+		<TypeWeightWidget
+			layout={display.layout}
+			language={display.language}
+			initialWeight={display.initialWeight}
+		/>
+	)
+}

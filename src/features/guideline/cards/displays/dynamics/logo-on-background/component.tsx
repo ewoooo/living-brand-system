@@ -1,6 +1,6 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { BrandColorGroup } from '@/payload-types'
+import type { BrandColorGroup, LogoOnBgWidget as LogoOnBgWidgetRow } from '@/payload-types'
 import { toBrandBackgrounds } from '../brand-background'
 import { type LogoRef, resolveLogoSet } from '../logo-set'
 import { LogoOnBackgroundView } from './view'
@@ -54,4 +54,9 @@ async function firstGroup(
 	return docs[0] ?? null
 }
 
-export default LogoOnBackgroundWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function LogoOnBackgroundDisplay({ display }: { display: LogoOnBgWidgetRow }) {
+	return (
+		<LogoOnBackgroundWidget group={display.group} logo={display.logo} column={display.column} />
+	)
+}

@@ -1,4 +1,5 @@
-import type { Block, Field } from 'payload'
+import type { Field } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 import { CI_LOCKUP_CONTROL_IDS, CI_LOCKUP_CONTROLS } from './manifest'
 
 // CI 락업 조립 위젯 — Block children에 등록되는 인터랙티브 leaf.
@@ -46,11 +47,13 @@ function initialValueField(control: (typeof CI_LOCKUP_CONTROLS)[number]): Field 
 	}
 }
 
-export const CiLockupWidget: Block = {
-	slug: 'ciLockupWidget',
+export const ciLockup = defineDisplay({
+	id: 'ciLockupWidget',
+	type: 'dynamic',
 	dbName: 'cil',
-	interfaceName: 'CiLockupWidget',
-	labels: { singular: 'CI 락업 위젯', plural: 'CI 락업 위젯' },
+	name: 'CI 락업',
+	description:
+		'꼴·언어·표현을 admin 고정값으로 정한 CI 락업 판. 컨트롤러 연결은 카드에서 끊겼다.',
 	fields: [
 		...CI_LOCKUP_CONTROLS.map(initialValueField),
 		{
@@ -74,6 +77,6 @@ export const CiLockupWidget: Block = {
 			},
 		},
 	],
-}
+})
 
-export default CiLockupWidget
+export default ciLockup

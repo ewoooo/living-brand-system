@@ -1,5 +1,6 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
+import type { PresetPanelDisplay as PresetPanelDisplayRow } from '@/payload-types'
 import { type LogoRef, type LogoSources, resolveLogoSet } from '../logo-set'
 import {
 	BAND_OPACITY,
@@ -25,13 +26,7 @@ const LOGO_MAX_HEIGHT = '62%'
  * 여기는 `absolute inset-0`으로 채우기만 한다. 컬러 프리셋만 로고를 얹으므로 그때만 brand-logos를 조회한다.
  * 표현은 SVG-54(COLOR 사용 금지)·Artboard 49(타이포)의 판을 따른다.
  */
-export async function PresetPanelDisplay({
-	preset,
-	logo,
-}: {
-	preset?: PresetKey | null
-	logo?: LogoRef
-}) {
+export async function PresetPanel({ preset, logo }: { preset?: PresetKey | null; logo?: LogoRef }) {
 	if (!preset) return null
 	const color = colorPreset(preset)
 	if (color) {
@@ -149,4 +144,7 @@ function LogoMark({ logo, logos }: { logo: ColorPreset['logo']; logos: LogoSourc
 	)
 }
 
-export default PresetPanelDisplay
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function PresetPanelDisplay({ display }: { display: PresetPanelDisplayRow }) {
+	return <PresetPanel preset={display.preset} logo={display.logo} />
+}

@@ -1,4 +1,4 @@
-import type { Block } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 import { LANGUAGES } from '../brand-typeface'
 
 // 문단 위계 위젯 — Head / Sub / Body 세 단이 규정대로 쌓인 문단을 직접 만져 보는 leaf.
@@ -9,11 +9,12 @@ import { LANGUAGES } from '../brand-typeface'
 // 🔴 배열 필드를 두지 않는다. 중첩 블록의 조회 SQL 별칭이 63자를 넘으면 조인이 조용히 깨진다
 //    (alias-length.test.ts가 지킨다).
 // dbName 짧게(thr)로 중첩 테이블명 63자 방어. enum은 전역 이름 공유라 enumName 명시.
-export const TypeHierarchyWidget: Block = {
-	slug: 'typeHierarchyWidget',
+export const typeHierarchy = defineDisplay({
+	id: 'typeHierarchyWidget',
+	type: 'dynamic',
 	dbName: 'thr',
-	interfaceName: 'TypeHierarchyWidget',
-	labels: { singular: '문단 위계 구성', plural: '문단 위계 구성' },
+	name: '문단 위계 구성',
+	description: '제목·본문·캡션의 위계 표본. 콘텐츠 높이형이라 판 안에서 스크롤된다.',
 	fields: [
 		{
 			// 🔴 옵션은 brand-typeface.ts를 그대로 쓴다 — 언어를 두 곳에 적으면 규정 표에는 있는데
@@ -30,6 +31,6 @@ export const TypeHierarchyWidget: Block = {
 			},
 		},
 	],
-}
+})
 
-export default TypeHierarchyWidget
+export default typeHierarchy

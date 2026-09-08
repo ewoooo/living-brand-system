@@ -1,4 +1,7 @@
-import type { BrandLogo } from '@/payload-types'
+import type {
+	BrandLogo,
+	ClearspaceOverlayWidget as ClearspaceOverlayWidgetRow,
+} from '@/payload-types'
 
 // [임시] 클리어스페이스 오버레이(서버) — 로고 레이어 위에 그리드 레이어를 정확히 겹친다.
 // 두 레이어는 동일 viewBox(px scale 일치)라, 같은 박스에 렌더하면 정합. 배율 = 자기 크기 × (scalePercent/100).
@@ -42,4 +45,17 @@ export function ClearspaceOverlayWidget({
 	)
 }
 
-export default ClearspaceOverlayWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function ClearspaceOverlayDisplay({
+	display,
+}: {
+	display: ClearspaceOverlayWidgetRow
+}) {
+	return (
+		<ClearspaceOverlayWidget
+			logoLayer={display.logoLayer}
+			gridLayer={display.gridLayer}
+			scalePercent={display.scalePercent}
+		/>
+	)
+}

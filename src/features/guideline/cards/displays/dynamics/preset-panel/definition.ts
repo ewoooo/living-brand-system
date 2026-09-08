@@ -1,4 +1,4 @@
-import type { Block } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 import { PRESET_OPTIONS } from './presets'
 
 /**
@@ -7,11 +7,13 @@ import { PRESET_OPTIONS } from './presets'
  * 이 디스플레이를 가진 카드 하나가 됐다(2026-09-08). Do/OK/Don't 표식은 카드가 아니라 블록(`mark`)이 갖는다.
  * dbName 짧게(ppd).
  */
-export const PresetPanelDisplay: Block = {
-	slug: 'presetPanelDisplay',
+export const presetPanel = defineDisplay({
+	id: 'presetPanelDisplay',
+	type: 'dynamic',
 	dbName: 'ppd',
-	interfaceName: 'PresetPanelDisplay',
-	labels: { singular: '프리셋 패널(위반 예시)', plural: '프리셋 패널(위반 예시)' },
+	name: '프리셋 패널(위반 예시)',
+	description:
+		'코드로 그리는 컬러·타이포 위반 예시 판. 옛 Do/Don’t 위젯의 예시 하나가 이 카드 하나다.',
 	fields: [
 		{
 			name: 'preset',
@@ -44,6 +46,6 @@ export const PresetPanelDisplay: Block = {
 			},
 		},
 	],
-}
+})
 
-export default PresetPanelDisplay
+export default presetPanel

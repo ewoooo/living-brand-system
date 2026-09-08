@@ -1,4 +1,4 @@
-import type { Block } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 import { LANGUAGES } from '../brand-typeface'
 
 // 언어별 조판 비교 위젯 — 같은 한 덩어리 본문을 국문 / 영문 / 영문(All Caps)로 갈아 끼우며,
@@ -13,11 +13,12 @@ import { LANGUAGES } from '../brand-typeface'
 //
 // dbName 짧게(tlg). 배열 필드가 없고 slug 18자라 조회 SQL 별칭이 63자 아래로 남는다
 // (alias-length.test.ts가 지킨다).
-export const TypeLanguageWidget: Block = {
-	slug: 'typeLanguageWidget',
+export const typeLanguage = defineDisplay({
+	id: 'typeLanguageWidget',
+	type: 'dynamic',
 	dbName: 'tlg',
-	interfaceName: 'TypeLanguageWidget',
-	labels: { singular: '언어별 조판 비교', plural: '언어별 조판 비교' },
+	name: '언어별 조판 비교',
+	description: '국문·영문 조판을 나란히 비교한다.',
 	fields: [
 		{
 			name: 'initialLanguage',
@@ -48,6 +49,6 @@ export const TypeLanguageWidget: Block = {
 			},
 		},
 	],
-}
+})
 
-export default TypeLanguageWidget
+export default typeLanguage

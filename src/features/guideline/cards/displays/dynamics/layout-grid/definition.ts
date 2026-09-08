@@ -1,4 +1,4 @@
-import type { Block } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 import { GUTTER_X, MARGIN } from './manifest'
 import { SAMPLE_OPTIONS } from './samples'
 
@@ -7,11 +7,12 @@ import { SAMPLE_OPTIONS } from './samples'
 // 🔴 옵션은 samples.ts를 그대로 쓴다 — 키를 두 곳에 적으면 조합만 추가하고 옵션을 빼먹는 사고가 난다.
 //    (samples.ts는 에셋을 import하지 않아 Payload 설정 로딩에서 안전하다.)
 // dbName 짧게(lgw)로 중첩 테이블명 63자 방어.
-export const LayoutGridWidget: Block = {
-	slug: 'layoutGridWidget',
+export const layoutGrid = defineDisplay({
+	id: 'layoutGridWidget',
+	type: 'dynamic',
 	dbName: 'lgw',
-	interfaceName: 'LayoutGridWidget',
-	labels: { singular: '레이아웃 그리드 위젯', plural: '레이아웃 그리드 위젯' },
+	name: '레이아웃 그리드',
+	description: '판형 표본 위의 여백·거터 격자. 컨트롤러 연결은 카드에서 끊겼다.',
 	fields: [
 		{
 			name: 'sample',
@@ -72,6 +73,6 @@ export const LayoutGridWidget: Block = {
 			},
 		},
 	],
-}
+})
 
-export default LayoutGridWidget
+export default layoutGrid

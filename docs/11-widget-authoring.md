@@ -8,8 +8,8 @@
 
 ```
 1. src/features/guideline/cards/displays/dynamics/<kebab-name>/ 생성
-2. schema.ts 작성 — 짧은 dbName 필수
-3. component.tsx 작성 (서버). 인터랙션이 있으면 view.tsx 추가 (클라이언트)
+2. definition.ts 작성 — `defineDisplay({ id, type, dbName, name, description, fields })`. 짧은 dbName 필수
+3. component.tsx 작성 (서버). 기본 export는 `({ display })`를 받는 진입점. 인터랙션이 있으면 view.tsx 추가 (클라이언트)
 4. 등록 2곳을 손으로 고친다 (§3)
 5. /guideline/widgets 에서 렌더 확인
 6. admin에서 섹션 안에 넣어 실제 페이지로 확인
@@ -21,8 +21,8 @@
 
 | 파일 | 역할 | 필수 |
 |---|---|---|
-`schema.ts` | Payload 필드 정의. 짧은 `dbName` 별칭 | ✅ |
-`component.tsx` | 서버 컴포넌트. 관계 해석·URL 계산 후 뷰에 넘김 | ✅ |
+`definition.ts` | 디스플레이 정의 하나 — `defineDisplay({ id, type, dbName, name, description, fields })`. slug·라벨·interfaceName은 여기서 파생된다(`displays/definition.ts`의 `displaySchema`) | ✅ |
+`component.tsx` | 서버 컴포넌트. **기본 export**가 자기 행 `{ display }`를 받아 뷰로 넘기는 진입점이다. 관계 해석·URL 계산은 여기서 끝낸다 | ✅ |
 `view.tsx` | 클라이언트 뷰. 인터랙션이 있을 때만 | 선택 |
 `manifest.ts` | 이 위젯이 여는 **컨트롤 계약** — 범위·초기값·단위·프리미티브 종류(§4.1) | 선택 |
 그 외 (`compositions.ts`·`samples.ts`·`images/`) | 데이터·에셋 분리 | 선택 |
@@ -45,14 +45,14 @@
 
 에셋은 레지스트리 맵의 **키로 참조**합니다(`PHOTOS`·`CI_ART` 같은 맵). 그러면 조합이 문자열만으로 표현됩니다.
 
-🔴 **schema가 참조하는 모듈에는 react·이미지 import를 넣지 마십시오.** `payload.config`는 Node에서 로드되므로 webp/svg import나 react가 섞이면 설정 로딩이 깨집니다. 그래서 조합 키·라벨과 규칙 상수를 별 파일로 뺍니다(`layout-grid/samples.ts`·`manifest.ts`가 그 선례 — 매니페스트는 타입만 `import type`으로 가져옵니다).
+🔴 **definition이 참조하는 모듈에는 react·이미지 import를 넣지 마십시오.** `payload.config`는 Node에서 로드되므로 webp/svg import나 react가 섞이면 설정 로딩이 깨집니다. 그래서 조합 키·라벨과 규칙 상수를 별 파일로 뺍니다(`layout-grid/samples.ts`·`manifest.ts`가 그 선례 — 매니페스트는 타입만 `import type`으로 가져옵니다).
 
 ## 3. 등록 — 손으로 고치는 2곳
 
 | 파일 | 무엇을 등록하나 |
 |---|---|
-`cards/displays/registry.ts` | **`DISPLAYS` 항목**(id·name·description·schema) 추가. 여기 없으면 admin 카드에서 고를 수 없다 |
-`cards/displays/registry.render.tsx` | `DISPLAY_RENDERERS`에 같은 id의 렌더 추가. 빠지면 typecheck가 잡는다 |
+`cards/displays/registry.ts` | `DISPLAYS` 배열에 폴더의 `definition` 추가(순서 = admin 선택기 순서). 여기 없으면 admin 카드에서 고를 수 없다 |
+`cards/displays/registry.render.tsx` | `DISPLAY_COMPONENTS`에 같은 id로 폴더의 기본 export 컴포넌트 추가. 빠지면 typecheck가 잡는다 |
 `components/widgets/gallery.tsx` | `/guideline/widgets` 미리보기 목록 |
 `controllers/registry.ts` | (컨트롤러를 여는 위젯만) `blockType` → 매니페스트 (§4.1) |
 

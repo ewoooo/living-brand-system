@@ -1,6 +1,6 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { BrandColorGroup } from '@/payload-types'
+import type { BrandColorGroup, LogoBgPickerWidget as LogoBgPickerWidgetRow } from '@/payload-types'
 import { toBrandBackgrounds } from '../brand-background'
 import { type LogoRef, resolveLogoSet } from '../logo-set'
 import { LogoBgPickerView } from './view'
@@ -51,4 +51,7 @@ async function firstGroup(
 	return docs[0] ?? null
 }
 
-export default LogoBgPickerWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function LogoBgPickerDisplay({ display }: { display: LogoBgPickerWidgetRow }) {
+	return <LogoBgPickerWidget group={display.group} logo={display.logo} />
+}

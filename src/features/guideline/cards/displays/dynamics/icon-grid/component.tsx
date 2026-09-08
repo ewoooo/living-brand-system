@@ -47,4 +47,8 @@ export async function IconGridWidget() {
 	)
 }
 
-export default IconGridWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+// 자족 렌더 위젯 — 행의 필드를 읽지 않는다.
+export default function IconGridDisplay() {
+	return <IconGridWidget />
+}

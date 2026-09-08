@@ -13,3 +13,5 @@ export function StaticDisplay({ display, alt }: { display: StaticDisplayType; al
 		/>
 	)
 }
+
+export default StaticDisplay

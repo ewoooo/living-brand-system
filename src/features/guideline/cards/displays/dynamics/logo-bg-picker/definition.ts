@@ -1,4 +1,4 @@
-import type { Block } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 
 // 배경색 선택 위젯 — 가로 배경판 하나에 CI 두 표현(기본형/WHITE, 단색분리형)을 나란히 올리고,
 // 구석의 스와치 picker로 배경색을 바꾸면 둘이 동시에 반응한다.
@@ -11,11 +11,12 @@ import type { Block } from 'payload'
 //    (`#DCF5D2`는 기본형 가능, 비슷한 밝기의 `#73D75A`는 불가).
 //
 // dbName 짧게(lbp). slug 18자 → 조회 SQL 별칭 44자(alias-length.test.ts가 지킨다).
-export const LogoBgPickerWidget: Block = {
-	slug: 'logoBgPickerWidget',
+export const logoBgPicker = defineDisplay({
+	id: 'logoBgPickerWidget',
+	type: 'dynamic',
 	dbName: 'lbp',
-	interfaceName: 'LogoBgPickerWidget',
-	labels: { singular: '배경색 선택 위젯', plural: '배경색 선택 위젯' },
+	name: '배경색 선택',
+	description: '배경색을 바꿔 가며 로고 표현을 확인한다.',
 	fields: [
 		{
 			name: 'group',
@@ -38,6 +39,6 @@ export const LogoBgPickerWidget: Block = {
 			},
 		},
 	],
-}
+})
 
-export default LogoBgPickerWidget
+export default logoBgPicker

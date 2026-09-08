@@ -280,7 +280,8 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 | `blocks/shared/base-fields.ts` | 기본 블록 필드(`baseContentFields`)와 슈거용 `presetFields` |
 | `blocks/shared/card-block.tsx` · `card-projection.ts` | 카드 블록 공용 렌더·투영. 각 블록의 3파일은 이것을 부르는 얇은 껍데기 |
 | `cards/schema.ts` | 카드 필드 — 규격 비율, 디스플레이 1개, 캡션(제목·설명). 폭 필드는 없다 |
-| `cards/displays/registry.ts` · `registry.render.tsx` | 디스플레이 레지스트리 — 판에 그릴 수 있는 것은 여기 항목(`id·name·description·schema`) 하나로 정의하고, 렌더는 짝 파일이 같은 id로 갈라 그립니다. 정적 디스플레이 1종 + 프리셋 패널 1종 + 위젯 19종(컨트롤 전용 layout-grid-controls 제외, Do/Don’t 위젯은 2026-09-08에 카드로 대체). 위젯 폴더는 `displays/dynamics/<kebab-name>/`에 있습니다(2026-09-08 이관, 옛 `widgets/`·`leaves/`는 삭제) |
+| `cards/displays/definition.ts` | `DisplayDefinition`(id·type·dbName·name·description·fields)과 `defineDisplay`·`displaySchema` 팩토리 |
+| `cards/displays/registry.ts` · `registry.render.tsx` | 디스플레이 레지스트리 — 각 폴더의 `definition.ts`를 순서대로 모은 `DISPLAYS`와, 같은 id로 폴더의 기본 export 컴포넌트를 모은 `DISPLAY_COMPONENTS`. 정의와 렌더를 파일로 가르는 이유는 정의 쪽을 Payload config가 Node에서 읽기 때문입니다(graphic-runtimes의 definition/runtime.client와 같은 꼴). 정적 디스플레이 1종 + 프리셋 패널 1종 + 위젯 19종(컨트롤 전용 layout-grid-controls 제외, Do/Don’t 위젯은 2026-09-08에 카드로 대체). 위젯 폴더는 `displays/dynamics/<kebab-name>/`에 있습니다(2026-09-08 이관, 옛 `widgets/`·`leaves/`는 삭제) |
 | `cards/displays/static/` | 정적 디스플레이(배경 이미지)의 스키마·컴포넌트 |
 | `cards/caption/` | 캡션 렌더. 설명 richText의 표를 스펙 리스트로 바꾸는 컨버터 자리 |
 

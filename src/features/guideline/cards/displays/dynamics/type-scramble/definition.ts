@@ -1,4 +1,4 @@
-import type { Block } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 
 // 서체 스크램블 뷰어 — 무작위 글자가 흐르다 표본 문구로 굳는다. 규정 설명이 아니라 서체 감상용이다.
 //
@@ -13,11 +13,12 @@ import type { Block } from 'payload'
 // dbName 짧게(tsc)로 중첩 테이블명 63자 방어. enum은 전역 이름 공유라 enumName 명시.
 // 🔴 배열 필드를 두지 않는다 — 배열은 조회 SQL 별칭에 레벨을 하나 더 얹어 63자를 넘기면 조인이 조용히
 //    깨진다(alias-length.test.ts가 지킨다). 여러 문자열은 배열 대신 textarea 줄바꿈으로 받는다.
-export const TypeScrambleWidget: Block = {
-	slug: 'typeScrambleWidget',
+export const typeScramble = defineDisplay({
+	id: 'typeScrambleWidget',
+	type: 'dynamic',
 	dbName: 'tsw',
-	interfaceName: 'TypeScrambleWidget',
-	labels: { singular: '서체 스크램블 뷰어', plural: '서체 스크램블 뷰어' },
+	name: '서체 스크램블',
+	description: '글자가 흩어졌다 모이는 서체 표본.',
 	fields: [
 		{
 			name: 'text',
@@ -77,6 +78,6 @@ export const TypeScrambleWidget: Block = {
 			},
 		},
 	],
-}
+})
 
-export default TypeScrambleWidget
+export default typeScramble

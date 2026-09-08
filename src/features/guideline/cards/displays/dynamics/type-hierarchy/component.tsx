@@ -1,3 +1,4 @@
+import type { TypeHierarchyWidget as TypeHierarchyWidgetRow } from '@/payload-types'
 import type { LanguageKey } from '../brand-typeface'
 import { TypeHierarchyView } from './view'
 
@@ -14,4 +15,7 @@ export function TypeHierarchyWidget({ language }: { language?: LanguageKey | nul
 	return <TypeHierarchyView key={resolved} language={resolved} />
 }
 
-export default TypeHierarchyWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function TypeHierarchyDisplay({ display }: { display: TypeHierarchyWidgetRow }) {
+	return <TypeHierarchyWidget language={display.language} />
+}

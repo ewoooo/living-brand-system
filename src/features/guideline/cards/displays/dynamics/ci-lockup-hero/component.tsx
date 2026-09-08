@@ -1,3 +1,4 @@
+import type { CiLockupHeroWidget as CiLockupHeroWidgetRow } from '@/payload-types'
 import { brandColors } from '../ci-lockup/component'
 import { type CiLockupHeroSource, CiLockupHeroView } from './view'
 
@@ -18,4 +19,7 @@ export async function CiLockupHeroWidget({
 	)
 }
 
-export default CiLockupHeroWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function CiLockupHeroDisplay({ display }: { display: CiLockupHeroWidgetRow }) {
+	return <CiLockupHeroWidget source={display.source} h={display.h} />
+}

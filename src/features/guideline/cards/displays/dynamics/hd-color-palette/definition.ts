@@ -1,13 +1,14 @@
-import type { Block } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 
 // HD현대 컬러 팔레트 위젯. brand-color-groups를 서버에서 조회해 색을 한 줄로 늘어놓는다.
 // 어떤 색이 어느 그룹에 어떤 순서로 들어가는지는 컬렉션이 소유한다 — 위젯은 어느 그룹을 그릴지만 고른다.
 // 제목·폭은 컨테이너 Block 소관이라 여기 없다(docs/11 §4). rules도 Block에만 둔다(provenance 불변식).
-export const HdColorPaletteWidget: Block = {
-	slug: 'hdColorPaletteWidget',
+export const hdColorPalette = defineDisplay({
+	id: 'hdColorPaletteWidget',
+	type: 'dynamic',
 	dbName: 'hcp',
-	interfaceName: 'HdColorPaletteWidget',
-	labels: { singular: 'HD 컬러 팔레트 위젯', plural: 'HD 컬러 팔레트 위젯' },
+	name: 'HD 컬러 팔레트',
+	description: '컬러 그룹의 스와치 격자. 콘텐츠 높이형이라 판 안에서 스크롤된다.',
 	fields: [
 		{
 			// hasMany인 이유: 같은 색을 다른 기준으로 묶은 그룹이 공존한다(용도별 / 계열별).
@@ -37,6 +38,6 @@ export const HdColorPaletteWidget: Block = {
 			},
 		},
 	],
-}
+})
 
-export default HdColorPaletteWidget
+export default hdColorPalette

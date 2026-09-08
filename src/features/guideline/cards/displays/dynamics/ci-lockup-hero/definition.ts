@@ -1,4 +1,4 @@
-import type { Block } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 import { HEIGHT } from '../ci-lockup/manifest'
 
 // CI 락업 히어로 — 락업 하나를 크게 놓고 **이름만 끊임없이 갈아 끼우는** 판.
@@ -16,11 +16,12 @@ export const HERO_SOURCES = [
 	{ value: 'branch', label: '해외지사 지역명' },
 ] as const
 
-export const CiLockupHeroWidget: Block = {
-	slug: 'ciLockupHeroWidget',
+export const ciLockupHero = defineDisplay({
+	id: 'ciLockupHeroWidget',
+	type: 'dynamic',
 	dbName: 'cih',
-	interfaceName: 'CiLockupHeroWidget',
-	labels: { singular: 'CI 락업 히어로', plural: 'CI 락업 히어로' },
+	name: 'CI 락업 히어로',
+	description: '자회사명·해외지사명이 도는 CI 락업. 판 높이가 심볼 크기를 정한다.',
 	fields: [
 		{
 			name: 'source',
@@ -41,6 +42,6 @@ export const CiLockupHeroWidget: Block = {
 			},
 		},
 	],
-}
+})
 
-export default CiLockupHeroWidget
+export default ciLockupHero

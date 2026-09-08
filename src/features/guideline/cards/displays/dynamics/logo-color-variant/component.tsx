@@ -1,6 +1,9 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { BrandLogo } from '@/payload-types'
+import type {
+	BrandLogo,
+	LogoColorVariantWidget as LogoColorVariantWidgetRow,
+} from '@/payload-types'
 import { LogoColorVariantView } from './view'
 
 // 로고 색상 변형 위젯(서버) — 픽된 로고의 파일명에서 언어(ko/en/hd)를 파싱해,
@@ -42,4 +45,11 @@ export async function LogoColorVariantWidget({ logo }: { logo: LogoRef }) {
 	return <LogoColorVariantView map={map} />
 }
 
-export default LogoColorVariantWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function LogoColorVariantDisplay({
+	display,
+}: {
+	display: LogoColorVariantWidgetRow
+}) {
+	return <LogoColorVariantWidget logo={display.logo} />
+}

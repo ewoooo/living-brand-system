@@ -1,4 +1,4 @@
-import type { Block } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 import { LANGUAGES, WEIGHTS } from '../brand-typeface'
 
 // 서체 굵기 컨트롤 — 문구 하나를 두고 굵기만 갈아 끼워 3종을 몸으로 비교하게 한다.
@@ -10,11 +10,12 @@ import { LANGUAGES, WEIGHTS } from '../brand-typeface'
 //    (brand-typeface는 순수 상수 모듈이라 payload.config가 Node에서 로드해도 안전하다.)
 //
 // dbName 짧게(twt), enum은 전역 이름 공유라 enumName 명시 — 조회 SQL 별칭 63자 한계 방어.
-export const TypeWeightWidget: Block = {
-	slug: 'typeWeightWidget',
+export const typeWeight = defineDisplay({
+	id: 'typeWeightWidget',
+	type: 'dynamic',
 	dbName: 'twt',
-	interfaceName: 'TypeWeightWidget',
-	labels: { singular: '서체 굵기 컨트롤', plural: '서체 굵기 컨트롤' },
+	name: '서체 굵기',
+	description: '슬라이더로 굵기를 바꿔 보는 서체 표본.',
 	fields: [
 		{
 			name: 'layout',
@@ -56,6 +57,6 @@ export const TypeWeightWidget: Block = {
 			},
 		},
 	],
-}
+})
 
-export default TypeWeightWidget
+export default typeWeight

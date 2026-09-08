@@ -1,4 +1,4 @@
-import type { BrandLogo } from '@/payload-types'
+import type { BrandLogo, LogoDisplayWidget as LogoDisplayWidgetRow } from '@/payload-types'
 
 // 로고 크게 보기 위젯(서버) — 픽된 로고를 크게 중앙 정렬로 렌더한다(오버레이 없음).
 // 🔑 fishing 없이 logo를 pin해서 받으므로 공유 brand-logos 풀 내용에 영향받지 않는다.
@@ -32,4 +32,14 @@ export function LogoDisplayWidget({ logo, width, height, padding }: Props) {
 	)
 }
 
-export default LogoDisplayWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function LogoDisplayDisplay({ display }: { display: LogoDisplayWidgetRow }) {
+	return (
+		<LogoDisplayWidget
+			logo={display.logo}
+			width={display.width}
+			height={display.height}
+			padding={display.padding}
+		/>
+	)
+}

@@ -7,6 +7,7 @@ import {
 	controllerNumber,
 	useGuidelineController,
 } from '@/features/guideline/controllers/provider'
+import type { LayoutGridWidget as LayoutGridWidgetRow } from '@/payload-types'
 import { WIDGET_CAPTION } from '../readout'
 import {
 	CI_ART,
@@ -131,8 +132,6 @@ export function LayoutGridWidget({
 		</figure>
 	)
 }
-
-export default LayoutGridWidget
 
 type Offsets = { x: number; y: number }
 
@@ -369,5 +368,19 @@ function FillTitle({ children }: { children: string }) {
 				{children}
 			</text>
 		</svg>
+	)
+}
+
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function LayoutGridDisplay({ display }: { display: LayoutGridWidgetRow }) {
+	return (
+		<LayoutGridWidget
+			sample={display.sample}
+			caption={display.caption}
+			guides={display.guides}
+			marginPct={display.marginPct}
+			gutterX={display.gutterX}
+			gutterY={display.gutterY}
+		/>
 	)
 }

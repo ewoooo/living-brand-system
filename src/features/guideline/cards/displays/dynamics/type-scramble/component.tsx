@@ -1,6 +1,6 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { BrandColor } from '@/payload-types'
+import type { BrandColor, TypeScrambleWidget as TypeScrambleWidgetRow } from '@/payload-types'
 import { AVAILABLE_WEIGHTS, SCRAMBLE_DEFAULT, WEIGHTS, type WeightKey } from '../brand-typeface'
 import { TypeScrambleView } from './view'
 
@@ -64,4 +64,16 @@ async function resolveHex(color?: number | BrandColor | null): Promise<string | 
 	}
 }
 
-export default TypeScrambleWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function TypeScrambleDisplay({ display }: { display: TypeScrambleWidgetRow }) {
+	return (
+		<TypeScrambleWidget
+			text={display.text}
+			fontSize={display.fontSize}
+			panelHeight={display.panelHeight}
+			color={display.color}
+			background={display.background}
+			weight={display.weight}
+		/>
+	)
+}

@@ -1,11 +1,12 @@
-import type { Block } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 
 /** 정적 디스플레이 — 업로드 이미지가 카드 판을 배경으로 덮는다(cover). dbName 짧게(sdp). */
-export const StaticDisplay: Block = {
-	slug: 'staticDisplay',
+export const staticDisplay = defineDisplay({
+	id: 'staticDisplay',
+	type: 'static',
 	dbName: 'sdp',
-	interfaceName: 'StaticDisplay',
-	labels: { singular: '정적 디스플레이(이미지)', plural: '정적 디스플레이(이미지)' },
+	name: '정적 디스플레이(이미지)',
+	description: '업로드 이미지가 판을 배경으로 덮는다. 판 비율에 맞춰 잘린다.',
 	fields: [
 		{
 			name: 'image',
@@ -17,6 +18,6 @@ export const StaticDisplay: Block = {
 			},
 		},
 	],
-}
+})
 
-export default StaticDisplay
+export default staticDisplay

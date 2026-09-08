@@ -1,4 +1,4 @@
-import type { Block } from 'payload'
+import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 
 // 배경색 위 로고 위젯 — 배경색 띠를 세로로 쌓고 그 위에 로고를 얹어, 드래그로 배경을 바꿔 가며
 // 어떤 로고를 쓸 수 있는지 보게 한다. PDF는 배경마다 로고를 한 번씩 그려 보여줄 뿐이지만
@@ -10,11 +10,12 @@ import type { Block } from 'payload'
 //
 // dbName 짧게(lob), slug도 짧게(logoOnBgWidget) — 조회 SQL 별칭 63자 한계 때문이다
 // (alias-length.test.ts가 지킨다).
-export const LogoOnBackgroundWidget: Block = {
-	slug: 'logoOnBgWidget',
+export const logoOnBackground = defineDisplay({
+	id: 'logoOnBgWidget',
+	type: 'dynamic',
 	dbName: 'lob',
-	interfaceName: 'LogoOnBackgroundWidget',
-	labels: { singular: '배경색 위 로고 위젯', plural: '배경색 위 로고 위젯' },
+	name: '배경색 위 로고',
+	description: '컬러 그룹의 배경마다 로고를 얹어 본다. 콘텐츠 높이형이라 판 안에서 스크롤된다.',
 	fields: [
 		{
 			name: 'group',
@@ -51,6 +52,6 @@ export const LogoOnBackgroundWidget: Block = {
 			},
 		},
 	],
-}
+})
 
-export default LogoOnBackgroundWidget
+export default logoOnBackground

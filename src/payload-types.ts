@@ -366,7 +366,7 @@ export interface SectionBlock {
               | IconGridWidget
               | StemClearSpaceWidget
               | LogoColorVariantWidget
-              | LogoOnBackgroundWidget
+              | LogoOnBgWidget
               | TypeHierarchyWidget
               | TypeLanguageWidget
             )[]
@@ -938,9 +938,9 @@ export interface LogoColorVariantWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "LogoOnBackgroundWidget".
+ * via the `definition` "LogoOnBgWidget".
  */
-export interface LogoOnBackgroundWidget {
+export interface LogoOnBgWidget {
   /**
    * 배경으로 쌓을 컬러 그룹입니다. 그룹이 가진 순서대로 위에서부터 쌓습니다.
    */
@@ -1148,7 +1148,7 @@ export interface BaseBlock {
               | IconGridWidget
               | StemClearSpaceWidget
               | LogoColorVariantWidget
-              | LogoOnBackgroundWidget
+              | LogoOnBgWidget
               | TypeHierarchyWidget
               | TypeLanguageWidget
             )[]
@@ -1253,7 +1253,7 @@ export interface OverviewBlock {
               | IconGridWidget
               | StemClearSpaceWidget
               | LogoColorVariantWidget
-              | LogoOnBackgroundWidget
+              | LogoOnBgWidget
               | TypeHierarchyWidget
               | TypeLanguageWidget
             )[]
@@ -1358,7 +1358,7 @@ export interface ExamplesBlock {
               | IconGridWidget
               | StemClearSpaceWidget
               | LogoColorVariantWidget
-              | LogoOnBackgroundWidget
+              | LogoOnBgWidget
               | TypeHierarchyWidget
               | TypeLanguageWidget
             )[]
@@ -2661,7 +2661,7 @@ export interface SectionBlockSelect<T extends boolean = true> {
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
               logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
-              logoOnBgWidget?: T | LogoOnBackgroundWidgetSelect<T>;
+              logoOnBgWidget?: T | LogoOnBgWidgetSelect<T>;
               typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
               typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
             };
@@ -2867,9 +2867,9 @@ export interface LogoColorVariantWidgetSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "LogoOnBackgroundWidget_select".
+ * via the `definition` "LogoOnBgWidget_select".
  */
-export interface LogoOnBackgroundWidgetSelect<T extends boolean = true> {
+export interface LogoOnBgWidgetSelect<T extends boolean = true> {
   group?: T;
   logo?: T;
   column?: T;
@@ -2929,7 +2929,7 @@ export interface BaseBlockSelect<T extends boolean = true> {
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
               logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
-              logoOnBgWidget?: T | LogoOnBackgroundWidgetSelect<T>;
+              logoOnBgWidget?: T | LogoOnBgWidgetSelect<T>;
               typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
               typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
             };
@@ -2980,7 +2980,7 @@ export interface OverviewBlockSelect<T extends boolean = true> {
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
               logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
-              logoOnBgWidget?: T | LogoOnBackgroundWidgetSelect<T>;
+              logoOnBgWidget?: T | LogoOnBgWidgetSelect<T>;
               typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
               typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
             };
@@ -3031,7 +3031,7 @@ export interface ExamplesBlockSelect<T extends boolean = true> {
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
               logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
-              logoOnBgWidget?: T | LogoOnBackgroundWidgetSelect<T>;
+              logoOnBgWidget?: T | LogoOnBgWidgetSelect<T>;
               typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
               typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
             };

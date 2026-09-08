@@ -1,3 +1,4 @@
+import type { TypeLanguageWidget as TypeLanguageWidgetRow } from '@/payload-types'
 import type { LanguageKey } from '../brand-typeface'
 import { TypeLanguageView } from './view'
 
@@ -22,4 +23,7 @@ export function TypeLanguageWidget({
 	)
 }
 
-export default TypeLanguageWidget
+/** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */
+export default function TypeLanguageDisplay({ display }: { display: TypeLanguageWidgetRow }) {
+	return <TypeLanguageWidget initialLanguage={display.initialLanguage} layout={display.layout} />
+}
