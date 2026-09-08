@@ -120,7 +120,11 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|or
 
 14px 텍스트와 함께 쓰는 아이콘은 `size-4`, 16px 텍스트와 함께 쓰는 아이콘은 `size-5`를 기본으로 합니다. 일반 컴포넌트에는 `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기를 선언하지 않습니다.
 
-가이드라인 카드의 하단 캡션 배치는 Figma 131:272를 따릅니다. 제목·설명은 같은 크기와 Medium, 행간 155%를 사용합니다(사용자 지정 2026-09-08). 설명은 `text-muted-foreground`로 구분합니다. 서체는 브랜드 본문 서체(`font-body`)를 유지합니다. 이 스타일은 `cards/caption/component.tsx`가 소유하며 섹션 설명에는 적용하지 않습니다.
+가이드라인의 역할별 크기·굵기·행간·자간은 `features/guideline/components/globals/guideline-typography.ts`가 소유합니다. 토픽 제목은 `text-6xl`, 동급 블록 제목은 `text-5xl`, 블록 설명·하단 캡션은 `text-xl`, 오버레이 캡션은 `text-base`, 스펙 라벨·값은 `text-sm`을 소비합니다. 이 역할 매핑은 가이드라인 본문에만 적용하고 일반 화면의 제목·컨트롤에는 적용하지 않습니다. `text-sm`처럼 제품에서 재정의한 유틸리티의 실제 크기는 Tailwind 기본값이 아닌 `theme.css`에서 확인합니다.
+
+카드 캡션 제목·설명은 같은 크기와 Medium, 행간 155%를 사용합니다(사용자 지정 2026-09-08). 블록 설명과 스펙 값은 Regular로 구분합니다. 캡션 설명과 스펙 값은 `text-muted-foreground`, 서체는 `font-body`입니다. 하단 캡션의 배치·폭·여백은 계속 `cards/caption/component.tsx`가 소유합니다.
+
+HTML 의미와 시각 역할은 분리합니다. `GuidelineHeader`가 h1/h2를 정하고 캡션은 문단, 스펙은 dt/dd를 유지합니다. `Typography`와 richText는 `components/ui/typography-variants.ts`의 같은 스타일 생성기를 사용합니다. 도판 속 브랜드 서체 표본·치수 라벨·컨트롤 값은 이 산문 스케일에 포함하지 않습니다.
 
 캡션 배치는 `below`(기본, 카드 아래)와 `overlay`(판 안쪽 하단) 중 고릅니다. 오버레이는 Figma 136:231의 `text-base` 크기와 여백을 따르며, 제목·설명의 Medium·행간 155%는 공유합니다. 그라데이션은 판 폭을 채우고 텍스트 폭은 제한합니다. `dark` 토큰 스코프로 밝은 글자와 어두운 그라데이션의 대비를 유지하며, 긴 내용은 키보드로 접근할 수 있는 캡션 영역 안에서 스크롤합니다. 제목·설명·2열 스펙 표는 두 배치가 같은 렌더러를 사용합니다. 배치가 없는 기존 콘텐츠는 카드 아래에 표시합니다.
 

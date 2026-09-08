@@ -110,7 +110,7 @@ export function TypeSpecimenWidget() {
 				aria-label="타입 견본 입력"
 				value={texts[tier]}
 				onChange={(e) => setTexts((prev) => ({ ...prev, [tier]: e.target.value }))}
-				className="mt-16 h-64 w-full resize-none overflow-auto break-keep border-none bg-transparent text-foreground outline-none"
+				className="mt-16 min-h-64 w-full field-sizing-content resize-none overflow-hidden break-keep border-none bg-transparent text-foreground outline-none"
 				style={{
 					fontFamily,
 					fontSize: TIER_PRESETS[tier].size,

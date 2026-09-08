@@ -200,7 +200,7 @@ export function ClearSpaceView({
 	const aLeft = stemX != null ? margin + stemX * logoW : margin + (logoW - a) / 2
 
 	return (
-		<div className="flex w-full flex-col gap-3 overflow-x-auto">
+		<div className="flex w-full flex-col gap-3 overflow-clip">
 			<div className="grid min-h-56 place-items-center rounded-lg border border-border bg-background p-8">
 				<div className="relative shrink-0" style={{ width: outerW, height: outerH }}>
 					{/* 4개 padding 사각형 — 그룹 opacity로 코너에서 겹쳐도 색이 진해지지 않는다. */}

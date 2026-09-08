@@ -1,11 +1,12 @@
 import { cva } from 'class-variance-authority'
 import { Typography } from '@/components/ui/typography'
 import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
+import { GUIDELINE_TYPOGRAPHY } from '@/features/guideline/components/globals/guideline-typography'
 import type { BaseBlock } from '@/payload-types'
 
 export type CardCaptionData = NonNullable<NonNullable<BaseBlock['cards']>[number]['caption']>
 
-const captionVariants = cva('flex w-full flex-col font-body tracking-tight wrap-anywhere', {
+const captionVariants = cva('flex w-full flex-col wrap-anywhere', {
 	variants: {
 		placement: {
 			below: 'max-w-120 px-4 py-8',
@@ -27,6 +28,7 @@ export function CardCaption({ caption }: { caption?: CardCaptionData | null }) {
 	if (!title && !description) return null
 	const placement = caption?.placement ?? 'below'
 	const overlay = placement === 'overlay'
+	const textRole = overlay ? 'overlayCaption' : 'caption'
 
 	return (
 		// Figma 131:272 — 판 폭 안에서 최대 480px. 긴 캡션도 카드의 비율을 밀어내지 않는다.
@@ -38,22 +40,14 @@ export function CardCaption({ caption }: { caption?: CardCaptionData | null }) {
 		>
 			<div className={overlay ? 'max-w-108' : undefined}>
 				{title ? (
-					<Typography
-						as="p"
-						size={overlay ? 'base' : 'xl'}
-						weight="medium"
-						className="leading-[1.55]"
-					>
+					<Typography as="p" {...GUIDELINE_TYPOGRAPHY[textRole]}>
 						{title}
 					</Typography>
 				) : null}
 				<GuidelineDescription
 					description={description}
-					className={
-						overlay
-							? 'pr-0 font-medium text-base text-muted-foreground leading-[1.55] text-wrap'
-							: 'pr-0 font-medium text-xl text-muted-foreground leading-[1.55] text-wrap'
-					}
+					variant={textRole}
+					className="pr-0 text-muted-foreground text-wrap"
 				/>
 			</div>
 		</figcaption>

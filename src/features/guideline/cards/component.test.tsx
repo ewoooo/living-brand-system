@@ -14,7 +14,12 @@ vi.mock('@/components/ui/carousel', () => ({
 		</div>
 	),
 }))
-afterEach(cleanup)
+// 이 검증은 카드의 경계를 본다. Slider의 ResizeObserver는 실제 브라우저에서 확인한다.
+vi.mock('@/components/ui/slider', () => ({ Slider: () => null }))
+afterEach(() => {
+	cleanup()
+	vi.unstubAllGlobals()
+})
 
 const image = (id: number) => ({ id, url: `/img-${id}.png`, alt: `그림 ${id}` })
 const staticCard = (id: string, extra: object = {}) => ({
@@ -25,6 +30,26 @@ const staticCard = (id: string, extra: object = {}) => ({
 })
 
 describe('Card', () => {
+	it('동적 디스플레이는 판 내부 스크롤을 만들지 않는다', () => {
+		vi.stubGlobal(
+			'ResizeObserver',
+			class {
+				observe() {}
+				disconnect() {}
+			},
+		)
+		const { container } = render(
+			<Card
+				card={{ ratio: '1:1', display: [{ blockType: 'typeSpecimenWidget' }] } as never}
+			/>,
+		)
+		expect(container.querySelector('[data-slot="card-display"]')).toHaveClass('overflow-clip')
+		expect(container.querySelector('figure > div')).toHaveClass('overflow-clip')
+		expect(screen.getByRole('textbox', { name: '타입 견본 입력' })).toHaveClass(
+			'field-sizing-content',
+		)
+	})
+
 	it('정적 디스플레이와 캡션(제목만)을 그린다', () => {
 		const { container } = render(
 			<Card

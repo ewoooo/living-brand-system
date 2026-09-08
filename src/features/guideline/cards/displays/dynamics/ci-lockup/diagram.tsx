@@ -525,7 +525,7 @@ export function LockupDiagram({
 	return (
 		/* 🔴 `h-full`이 있어야 판의 `size-full`이 캔버스 높이를 받는다 — 없으면 내용 높이가 되어
 		   세로 신축 트랙이 0으로 접히고 세로 점선이 캔버스 위아래에 못 닿는다. */
-		<div className="h-full w-full overflow-x-auto">
+		<div className="h-full w-full overflow-clip">
 			{/* 🔑 판이 **캔버스를 꽉 채운다** — 사방 신축 트랙(`FLEX`)이 남는 자리를 먹으므로 덩어리는
 				여전히 가운데에 놓이고, 면·선·점선은 캔버스 끝까지 닿는다.
 				🔴 `minWidth: max-content`가 안전망이다: 내용이 캔버스보다 넓어지면 신축이 0으로 접히고
