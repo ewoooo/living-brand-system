@@ -8,6 +8,7 @@ import type { VideoExportSpec } from '@/features/studio-export/export-contract'
 import {
 	MAX_PRINT_PPI,
 	MIN_PRINT_PPI,
+	maxPrintSize,
 	millimetersToPixels,
 	PRINT_PPI_OPTIONS,
 	type PrintPpi,
@@ -182,7 +183,11 @@ type SizingControlsProps = {
 	ppi: PrintPpi
 	/** 드롭다운에 띄울 해상도 프리셋. 목록 밖 값은 「직접 입력」으로 들어온다. */
 	ppiOptions: readonly PrintPpi[]
-	onChange: (value: { width: number; height: number }) => void
+	/**
+	 * 🔴 **거부하면 `false`를 돌려줘야 한다.** 해상도 변경은 「픽셀을 다시 잡고 → ppi를 확정」하는
+	 * 한 쌍인데, 앞쪽만 거부되고 뒤쪽이 통과하면 `mm = px ÷ ppi`가 깨져 판형이 조용히 바뀐다.
+	 */
+	onChange: (value: { width: number; height: number }) => boolean
 	onPpiChange: (ppi: PrintPpi) => void
 }
 
@@ -209,6 +214,22 @@ export function SizingControls({
 }: SizingControlsProps) {
 	const [unit, setUnit] = useState<OutputSizeUnit>('px')
 	const [manualPpi, setManualPpi] = useState(false)
+	/**
+	 * 거부된 입력을 되돌리고 이유를 남긴다.
+	 * 🔑 `revision`은 `NumberRow`의 `key`를 흔들어 **입력란이 붙들고 있는 값을 버리게** 한다 —
+	 *    state가 안 바뀌면 `defaultValue`도 안 바뀌어서, 화면에는 통과한 것처럼 보인다.
+	 */
+	const [notice, setNotice] = useState<string | null>(null)
+	const [revision, setRevision] = useState(0)
+	const reject = (reason: string) => {
+		setNotice(reason)
+		setRevision((current) => current + 1)
+		return false
+	}
+	const accept = () => {
+		setNotice(null)
+		return true
+	}
 	// 🔑 선택 상태를 따로 들지 않는다 — 현재 크기에서 파생한다. 크기를 직접 고치면 저절로 「직접 입력」이 된다.
 	const artboard = matchArtboard(value, ppi)
 	const artboardOptions = listArtboardOptions({ maxWidth, maxHeight, current: artboard })
@@ -219,7 +240,15 @@ export function SizingControls({
 		const px = Math.max(1, Math.round(unitToPx(next, unit, ppi)))
 		const { width, height } = value
 		if (width === null || height === null) return
-		onChange(axis === 'width' ? { width: px, height } : { width, height: px })
+		const applied = onChange(axis === 'width' ? { width: px, height } : { width, height: px })
+		if (applied) {
+			accept()
+			return
+		}
+		const limit = maxPrintSize(axis === 'width' ? px : width, axis === 'height' ? px : height)
+		reject(
+			`이 비율에서는 최대 ${displayValue(limit.width, unit, ppi)}×${displayValue(limit.height, unit, ppi)}${unit}까지 만들 수 있습니다.`,
+		)
 	}
 
 	/**
@@ -228,11 +257,19 @@ export function SizingControls({
 	 */
 	const changePpi = (next: PrintPpi) => {
 		if (unit === 'mm' && value.width !== null && value.height !== null) {
-			onChange({
+			const applied = onChange({
 				width: millimetersToPixels(pixelsToMillimeters(value.width, ppi), next),
 				height: millimetersToPixels(pixelsToMillimeters(value.height, ppi), next),
 			})
+			// 🔴 픽셀을 못 바꿨으면 해상도도 바꾸지 않는다 — 한쪽만 적용하면 판형이 조용히 줄어든다.
+			//    Select의 값이 `ppi`에서 파생되므로 선택이 눈에 보이게 원래 값으로 되돌아간다.
+			if (!applied) {
+				const max = Math.max(...ppiOptions)
+				reject(`이 판형은 최대 ${max}ppi까지 만들 수 있습니다.`)
+				return
+			}
 		}
+		accept()
 		onPpiChange(next)
 	}
 
@@ -245,7 +282,12 @@ export function SizingControls({
 					onChange={(next) => {
 						if (next === CUSTOM_ARTBOARD) return
 						const preset = presetArtboard(next as ArtboardKey)
-						onChange({ width: preset.width, height: preset.height })
+						// 🔴 크기를 못 바꿨으면 단위·해상도도 건드리지 않는다 — `changePpi`와 같은 이유다.
+						if (!onChange({ width: preset.width, height: preset.height })) {
+							reject('이 판형은 지금 형식으로 만들 수 없습니다.')
+							return
+						}
+						accept()
 						// 규격을 말할 때 쓰는 단위로 입력란을 맞춘다(원본도 프리셋 단위를 따라간다).
 						setUnit(preset.unit)
 						// mm 규격은 자기 권장 해상도를 갖는다 — 배너를 300ppi로 채우면 한도를 넘는다.
@@ -265,6 +307,7 @@ export function SizingControls({
 				/>
 			</Controller.Row>
 			<NumberRow
+				key={`width-${revision}`}
 				label="Width"
 				value={displayValue(value.width, unit, ppi)}
 				max={displayMax(maxWidth, unit, ppi)}
@@ -272,6 +315,7 @@ export function SizingControls({
 				onChange={(width) => resize('width', width)}
 			/>
 			<NumberRow
+				key={`height-${revision}`}
 				label="Height"
 				value={displayValue(value.height, unit, ppi)}
 				max={displayMax(maxHeight, unit, ppi)}
@@ -302,6 +346,7 @@ export function SizingControls({
 					</Controller.Row>
 					{showManualPpi && (
 						<NumberRow
+							key={`ppi-${revision}`}
 							label="직접 입력"
 							value={ppi}
 							min={MIN_PRINT_PPI}
@@ -311,6 +356,11 @@ export function SizingControls({
 						/>
 					)}
 				</>
+			)}
+			{notice && (
+				<Typography role="status" size="sm" className="text-warning">
+					{notice}
+				</Typography>
 			)}
 		</div>
 	)
