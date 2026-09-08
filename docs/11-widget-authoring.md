@@ -116,6 +116,8 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 | `GuidelineHelperRegion` | 블록이 선언하는 **관측 영역** = 조작 대상이 놓인 면(제목·본문 아님) | 컨트롤이 무엇인지 |
 | `GuidelineHelperSlot` | 알약이 앉는 **자리 상자**(`absolute inset-0`인 세로 flex 열). sticky는 바가 갖는다 | 무엇이 들어오는지 |
 
+🔴 `GuidelineHelperProvider`·`GuidelineHelperSlot`은 지금 토픽 화면(`pages/guideline-topic.tsx`)에 마운트되어 있지 않습니다(2026-09-08). 등록하는 블록이 없어 빈 관측자와 빈 상자만 남았기 때문입니다. 컨트롤을 다시 연결할 때 그 `<article>`이 둘을 감싸는 것이 계약입니다.
+
 #### 🔑 한 블록에 판을 여럿 두려면 「뺀 축만 자기 값」
 
 컨트롤러 스코프는 **블록당 하나**이고 제한은 **첫 컨트롤러 자식**에서만 나옵니다. 값도 하나이므로 같은 블록의 두 위젯이 같은 축을 읽으면 값이 공유됩니다. 그래서 규칙 하나로 가릅니다 — **`hiddenControls`로 뺀 축이면 자기 인스턴스 값, 아니면 알약 값**(`ci-lockup/view.tsx`의 `pick`).
