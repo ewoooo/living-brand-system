@@ -224,11 +224,9 @@ export function SizingControls({
 	const reject = (reason: string) => {
 		setNotice(reason)
 		setRevision((current) => current + 1)
-		return false
 	}
 	const accept = () => {
 		setNotice(null)
-		return true
 	}
 	// 🔑 선택 상태를 따로 들지 않는다 — 현재 크기에서 파생한다. 크기를 직접 고치면 저절로 「직접 입력」이 된다.
 	const artboard = matchArtboard(value, ppi)
@@ -264,11 +262,8 @@ export function SizingControls({
 			// 🔴 픽셀을 못 바꿨으면 해상도도 바꾸지 않는다 — 한쪽만 적용하면 판형이 조용히 줄어든다.
 			//    Select의 값이 `ppi`에서 파생되므로 선택이 눈에 보이게 원래 값으로 되돌아간다.
 			if (!applied) {
-				reject(
-					ppiOptions.length > 0
-						? `이 판형은 최대 ${Math.max(...ppiOptions)}ppi까지 만들 수 있습니다.`
-						: '이 판형은 인쇄할 수 없습니다. 크기를 줄여 주세요.',
-				)
+				// 목록이 비면 아래에서 이 컨트롤 자체를 안 그리므로 여기서는 늘 비어 있지 않다.
+				reject(`이 판형은 최대 ${Math.max(...ppiOptions)}ppi까지 만들 수 있습니다.`)
 				return
 			}
 		}

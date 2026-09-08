@@ -91,8 +91,8 @@ export function exportVectorArtifactAsSvg(
 }
 
 /**
- * Vector Artifact를 인쇄용 CMYK PDF로 만든다.
- * 🔴 변환은 서버가 한다 — ICC 색 변환(sharp)이 서버 전용이고 pdf-lib을 클라이언트 번들에 넣지 않는다.
+ * Vector Artifact를 인쇄용 PDF로 만든다.
+ * 🔴 직렬화는 서버가 한다 — pdf-lib을 클라이언트 번들에 넣지 않는다.
  */
 export async function exportVectorArtifactAsPrintPdf(
 	fileName: string,

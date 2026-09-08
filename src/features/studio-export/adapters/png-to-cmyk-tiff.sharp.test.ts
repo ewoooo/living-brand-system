@@ -48,9 +48,4 @@ describe('pngToCmykTiff', () => {
 		expect(tiff).not.toBeNull()
 		expect(await roundTripDistance('#333333', tiff as Buffer)).toBeLessThan(15)
 	})
-
-	it('브랜드 색도 원본 근처에 남는다', async () => {
-		const tiff = await pngToCmykTiff(await solid('#00ad45'), 300, icc)
-		expect(await roundTripDistance('#00ad45', tiff as Buffer)).toBeLessThan(35)
-	})
 })

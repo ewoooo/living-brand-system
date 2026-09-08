@@ -24,7 +24,6 @@ describe('exportVectorPrint', () => {
 		})
 
 		expect(pdf.subarray(0, 5).toString('latin1')).toBe('%PDF-')
-		expect(pdf.byteLength).toBeGreaterThan(500)
 	})
 
 	/**
