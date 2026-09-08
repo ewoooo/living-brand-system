@@ -104,6 +104,7 @@ import * as migration_20260904_061650_flatten_guideline_sections from './2026090
 import * as migration_20260907_092431_add_guideline_card_blocks from './20260907_092431_add_guideline_card_blocks';
 import * as migration_20260908_001826_drop_leaf_span from './20260908_001826_drop_leaf_span';
 import * as migration_20260908_004225_replace_do_dont_with_cards from './20260908_004225_replace_do_dont_with_cards';
+import * as migration_20260908_025709_add_card_caption_placement from './20260908_025709_add_card_caption_placement';
 
 export const migrations = [
   {
@@ -634,6 +635,11 @@ export const migrations = [
   {
     up: migration_20260908_004225_replace_do_dont_with_cards.up,
     down: migration_20260908_004225_replace_do_dont_with_cards.down,
-    name: '20260908_004225_replace_do_dont_with_cards'
+    name: '20260908_004225_replace_do_dont_with_cards',
+  },
+  {
+    up: migration_20260908_025709_add_card_caption_placement.up,
+    down: migration_20260908_025709_add_card_caption_placement.down,
+    name: '20260908_025709_add_card_caption_placement'
   },
 ];

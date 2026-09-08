@@ -37,6 +37,17 @@ export function cardFields(): Field[] {
 			type: 'group',
 			label: '캡션',
 			fields: [
+				{
+					name: 'placement',
+					type: 'select',
+					label: '캡션 배치',
+					defaultValue: 'below',
+					enumName: 'enum_card_caption_placement',
+					options: [
+						{ label: '카드 아래', value: 'below' },
+						{ label: '이미지 위 하단', value: 'overlay' },
+					],
+				},
 				{ name: 'title', type: 'text', localized: true },
 				{
 					name: 'description',

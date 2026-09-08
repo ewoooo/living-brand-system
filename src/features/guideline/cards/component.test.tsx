@@ -53,6 +53,33 @@ describe('Card', () => {
 		const empty = render(<Card card={{ id: 'b', ratio: '16:9', display: [] } as never} />)
 		expect(empty.container).toBeEmptyDOMElement()
 	})
+
+	it('기존 캡션은 아래에 두고 오버레이는 figure의 접근 가능한 마지막 자식으로 그린다', () => {
+		const { container, rerender } = render(
+			<Card card={staticCard('a', { caption: { title: '기존 캡션' } }) as never} />,
+		)
+		expect(container.querySelector('figcaption')).toHaveAttribute('data-placement', 'below')
+		expect(container.querySelector('figcaption')).not.toHaveAttribute('tabindex')
+		rerender(
+			<Card
+				card={
+					staticCard('a', {
+						caption: { placement: 'overlay', title: '오버레이 캡션' },
+					}) as never
+				}
+			/>,
+		)
+		const caption = container.querySelector('figure > figcaption:last-child')
+		expect(caption).toHaveAttribute('data-placement', 'overlay')
+		expect(caption).toHaveAttribute('tabindex', '0')
+		expect(screen.getByText('오버레이 캡션')).toBeInTheDocument()
+		rerender(
+			<Card
+				card={staticCard('a', { caption: { placement: 'overlay', title: ' ' } }) as never}
+			/>,
+		)
+		expect(container.querySelector('figcaption')).toBeNull()
+	})
 })
 
 describe('CardBlock', () => {
