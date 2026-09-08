@@ -60,7 +60,7 @@ export function Card({
 						role="img"
 						aria-label={MARK_STYLE[mark].label}
 						className={cn(
-							'absolute top-3 right-3 grid size-8 place-items-center rounded-full bg-background/80 font-body text-lg leading-none',
+							'absolute top-3 right-3 grid size-8 place-items-center rounded-full bg-background/80 font-body text-base leading-none',
 							MARK_STYLE[mark].className,
 						)}
 					>

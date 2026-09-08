@@ -3,6 +3,7 @@
 import { type PointerEvent as ReactPointerEvent, useRef, useState } from 'react'
 import type { BrandBackground as Band } from '../brand-background'
 import type { LogoSources } from '../logo-set'
+import { MONO_FILL } from '../surface'
 
 const BAND_HEIGHT = 76
 
@@ -71,7 +72,7 @@ export function LogoOnBackgroundView({
 						style={{
 							height: BAND_HEIGHT,
 							backgroundColor: b.hex,
-							color: b.monoFill === 'black' ? '#000000' : '#FFFFFF',
+							color: MONO_FILL[b.monoFill],
 						}}
 					>
 						<span className="opacity-70">{b.name}</span>
@@ -133,7 +134,7 @@ function LogoMark({
 		// 단색형은 fill 속성이 없는 실루엣이라 mask로 색을 입힌다.
 		// 🔴 이건 색 파생이 아니다 — 단색형은 원래 한 색이고, 그 색을 규정이 정해준다.
 		if (!logos.mono) return null
-		const color = band.monoFill === 'black' ? '#000000' : '#FFFFFF'
+		const color = MONO_FILL[band.monoFill]
 		return (
 			<div
 				role="img"
@@ -178,7 +179,7 @@ function Forbidden() {
 			// (span은 aria-label을 지원하지 않는다) — 같은 표식을 쓰는 logo-bg-picker와 맞춘다.
 			role="img"
 			aria-label="이 배경에는 사용할 수 없습니다"
-			className="grid size-9 place-items-center bg-destructive/15 font-body text-destructive text-lg"
+			className="grid size-9 place-items-center bg-destructive/15 font-body text-base text-destructive"
 		>
 			✕
 		</span>

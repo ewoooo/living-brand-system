@@ -4,6 +4,7 @@ import { type PointerEvent as ReactPointerEvent, useRef, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { BrandBackground } from '../brand-background'
 import type { LogoSources } from '../logo-set'
+import { MONO_FILL } from '../surface'
 
 // 한 배경 위에 CI 두 표현을 나란히 올리고, 구석의 색 띠를 끌어 배경을 갈아 끼운다.
 // 컨트롤이 하나라 두 표현이 같은 배경에서 어떻게 갈리는지가 한눈에 보인다 — 드래그 위젯이 열을
@@ -51,7 +52,7 @@ export function LogoBgPickerView({
 	const background = backgrounds[Math.min(index, backgrounds.length - 1)]
 	if (!background) return null
 
-	const foreground = background.monoFill === 'black' ? '#000000' : '#FFFFFF'
+	const foreground = MONO_FILL[background.monoFill]
 	const fullColorSrc = pickFullColor(background, logos)
 
 	/** 띠 위 x좌표를 색 순번으로 바꾼다. 칸이 아니라 띠 전체 폭으로 나눠 경계에서 끊기지 않는다. */
@@ -202,7 +203,7 @@ function Forbidden({ foreground }: { foreground: string }) {
 		<span
 			role="img"
 			aria-label="이 배경에는 사용할 수 없습니다"
-			className="grid size-16 place-items-center font-body text-2xl"
+			className="grid size-16 place-items-center font-body text-xl"
 			style={{ color: foreground, boxShadow: `inset 0 0 0 1px ${foreground}` }}
 		>
 			✕

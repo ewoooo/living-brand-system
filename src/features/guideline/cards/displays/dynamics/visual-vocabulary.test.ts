@@ -2,7 +2,8 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-// 위젯이 색을 **공유 어휘로만** 말하는지 지킨다(계약은 `docs/11` §8, 토큰 규칙은 `docs/09` §4).
+// 가이드라인 표면(블록·카드·컴포넌트·위젯)이 색을 **공유 어휘로만** 말하는지 지킨다(계약은 `docs/11` §8, 토큰 규칙은 `docs/09` §4).
+// 2026-09-08부터 스캔 루트는 위젯 폴더가 아니라 `features/guideline` 전체다 — 카드 모델에서 판·배지·캡션이 위젯 밖으로 나왔다.
 //
 // 🔴 왜 필요한가: 위젯 19개가 반복되는 시각 요소를 각자 만들어, 한 페이지 안에서 같은 것이 다르게
 //    표기됐다. 그걸 정리한 뒤에도 새 위젯이 같은 길로 다시 갈 수 있고, 생 팔레트는 리뷰에서
@@ -12,7 +13,8 @@ import { describe, expect, it } from 'vitest'
 // 예외는 `surface.ts` 하나다. 표본이 얹히는 브랜드 면은 흰 판/검은 판 자체가 규정의 일부라
 // 테마를 따르면 안 되고, 그 예외를 한 파일에 모아 두는 것이 이 규칙의 설계다.
 
-const WIDGETS = path.join(process.cwd(), 'src/features/guideline/cards/displays/dynamics')
+const GUIDELINE = path.join(process.cwd(), 'src/features/guideline')
+const WIDGETS = path.join(GUIDELINE, 'cards/displays/dynamics')
 
 /** 브랜드 면의 고정 팔레트를 갖는 유일한 자리. */
 const DECLARED_EXCEPTION = 'surface.ts'
@@ -81,10 +83,12 @@ const WIDGET_CAPTION_USE = /\bWIDGET_CAPTION\b/
  * 아직 걷어내지 못한 캡션. **둘 다 값 결정이 남아 있어서**지 규칙의 예외라서가 아니다.
  * 🔴 이 목록은 늘리지 않는다 — 새 위젯이 여기 들어오려 하면 캡션을 지우는 것이 답이다.
  */
-const CAPTION_DEBT = ['layout-grid/component.tsx', 'stem-clear-space/view.tsx']
+const CAPTION_DEBT = ['layout-grid/component.tsx', 'stem-clear-space/view.tsx'].map((f) =>
+	path.join(WIDGETS, f),
+)
 
 /** 어휘를 **정의**하는 자리. 검사 대상이 아니다(`surface.ts`가 팔레트에 대해 그런 것과 같다). */
-const CAPTION_VOCAB_HOME = 'readout.ts'
+const CAPTION_VOCAB_HOME = path.join(WIDGETS, 'readout.ts')
 
 function sourceFiles(dir: string): string[] {
 	return readdirSync(dir).flatMap((entry) => {
@@ -102,13 +106,15 @@ function offendingLines(file: string, pattern: RegExp): string[] {
 		.map(([number, line]) => `${number}: ${line.trim()}`)
 }
 
-describe('위젯 시각 어휘', () => {
-	const files = sourceFiles(WIDGETS).filter((file) => path.basename(file) !== DECLARED_EXCEPTION)
+describe('가이드라인 시각 어휘', () => {
+	const files = sourceFiles(GUIDELINE).filter(
+		(file) => file !== path.join(WIDGETS, DECLARED_EXCEPTION),
+	)
 
 	// 🔴 탐지가 조용히 0건이 되면 이 테스트 전체가 "문제 없음"을 승인하는 도장으로 바뀐다.
 	//    보지 않는 것은 통과시키는 것과 구별되지 않으므로, 무엇을 봤는지를 먼저 확인한다.
-	it('위젯 소스를 실제로 훑는다', () => {
-		expect(files.length).toBeGreaterThan(30)
+	it('가이드라인 소스를 실제로 훑는다', () => {
+		expect(files.length).toBeGreaterThan(60)
 	})
 
 	it('생 팔레트 패턴이 실제 위반을 잡는다', () => {
@@ -141,13 +147,13 @@ describe('위젯 시각 어휘', () => {
 	})
 
 	it.each(
-		files.map((file) => [path.relative(WIDGETS, file), file]),
+		files.map((file) => [path.relative(GUIDELINE, file), file]),
 	)('%s 가 생 팔레트를 쓰지 않는다', (_label, file) => {
 		expect(offendingLines(file, RAW_COLOR)).toEqual([])
 	})
 
 	it.each(
-		files.map((file) => [path.relative(WIDGETS, file), file]),
+		files.map((file) => [path.relative(GUIDELINE, file), file]),
 	)('%s 가 dark: 변형으로 분기하지 않는다', (_label, file) => {
 		expect(offendingLines(file, DARK_VARIANT)).toEqual([])
 	})
@@ -156,7 +162,7 @@ describe('위젯 시각 어휘', () => {
 	it('캡션 빚 목록에 실제로 캡션이 남아 있다', () => {
 		for (const debt of CAPTION_DEBT) {
 			expect(
-				offendingLines(path.join(WIDGETS, debt), WIDGET_CAPTION_USE).length,
+				offendingLines(debt, WIDGET_CAPTION_USE).length,
 				`${debt} 의 캡션이 사라졌다 — CAPTION_DEBT에서 지울 것`,
 			).toBeGreaterThan(0)
 		}
@@ -164,11 +170,8 @@ describe('위젯 시각 어휘', () => {
 
 	it.each(
 		files
-			.filter((file) => {
-				const relative = path.relative(WIDGETS, file)
-				return relative !== CAPTION_VOCAB_HOME && !CAPTION_DEBT.includes(relative)
-			})
-			.map((file) => [path.relative(WIDGETS, file), file]),
+			.filter((file) => file !== CAPTION_VOCAB_HOME && !CAPTION_DEBT.includes(file))
+			.map((file) => [path.relative(GUIDELINE, file), file]),
 	)('%s 가 판 밖 캡션을 그리지 않는다', (_label, file) => {
 		expect(offendingLines(file, WIDGET_CAPTION_USE)).toEqual([])
 	})

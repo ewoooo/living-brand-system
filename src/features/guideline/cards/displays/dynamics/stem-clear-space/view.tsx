@@ -121,18 +121,17 @@ export function StemMeasure({
 				>
 					{/* biome-ignore lint/performance/noImgElement: 원격 svg라 next/image 대신 img 사용. */}
 					<img src={logo} alt="로고" className="pointer-events-none block h-16 w-auto" />
-					{/* 측정된 줄기를 불투명 흰색·무테 사각형으로 오버레이 — 클릭한 줄기와 fill이 정확히 겹치면 측정이 맞다.
+					{/* 측정된 줄기를 판과 같은 면(bg-background)의 무테 사각형으로 덮는다 — 클릭한 줄기와 정확히 겹치면 측정이 맞다.
 					    좌/폭은 로고 폭 대비 %라 정확히 정렬(계산은 SVG 픽셀 기준). 높이는 top/bottom을 크게 잡아
 					    패널 overflow-hidden이 패널 전체 높이로 클립한다. 재클릭 방해 없도록 pointer-events-none. */}
 					{value && (
 						<div
-							className="pointer-events-none absolute"
+							className="pointer-events-none absolute bg-background"
 							style={{
 								top: -1000,
 								bottom: -1000,
 								left: `${value.x * 100}%`,
 								width: `${value.ratio * 100}%`,
-								background: '#ffffff',
 							}}
 						/>
 					)}

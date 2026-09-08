@@ -245,7 +245,7 @@ look은 언젠가 전부 바뀝니다. 그러므로 **겉모습이 어설픈 것
 | hairline 격자 | `features/guideline/cards/displays/dynamics/hairline.ts` |
 | 색·간격·radius·타입 원시값 | `app/(frontend)/theme.css` |
 
-🔴 이 목록이 늘어나는 것은 정상이고, **같은 요소가 두 자리에 생기는 것은 결함입니다.** `features/guideline/cards/displays/dynamics/visual-vocabulary.test.ts`가 색에 대해서만 이것을 지킵니다 — 다른 축은 아직 사람이 봅니다.
+🔴 이 목록이 늘어나는 것은 정상이고, **같은 요소가 두 자리에 생기는 것은 결함입니다.** `features/guideline/cards/displays/dynamics/visual-vocabulary.test.ts`가 `features/guideline` 전체(블록·카드·컴포넌트·위젯)를 훑어 색에 대해서만 이것을 지킵니다 — 다른 축은 아직 사람이 봅니다.
 
 #### 값은 어디서 읽나 — `@carbon/layout` (devDependency)
 

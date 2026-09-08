@@ -14,7 +14,8 @@ export function CardCaption({ caption }: { caption?: CardCaptionData | null }) {
 
 	return (
 		<figcaption className="flex flex-col gap-1 px-4 py-6 font-body">
-			{title ? <p className="font-semibold text-sm">{title}</p> : null}
+			{/* Figma 135:488 — 제목 17px SemiBold. 공유 단계의 「카드 제목」 칸(text-base)이다(docs/09 §6). */}
+			{title ? <p className="font-semibold text-base">{title}</p> : null}
 			<GuidelineDescription description={description} />
 		</figcaption>
 	)

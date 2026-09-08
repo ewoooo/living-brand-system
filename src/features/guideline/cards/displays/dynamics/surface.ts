@@ -33,6 +33,12 @@ export const CI_STAGE_LIGHT = '#f2f2f2'
 export const CI_STAGE_DARK = '#000000'
 
 /**
+ * 단색형 로고의 fill. 배경(`brand-background.ts`의 `monoFill`)이 정하는 규정 값이라 테마를 따르지 않는다.
+ * inline style·mask에 넣는 값이므로 클래스가 아니라 hex다.
+ */
+export const MONO_FILL = { black: '#000000', white: '#ffffff' } as const
+
+/**
  * 브랜드 판 **위에 얹히는 컨트롤**(CI 락업의 SVG 내보내기 버튼).
  *
  * 🔴 판이 테마를 따르지 않으므로 그 위의 컨트롤도 따르면 안 된다. `outline` 버튼의 기본값은

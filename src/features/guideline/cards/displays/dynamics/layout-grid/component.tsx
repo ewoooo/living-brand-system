@@ -33,8 +33,6 @@ const TRACKS = [1, 2, 3]
 /** 판형 = A4 세로. 폭은 컨테이너가 주고 높이는 이 비율로 나온다. */
 const ARTBOARD_ASPECT = '210 / 297'
 
-/** 그리드 표시 색. 🔴 임시 리터럴 — brand-colors의 값으로 교체될 자리다. */
-const GRID_COLOR = '#007332'
 /** 마진·거터 영역 채움의 투명도. 밴드가 아니라 **그룹**에 적용해야 교차부가 진해지지 않는다. */
 const GRID_AREA_OPACITY = 0.3
 /** 그리드가 보일 때 콘텐츠 투명도 — 선과 영역이 읽히도록 죽인다. */
@@ -204,6 +202,7 @@ function renderElement(element: Element): ReactNode {
 
 /**
  * 그리드 표시 = 마진 링 + 거터 밴드의 **면**. 5×5 트랙 위에 그려 위치 계산이 없다.
+ * 색은 `bg-primary` — 주입된 브랜드 색을 따른다(docs/09 §4·§5). 판형 배경은 조합 데이터라 토큰이 아니다.
  *
  * 🔴 밴드를 불투명하게 그리고 그룹째로 한 번만 투명하게 만든다. 밴드에 직접 알파를 주면 거터
  *    교차부에서 알파가 누적돼 그 네 곳만 진해진다.
@@ -218,34 +217,34 @@ function Guides({ marginPct, gutterHalf }: { marginPct: number; gutterHalf: Offs
 			style={{ ...gridTemplate(marginPct), opacity: GRID_AREA_OPACITY }}
 		>
 			{/* 마진 영역 — 바깥 링 4개 밴드. 트랙이라 좌표를 계산하지 않는다. */}
-			<div style={{ gridColumn: '1 / -1', gridRow: 1, background: GRID_COLOR }} />
-			<div style={{ gridColumn: '1 / -1', gridRow: -2, background: GRID_COLOR }} />
-			<div style={{ gridColumn: 1, gridRow: '2 / -2', background: GRID_COLOR }} />
-			<div style={{ gridColumn: -2, gridRow: '2 / -2', background: GRID_COLOR }} />
+			<div className="bg-primary" style={{ gridColumn: '1 / -1', gridRow: 1 }} />
+			<div className="bg-primary" style={{ gridColumn: '1 / -1', gridRow: -2 }} />
+			<div className="bg-primary" style={{ gridColumn: 1, gridRow: '2 / -2' }} />
+			<div className="bg-primary" style={{ gridColumn: -2, gridRow: '2 / -2' }} />
 
 			{/* 거터 — 구분선은 실제 트랙이 아니라 셀 padding이라, 구분선이 왼변(위변)인 셀에 붙여
 			    절반만큼 밀고 거터 폭만큼 채워 선을 가운데 두고 덮는다. */}
 			{INTERIOR_LINES.map((line) => (
 				<div
 					key={`gutter-v-${line}`}
+					className="bg-primary"
 					style={{
 						gridColumn: line,
 						gridRow: '2 / -2',
 						marginLeft: `-${gutterHalf.x}cqmax`,
 						width: `${gutterHalf.x * 2}cqmax`,
-						background: GRID_COLOR,
 					}}
 				/>
 			))}
 			{INTERIOR_LINES.map((line) => (
 				<div
 					key={`gutter-h-${line}`}
+					className="bg-primary"
 					style={{
 						gridColumn: '2 / -2',
 						gridRow: line,
 						marginTop: `-${gutterHalf.y}cqmax`,
 						height: `${gutterHalf.y * 2}cqmax`,
-						background: GRID_COLOR,
 					}}
 				/>
 			))}
