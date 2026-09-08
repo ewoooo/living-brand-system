@@ -1,0 +1,118 @@
+import { cleanup, render, screen } from '@testing-library/react'
+import type { ReactNode } from 'react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { CardBlock } from '../blocks/card-block'
+import { Card } from './component'
+
+// embla는 jsdom에 없는 브라우저 API를 요구한다 — 리포 선례(review-canvas.test)대로 껍데기로 바꾼다.
+vi.mock('@/components/ui/carousel', () => ({
+	Carousel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	CarouselContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	CarouselItem: ({ children, className }: { children: ReactNode; className?: string }) => (
+		<div data-slot="slide" className={className}>
+			{children}
+		</div>
+	),
+}))
+afterEach(cleanup)
+
+const image = (id: number) => ({ id, url: `/img-${id}.png`, alt: `그림 ${id}` })
+const staticCard = (id: string, extra: object = {}) => ({
+	id,
+	ratio: '16:9',
+	display: [{ id: `${id}-d`, blockType: 'staticDisplay', image: image(1) }],
+	...extra,
+})
+
+describe('Card', () => {
+	it('정적 디스플레이와 캡션(제목만)을 그린다', () => {
+		const { container } = render(
+			<Card
+				card={
+					staticCard('a', { ratio: '1:1', caption: { title: 'Forward Mark' } }) as never
+				}
+			/>,
+		)
+		expect(screen.getByRole('img')).toHaveAttribute('src', '/img-1.png')
+		expect(container.querySelector('.aspect-square')).not.toBeNull()
+		expect(screen.getByText('Forward Mark')).toBeInTheDocument()
+	})
+
+	it('블록 표식이 있으면 판 모서리에 배지를 그리고 none이면 그리지 않는다', () => {
+		render(<Card card={staticCard('a') as never} mark="dont" />)
+		expect(screen.getByRole('img', { name: "Don't" })).toHaveClass('text-destructive')
+		cleanup()
+		render(<Card card={staticCard('a') as never} mark="none" />)
+		expect(screen.queryByRole('img', { name: "Don't" })).toBeNull()
+	})
+
+	it('캡션이 비면 figcaption을 만들지 않고, 디스플레이가 없으면 카드 자체를 그리지 않는다', () => {
+		const { container } = render(<Card card={staticCard('a') as never} />)
+		expect(container.querySelector('figcaption')).toBeNull()
+
+		const empty = render(<Card card={{ id: 'b', ratio: '16:9', display: [] } as never} />)
+		expect(empty.container).toBeEmptyDOMElement()
+	})
+
+	it('기존 캡션은 아래에 두고 오버레이는 figure의 접근 가능한 마지막 자식으로 그린다', () => {
+		const { container, rerender } = render(
+			<Card card={staticCard('a', { caption: { title: '기존 캡션' } }) as never} />,
+		)
+		expect(container.querySelector('figcaption')).toHaveAttribute('data-placement', 'below')
+		expect(container.querySelector('figcaption')).not.toHaveAttribute('tabindex')
+		rerender(
+			<Card
+				card={
+					staticCard('a', {
+						caption: { placement: 'overlay', title: '오버레이 캡션' },
+					}) as never
+				}
+			/>,
+		)
+		const caption = container.querySelector('figure > figcaption:last-child')
+		expect(caption).toHaveAttribute('data-placement', 'overlay')
+		expect(caption).toHaveAttribute('tabindex', '0')
+		expect(screen.getByText('오버레이 캡션')).toBeInTheDocument()
+		rerender(
+			<Card
+				card={staticCard('a', { caption: { placement: 'overlay', title: ' ' } }) as never}
+			/>,
+		)
+		expect(container.querySelector('figcaption')).toBeNull()
+	})
+})
+
+describe('CardBlock', () => {
+	it('블록의 줄 높이를 모든 카드 판에 주고 폭은 카드 비율이 정한다', () => {
+		const { container } = render(
+			<CardBlock
+				title="한 눈에 보기"
+				block={
+					{
+						layout: 'carousel',
+						rowHeight: 'high',
+						cards: [staticCard('a', { ratio: '9:16' }), staticCard('b')],
+					} as never
+				}
+			/>,
+		)
+		expect(screen.getByRole('heading', { level: 2, name: '한 눈에 보기' })).toBeInTheDocument()
+		const panels = [...container.querySelectorAll('figure > div')]
+		expect(panels.map((el) => el.className.includes('md:h-[min(60vw,60rem)]'))).toEqual([
+			true,
+			true,
+		])
+		expect(panels[0]).toHaveClass('aspect-[9/16]')
+		expect(panels[1]).toHaveClass('aspect-video')
+		// 슬라이드 폭은 카드가 정한다.
+		expect(container.querySelector('[data-slot="slide"]')).toHaveClass('md:basis-auto')
+	})
+
+	it('격자는 줄바꿈 행이고 rowHeight가 비면 보통이다', () => {
+		const { container } = render(
+			<CardBlock block={{ layout: 'grid', cards: [staticCard('a')] } as never} />,
+		)
+		expect(container.querySelector('.md\\:flex-wrap')).not.toBeNull()
+		expect(container.querySelector('figure > div')).toHaveClass('md:h-[min(45vw,46rem)]')
+	})
+})

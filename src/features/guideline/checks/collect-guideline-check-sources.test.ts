@@ -15,7 +15,7 @@ describe('collectGuidelineCheckSources', () => {
 					blockType: 'section',
 					anchor: 'clear-space',
 					title: 'Clear space',
-					children: [{ id: 'w', blockType: 'logoDisplayWidget' }],
+					cards: [{ id: 'c', display: [{ id: 'w', blockType: 'logoDisplayWidget' }] }],
 					rules: [{ id: 2, key: 'logo.section', title: 'Section Rule', checker: 1 }],
 				},
 			],
@@ -30,10 +30,13 @@ describe('collectGuidelineCheckSources', () => {
 		expect(sources.map(({ blockName }) => blockName)).toEqual([null, 'Logo examples'])
 		expect(sources[0]?.evidence).toEqual({
 			type: 'document',
-			blocks: [{ type: 'section', anchor: 'clear-space', title: 'Clear space' }],
+			blocks: [
+				{ type: 'section', captions: [], anchor: 'clear-space', title: 'Clear space' },
+			],
 		})
 		expect(sources[1]?.evidence).toEqual({
 			type: 'section',
+			captions: [],
 			anchor: 'clear-space',
 			title: 'Clear space',
 		})
@@ -53,7 +56,7 @@ describe('collectGuidelineCheckSources', () => {
 				{
 					id: 'hero',
 					blockType: 'section',
-					children: [{ id: 'w', blockType: 'ciLockupHeroWidget' }],
+					cards: [{ id: 'c', display: [{ id: 'w', blockType: 'ciLockupHeroWidget' }] }],
 					rules: [{ id: 2, key: 'logo.hero', title: 'Hero Rule', checker: 1 }],
 				},
 			],
@@ -98,7 +101,7 @@ describe('collectGuidelineCheckSources', () => {
 					id: 's',
 					blockType: 'section',
 					title: 'Misuse',
-					children: [{ id: 'i', blockType: 'image', image }],
+					cards: [{ id: 'c', display: [{ id: 'i', blockType: 'image', image }] }],
 				},
 			],
 		} as unknown as GuidelineDocument

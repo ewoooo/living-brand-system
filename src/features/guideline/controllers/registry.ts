@@ -6,10 +6,10 @@ import {
 	CI_LOCKUP_CONTROLS,
 	CI_LOCKUP_MANIFEST,
 	ciLockupHiddenAxes,
-} from '../widgets/ci-lockup/manifest'
-import { lockupOptions, tierFor } from '../widgets/ci-lockup/rules'
-import { CLEARSPACE_VIEWER_MANIFEST } from '../widgets/clearspace-viewer/manifest'
-import { LAYOUT_GRID_MANIFEST } from '../widgets/layout-grid/manifest'
+} from '../cards/displays/dynamics/ci-lockup/manifest'
+import { lockupOptions, tierFor } from '../cards/displays/dynamics/ci-lockup/rules'
+import { CLEARSPACE_VIEWER_MANIFEST } from '../cards/displays/dynamics/clearspace-viewer/manifest'
+import { LAYOUT_GRID_MANIFEST } from '../cards/displays/dynamics/layout-grid/manifest'
 import type { GuidelineControllerManifest } from './contract'
 
 /**

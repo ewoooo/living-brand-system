@@ -2,30 +2,30 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import type { ReactNode } from 'react'
 import { ControllerBar } from '@/components/shared/controller'
+import { CiLockupWidget } from '@/features/guideline/cards/displays/dynamics/ci-lockup/component'
+import { CI_LOCKUP_MANIFEST } from '@/features/guideline/cards/displays/dynamics/ci-lockup/manifest'
+import { CiLockupHeroWidget } from '@/features/guideline/cards/displays/dynamics/ci-lockup-hero/component'
+import { ClearspaceOverlayWidget } from '@/features/guideline/cards/displays/dynamics/clearspace-overlay/component'
+import { ClearspaceViewerWidget } from '@/features/guideline/cards/displays/dynamics/clearspace-viewer/component'
+import { HdColorPaletteWidget } from '@/features/guideline/cards/displays/dynamics/hd-color-palette/component'
+import { IconGridWidget } from '@/features/guideline/cards/displays/dynamics/icon-grid/component'
+import { LayoutGridWidget } from '@/features/guideline/cards/displays/dynamics/layout-grid/component'
+import { LAYOUT_GRID_MANIFEST } from '@/features/guideline/cards/displays/dynamics/layout-grid/manifest'
+import { LayoutGridOverlayWidget } from '@/features/guideline/cards/displays/dynamics/layout-grid-overlay/component'
+import { LogoBgPickerWidget } from '@/features/guideline/cards/displays/dynamics/logo-bg-picker/component'
+import { LogoColorVariantWidget } from '@/features/guideline/cards/displays/dynamics/logo-color-variant/component'
+import { LogoDisplayWidget } from '@/features/guideline/cards/displays/dynamics/logo-display/component'
+import { LogoOnBackgroundWidget } from '@/features/guideline/cards/displays/dynamics/logo-on-background/component'
+import { PresetPanel } from '@/features/guideline/cards/displays/dynamics/preset-panel/component'
+import { StemClearSpaceWidget } from '@/features/guideline/cards/displays/dynamics/stem-clear-space/component'
+import { TypeHierarchyWidget } from '@/features/guideline/cards/displays/dynamics/type-hierarchy/component'
+import { TypeLanguageWidget } from '@/features/guideline/cards/displays/dynamics/type-language/component'
+import { TypeScrambleWidget } from '@/features/guideline/cards/displays/dynamics/type-scramble/component'
+import { TypeSpecimenWidget } from '@/features/guideline/cards/displays/dynamics/type-specimen/component'
+import { TypeWeightWidget } from '@/features/guideline/cards/displays/dynamics/type-weight/component'
 import { helperLabel } from '@/features/guideline/components/globals/guideline-helper-label'
 import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
 import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
-import { CiLockupWidget } from '@/features/guideline/widgets/ci-lockup/component'
-import { CI_LOCKUP_MANIFEST } from '@/features/guideline/widgets/ci-lockup/manifest'
-import { CiLockupHeroWidget } from '@/features/guideline/widgets/ci-lockup-hero/component'
-import { ClearspaceOverlayWidget } from '@/features/guideline/widgets/clearspace-overlay/component'
-import { ClearspaceViewerWidget } from '@/features/guideline/widgets/clearspace-viewer/component'
-import { DoDontWidget } from '@/features/guideline/widgets/do-dont/component'
-import { HdColorPaletteWidget } from '@/features/guideline/widgets/hd-color-palette/component'
-import { IconGridWidget } from '@/features/guideline/widgets/icon-grid/component'
-import { LayoutGridWidget } from '@/features/guideline/widgets/layout-grid/component'
-import { LAYOUT_GRID_MANIFEST } from '@/features/guideline/widgets/layout-grid/manifest'
-import { LayoutGridOverlayWidget } from '@/features/guideline/widgets/layout-grid-overlay/component'
-import { LogoBgPickerWidget } from '@/features/guideline/widgets/logo-bg-picker/component'
-import { LogoColorVariantWidget } from '@/features/guideline/widgets/logo-color-variant/component'
-import { LogoDisplayWidget } from '@/features/guideline/widgets/logo-display/component'
-import { LogoOnBackgroundWidget } from '@/features/guideline/widgets/logo-on-background/component'
-import { StemClearSpaceWidget } from '@/features/guideline/widgets/stem-clear-space/component'
-import { TypeHierarchyWidget } from '@/features/guideline/widgets/type-hierarchy/component'
-import { TypeLanguageWidget } from '@/features/guideline/widgets/type-language/component'
-import { TypeScrambleWidget } from '@/features/guideline/widgets/type-scramble/component'
-import { TypeSpecimenWidget } from '@/features/guideline/widgets/type-specimen/component'
-import { TypeWeightWidget } from '@/features/guideline/widgets/type-weight/component'
 import type { BrandLogo } from '@/payload-types'
 
 // dev 전용 위젯 갤러리. 위젯 스타일 통일 + 성능 확인용 (로컬에서만 노출, nav 미등록).
@@ -120,108 +120,20 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 			),
 		},
 		{
-			// 이미지 예시(제목 없음)와 컬러 프리셋 예시(순번 제목)를 둘 다 걸어 두 경로를 함께 본다.
-			name: 'do-dont (이미지 예시)',
+			// 프리셋 패널은 카드 판을 채우는 디스플레이라 판(비율·clip)을 여기서 흉내 낸다. 컬러(로고 얹음)·타이포 하나씩.
+			name: 'preset-panel (컬러 프리셋)',
 			node: (
-				<DoDontWidget
-					imageRatio="1:1"
-					columns="3"
-					itemLabel=""
-					examples={[
-						{
-							id: 'do',
-							kind: 'do',
-							image: koLogo,
-							caption: '기본형을 그대로 사용합니다.',
-						},
-						{ id: 'ok', kind: 'ok', image: koLogo, caption: '배경 대비를 확인합니다.' },
-						{
-							id: 'dont',
-							kind: 'dont',
-							image: koLogo,
-							caption: '비율을 변경할 수 없습니다.',
-						},
-					]}
-				/>
+				<div className="relative aspect-video overflow-hidden rounded-3xl bg-muted">
+					<PresetPanel preset="overlay-stack" logo={koLogo} />
+				</div>
 			),
 		},
 		{
-			name: 'do-dont (컬러 프리셋)',
+			name: 'preset-panel (타이포 프리셋)',
 			node: (
-				<DoDontWidget
-					imageRatio="16:9"
-					columns="3"
-					itemLabel="INCORRECT USAGE"
-					examples={[
-						{
-							id: 'p1',
-							kind: 'dont',
-							preset: 'off-palette',
-							caption: '지정 컬러 외 컬러를 사용할 수 없습니다.',
-						},
-						{
-							id: 'p2',
-							kind: 'dont',
-							preset: 'gradient',
-							caption: '지정 컬러를 그라디언트로 적용할 수 없습니다.',
-						},
-						{
-							id: 'p3',
-							kind: 'dont',
-							preset: 'overlay-stack',
-							caption: '투명도 효과 적용 및 컬러 중첩을 사용할 수 없습니다.',
-						},
-					]}
-				/>
-			),
-		},
-		{
-			// Typography 사용 금지 6종. 위반이 글자 자체라 이미지 없이 프리셋으로 그린다(Artboard 49).
-			name: 'do-dont (타이포 프리셋)',
-			node: (
-				<DoDontWidget
-					imageRatio="16:9"
-					columns="3"
-					itemLabel="INCORRECT USAGE"
-					examples={[
-						{
-							id: 't1',
-							kind: 'dont',
-							preset: 'tight-tracking',
-							caption: '글자 사이 간격을 지나치게 좁힐 수 없습니다.',
-						},
-						{
-							id: 't2',
-							kind: 'dont',
-							preset: 'loose-tracking',
-							caption: '글자 사이 간격을 지나치게 넓힐 수 없습니다.',
-						},
-						{
-							id: 't3',
-							kind: 'dont',
-							preset: 'wrong-typeface',
-							caption: '지정된 서체 이외의 다른 서체를 사용할 수 없습니다.',
-						},
-						{
-							id: 't4',
-							kind: 'dont',
-							preset: 'mixed-size',
-							caption: '한 문장 안에서 각기 다른 글자 크기를 적용할 수 없습니다.',
-						},
-						{
-							id: 't5',
-							kind: 'dont',
-							preset: 'distorted',
-							caption: '글자의 형태를 변형할 수 없습니다.',
-						},
-						{
-							id: 't6',
-							kind: 'dont',
-							preset: 'slanted',
-							caption: '글자를 기울여 사용하실 수 없습니다.',
-						},
-					]}
-				/>
+				<div className="relative aspect-video overflow-hidden rounded-3xl bg-muted">
+					<PresetPanel preset="slanted" />
+				</div>
 			),
 		},
 		{ name: 'layout-grid', node: <LayoutGridWidget /> },

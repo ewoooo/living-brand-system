@@ -93,7 +93,7 @@
 | 보관 | 토픽의 Payload revision에 포함해 변경 이력을 보관한다. |
 | 파기 | 블록을 제거하면 다음 발행부터 화면과 검수 대상에서 제외한다. 기존 CheckSession snapshot은 보존한다. |
 
-옛 모델의 PagePolicy, PageAssetRef, PageExample은 별도 엔티티로 존재하지 않는다. 정책 문구는 섹션·블록의 설명이, 에셋 연결은 블록의 이미지 leaf가, 예시는 Do/Don't 위젯이 각각 블록 안에서 대신한다.
+옛 모델의 PagePolicy, PageAssetRef, PageExample은 별도 엔티티로 존재하지 않는다. 정책 문구는 섹션·블록의 설명이, 에셋 연결은 블록의 이미지 leaf가, 예시는 카드(정적 이미지 또는 프리셋 패널 디스플레이)와 블록의 `mark`(Do/OK/Don't)가 각각 블록 안에서 대신한다.
 
 ## 4. 브랜드 자원
 

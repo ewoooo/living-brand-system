@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { applyControllerRestrictions } from '@/modules/studio-controller/controller-definition'
-import { CI_LOCKUP_CONTROLS, CI_LOCKUP_MANIFEST } from '../widgets/ci-lockup/manifest'
-import { LAYOUT_GRID_MANIFEST } from '../widgets/layout-grid/manifest'
+import {
+	CI_LOCKUP_CONTROLS,
+	CI_LOCKUP_MANIFEST,
+} from '../cards/displays/dynamics/ci-lockup/manifest'
+import { LAYOUT_GRID_MANIFEST } from '../cards/displays/dynamics/layout-grid/manifest'
 import { controllerEntryFor } from './registry'
 
 const entry = controllerEntryFor('layoutGridControlsWidget')

@@ -1,6 +1,6 @@
 import { type CollectionConfig, slugField } from 'payload'
-import { guidelineRulesField } from '@/features/guideline/blocks/shared/fields'
-import { guidelineBlocks } from '@/features/guideline/catalog/schema.generated'
+import { guidelineRulesField } from '@/features/guideline/blocks/fields'
+import { guidelineBlocks } from '@/features/guideline/blocks/registry'
 import { validateGuidelineDocumentSlug } from '@/features/guideline/checks/validate-guideline-document-slug'
 import { managerManagedAccess } from '@/lib/auth'
 import { guidelineDraftVersions } from './shared'

@@ -1,6 +1,6 @@
 # 12. CI 락업 — 정본 근거와 미해결 질문
 
-CI 락업 위젯(`features/guideline/widgets/ci-lockup/`)이 그리는 값의 **출처**와, 아직 브랜드팀이 확정하지 않은 항목을 소유합니다. 수치 자체는 코드가 갖습니다 — `rules.ts`의 상수마다 `source:`와 주석으로 근거가 붙어 있고, `rules.test.ts`가 그 관계를 검증합니다. 이 문서는 **코드가 답할 수 없는 것**만 담습니다.
+CI 락업 위젯(`features/guideline/cards/displays/dynamics/ci-lockup/`)이 그리는 값의 **출처**와, 아직 브랜드팀이 확정하지 않은 항목을 소유합니다. 수치 자체는 코드가 갖습니다 — `rules.ts`의 상수마다 `source:`와 주석으로 근거가 붙어 있고, `rules.test.ts`가 그 관계를 검증합니다. 이 문서는 **코드가 답할 수 없는 것**만 담습니다.
 
 ## 1. 값은 어디서 왔나
 

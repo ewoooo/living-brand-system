@@ -7,22 +7,22 @@
 ## 1. 새 위젯 만드는 순서
 
 ```
-1. src/features/guideline/widgets/<kebab-name>/ 생성
-2. schema.ts 작성 — 짧은 dbName 필수
-3. component.tsx 작성 (서버). 인터랙션이 있으면 view.tsx 추가 (클라이언트)
-4. 등록 3곳을 손으로 고친다 (§3)
+1. src/features/guideline/cards/displays/dynamics/<kebab-name>/ 생성
+2. definition.ts 작성 — `defineDisplay({ id, type, dbName, name, description, fields })`. 짧은 dbName 필수
+3. component.tsx 작성 (서버). 기본 export는 `({ display })`를 받는 진입점. 인터랙션이 있으면 view.tsx 추가 (클라이언트)
+4. 등록 2곳을 손으로 고친다 (§3)
 5. /guideline/widgets 에서 렌더 확인
 6. admin에서 섹션 안에 넣어 실제 페이지로 확인
 ```
 
-자동 카탈로그(`pnpm generate:block-catalogs`)는 **`blocks/`만 스캔합니다.** 위젯은 자동 등록되지 않고, CI의 `check:block-catalogs`도 위젯 등록 누락을 잡아주지 못합니다.
+블록은 `blocks/registry.ts`에 손으로 등록하지만 위젯은 그 레지스트리에 있지 않습니다. 등록 누락은 아래 §3의 두 곳을 직접 확인해야 하고, CI가 잡아주지 않습니다.
 
 ## 2. 폴더 계약
 
 | 파일 | 역할 | 필수 |
 |---|---|---|
-`schema.ts` | Payload 필드 정의. 짧은 `dbName` 별칭 | ✅ |
-`component.tsx` | 서버 컴포넌트. 관계 해석·URL 계산 후 뷰에 넘김 | ✅ |
+`definition.ts` | 디스플레이 정의 하나 — `defineDisplay({ id, type, dbName, name, description, fields })`. slug·라벨·interfaceName은 여기서 파생된다(`displays/definition.ts`의 `displaySchema`) | ✅ |
+`component.tsx` | 서버 컴포넌트. **기본 export**가 자기 행 `{ display }`를 받아 뷰로 넘기는 진입점이다. 관계 해석·URL 계산은 여기서 끝낸다 | ✅ |
 `view.tsx` | 클라이언트 뷰. 인터랙션이 있을 때만 | 선택 |
 `manifest.ts` | 이 위젯이 여는 **컨트롤 계약** — 범위·초기값·단위·프리미티브 종류(§4.1) | 선택 |
 그 외 (`compositions.ts`·`samples.ts`·`images/`) | 데이터·에셋 분리 | 선택 |
@@ -45,32 +45,32 @@
 
 에셋은 레지스트리 맵의 **키로 참조**합니다(`PHOTOS`·`CI_ART` 같은 맵). 그러면 조합이 문자열만으로 표현됩니다.
 
-🔴 **schema가 참조하는 모듈에는 react·이미지 import를 넣지 마십시오.** `payload.config`는 Node에서 로드되므로 webp/svg import나 react가 섞이면 설정 로딩이 깨집니다. 그래서 조합 키·라벨과 규칙 상수를 별 파일로 뺍니다(`layout-grid/samples.ts`·`manifest.ts`가 그 선례 — 매니페스트는 타입만 `import type`으로 가져옵니다).
+🔴 **definition이 참조하는 모듈에는 react·이미지 import를 넣지 마십시오.** `payload.config`는 Node에서 로드되므로 webp/svg import나 react가 섞이면 설정 로딩이 깨집니다. 그래서 조합 키·라벨과 규칙 상수를 별 파일로 뺍니다(`layout-grid/samples.ts`·`manifest.ts`가 그 선례 — 매니페스트는 타입만 `import type`으로 가져옵니다).
 
-## 3. 등록 — 손으로 고치는 3곳
+## 3. 등록 — 손으로 고치는 2곳
 
 | 파일 | 무엇을 등록하나 |
 |---|---|
-`leaves/registry.ts` | **`LEAVES` 배열**에 스키마 추가 (CMS 저작용). 공통 `span` 필드는 여기서 붙는다 |
-`leaves/render-leaf.tsx` | 렌더 디스패치에 분기 추가 |
+`cards/displays/registry.ts` | `DISPLAYS` 배열에 폴더의 `definition` 추가(순서 = admin 선택기 순서). 여기 없으면 admin 카드에서 고를 수 없다 |
+`cards/displays/registry.render.tsx` | `DISPLAY_COMPONENTS`에 같은 id로 폴더의 기본 export 컴포넌트 추가. 빠지면 typecheck가 잡는다 |
 `components/widgets/gallery.tsx` | `/guideline/widgets` 미리보기 목록 |
 `controllers/registry.ts` | (컨트롤러를 여는 위젯만) `blockType` → 매니페스트 (§4.1) |
 
-세 곳 중 하나만 빠뜨리면 조용히 실패합니다 — 스키마만 등록하면 admin에서 고를 수 있지만 화면이 비고, 갤러리만 등록하면 미리보기에서만 보입니다.
+레지스트리 항목만 넣고 렌더를 빠뜨리면 typecheck가 잡습니다. 갤러리(`components/widgets/gallery.tsx`)는 dev 미리보기용이라 별도이고, 여기만 등록하면 미리보기에서만 보입니다.
 
 🔴 **`dbName`은 필수입니다.** 중첩 블록의 이름이 길어지면 Postgres 식별자 63자 한계에 닿습니다. 예: `clearspaceViewerWidget` → `dbName: 'cvw'`. enum은 `enumName`으로 전역 이름을 공유합니다.
 
 한계에 실제로 닿는 것은 **FK 제약명**입니다. 최신 드리즐 스냅샷 실측으로 66~93자 제약명이 6개 있고(최장 90자대), 인덱스명은 최장 62자로 아직 아래에 있습니다. 🔴 **여기에 개수를 적어 두지 마십시오** — 스키마가 바뀔 때마다 낡습니다. 지금 값은 `migrations/`의 최신 `.json` 스냅샷에서 세십시오.
 
-이 한계는 `leaves/alias-length.test.ts`가 막고 있지만 **갤러리 통과 ≠ 페이지 통과**입니다 — 잘림은 조회 SQL의 별칭에서 일어납니다.
+이 한계는 `cards/displays/alias-length.test.ts`가 막고 있지만 **갤러리 통과 ≠ 페이지 통과**입니다 — 잘림은 조회 SQL의 별칭에서 일어납니다.
 
 ## 4. Section과 Widget의 책임
 
-**Section이 소유하는 것** — 앵커·제목·설명(`anchor`·`title`·`description`)·`rules`, 그리고 leaf 목록(`children`). 자식에게 컨트롤 값 스코프를 제공합니다. 🔴 **폭과 면은 갖지 않습니다** — 폭은 leaf의 `span`이 말하고, 배경 설정은 2026-09-04에 전 계층에서 걷었습니다.
+**블록이 소유하는 것**(2026-09-07 카드 모델) — 제목·설명·rules·에셋 다운로드 유무, 카드 **레이아웃과 줄 높이**, 그리고 섹션만 앵커. 카드 목록(`cards`)을 품습니다. 🔴 **폭과 면은 갖지 않습니다** — 카드 폭은 카드 비율에서 나오고, 배경 설정은 2026-09-04에 전 계층에서 걷었습니다.
 
-**leaf가 소유하는 것** — 자기 폭(`span`: 전폭·절반·삼분). 6열 격자에 얹혀 줄바꿈이 폭에서 나오므로 행(블록)이라는 층이 없습니다(`blocks/shared/rhythm.ts`).
+**카드가 소유하는 것** — 규격 비율(`ratio`), 디스플레이 하나(정적 이미지 또는 위젯), 캡션(제목·설명, 각각 선택)과 캡션 배치(카드 아래·판 위 하단). 배치·텍스트 스타일은 [09 §6](09-design-system.md)가 소유합니다. 위젯은 카드 디스플레이의 한 종류이고 판 안을 채우기만 합니다(`cards/`).
 
-중첩은 **한 겹**입니다: `section` > leaf. 위젯은 잎이라 다른 위젯을 품지 않습니다. 🔴 **자기 참조 블록은 만들 수 없습니다** — Payload 스키마 생성기가 무한 재귀에 빠집니다. 옛 `block`·`subBlock` 층은 쓰이지 않아 2026-09-04에 지웠습니다. 위젯 여럿을 한 판으로 묶어야 하는 요구가 생기면 그때 slug 하나로 층을 다시 세웁니다.
+중첩은 `블록 > 카드 > 디스플레이`입니다. 위젯은 디스플레이라 다른 위젯을 품지 않습니다. 🔴 **자기 참조 블록은 만들 수 없습니다** — Payload 스키마 생성기가 무한 재귀에 빠집니다. 옛 `block`·`subBlock` 층은 쓰이지 않아 2026-09-04에 지웠습니다. 위젯 여럿을 한 판으로 묶어야 하는 요구가 생기면 그때 slug 하나로 층을 다시 세웁니다.
 
 **Widget이 소유하는 것** — 자기 셀 안의 콘텐츠. **셀 안에서는 `w-full`과 배경색을 자유롭게 씁니다**(판형·스와치·패널의 면은 위젯 콘텐츠입니다). 금지는 섹션의 폭 결정권을 가져가는 것입니다. 인터랙션 컨트롤의 폭은 위젯이 아니라 컨트롤러 킷이 갖습니다(§4.1).
 
@@ -88,11 +88,11 @@
 
 ### 값 공유는 Section이 provider
 
-형제 위젯이 값을 공유해야 하면 **Section이 context provider가 됩니다**(`controllers/provider.tsx` + `blocks/section/component.tsx`). 한 섹션의 판형들이 슬라이더 하나를 공유합니다. 위젯이 자기 스토어를 따로 만들지 않습니다 — 공유 값은 전부 컨트롤러 계약을 탑니다(§4.1).
+형제 위젯이 값을 공유해야 하면 **블록이 context provider가 되는 것**이 계약입니다(`controllers/provider.tsx`). 🔴 다만 2026-09-07 카드 모델 전환에서 컨트롤러 연결은 범위 밖으로 배제되어, 지금 카드 블록(`blocks/card-block.tsx`)은 스코프를 열지 않습니다 — 컨트롤러 위젯은 admin 고정값으로만 그려지고 하단 Floating Controller는 위젯 갤러리에서만 동작합니다. 다시 연결할 때 이 절이 계약입니다. 위젯이 자기 스토어를 따로 만들지 않습니다 — 공유 값은 전부 컨트롤러 계약을 탑니다(§4.1).
 
 🔴 **모듈 스코프 스토어는 금지입니다.** 토픽 라우트가 여러 섹션을 한 화면에 렌더하므로, 섹션마다 놓인 패널이 전부 같은 값을 물어 슬라이더 하나가 판형 12개를 함께 움직입니다(실측된 사고). `set`은 `useCallback`으로 안정화해 소비자가 effect 의존에 넣을 수 있게 합니다.
 
-Section은 특정 leaf를 격자에서 걷어내 **다른 자리에 렌더**할 수 있습니다 — 컨트롤 패널이 배치 셀을 차지하면 안 되기 때문입니다(`splitControls`). 지금 그 자리는 화면 하단의 **Floating Controller**입니다(§4.1).
+컨트롤만 나르는 위젯(layout-grid-controls)은 카드 디스플레이가 아닙니다 — 그릴 것이 없어 디스플레이 레지스트리에 없고, 2026-09-07 이관에서 그 행은 사라졌습니다. 컨트롤을 다시 연결하면 그 자리는 화면 하단의 **Floating Controller**입니다(§4.1).
 
 ### 4.1 컨트롤은 매니페스트가 정하고 하단 Floating Controller에 뜹니다
 
@@ -108,13 +108,15 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 
 | 누가 | 무엇을 | 🔴 모르는 것 |
 | --- | --- | --- |
-| `widgets/<name>/manifest.ts` | 이 블록이 여는 컨트롤 계약 | 화면 어디에 그려지는지 |
+| `cards/displays/dynamics/<name>/manifest.ts` | 이 블록이 여는 컨트롤 계약 | 화면 어디에 그려지는지 |
 | `controllers/registry.ts` | `blockType` → 매니페스트 + admin 값→제한 변환 | — (양쪽을 아는 **유일한** 자리) |
 | `controllers/provider.tsx` | 블록 단위 값 스코프 | 값의 뜻 |
 | `controllers/pill.tsx` | 그룹을 구분선으로 가른 한 줄 배치 | 도메인 |
 | `GuidelineHelperProvider` | 관측(IntersectionObserver)과 "누가 활성인가" | **값** |
 | `GuidelineHelperRegion` | 블록이 선언하는 **관측 영역** = 조작 대상이 놓인 면(제목·본문 아님) | 컨트롤이 무엇인지 |
 | `GuidelineHelperSlot` | 알약이 앉는 **자리 상자**(`absolute inset-0`인 세로 flex 열). sticky는 바가 갖는다 | 무엇이 들어오는지 |
+
+🔴 `GuidelineHelperProvider`·`GuidelineHelperSlot`은 지금 토픽 화면(`pages/guideline-topic.tsx`)에 마운트되어 있지 않습니다(2026-09-08). 등록하는 블록이 없어 빈 관측자와 빈 상자만 남았기 때문입니다. 컨트롤을 다시 연결할 때 그 `<article>`이 둘을 감싸는 것이 계약입니다.
 
 #### 🔑 한 블록에 판을 여럿 두려면 「뺀 축만 자기 값」
 
@@ -125,7 +127,7 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 
 그래서 정본 지면 구성이 그대로 나옵니다: 가로형·세로형을 수평 병행, 표현 3종을 나란히. `layout-grid`는 같은 문제를 `override ?? 값`과 lock 플래그로 풉니다(`docs/11` 인스턴스 오버라이드 3형태).
 
-🔴 **dispatch가 인스턴스 필드를 props로 넘기지 않으면 두 번째 판의 admin 값이 조용히 버려집니다.** `leaves/render-leaf.tsx`의 case마다 `leaf.<필드>`를 넘겨야 합니다 — 에러도 경고도 없이 「저장했는데 안 바뀐다」로 나타납니다.
+🔴 **dispatch가 인스턴스 필드를 props로 넘기지 않으면 두 번째 판의 admin 값이 조용히 버려집니다.** `cards/displays/registry.render.tsx`의 렌더마다 `d.<필드>`를 넘겨야 합니다 — 에러도 경고도 없이 「저장했는데 안 바뀐다」로 나타납니다.
 
 🔴 **`select` 초기값이 options에 없으면 렌더가 던져 페이지가 죽습니다.** 선택지를 데이터에서 파생하는 위젯은 registry에서 값의 유효성을 확인하고 버려야 합니다(`ci-lockup`의 `usable`).
 
@@ -189,8 +191,8 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 
 ## 7. 알려진 결함
 
-- ✅ **섹션의 자식 위젯 이미지는 AI 검수에 넣지 않습니다 — 결함이 아니라 결정입니다**(2026-08-12). 기계(AI 챗·검색·검수)가 읽는 것은 섹션이 소유한 title·description·rule 셋뿐이고, 자식 위젯과 그 이미지는 사람이 보는 표현입니다(§4). 그래서 `blocks/section/projection.ts`는 `referenceAssets: []`를 돌려주고, `checks/collect-guideline-check-sources.ts`도 leaf 이미지를 모으지 않습니다. 🔴 **위젯별 projection을 만들어 이 경로를 "복구"하지 마십시오.**
-- 구 flat 블록 18종은 2026-08-10에, 한 번도 쓰이지 않은 `content-columns`·`callout`·`subBlock`은 2026-09-04에 삭제됐습니다. 같은 날 블록 층(`block`) 자체도 걷어 **섹션이 leaf(이미지·위젯)를 직접 품습니다.** 토픽에 배치할 수 있는 것은 `section` 하나이고, 나머지 시각 요소는 전부 섹션의 자식 leaf입니다. 동결된 CheckSession 스냅샷에 남은 옛 근거는 `checks/format-check-evidence.ts`가 읽기만 합니다.
+- ✅ **섹션의 자식 위젯 이미지는 AI 검수에 넣지 않습니다 — 결함이 아니라 결정입니다**(2026-08-12). 기계(AI 챗·검색·검수)가 읽는 것은 섹션이 소유한 title·description·rule 셋뿐이고, 자식 위젯과 그 이미지는 사람이 보는 표현입니다(§4). 그래서 `blocks/projection.ts`는 `referenceAssets: []`를 돌려주고, `checks/collect-guideline-check-sources.ts`도 leaf 이미지를 모으지 않습니다. 🔴 **위젯별 projection을 만들어 이 경로를 "복구"하지 마십시오.**
+- 구 flat 블록 18종은 2026-08-10에, 한 번도 쓰이지 않은 `content-columns`·`callout`·`subBlock`은 2026-09-04에 삭제됐습니다. 같은 날 블록 층(`block`) 자체도 걷었고, 2026-09-07에는 leaf를 **카드**로 옮겨 블록(section·base·overview·examples)이 카드를 품습니다. 시각 요소는 전부 카드의 디스플레이입니다. 동결된 CheckSession 스냅샷에 남은 옛 근거는 `checks/format-check-evidence.ts`가 읽기만 합니다.
 - 🔴 **CI 락업 도판의 치수 라벨이 H를 따라오지 않습니다.** 라벨 글자는 고정 크기(`text-xs`)라 좁은 간격 트랙에서 서로를 지우고(해외지사 가로형A에서 기본 H=100에도 인접 라벨이 겹칩니다), 게이지 라벨의 오프셋도 고정 px이라 H를 낮추면 치수선에 붙고 높이면 멀어집니다. 라벨을 H 배수로 조판하거나 겹칠 때 자리를 옮기는 규칙이 필요합니다(`ci-lockup/diagram.tsx`).
 - 🔴 **CI 락업의 치수 도판에서, 셀 안에 가운데 정렬된 글자·심볼이 셀 폭이 바뀔 때 그 절반만큼 순간이동합니다.** 세로형에서 드러납니다. 도판은 요소의 이동을 FLIP으로 잇는데 기준이 **셀 상자**이고, 상자 안의 내용은 상자 폭에서 파생된 자리에 놓이므로 상자만 되돌려서는 내용이 제자리에 오지 않습니다. 고치려면 잉크를 기준으로 재야 하고, 그러려면 셀을 꽉 채우는 래퍼를 없애 상자가 곧 잉크가 되게 해야 합니다(`ci-lockup/diagram.tsx`).
 - 🔴 **CI 락업의 치수 도판을 키보드로 열 수 없습니다.** hover(pointer)로만 열립니다. focus로 열면 도판이 내보내기 버튼을 판에서 밀어내는데, 그 버튼이 곧 포커스를 쥔 요소라 포커스가 body로 튑니다. 여는 길과 내보내기 자리를 겹치지 않게 다시 잡아야 풀립니다(`ci-lockup/view.tsx`).
@@ -208,7 +210,7 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 | **스펙 판독** | 수치를 읽어주는 줄. `font-mono` + `tabular-nums` + `text-xs` + `text-muted-foreground`. 규정이 범위인데 화면이 한 값을 그리면 **적용값을 함께 적습니다**(`행간 150–160% · 150% 적용`).<br>🔴 **판 안에서만 씁니다** — 아래 「위젯은 판만 그립니다」를 보십시오 |
 | **캡션** | 🔴 **쓰지 않습니다.** 아래 「위젯은 판만 그립니다」가 이 자리를 대신합니다. `WIDGET_CAPTION`은 아직 지우지 않은 예외 하나(`layout-grid`의 admin `caption` 필드)를 위해 남아 있습니다 |
 | **판정 표식** | 상태 토큰만(`text-destructive` 등, `docs/09` §4). 생 팔레트로 위반을 칠하지 않습니다 |
-| **hairline 격자** | `widgets/hairline.ts`의 `HAIRLINE_GRID`/`HAIRLINE_CELL` |
+| **hairline 격자** | `cards/displays/dynamics/hairline.ts`의 `HAIRLINE_GRID`/`HAIRLINE_CELL` |
 
 ### 표본 면은 두 종류이고, 어느 쪽인지 **선언**합니다
 
@@ -221,7 +223,7 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 
 🔴 브랜드 면은 `docs/09` §4의 "색을 데이터로 다루는 컴포넌트" 예외에 해당합니다. 다만 **예외라는 사실을 코드에 남깁니다** — 어느 쪽인지 이름 붙이지 않으면 다음 사람이 토큰 위반으로 보고 "고칩니다".
 
-그 이름이 사는 자리는 `widgets/surface.ts` 하나입니다(`hairline.ts`·`readout.ts`와 같은 형태). 위젯은 생 팔레트를 직접 쓰지 않고 거기서 가져옵니다. `widgets/visual-vocabulary.test.ts`가 그 파일만 예외로 두고 나머지를 막으며, 위젯에서 `dark:` 분기도 함께 막습니다 — 블록 면이 토큰 스코프를 다시 선언하는 것과 `dark:`가 어긋나기 때문입니다(`docs/09` §5).
+그 이름이 사는 자리는 `cards/displays/dynamics/surface.ts` 하나입니다(`hairline.ts`·`readout.ts`와 같은 형태). 위젯은 생 팔레트를 직접 쓰지 않고 거기서 가져옵니다. `cards/displays/dynamics/visual-vocabulary.test.ts`가 그 파일만 예외로 두고 `features/guideline` 전체에서 생 팔레트와 `dark:` 분기를 함께 막습니다(2026-09-08부터 위젯 밖의 블록·카드·컴포넌트도 대상). 블록 면이 토큰 스코프를 다시 선언하는 것과 `dark:`가 어긋나기 때문입니다(`docs/09` §5). 단색형 로고 fill(`MONO_FILL`)도 같은 파일이 갖습니다.
 
 ### 규정을 겹쳐 보이는 두 방식 — 얹기와 갈아치우기
 

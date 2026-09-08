@@ -113,12 +113,16 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|or
 | Badge·비필수 메타·캡션 | `text-xs` |
 | 본문·입력·일반 버튼·메뉴 | `text-sm` |
 | 큰 버튼·카드 제목 | `text-base` |
-| H1 설명·lead | `text-xl` |
+| H1 설명·lead·가이드라인 카드 캡션 | `text-xl` |
 | 섹션·로컬 페이지 제목 | `text-2xl` |
 | 페이지·챕터 제목 | `text-5xl` |
 | 최상위 H1 | `text-6xl` |
 
 14px 텍스트와 함께 쓰는 아이콘은 `size-4`, 16px 텍스트와 함께 쓰는 아이콘은 `size-5`를 기본으로 합니다. 일반 컴포넌트에는 `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기를 선언하지 않습니다.
+
+가이드라인 카드의 하단 캡션 배치는 Figma 131:272를 따릅니다. 제목·설명은 같은 크기와 Medium, 행간 155%를 사용합니다(사용자 지정 2026-09-08). 설명은 `text-muted-foreground`로 구분합니다. 서체는 브랜드 본문 서체(`font-body`)를 유지합니다. 이 스타일은 `cards/caption/component.tsx`가 소유하며 섹션 설명에는 적용하지 않습니다.
+
+캡션 배치는 `below`(기본, 카드 아래)와 `overlay`(판 안쪽 하단) 중 고릅니다. 오버레이는 Figma 136:231의 `text-base` 크기와 여백을 따르며, 제목·설명의 Medium·행간 155%는 공유합니다. 그라데이션은 판 폭을 채우고 텍스트 폭은 제한합니다. `dark` 토큰 스코프로 밝은 글자와 어두운 그라데이션의 대비를 유지하며, 긴 내용은 키보드로 접근할 수 있는 캡션 영역 안에서 스크롤합니다. 제목·설명·2열 스펙 표는 두 배치가 같은 렌더러를 사용합니다. 배치가 없는 기존 콘텐츠는 카드 아래에 표시합니다.
 
 메인 히어로의 제목·버전 표기와 푸터 `LBS`는 화면 비율에 맞춘 lockup을 유지해야 하므로 유일한 viewport 반응형 예외이며 기존 `clamp()` 크기를 사용합니다. 템플릿 캔버스와 `TypeScale`·`TypeSpecimen`이 데이터로 받은 글자 크기도 UI 타이포그래피가 아니므로 예외입니다. 그 밖의 `TypeSpecimen` 같은 대형 표본은 viewport 계산식 대신 `text-9xl` 같은 고정 유틸리티를 사용합니다. 클래스 주입이 불가능한 `.typeset` 내부 생성 HTML은 `typeset.css`에서 같은 고정 단계만 직접 선언합니다.
 
@@ -135,16 +139,18 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|or
 
 ## 7. 공통 셸과 프레임 골격
 
-guideline 섹션은 머리(제목·설명)와 leaf 격자를 각각 `ContentFrame` 하나로 감쌉니다.
+guideline 블록은 머리(제목·설명)와 카드 배치를 각각 `ContentFrame` 하나로 감쌉니다.
 
 | 겹 | 컴포넌트 | 소유 책임 |
 | --- | --- | --- |
-| 폭 프레임 | `ContentFrame` | 최대 폭과 가로 여백(`max-w-[1540px] px-4 md:px-8`) |
-| leaf 격자 | `blocks/shared/rhythm.ts`의 `LEAF_GRID`·`LEAF_SPAN` | 6열 격자와 leaf 폭(전폭 6·절반 3·삼분 2). 좁은 화면은 한 열 |
+| 폭 프레임 | `ContentFrame` | 카드 배치의 최대 폭·가로 여백(`padded`)과 블록 제목의 왼쪽 패딩(`heading`) |
+| 카드 배치 | `blocks/rhythm.ts`의 `CARD_ROWS`·`CARD_ROW_HEIGHT` | 줄바꿈 행(격자) 또는 캐러셀. 카드는 **높이 기준**이라 블록의 줄 높이(낮게·보통·높게)를 갖고 폭은 카드 비율에서 나온다. 좁은 화면은 한 열·폭 기준 |
 
-폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx`). 개별 섹션·leaf는 자기 `max-width`를 선언하지 않습니다 — leaf의 폭은 admin의 `span`이고, 그 값이 몇 열인지는 `LEAF_SPAN` 한 곳이 정합니다. 배경(면) 설정은 2026-09-04에 전 계층에서 걷었습니다 — 브랜드 면(흰 판·검은 판)은 위젯이 `widgets/surface.ts`의 선언으로 그립니다(`docs/11` §8).
+폭과 가로 여백은 `ContentFrame` 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록·카드는 자기 `max-width`를 선언하지 않습니다 — 카드가 정하는 값은 비율 하나고, 줄 높이가 얼마인지는 `CARD_ROW_HEIGHT` 한 곳이 정합니다. 배경(면) 설정은 2026-09-04에 전 계층에서 걷었습니다 — 브랜드 면(흰 판·검은 판)은 위젯이 `cards/displays/dynamics/surface.ts`의 선언으로 그립니다(`docs/11` §8).
 
-세로 리듬은 두 층이 담당합니다. 프레임의 self-padding(`content-frame.tsx`의 `py-8`)은 요소 **안쪽**의 대칭 여백이고, 섹션 **사이**의 간격은 `blocks/shared/rhythm.ts`의 `SECTION_STACK`(부모 `gap`)이 소유합니다. 루트에는 섹션만 오므로 리듬은 하나입니다. 섹션 안에서 제목과 격자 사이는 섹션 컴포넌트의 `gap-12`이고, 실제 간격은 `패딩 + gap + 패딩`의 합입니다. 본문 텍스트가 앉는 오른쪽 반칸은 같은 파일의 `RIGHT_HALF`가 소유합니다.
+캐러셀은 `ContentFrame`으로 첫 카드와 스냅 위치를 정렬하되, 이웃 카드는 프레임 밖에도 보입니다. 가이드라인의 `CardBlock`이 블록의 좌우 끝에서만 잘라내며 공통 캐러셀의 기본 clipping은 유지합니다. 카드 폭은 캡션 길이와 무관하게 판의 높이·비율로 결정합니다. **하단 캡션은 최대 폭 규칙의 예외**입니다 — Figma 131:272처럼 카드 폭 안에서 최대 폭을 제한하고 왼쪽에 붙이며, 값과 안쪽 여백은 `cards/caption/component.tsx`가 소유합니다.
+
+세로 리듬은 두 층이 담당합니다. 프레임의 self-padding(`content-frame.tsx`의 `py-8`)은 요소 **안쪽**의 대칭 여백이고, 섹션 **사이**의 간격은 `blocks/rhythm.ts`의 `SECTION_STACK`(부모 `gap`)이 소유합니다. 루트 블록은 섹션(`section`)과 카드 블록(`base`·슈거 `overview`·`examples`) 여럿이지만 전부 같은 스택에 앉으므로 리듬은 하나입니다. 섹션 안에서 제목과 격자 사이는 섹션 컴포넌트의 `gap-12`이고, 실제 간격은 `패딩 + gap + 패딩`의 합입니다. 블록의 제목·설명은 오른쪽 반칸 대신 `ContentFrame`의 `heading` variant에 왼쪽 정렬합니다(Figma 117:883). 이 프레임은 최대 폭 없이 블록 전체를 채우며, 가로 패딩은 `content-frame.tsx`가 소유합니다. 카드 배치는 기존 `padded` variant를 유지합니다.
 
 값을 바꿀 때는 이 두 자리만 고칩니다. 개별 블록이 자기 패딩·마진·열 배치를 다시 잡는 것은 이 통일을 깨므로 지양합니다. 페이지의 상하 여백도 라우트 layout이 따로 주지 않습니다 — 첫·마지막 프레임의 self-padding이 그 자리이고, 둘을 겹치면 상단 여백이 두 곳의 합이 됩니다.
 
@@ -240,12 +246,12 @@ look은 언젠가 전부 바뀝니다. 그러므로 **겉모습이 어설픈 것
 | on/off 스위치 | `components/ui/switch.tsx` |
 | 패널 카드·알약 칩(어드민 대시보드·가이드라인 메인) | `components/shared/panel-card.tsx` — 두 표면(Payload 13px root ↔ frontend 16px root)에서 동일하게 그려져야 해서 수치를 px로 고정한 예외 |
 | 페이지 히어로 배너(shader 배경 + 락업) | `components/shared/page-hero.tsx` |
-| 표본 면(테마 면·브랜드 면) | `features/guideline/widgets/surface.ts` |
-| 수치·캡션 줄 | `features/guideline/widgets/readout.ts` |
-| hairline 격자 | `features/guideline/widgets/hairline.ts` |
+| 표본 면(테마 면·브랜드 면) | `features/guideline/cards/displays/dynamics/surface.ts` |
+| 수치·캡션 줄 | `features/guideline/cards/displays/dynamics/readout.ts` |
+| hairline 격자 | `features/guideline/cards/displays/dynamics/hairline.ts` |
 | 색·간격·radius·타입 원시값 | `app/(frontend)/theme.css` |
 
-🔴 이 목록이 늘어나는 것은 정상이고, **같은 요소가 두 자리에 생기는 것은 결함입니다.** `features/guideline/widgets/visual-vocabulary.test.ts`가 색에 대해서만 이것을 지킵니다 — 다른 축은 아직 사람이 봅니다.
+🔴 이 목록이 늘어나는 것은 정상이고, **같은 요소가 두 자리에 생기는 것은 결함입니다.** `features/guideline/cards/displays/dynamics/visual-vocabulary.test.ts`가 `features/guideline` 전체(블록·카드·컴포넌트·위젯)를 훑어 색에 대해서만 이것을 지킵니다 — 다른 축은 아직 사람이 봅니다.
 
 #### 값은 어디서 읽나 — `@carbon/layout` (devDependency)
 
