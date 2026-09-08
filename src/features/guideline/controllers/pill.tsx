@@ -2,6 +2,7 @@
 
 import { Fragment } from 'react'
 import { ControllerControlRenderer } from '@/components/shared/controller-renderer'
+import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useGuidelineController } from './provider'
 
@@ -16,7 +17,7 @@ import { useGuidelineController } from './provider'
  *   (Figma의 Layout Type 1이 마진 하나만 실은 것이 이 경우다).
  */
 export function GuidelineControllerPill() {
-	const { groups, values, set } = useGuidelineController()
+	const { groups, values, set, reset } = useGuidelineController()
 
 	const visible = groups
 		.map((group) => ({
@@ -45,7 +46,10 @@ export function GuidelineControllerPill() {
 						// 🔴 최소폭이 없으면 값이 바뀔 때마다 컨트롤이 늘었다 줄었다 하고, 알약 전체와
 						//    그 안의 이웃까지 함께 움직인다(`4.5%` → `100%`에서 실제로 출렁였다).
 						//    고정폭이 아니라 **최소폭**인 이유는 라벨 길이가 컨트롤마다 달라서다.
-						<div key={control.id} className="min-w-[150px]">
+						<div
+							key={control.id}
+							className={control.kind === 'text' ? 'min-w-0' : 'min-w-[150px]'}
+						>
 							<ControllerControlRenderer
 								definition={control}
 								value={
@@ -57,6 +61,9 @@ export function GuidelineControllerPill() {
 					))}
 				</Fragment>
 			))}
+			<Button type="button" variant="ghost" size="sm" onClick={reset}>
+				초기화
+			</Button>
 		</>
 	)
 }

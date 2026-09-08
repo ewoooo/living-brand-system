@@ -7,7 +7,17 @@ import { IMAGE_RATIO_CLASS_NAMES, IMAGE_RATIO_OPTIONS, type ImageRatio } from '@
 export const CARD_RATIO_OPTIONS = IMAGE_RATIO_OPTIONS.filter(
 	(option) => option.value !== 'original',
 )
-export type CardRatio = Exclude<ImageRatio, 'original'>
-export const CARD_RATIO_CLASS: Record<CardRatio, string> = Object.fromEntries(
-	Object.entries(IMAGE_RATIO_CLASS_NAMES).filter(([key]) => key !== 'original'),
-) as Record<CardRatio, string>
+// 5:7은 Figma 142:1008의 동적 타입 카드 규격이며 CMS 비율 선택지는 늘리지 않는다.
+export type CardRatio = Exclude<ImageRatio, 'original'> | '5:7'
+/** 이관한 동적 카드의 기본 규격. 크기는 Card가 계산하고 Display는 영역을 채운다. */
+export const DYNAMIC_CARD_RATIO: Partial<Record<string, CardRatio>> = {
+	typeLanguageWidget: '5:7',
+	typeHierarchyWidget: '5:7',
+	layoutGridOverlayWidget: '3:2',
+}
+export const CARD_RATIO_CLASS = {
+	...Object.fromEntries(
+		Object.entries(IMAGE_RATIO_CLASS_NAMES).filter(([key]) => key !== 'original'),
+	),
+	'5:7': 'aspect-[5/7]',
+} as Record<CardRatio, string>

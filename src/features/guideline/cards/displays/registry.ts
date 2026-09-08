@@ -28,11 +28,11 @@ import { staticDisplay } from './static/definition'
  *
  * 🔴 이 모듈은 payload.config가 Node에서 읽는다(`cards/schema.ts` 경유) — React를 넣지 말 것.
  *
- * 위젯은 **전부** 연다(사용자 결정 2026-09-07 "B"). 그 결과 감수하는 것 둘: 컨트롤러 위젯(ci-lockup·
- * clearspace-viewer·layout-grid)은 하단 Floating Controller를 잃고 admin 고정값으로만 그려지며, 콘텐츠 높이형
- * (icon-grid·hd-color-palette·type-hierarchy·logo-on-background)은 규격 비율 판 안에서 스크롤된다.
+ * 위젯은 **전부** 연다(사용자 결정 2026-09-07 "B"). 현재 제한: 컨트롤러 위젯(ci-lockup·
+ * clearspace-viewer·layout-grid)은 하단 Floating Controller를 잃고 admin 고정값으로만 그려진다.
+ * 모든 동적 디스플레이는 카드의 너비·높이를 채우며 내부 스크롤이나 전체 자동 축소를 만들지 않는다.
  * 컨트롤 전용 layout-grid-controls는 그릴 것이 없어 2026-09-08에 지웠고, Do/Don’t 위젯은 카드(프리셋 패널·정적
- * 디스플레이 + 블록 `mark`)로 대체됐다.
+ * 디스플레이 + 카드 `mark`)로 대체됐다.
  */
 export const DISPLAYS = [
 	staticDisplay,

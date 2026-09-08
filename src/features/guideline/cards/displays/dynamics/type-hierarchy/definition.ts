@@ -14,7 +14,7 @@ export const typeHierarchy = defineDisplay({
 	type: 'dynamic',
 	dbName: 'thr',
 	name: '문단 위계 구성',
-	description: '제목·본문·캡션의 위계 표본. 콘텐츠 높이형이라 판 안에서 스크롤된다.',
+	description: '제목·본문·캡션의 위계 표본. 카드가 준 영역 안에 배치한다.',
 	fields: [
 		{
 			// 🔴 옵션은 brand-typeface.ts를 그대로 쓴다 — 언어를 두 곳에 적으면 규정 표에는 있는데

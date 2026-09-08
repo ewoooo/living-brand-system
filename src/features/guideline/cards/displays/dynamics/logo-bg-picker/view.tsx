@@ -10,8 +10,6 @@ import { MONO_FILL } from '../surface'
 // 컨트롤이 하나라 두 표현이 같은 배경에서 어떻게 갈리는지가 한눈에 보인다 — 드래그 위젯이 열을
 // 나눠 놓아서 못 하던 것이다.
 
-/** 판 높이. */
-const PANEL_HEIGHT = '23rem'
 /**
  * 로고 상자 = 판 폭의 1/3. 두 표현이 **같은 상자**를 쓰고 둘 다 contain으로 맞아야 크기가 같아진다
  * — 한쪽만 고정 높이를 주면 방향이 다른 로고에서 크기가 갈린다(78×95 대 22×64로 갈렸었다).
@@ -75,11 +73,10 @@ export function LogoBgPickerView({
 	}
 
 	return (
-		<div className="flex w-full flex-col gap-2">
+		<div className="flex size-full min-h-0 min-w-0 flex-col gap-2">
 			<div
-				className="relative w-full overflow-hidden border border-border transition-colors"
+				className="relative min-h-0 w-full flex-1 overflow-clip border border-border transition-colors"
 				style={{
-					height: PANEL_HEIGHT,
 					backgroundColor: background.hex,
 					// 로고 상자가 셀이 아니라 판을 기준으로 크기를 잡게 한다(LOGO_BOX_WIDTH 주석 참고).
 					containerType: 'size',

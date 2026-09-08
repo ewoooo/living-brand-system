@@ -1,7 +1,7 @@
 import type { Field, TextField } from 'payload'
 import { describe, expect, it } from 'vitest'
 import { anchorField, baseContentFields, presetFields } from './fields'
-import { blockEntry, blockSchema } from './registry'
+import { BLOCKS, blockEntry, blockSchema } from './registry'
 
 function flat(fields: Field[]): Field[] {
 	return fields.flatMap((field) =>
@@ -19,6 +19,24 @@ const OverviewBlock = blockSchema(blockEntry('overview'))
 const ExamplesBlock = blockSchema(blockEntry('examples'))
 
 describe('슈거 블록', () => {
+	it('모든 블록의 Mark는 카드가 소유하고 기본값은 없음이다', () => {
+		for (const entry of BLOCKS) {
+			const fields = blockSchema(entry).fields
+			expect(named(fields, 'mark')).toBeUndefined()
+			const cards = named(fields, 'cards')
+			if (cards.type !== 'array') throw new Error('cards 배열이 없다')
+			expect(named(cards.fields, 'mark')).toMatchObject({
+				defaultValue: 'none',
+				options: [
+					{ label: '없음', value: 'none' },
+					{ label: 'Do (권장)', value: 'do' },
+					{ label: 'OK (허용)', value: 'ok' },
+					{ label: "Don't (금지)", value: 'dont' },
+				],
+			})
+		}
+	})
+
 	// 🔴 슈거는 새 필드를 만들지 않는다 — 기본 블록과 같은 필드 이름 집합이어야 한다.
 	it('기본 블록과 같은 필드를 갖는다', () => {
 		const base = flat(baseContentFields()).map((f) => ('name' in f ? f.name : f.type))

@@ -2,13 +2,21 @@ import type { Field } from 'payload'
 import { CARD_RATIO_OPTIONS } from './displays/ratio'
 import { displayBlocks } from './displays/registry'
 
+/** 카드 하나의 판정 표식. 생략하거나 none이면 표시하지 않는다. */
+export const CARD_MARKS = [
+	{ label: '없음', value: 'none' },
+	{ label: 'Do (권장)', value: 'do' },
+	{ label: 'OK (허용)', value: 'ok' },
+	{ label: "Don't (금지)", value: 'dont' },
+] as const
+
 /**
  * 카드 = 디스플레이 + 캡션(제목·설명). 콘텐츠의 최소 단위이고 블록의 하위 개체다(2026-09-07 모델).
  *
  * 🔴 비율은 규격 타입에서 고른다(`displays/ratio.ts`). 디스플레이는 정적(이미지) 또는 다이나믹(위젯)
  *    중 **하나**다. 캡션은 선택이고 제목·설명도 각각 단독으로 쓸 수 있다 — 빈 자리는 렌더하지 않는다.
  * 🔴 카드는 폭을 갖지 않는다. 줄 높이는 블록이 정하고(`rowHeight`) 폭은 비율에서 계산된다 — 그래서
- *    카드가 정하는 값은 비율 하나다.
+ *    카드의 크기를 정하는 값은 비율 하나다. Mark와 캡션은 카드별 선택 속성이다.
  */
 export function cardFields(): Field[] {
 	return [
@@ -21,7 +29,18 @@ export function cardFields(): Field[] {
 			options: [...CARD_RATIO_OPTIONS],
 			admin: {
 				description:
-					'카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.',
+					'카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 높이는 블록의 줄 높이를 따릅니다.',
+			},
+		},
+		{
+			name: 'mark',
+			type: 'select',
+			label: '판정 표식',
+			defaultValue: 'none',
+			enumName: 'enum_card_mark',
+			options: [...CARD_MARKS],
+			admin: {
+				description: '이 카드에만 붙는 표식입니다. 없음을 선택하면 표시하지 않습니다.',
 			},
 		},
 		{

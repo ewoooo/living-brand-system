@@ -5,7 +5,7 @@ import { controllerNumber, useGuidelineController } from '@/features/guideline/c
 import { SCALE } from './manifest'
 
 // 클리어스페이스 뷰어(클라). 레이아웃 규칙:
-//  - 바깥 row = 고정 높이 + 폭 100%. 패널 2개가 그 폭을 flex-1로 균등 양분(박스는 슬라이더에 불변, 창 폭에만 반응).
+//  - 바깥 row = 카드가 준 너비·높이. 패널 2개가 그 폭을 flex-1로 균등 양분(박스는 슬라이더에 불변, 창 폭에만 반응).
 //  - 🔑 슬라이더 % = 원본(viewBox) 대비 배율. 렌더 높이 = 원본 높이 × %/100, 100% = 원본 1:1.
 //    박스 크기를 기준으로 삼으면 패널마다 100%가 다른 배율을 뜻하게 되고, 원본에서 같은 10px였던
 //    SVG 내부 치수 텍스트가 패널 간에 다른 크기로 보인다(가로형은 박스 폭에, 세로형은 높이에 걸림).
@@ -19,8 +19,6 @@ export type ClearspacePanel = {
 }
 type Props = { panels: ClearspacePanel[] }
 
-// 뷰포트 높이(px). 로고 크기와 무관한 고정 표시 영역 — 넘치면 잘린다.
-const BASE_H = 640
 // 슬라이더 표시값 대비 실제 배율. 슬라이더 눈금은 그대로 10~100%로 두고 실제 배율만 여기서 정한다
 // (표시 100% = 원본의 75%). 눈금을 바꾸지 않는 건 사용자에게 보이는 범위를 유지하기 위함.
 // 최소크기 경고는 이 값으로 계산된 실제 렌더 높이를 minHeightPx와 비교하므로 배율을 바꿔도 유효하다.
@@ -58,13 +56,10 @@ export function ClearspaceViewerView({ panels }: Props) {
 	}
 
 	return (
-		<div className="flex flex-col gap-6">
-			{/* 뷰포트 = 박스 하나(고정 높이 · 폭 100%). 넘치면 자른다.
+		<div className="flex size-full min-h-0 min-w-0 flex-col gap-6">
+			{/* 뷰포트 = 카드에서 판독 줄을 뺀 영역. 넘치면 자른다.
 			    그 안에 로고 전체를 한 그룹으로 묶어 가운데 정렬한다(패널별로 폭을 나눠 갖지 않는다). */}
-			<div
-				className="flex w-full items-center justify-center overflow-hidden"
-				style={{ height: BASE_H }}
-			>
+			<div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-clip">
 				<div className="flex shrink-0 items-center gap-6">
 					{panels.map((p, i) => {
 						const h = renderedH(i)

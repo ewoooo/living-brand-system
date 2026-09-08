@@ -8,7 +8,7 @@ export const hdColorPalette = defineDisplay({
 	type: 'dynamic',
 	dbName: 'hcp',
 	name: 'HD 컬러 팔레트',
-	description: '컬러 그룹의 스와치 격자. 콘텐츠 높이형이라 판 안에서 스크롤된다.',
+	description: '컬러 그룹의 스와치 격자. 카드 높이를 균등 또는 순위 비율로 나눈다.',
 	fields: [
 		{
 			// hasMany인 이유: 같은 색을 다른 기준으로 묶은 그룹이 공존한다(용도별 / 계열별).
@@ -23,13 +23,13 @@ export const hdColorPalette = defineDisplay({
 			},
 		},
 		{
-			// 그룹 사이에 우열이 있느냐가 판형을 가른다. 위계가 있으면 높이로, 없으면 균일 정사각형으로.
+			// 그룹 사이에 우열이 있느냐가 판형을 가른다. 위계가 있으면 높이로, 없으면 균일한 크기로.
 			name: 'layout',
 			type: 'select',
 			defaultValue: 'uniform',
 			enumName: 'enum_hcp_layout',
 			options: [
-				{ label: '균일 (모든 칸이 같은 크기 정사각형)', value: 'uniform' },
+				{ label: '균일 (모든 칸이 같은 크기)', value: 'uniform' },
 				{ label: '위계 (앞 그룹일수록 높다)', value: 'ranked' },
 			],
 			admin: {

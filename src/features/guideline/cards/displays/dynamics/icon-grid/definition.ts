@@ -7,7 +7,7 @@ export const iconGrid = defineDisplay({
 	type: 'dynamic',
 	dbName: 'icw',
 	name: '아이콘 그리드',
-	description: '브랜드 아이콘 격자. 콘텐츠 높이형이라 판 안에서 스크롤된다.',
+	description: '브랜드 아이콘 격자. 카드가 준 영역 안에 배치한다.',
 	fields: [],
 })
 

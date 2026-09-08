@@ -22,6 +22,26 @@ const doc = (...rows: ReturnType<typeof row>[]) =>
 	}) as never
 
 describe('표 → 스펙 리스트', () => {
+	it.each([
+		'description',
+		'caption',
+		'overlayCaption',
+	] as const)('%s 안에서도 스펙 라벨·값의 밀도를 유지한다', (variant) => {
+		const { container } = render(
+			<GuidelineDescription variant={variant} description={doc(row('Weight', 'Regular'))} />,
+		)
+		expect(container.querySelector('dt')).toHaveClass(
+			'text-sm',
+			'font-medium',
+			'leading-[1.55]',
+		)
+		expect(container.querySelector('dd')).toHaveClass(
+			'text-sm',
+			'font-normal',
+			'leading-[1.55]',
+		)
+	})
+
 	it('2열 표는 라벨·값 dl로 그린다', () => {
 		const { container } = render(
 			<GuidelineDescription

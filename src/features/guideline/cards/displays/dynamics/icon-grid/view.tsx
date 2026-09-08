@@ -73,7 +73,7 @@ export function IconGridView({
 	}
 
 	return (
-		<div className="w-full">
+		<div className="flex size-full min-h-0 min-w-0 flex-col">
 			{/* 뷰어 조작 — 필터(태그)는 왼쪽, 보기 액션(반전·섞기)은 오른쪽 도구 클러스터로 분리 */}
 			<div className="mb-4 flex flex-wrap items-start justify-between gap-x-8 gap-y-3">
 				<div className="flex flex-wrap items-center gap-2">
@@ -139,7 +139,7 @@ export function IconGridView({
 			</div>
 
 			{/* 8열 그리드 — border/radius 없음. SVG는 CSS mask로 그려 fg(실루엣)·bg를 색칠. */}
-			<div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+			<div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-4 gap-2 sm:grid-cols-8">
 				{visible.map((it) => {
 					const { fg, bg } = cellColors(it)
 					return (

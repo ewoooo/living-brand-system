@@ -74,15 +74,19 @@ export async function HdColorPaletteWidget({
 
 	return (
 		// 행 사이 간격 없이 붙여 한 덩어리로 읽히게 한다(그룹 구분은 행 위 라벨이 한다).
-		<div className="flex w-full flex-col">
+		<div className="flex size-full min-h-0 min-w-0 flex-col">
 			{sections.map((section, index) => (
-				<section key={section.id} className="flex flex-col">
+				<section
+					key={section.id}
+					className="flex min-h-0 flex-col"
+					style={{ flex: layout === 'ranked' ? weightOf(index) : 1 }}
+				>
 					<Typography
 						as="h3"
 						size="sm"
 						tone="muted"
 						weight="medium"
-						className="px-4 py-2"
+						className="shrink-0 px-4 py-2"
 					>
 						{section.name}
 					</Typography>
@@ -90,7 +94,6 @@ export async function HdColorPaletteWidget({
 						swatches={section.swatches}
 						layout={layout ?? 'uniform'}
 						columnCount={columnCount}
-						rankWeight={weightOf(index)}
 					/>
 				</section>
 			))}

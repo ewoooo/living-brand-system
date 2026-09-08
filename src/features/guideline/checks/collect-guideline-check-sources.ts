@@ -87,8 +87,8 @@ function toSources(
 }
 
 /**
- * 루트 블록에 **어느 섹션에 속하는지**를 달아 내놓는다. 지금 루트는 섹션뿐이고 섹션의 자식은 leaf(위젯·이미지)라
- * rules를 갖지 않으므로 내려가지 않는다 — 기계가 읽는 텍스트와 rules는 섹션이 소유한다(docs/11 §4).
+ * 모든 루트 블록을 읽되 section에만 앵커 출처를 붙인다. 카드·디스플레이는 rules를 갖지 않아
+ * 내려가지 않는다. 카드 캡션의 평문은 snapshotBlock이 조립한다(docs/11 §4).
  */
 function flattenBlocks(
 	blocks: GuidelineCheckDocument['blocks'],

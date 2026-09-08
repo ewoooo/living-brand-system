@@ -14,7 +14,11 @@ vi.mock('@/components/ui/carousel', () => ({
 		</div>
 	),
 }))
-afterEach(cleanup)
+// 이 검증은 카드의 경계를 본다. Slider의 ResizeObserver는 실제 브라우저에서 확인한다.
+vi.mock('@/components/ui/slider', () => ({ Slider: () => null }))
+afterEach(() => {
+	cleanup()
+})
 
 const image = (id: number) => ({ id, url: `/img-${id}.png`, alt: `그림 ${id}` })
 const staticCard = (id: string, extra: object = {}) => ({
@@ -25,6 +29,65 @@ const staticCard = (id: string, extra: object = {}) => ({
 })
 
 describe('Card', () => {
+	it('동적 디스플레이는 판 내부 스크롤을 만들지 않는다', () => {
+		const { container } = render(
+			<Card
+				card={{ ratio: '1:1', display: [{ blockType: 'typeSpecimenWidget' }] } as never}
+			/>,
+		)
+		expect(container.querySelector('[data-slot="card-display"]')).toHaveClass('overflow-clip')
+		expect(container.querySelector('figure > div')).toHaveClass('overflow-clip')
+		expect(screen.getByRole('textbox', { name: '타입 견본 입력' })).toHaveClass(
+			'flex-1',
+			'min-h-0',
+		)
+	})
+
+	it('기존 로고 크기와 오버레이 배율은 카드 크기를 바꾸지 않는다', () => {
+		const { container, rerender } = render(
+			<Card
+				card={
+					{
+						display: [
+							{
+								blockType: 'logoDisplayWidget',
+								logo: image(1),
+								width: 2000,
+								height: 1000,
+							},
+						],
+					} as never
+				}
+			/>,
+		)
+		const displayRoot = () => container.querySelector('[data-slot="card-display"] > div')
+		expect(displayRoot()).toHaveClass('size-full')
+		expect(screen.getByRole('img')).toHaveClass('size-full', 'object-contain')
+		expect(screen.getByRole('img').style.width).toBe('')
+		expect(screen.getByRole('img').style.height).toBe('')
+		rerender(
+			<Card
+				card={
+					{
+						display: [
+							{
+								blockType: 'clearspaceOverlayWidget',
+								logoLayer: image(1),
+								gridLayer: image(2),
+								scalePercent: 200,
+							},
+						],
+					} as never
+				}
+			/>,
+		)
+		expect(displayRoot()).toHaveClass('size-full')
+		expect((displayRoot() as HTMLElement).style.transform).toBe('')
+		for (const layer of container.querySelectorAll('img')) {
+			expect(layer).toHaveClass('absolute', 'inset-0', 'size-full', 'object-contain')
+		}
+	})
+
 	it('정적 디스플레이와 캡션(제목만)을 그린다', () => {
 		const { container } = render(
 			<Card
@@ -38,11 +101,11 @@ describe('Card', () => {
 		expect(screen.getByText('Forward Mark')).toBeInTheDocument()
 	})
 
-	it('블록 표식이 있으면 판 모서리에 배지를 그리고 none이면 그리지 않는다', () => {
-		render(<Card card={staticCard('a') as never} mark="dont" />)
+	it('카드 표식이 있으면 판 모서리에 배지를 그리고 none이면 그리지 않는다', () => {
+		render(<Card card={staticCard('a', { mark: 'dont' }) as never} />)
 		expect(screen.getByRole('img', { name: "Don't" })).toHaveClass('text-destructive')
 		cleanup()
-		render(<Card card={staticCard('a') as never} mark="none" />)
+		render(<Card card={staticCard('a', { mark: 'none' }) as never} />)
 		expect(screen.queryByRole('img', { name: "Don't" })).toBeNull()
 	})
 
@@ -83,6 +146,82 @@ describe('Card', () => {
 })
 
 describe('CardBlock', () => {
+	it('카드 없이도 제목·앵커를 유지하고 카드 프레임은 만들지 않는다', () => {
+		const { container, rerender } = render(
+			<CardBlock
+				id="text-only"
+				block={{ title: '사용 원칙', cards: [], layout: 'grid', rowHeight: 'medium' }}
+			/>,
+		)
+		expect(
+			screen.getByRole('heading', { name: '사용 원칙', level: 2 }).closest('section'),
+		).toHaveAttribute('id', 'text-only')
+		expect(container.querySelector('section')?.children).toHaveLength(1)
+		rerender(<CardBlock block={{ title: ' ', cards: [{ display: [] }] } as never} />)
+		expect(container).toBeEmptyDOMElement()
+	})
+
+	it('제목과 카드가 없어도 설명을 표시한다', () => {
+		const description = {
+			root: {
+				type: 'root',
+				version: 1,
+				direction: null,
+				format: '',
+				indent: 0,
+				children: [
+					{
+						type: 'paragraph',
+						version: 1,
+						direction: null,
+						format: '',
+						indent: 0,
+						children: [
+							{
+								type: 'text',
+								version: 1,
+								text: '브랜드 사용 원칙',
+								format: 0,
+								detail: 0,
+								mode: 'normal',
+								style: '',
+							},
+						],
+					},
+				],
+			},
+		}
+		render(<CardBlock block={{ description, layout: 'carousel', cards: [] } as never} />)
+		expect(screen.getByText('브랜드 사용 원칙')).toBeInTheDocument()
+		expect(screen.queryByRole('heading')).toBeNull()
+	})
+
+	it.each([
+		'grid',
+		'carousel',
+	])('%s 안에서 카드별 표식을 섞고 생략한 카드는 표시하지 않는다', (layout) => {
+		render(
+			<CardBlock
+				block={
+					{
+						layout,
+						cards: [
+							staticCard('a', { mark: 'do' }),
+							staticCard('b', { mark: 'ok' }),
+							staticCard('c', { mark: 'dont' }),
+							staticCard('d', { mark: 'none' }),
+							staticCard('e'),
+						],
+					} as never
+				}
+			/>,
+		)
+		for (const label of ['Do', 'OK', "Don't"]) {
+			expect(screen.getAllByRole('img', { name: label })).toHaveLength(1)
+		}
+		expect(screen.getAllByRole('img')).toHaveLength(8)
+	})
+
 	it('블록의 줄 높이를 모든 카드 판에 주고 폭은 카드 비율이 정한다', () => {
 		const { container } = render(
 			<CardBlock

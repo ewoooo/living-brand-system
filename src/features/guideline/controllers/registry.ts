@@ -2,6 +2,7 @@ import type {
 	ControllerControlRestriction,
 	StudioControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
+import { LANGUAGES, SAMPLE_PARAGRAPH, TIERS } from '../cards/displays/dynamics/brand-typeface'
 import {
 	CI_LOCKUP_CONTROLS,
 	CI_LOCKUP_MANIFEST,
@@ -10,6 +11,10 @@ import {
 import { lockupOptions, tierFor } from '../cards/displays/dynamics/ci-lockup/rules'
 import { CLEARSPACE_VIEWER_MANIFEST } from '../cards/displays/dynamics/clearspace-viewer/manifest'
 import { LAYOUT_GRID_MANIFEST } from '../cards/displays/dynamics/layout-grid/manifest'
+import { LAYOUT_OVERLAY_MANIFEST } from '../cards/displays/dynamics/layout-grid-overlay/manifest'
+import { TYPE_HIERARCHY_MANIFEST } from '../cards/displays/dynamics/type-hierarchy/manifest'
+import { LANGUAGE, TYPE_LANGUAGE_MANIFEST } from '../cards/displays/dynamics/type-language/manifest'
+import type { DisplayData } from '../cards/displays/registry.render'
 import type { GuidelineControllerManifest } from './contract'
 
 /**
@@ -165,4 +170,32 @@ export const GUIDELINE_CONTROLLERS: Readonly<Record<string, ControllerEntry>> = 
 /** 자식이 컨트롤러를 여는 블록인지 — 이름이 아니라 표로 판정한다. */
 export function controllerEntryFor(blockType: string): ControllerEntry | undefined {
 	return GUIDELINE_CONTROLLERS[blockType]
+}
+
+/** 이관한 카드의 조작은 카드별로 격리한다. 옛 블록 컨트롤러 등록과는 별개다. */
+export function cardControllerFor(display: DisplayData) {
+	if (display.blockType === 'layoutGridOverlayWidget')
+		return { manifest: LAYOUT_OVERLAY_MANIFEST }
+	if (display.blockType === 'typeLanguageWidget' && display.layout !== 'compare')
+		return {
+			manifest: TYPE_LANGUAGE_MANIFEST,
+			restrictions: {
+				controls: [
+					{ controlId: LANGUAGE.id, defaultValue: display.initialLanguage ?? 'ko' },
+				],
+			},
+		}
+	if (display.blockType === 'typeHierarchyWidget') {
+		const language = LANGUAGES.find((l) => l.key === display.language)?.key ?? 'ko'
+		return {
+			manifest: TYPE_HIERARCHY_MANIFEST,
+			restrictions: {
+				controls: TIERS.map((tier) => ({
+					controlId: tier.key,
+					defaultValue: SAMPLE_PARAGRAPH[language][tier.key],
+				})),
+			},
+		}
+	}
+	return null
 }

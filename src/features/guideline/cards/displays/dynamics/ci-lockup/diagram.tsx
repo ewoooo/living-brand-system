@@ -160,7 +160,7 @@ type Item = { placement: Placement; node: ReactNode; z: number; flow: boolean; s
  * 🔑 사방 신축 트랙. 판이 **캔버스를 꽉 채우게** 하는 장치다 — 면·선·점선이 도판 내용 폭이 아니라
  * **캔버스 끝까지** 닿아야 하고(사용자 지정 2026-08-19), 정본 도판도 그렇게 그린다.
  * 🔴 양쪽이 같은 신축이라 이것이 곧 가운데 정렬이다(`mx-auto`를 대신한다). 내용이 캔버스보다
- *    넓어지면 `minWidth: max-content`가 이겨서 신축이 0으로 접히고 왼쪽부터 보인다.
+ *    내용이 넓어져도 격자 자체는 카드 크기를 유지한다.
  * 🔴 `minmax(0, 1fr)`이어야 한다 — 맨 `1fr`은 최소 크기가 auto라 안의 것이 넘치면 트랙이 벌어진다.
  */
 const FLEX = 'minmax(0, 1fr)'
@@ -247,7 +247,7 @@ function GapLabel({
 }) {
 	const align = place === 'below' ? 'items-start pt-2.5' : 'items-end pb-2.5'
 	return (
-		<span className={`relative grid size-full justify-center ${align}`}>
+		<span className={`relative grid size-full min-h-0 min-w-0 justify-center ${align}`}>
 			{place === 'below' ? (
 				<span
 					className="absolute top-0 left-1/2 h-2.5"
@@ -270,7 +270,7 @@ function GapLabel({
 function Span({ label, side, guide }: { label: string; side: 'left' | 'right'; guide: string }) {
 	const near = side === 'left' ? 'right' : 'left'
 	return (
-		<span className="relative grid size-full place-items-center">
+		<span className="relative grid size-full min-h-0 min-w-0 place-items-center">
 			<span
 				className="absolute top-0 bottom-0 w-px"
 				style={{ background: guide, [near]: '13px' }}
@@ -525,21 +525,13 @@ export function LockupDiagram({
 	return (
 		/* 🔴 `h-full`이 있어야 판의 `size-full`이 캔버스 높이를 받는다 — 없으면 내용 높이가 되어
 		   세로 신축 트랙이 0으로 접히고 세로 점선이 캔버스 위아래에 못 닿는다. */
-		<div className="h-full w-full overflow-x-auto">
-			{/* 🔑 판이 **캔버스를 꽉 채운다** — 사방 신축 트랙(`FLEX`)이 남는 자리를 먹으므로 덩어리는
-				여전히 가운데에 놓이고, 면·선·점선은 캔버스 끝까지 닿는다.
-				🔴 `minWidth: max-content`가 안전망이다: 내용이 캔버스보다 넓어지면 신축이 0으로 접히고
-				   판이 내용 폭으로 자라 왼쪽부터 보인다(캔버스가 가로로 스크롤된다).
-				🔑 **판 자신은 움직이지 않는다**(실측: 꼴·언어·계층을 바꿔도 `offsetLeft/Top`이 불변).
-				   그래서 덩어리의 이동을 따로 이을 필요가 없고, 가운데 정렬 때문에 생기는 이동은
-				   판을 기준으로 재는 안쪽 FLIP이 그대로 잡는다. 판이 내용 폭으로 돌아가면 그때는
-				   판 자신의 이동을 다시 이어야 한다. */}
+		<div className="size-full min-h-0 min-w-0 overflow-clip">
+			{/* 카드 영역을 채우고 남는 공간은 신축 트랙으로 나눈다. */}
 			<div
-				className="relative grid size-full"
+				className="relative grid size-full min-h-0 min-w-0"
 				style={{
 					gridTemplateColumns: g.columns.join(' '),
 					gridTemplateRows: g.rows.join(' '),
-					minWidth: 'max-content',
 					alignItems: 'stretch',
 					/* 🔑 색은 여기 한 번만 얹는다 — 글자·구분바가 상속하고, 주석 마크는 전부
 					   `guide`를 명시로 갖고 있어 영향을 받지 않는다. 전환은 락업과 같은 토큰이다. */

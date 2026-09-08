@@ -1,14 +1,12 @@
 import { ContentHeading } from '@/components/shared/content-heading'
 import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineImage } from './guideline-image'
+import { GUIDELINE_TYPOGRAPHY } from './guideline-typography'
 import type { GuidelineVariant } from './guideline-variant'
 
 const HEADER_STYLE = {
-	// Figma 61:3509는 64px SemiBold다. 공유 어휘의 가장 가까운 칸이 6xl(60px)이라 4px 모자라고,
-	// 그 4px 때문에 `text-[64px]`를 들이지는 않는다 — 크기를 어휘 밖에서 말하기 시작하면 다음
-	// 제목도 같은 이유로 어휘를 벗어난다. 정확히 64가 필요하면 theme.css의 `--text-6xl`을 옮긴다.
-	topic: { level: 1, size: '6xl', weight: 'semibold' },
-	section: { level: 2, size: '2xl', weight: 'semibold' },
+	topic: { level: 1, ...GUIDELINE_TYPOGRAPHY.topicTitle },
+	section: { level: 2, ...GUIDELINE_TYPOGRAPHY.blockTitle },
 } as const
 
 export function GuidelineHeader({
@@ -30,7 +28,7 @@ export function GuidelineHeader({
 			size={style.size}
 			weight={style.weight}
 			className={className}
-			titleClassName="leading-none tracking-tight"
+			titleClassName={style.className}
 		/>
 	)
 }

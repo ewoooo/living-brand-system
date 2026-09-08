@@ -11,15 +11,12 @@ import { HdColorPaletteWidget } from '@/features/guideline/cards/displays/dynami
 import { IconGridWidget } from '@/features/guideline/cards/displays/dynamics/icon-grid/component'
 import { LayoutGridWidget } from '@/features/guideline/cards/displays/dynamics/layout-grid/component'
 import { LAYOUT_GRID_MANIFEST } from '@/features/guideline/cards/displays/dynamics/layout-grid/manifest'
-import { LayoutGridOverlayWidget } from '@/features/guideline/cards/displays/dynamics/layout-grid-overlay/component'
 import { LogoBgPickerWidget } from '@/features/guideline/cards/displays/dynamics/logo-bg-picker/component'
 import { LogoColorVariantWidget } from '@/features/guideline/cards/displays/dynamics/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/cards/displays/dynamics/logo-display/component'
 import { LogoOnBackgroundWidget } from '@/features/guideline/cards/displays/dynamics/logo-on-background/component'
 import { PresetPanel } from '@/features/guideline/cards/displays/dynamics/preset-panel/component'
 import { StemClearSpaceWidget } from '@/features/guideline/cards/displays/dynamics/stem-clear-space/component'
-import { TypeHierarchyWidget } from '@/features/guideline/cards/displays/dynamics/type-hierarchy/component'
-import { TypeLanguageWidget } from '@/features/guideline/cards/displays/dynamics/type-language/component'
 import { TypeScrambleWidget } from '@/features/guideline/cards/displays/dynamics/type-scramble/component'
 import { TypeSpecimenWidget } from '@/features/guideline/cards/displays/dynamics/type-specimen/component'
 import { TypeWeightWidget } from '@/features/guideline/cards/displays/dynamics/type-weight/component'
@@ -27,6 +24,8 @@ import { helperLabel } from '@/features/guideline/components/globals/guideline-h
 import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
 import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
 import type { BrandLogo } from '@/payload-types'
+import { CardBlock } from '../../blocks/card-block'
+import { GuidelineHelperProvider, GuidelineHelperSlot } from '../globals/guideline-helper'
 
 // dev 전용 위젯 갤러리. 위젯 스타일 통일 + 성능 확인용 (로컬에서만 노출, nav 미등록).
 // ponytail: registry = 배열 하나, 제너레이터는 반복이 지겨워질 때.
@@ -40,7 +39,7 @@ function pick(logos: BrandLogo[], filename: string): BrandLogo | null {
 	return logos.find((l) => l.filename === filename) ?? null
 }
 
-async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
+async function buildWidgets(): Promise<{ name: string; node: ReactNode; framed?: boolean }[]> {
 	const payload = await getPayload({ config })
 	const { docs: logos } = await payload.find({
 		collection: 'brand-logos',
@@ -94,9 +93,63 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 		{ name: 'type-specimen', node: <TypeSpecimenWidget /> },
 		{ name: 'type-scramble', node: <TypeScrambleWidget /> },
 		{ name: 'type-weight', node: <TypeWeightWidget /> },
-		{ name: 'type-hierarchy', node: <TypeHierarchyWidget /> },
-		{ name: 'type-language (단일)', node: <TypeLanguageWidget layout="single" /> },
-		{ name: 'type-language (비교)', node: <TypeLanguageWidget layout="compare" /> },
+		{
+			name: 'type-hierarchy',
+			framed: false,
+			node: (
+				<CardBlock
+					block={{
+						layout: 'grid',
+						rowHeight: 'medium',
+						cards: [
+							{
+								id: 'type-hierarchy',
+								ratio: '1:1',
+								display: [{ blockType: 'typeHierarchyWidget', language: 'ko' }],
+							},
+						],
+					}}
+				/>
+			),
+		},
+		{
+			name: 'type-language (단일)',
+			framed: false,
+			node: (
+				<CardBlock
+					block={{
+						layout: 'grid',
+						rowHeight: 'medium',
+						cards: [
+							{
+								id: 'type-language (단일)',
+								ratio: '1:1',
+								display: [{ blockType: 'typeLanguageWidget', layout: 'single' }],
+							},
+						],
+					}}
+				/>
+			),
+		},
+		{
+			name: 'type-language (비교)',
+			framed: false,
+			node: (
+				<CardBlock
+					block={{
+						layout: 'grid',
+						rowHeight: 'medium',
+						cards: [
+							{
+								id: 'type-language (비교)',
+								ratio: '1:1',
+								display: [{ blockType: 'typeLanguageWidget', layout: 'compare' }],
+							},
+						],
+					}}
+				/>
+			),
+		},
 
 		{ name: 'logo-display', node: <LogoDisplayWidget logo={koLogo} /> },
 		{ name: 'logo-color-variant', node: <LogoColorVariantWidget logo={koLogo} /> },
@@ -104,9 +157,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 		{ name: 'logo-bg-picker', node: <LogoBgPickerWidget group={bgGroup} /> },
 		{
 			name: 'clearspace-overlay',
-			node: (
-				<ClearspaceOverlayWidget logoLayer={hLogo} gridLayer={hGrid} scalePercent={100} />
-			),
+			node: <ClearspaceOverlayWidget logoLayer={hLogo} gridLayer={hGrid} />,
 		},
 		{
 			name: 'clearspace-viewer',
@@ -123,7 +174,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 			// 프리셋 패널은 카드 판을 채우는 디스플레이라 판(비율·clip)을 여기서 흉내 낸다. 컬러(로고 얹음)·타이포 하나씩.
 			name: 'preset-panel (컬러 프리셋)',
 			node: (
-				<div className="relative aspect-video overflow-hidden rounded-3xl bg-muted">
+				<div className="relative size-full overflow-clip rounded-3xl bg-muted">
 					<PresetPanel preset="overlay-stack" logo={koLogo} />
 				</div>
 			),
@@ -131,7 +182,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 		{
 			name: 'preset-panel (타이포 프리셋)',
 			node: (
-				<div className="relative aspect-video overflow-hidden rounded-3xl bg-muted">
+				<div className="relative size-full overflow-clip rounded-3xl bg-muted">
 					<PresetPanel preset="slanted" />
 				</div>
 			),
@@ -149,20 +200,47 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 				</GuidelineControllerScope>
 			),
 		},
-		{ name: 'layout-grid-overlay', node: <LayoutGridOverlayWidget /> },
+		{
+			name: 'layout-grid-overlay',
+			framed: false,
+			node: (
+				<CardBlock
+					block={{
+						layout: 'grid',
+						rowHeight: 'medium',
+						cards: [
+							{
+								id: 'layout-grid-overlay',
+								ratio: '1:1',
+								display: [{ blockType: 'layoutGridOverlayWidget' }],
+							},
+						],
+					}}
+				/>
+			),
+		},
 	]
 }
 
 export async function GuidelineWidgetGallery() {
 	const widgets = await buildWidgets()
 	return (
-		<div className="flex flex-col gap-16 py-12">
-			{widgets.map(({ name, node }) => (
-				<section key={name} className="flex flex-col gap-4">
-					<h2 className="font-mono text-sm text-muted-foreground">{name}</h2>
-					{node}
-				</section>
-			))}
-		</div>
+		<GuidelineHelperProvider>
+			<div className="relative flex flex-col gap-16 py-12">
+				{widgets.map(({ name, node, framed }) => (
+					<section key={name} className="flex flex-col gap-4">
+						<h2 className="font-mono text-sm text-muted-foreground">{name}</h2>
+						{framed === false ? (
+							node
+						) : (
+							<div className="relative aspect-video overflow-clip rounded-3xl bg-muted">
+								<div className="absolute inset-0">{node}</div>
+							</div>
+						)}
+					</section>
+				))}
+				<GuidelineHelperSlot />
+			</div>
+		</GuidelineHelperProvider>
 	)
 }

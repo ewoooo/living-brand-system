@@ -5,8 +5,6 @@ import type { BrandBackground as Band } from '../brand-background'
 import type { LogoSources } from '../logo-set'
 import { MONO_FILL } from '../surface'
 
-const BAND_HEIGHT = 76
-
 // 드래그로 배경을 갈아 끼우는 로고. 세로로만 움직이고 놓으면 띠 가운데로 붙는다 —
 // 판정 기준이 "어느 띠 위인가"라서 띠 경계에 걸친 애매한 위치가 없는 편이 낫다.
 export function LogoOnBackgroundView({
@@ -36,8 +34,8 @@ export function LogoOnBackgroundView({
 
 	function bandAt(clientY: number) {
 		const rect = trackRef.current?.getBoundingClientRect()
-		if (!rect) return index
-		const raw = Math.floor((clientY - rect.top) / BAND_HEIGHT)
+		if (!rect?.height) return index
+		const raw = Math.floor(((clientY - rect.top) / rect.height) * bands.length)
 		return Math.max(0, Math.min(bands.length - 1, raw))
 	}
 
@@ -60,17 +58,16 @@ export function LogoOnBackgroundView({
 	if (!band) return null
 
 	return (
-		<div className="flex w-full flex-col gap-2">
+		<div className="flex size-full min-h-0 min-w-0 flex-col gap-2">
 			<div
 				ref={trackRef}
-				className="relative w-full select-none overflow-hidden border border-border"
+				className="relative flex min-h-0 w-full flex-1 select-none flex-col overflow-clip border border-border"
 			>
 				{bands.map((b) => (
 					<div
 						key={b.id}
-						className="flex items-center px-4 font-body text-xs"
+						className="flex min-h-0 flex-1 items-center px-4 font-body text-xs"
 						style={{
-							height: BAND_HEIGHT,
 							backgroundColor: b.hex,
 							color: MONO_FILL[b.monoFill],
 						}}
@@ -101,8 +98,8 @@ export function LogoOnBackgroundView({
 						dragging ? 'cursor-grabbing' : ''
 					}`}
 					style={{
-						height: BAND_HEIGHT,
-						top: index * BAND_HEIGHT,
+						height: `${100 / bands.length}%`,
+						top: `${(index / bands.length) * 100}%`,
 						transition: dragging ? undefined : 'top 120ms ease-out',
 						// 터치에서 세로 스크롤에 뺏기지 않게 한다. 없으면 모바일에서 드래그 대신 페이지가 스크롤된다.
 						touchAction: 'none',

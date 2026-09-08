@@ -4,7 +4,7 @@ import { PRESET_OPTIONS } from './presets'
 /**
  * 프리셋 패널 디스플레이 — 이미지가 아니라 **코드로 그리는** 위반 예시 판. 컬러 위반(패널 색·띠·로고 변형)과
  * 타이포 위반(자간·서체·크기·형태·기울기) 프리셋을 select 하나로 고른다. 옛 Do/Don't 위젯의 예시 하나가
- * 이 디스플레이를 가진 카드 하나가 됐다(2026-09-08). Do/OK/Don't 표식은 카드가 아니라 블록(`mark`)이 갖는다.
+ * 이 디스플레이를 가진 카드 하나가 됐다(2026-09-08). Do/OK/Don't 표식은 카드(`mark`)가 갖는다.
  * dbName 짧게(ppd).
  */
 export const presetPanel = defineDisplay({

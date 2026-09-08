@@ -12,7 +12,7 @@
 | 대상 | 위치 | 기준 |
 | --- | --- | --- |
 | Creator UI | `src/app/(frontend)` | 셸, 헤더, 전역 컴포넌트의 색·타이포·간격 |
-| guideline 렌더링 계층 | `src/features/guideline/components` | 블록·프레임·헤더가 토큰을 소비하는 방식 |
+| guideline 렌더링 계층 | `src/features/guideline` | 페이지·블록·카드·디스플레이가 토큰을 소비하는 방식 |
 
 Payload Admin 기본 화면은 이 문서의 대상이 아닙니다. Payload가 제공하는 기본 스타일과 접근성을 우선하며, `docs/08-accessibility-i18n.md`의 적용 범위와 동일하게 프로젝트가 직접 추가한 Admin 확장 화면에만 이 문서를 참고합니다.
 
@@ -120,7 +120,11 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|or
 
 14px 텍스트와 함께 쓰는 아이콘은 `size-4`, 16px 텍스트와 함께 쓰는 아이콘은 `size-5`를 기본으로 합니다. 일반 컴포넌트에는 `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기를 선언하지 않습니다.
 
-가이드라인 카드의 하단 캡션 배치는 Figma 131:272를 따릅니다. 제목·설명은 같은 크기와 Medium, 행간 155%를 사용합니다(사용자 지정 2026-09-08). 설명은 `text-muted-foreground`로 구분합니다. 서체는 브랜드 본문 서체(`font-body`)를 유지합니다. 이 스타일은 `cards/caption/component.tsx`가 소유하며 섹션 설명에는 적용하지 않습니다.
+가이드라인의 역할별 크기·굵기·행간·자간은 `features/guideline/components/globals/guideline-typography.ts`가 소유합니다. 토픽 제목은 `text-6xl`, 동급 블록 제목은 `text-5xl`, 블록 설명·하단 캡션은 `text-xl`, 오버레이 캡션은 `text-base`, 스펙 라벨·값은 `text-sm`을 소비합니다. 이 역할 매핑은 가이드라인 본문에만 적용하고 일반 화면의 제목·컨트롤에는 적용하지 않습니다. `text-sm`처럼 제품에서 재정의한 유틸리티의 실제 크기는 Tailwind 기본값이 아닌 `theme.css`에서 확인합니다.
+
+카드 캡션 제목·설명은 같은 크기와 Medium, 행간 155%를 사용합니다(사용자 지정 2026-09-08). 블록 설명과 스펙 값은 Regular로 구분합니다. 캡션 설명과 스펙 값은 `text-muted-foreground`, 서체는 `font-body`입니다. 하단 캡션의 배치·폭·여백은 계속 `cards/caption/component.tsx`가 소유합니다.
+
+HTML 의미와 시각 역할은 분리합니다. `GuidelineHeader`가 h1/h2를 정하고 캡션은 문단, 스펙은 dt/dd를 유지합니다. `Typography`와 richText는 `components/ui/typography-variants.ts`의 같은 스타일 생성기를 사용합니다. 도판 속 브랜드 서체 표본·치수 라벨·컨트롤 값은 이 산문 스케일에 포함하지 않습니다.
 
 캡션 배치는 `below`(기본, 카드 아래)와 `overlay`(판 안쪽 하단) 중 고릅니다. 오버레이는 Figma 136:231의 `text-base` 크기와 여백을 따르며, 제목·설명의 Medium·행간 155%는 공유합니다. 그라데이션은 판 폭을 채우고 텍스트 폭은 제한합니다. `dark` 토큰 스코프로 밝은 글자와 어두운 그라데이션의 대비를 유지하며, 긴 내용은 키보드로 접근할 수 있는 캡션 영역 안에서 스크롤합니다. 제목·설명·2열 스펙 표는 두 배치가 같은 렌더러를 사용합니다. 배치가 없는 기존 콘텐츠는 카드 아래에 표시합니다.
 
@@ -146,7 +150,7 @@ guideline 블록은 머리(제목·설명)와 카드 배치를 각각 `ContentFr
 | 폭 프레임 | `ContentFrame` | 카드 배치의 최대 폭·가로 여백(`padded`)과 블록 제목의 왼쪽 패딩(`heading`) |
 | 카드 배치 | `blocks/rhythm.ts`의 `CARD_ROWS`·`CARD_ROW_HEIGHT` | 줄바꿈 행(격자) 또는 캐러셀. 카드는 **높이 기준**이라 블록의 줄 높이(낮게·보통·높게)를 갖고 폭은 카드 비율에서 나온다. 좁은 화면은 한 열·폭 기준 |
 
-폭과 가로 여백은 `ContentFrame` 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록·카드는 자기 `max-width`를 선언하지 않습니다 — 카드가 정하는 값은 비율 하나고, 줄 높이가 얼마인지는 `CARD_ROW_HEIGHT` 한 곳이 정합니다. 배경(면) 설정은 2026-09-04에 전 계층에서 걷었습니다 — 브랜드 면(흰 판·검은 판)은 위젯이 `cards/displays/dynamics/surface.ts`의 선언으로 그립니다(`docs/11` §8).
+폭과 가로 여백은 `ContentFrame` 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록·카드는 자기 `max-width`를 선언하지 않습니다 — 카드의 크기를 정하는 값은 비율 하나고, 줄 높이가 얼마인지는 `CARD_ROW_HEIGHT` 한 곳이 정합니다. 배경(면) 설정은 2026-09-04에 전 계층에서 걷었습니다 — 브랜드 면(흰 판·검은 판)은 위젯이 `cards/displays/dynamics/surface.ts`의 선언으로 그립니다(`docs/11` §8).
 
 캐러셀은 `ContentFrame`으로 첫 카드와 스냅 위치를 정렬하되, 이웃 카드는 프레임 밖에도 보입니다. 가이드라인의 `CardBlock`이 블록의 좌우 끝에서만 잘라내며 공통 캐러셀의 기본 clipping은 유지합니다. 카드 폭은 캡션 길이와 무관하게 판의 높이·비율로 결정합니다. **하단 캡션은 최대 폭 규칙의 예외**입니다 — Figma 131:272처럼 카드 폭 안에서 최대 폭을 제한하고 왼쪽에 붙이며, 값과 안쪽 여백은 `cards/caption/component.tsx`가 소유합니다.
 
@@ -154,7 +158,7 @@ guideline 블록은 머리(제목·설명)와 카드 배치를 각각 `ContentFr
 
 값을 바꿀 때는 이 두 자리만 고칩니다. 개별 블록이 자기 패딩·마진·열 배치를 다시 잡는 것은 이 통일을 깨므로 지양합니다. 페이지의 상하 여백도 라우트 layout이 따로 주지 않습니다 — 첫·마지막 프레임의 self-padding이 그 자리이고, 둘을 겹치면 상단 여백이 두 곳의 합이 됩니다.
 
-헤딩 계층은 `GuidelineHeader`가 `variant`(`topic` h1 / `section` h2 / `block` h3)로 분기해 소유합니다(`guideline-header.tsx`). 인덱스 화면의 h1은 히어로 락업이, 챕터 카드 제목은 `PanelCard`가 그립니다. 랜드마크는 셸이 `main`을(`section-layout.tsx`), 토픽 화면이 `article` 하나를(`pages/guideline-topic.tsx`) 갖고, 블록 프레임과 섹션 안쪽은 랜드마크를 만들지 않습니다.
+헤딩 계층은 `GuidelineHeader`가 `variant`(`topic` h1 / `section` h2)로 분기해 소유합니다(`guideline-header.tsx`). 토픽 안의 `section`·`base`·`overview`·`examples`는 동급 블록이므로 같은 h2를 사용하며 h3 단계는 없습니다. 인덱스 화면의 h1은 히어로 락업이, 챕터 카드 제목은 `PanelCard`가 그립니다. 랜드마크는 셸이 `main`을(`section-layout.tsx`), 토픽 화면이 `article` 하나를(`pages/guideline-topic.tsx`) 갖고, 블록 프레임과 섹션 안쪽은 랜드마크를 만들지 않습니다.
 
 ### 가이드라인 계층 이름은 Figma 정본과 다릅니다
 
@@ -162,7 +166,7 @@ guideline 블록은 머리(제목·설명)와 카드 배치를 각각 `ContentFr
 
 | 코드 | Figma 노드 | 무엇 |
 | --- | --- | --- |
-| 챕터 chapter | — | 최상위 문서. 토픽 카드 목록 화면 |
+| 챕터 chapter | — | 토픽을 묶는 분류. 별도 챕터 화면은 없습니다 |
 | 토픽 topic | **Section Heading**(61:3503) | URL을 가진 문서 한 장. 히어로 + 제목 |
 | 섹션 section | **Article**(61:3299·61:3376) | 토픽 본문 안의 섹션. 문서가 아니라 블록이고 `#앵커`만 가집니다 |
 

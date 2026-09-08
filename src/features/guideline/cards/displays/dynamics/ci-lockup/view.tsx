@@ -53,7 +53,6 @@ import {
 	type MonoColor,
 	OVERSEAS_BRANCHES,
 	partialColumnArea,
-	STAGE_HEIGHT,
 	SUBSIDIARIES,
 	SYMBOL_ASPECT,
 	SYMBOL_CONTOURS,
@@ -133,7 +132,7 @@ export function CiLockupView({
 	const pick = <T,>(id: string, own: T | null | undefined, live: T): T =>
 		off.has(id) && own !== null && own !== undefined ? own : live
 
-	/** H(심볼 높이). 🔑 락업의 모든 치수가 이 값의 배수다 — 판형을 정하는 단 하나의 값이다. */
+	/** H(심볼 높이). 🔑 락업 내부 치수가 이 값의 배수다. 카드 너비·높이는 바꾸지 않는다. */
 	const H = pick('h', fixed.h, controllerNumber(values, 'h', HEIGHT.defaultValue))
 	const subOn = pick(
 		'subsidiaryOn',
@@ -421,8 +420,7 @@ function LockupFigure({
 	}
 
 	return (
-		// 🔴 판 자체가 hover 대상이자 버튼의 기준면이다. 버튼을 판 **밖**(이 래퍼)에 두는 이유는
-		//    판이 `overflow-x-auto`라 안에 넣으면 락업과 함께 가로로 스크롤돼 나가기 때문이다.
+		// 판 자체가 hover 대상이자 버튼의 기준면이다. 버튼은 도판의 클리핑 영역 밖에 둔다.
 		// 🔴 pointer 이벤트로 잡는다 — 도판 교체는 CSS hover로 표현할 수 없다(보이고 숨는 것이 아니라
 		//    다른 트리로 바뀐다).
 		// 🔴 focus로는 열지 않는다. 도판이 나오면 내보내기 버튼이 판에서 빠지는데, 그 버튼에 포커스가
@@ -431,29 +429,21 @@ function LockupFigure({
 		// 🔴 `h-full`은 판을 **셀에 맞추기 위한 것**이다. 배치가 첫 칸을 두 줄 높이로 늘리면
 		//    (`featuredSide`) 고정 높이 판이 위쪽에만 붙고 아래가 통째로 빈다 — 실측 656 대 320.
 		<div
-			className="group/export relative h-full"
+			className="group/export relative size-full min-h-0 min-w-0"
 			onPointerEnter={() => setPeeking(true)}
 			onPointerLeave={() => setPeeking(false)}
 		>
-			{/* 🔴 판은 밝아야 한다(기본형 Full Color는 밝은 배경 전용). 다크 모드에서도 마찬가지다.
-				overflow-x-auto는 안전망이다 — 좁은 자리에서도 로고를 자르지 않고 흘려보낸다. */}
+			{/* 기본형 Full Color는 밝은 배경 전용이다. 도판은 스크롤 없이 판 경계에서 자른다. */}
 			{/* 🔴 안쪽 패딩을 두지 않는다(사용자 지정 2026-08-19) — 판은 캔버스이고, 그 안의 것이
 				판 끝까지 닿을 수 있어야 한다. 여백이 필요한 것은 판이 아니라 락업이고 그것은
 				클리어스페이스가 규정으로 갖는다. */}
-			{/* 🔴 판 크기는 **선택에 따라 변하지 않는다**(`STAGE_HEIGHT`). 표현을 바꿀 때마다 판이
-				커졌다 작아지면 락업이 아니라 화면이 움직이는 것처럼 보인다. 안의 락업만 변한다.
-				🔑 그래서 `height`가 아니라 `minHeight`다 — 바뀌지 않아야 하는 것은 **선택에 대한**
-				불변이고, 배치가 준 셀이 더 크면 판은 그것을 채워야 한다(빈 칸이 남는 것이 아니라).
-				판 색은 표현이 정하고 테마를 따르지 않으므로 전환도 여기서 이어 준다. */}
+			{/* 카드 크기는 유지하고 내부 락업과 배경만 바꾼다. */}
 			<div
 				ref={stageRef}
-				className="relative flex h-full items-center justify-center overflow-x-auto border border-border"
+				className="relative flex size-full min-h-0 min-w-0 items-center justify-center overflow-clip border border-border"
 				style={{
 					background: stage,
-					minHeight: h * STAGE_HEIGHT,
-					// 🔴 높이에도 전환이 필요하다 — H가 컨트롤러 축이 된 뒤로 한 칸 올릴 때마다 판이
-					//    32px씩 즉시 커져 그 아래 문서 전체가 튄다(판을 고정 비율로 둔 이유가 무효화된다).
-					transition: `background-color ${MORPH}, min-height ${MORPH}`,
+					transition: `background-color ${MORPH}`,
 				}}
 			>
 				{/* 🔑 갈아치우지 않고 **겹쳐 두고 투명도만** 바꾼다 — 둘은 같은 규정의 두 얼굴이라

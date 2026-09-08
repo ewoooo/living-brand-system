@@ -28,8 +28,7 @@ export const typeLanguage = defineDisplay({
 			enumName: 'enum_tlg_language',
 			options: LANGUAGES.map((language) => ({ label: language.label, value: language.key })),
 			admin: {
-				// 나란히 배치에서는 세 언어가 다 보여 전환 탭이 없다 — 그 배치에서 이 값은 화면에
-				// 아무 영향이 없으므로 칸을 감춘다. 남겨 두면 저작자가 고른 언어가 조용히 무시된다.
+				// 비교는 언어별 초기값을 가진 카드로 나누므로 이 필드를 사용하지 않는다.
 				condition: (_, siblingData) => siblingData?.layout !== 'compare',
 				description: '처음 보여줄 언어입니다. 독자가 화면에서 바꿀 수 있습니다.',
 			},
@@ -41,11 +40,11 @@ export const typeLanguage = defineDisplay({
 			enumName: 'enum_tlg_layout',
 			options: [
 				{ label: '한 언어씩 전환', value: 'single' },
-				{ label: '세 언어 나란히', value: 'compare' },
+				{ label: '언어별 카드로 비교', value: 'compare' },
 			],
 			admin: {
 				description:
-					'나란히 두면 세 언어를 한 화면에서 비교합니다(원본은 국문·영문을 좌우로 놓았습니다). 좁은 자리에서는 전환이 낫습니다.',
+					'비교를 고르면 언어별 카드로 나누고, 각 카드에 해당 언어의 명세를 표시합니다.',
 			},
 		},
 	],

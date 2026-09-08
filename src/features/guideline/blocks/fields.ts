@@ -31,15 +31,6 @@ export const ROW_HEIGHTS = [
 ] as const
 export type RowHeight = (typeof ROW_HEIGHTS)[number]['value']
 
-/** 카드 판에 붙는 판정 표식. 블록이 갖는다 — 한 블록 안에서 Do와 Don't를 섞는 자유는 데이터가 쓴 적이 없다. */
-export const BLOCK_MARKS = [
-	{ label: '없음', value: 'none' },
-	{ label: 'Do (권장)', value: 'do' },
-	{ label: 'OK (허용)', value: 'ok' },
-	{ label: "Don't (금지)", value: 'dont' },
-] as const
-export type BlockMark = (typeof BLOCK_MARKS)[number]['value']
-
 /**
  * 기본 블록의 필드. 블록의 책임은 다섯이다(2026-09-07 모델): 카드 레이아웃, 제목·설명, 에셋 다운로드 유무,
  * rules, 그리고 앵커(섹션만 — `anchorField`). 그 밖의 것은 카드가 갖는다.
@@ -61,7 +52,7 @@ export function baseContentFields(): Field[] {
 					defaultValue: 'grid',
 					enumName: 'enum_block_layout',
 					options: [...BLOCK_LAYOUTS],
-					admin: { width: '33%', description: '카드를 어떻게 놓을지입니다.' },
+					admin: { width: '50%', description: '카드를 어떻게 놓을지입니다.' },
 				},
 				{
 					name: 'rowHeight',
@@ -71,20 +62,8 @@ export function baseContentFields(): Field[] {
 					enumName: 'enum_block_row_height',
 					options: [...ROW_HEIGHTS],
 					admin: {
-						width: '33%',
+						width: '50%',
 						description: '카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.',
-					},
-				},
-				{
-					name: 'mark',
-					type: 'select',
-					required: true,
-					defaultValue: 'none',
-					enumName: 'enum_block_mark',
-					options: [...BLOCK_MARKS],
-					admin: {
-						width: '33%',
-						description: '모든 카드 판에 붙는 Do/OK/Don’t 표식입니다.',
 					},
 				},
 			],
