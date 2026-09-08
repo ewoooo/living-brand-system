@@ -16,7 +16,7 @@ import { elementToPng } from '../adapters/element-to-png.client'
 import { vectorSceneToSvg } from '../adapters/vector-scene-to-svg'
 import type { CmykIccProfile, ExportRequest, ExportResult } from '../export-contract'
 import type { PrintPpi } from '../print-policy'
-import { requestPrintExport } from './export-print.client'
+import { printFailureMessage, requestPrintExport } from './export-print.client'
 
 export type ExportableStudioArtifact =
 	| RasterArtifact
@@ -113,8 +113,9 @@ export async function exportVectorArtifactAsPrintPdf(
 		const body = (await response.json().catch(() => null)) as { code?: string } | null
 		throw new Error(
 			body?.code === 'text-not-outlined'
-				? '윤곽선으로 바꾸지 못한 글자가 있어 PDF를 만들지 않았습니다 — 그대로 내보내면 그 글자가 PDF에서 빠집니다.'
-				: '인쇄용 PDF를 만들지 못했습니다.',
+				? '윤곽선으로 바꾸지 못한 글자가 있어 PDF를 만들지 않았습니다.'
+				: // 래스터 경로와 같은 표를 쓴다 — 같은 401·413이 형식에 따라 다른 문구로 보이면 안 된다.
+					printFailureMessage('pdf', response.status),
 		)
 	}
 	return {

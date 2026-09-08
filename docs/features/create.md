@@ -12,7 +12,7 @@ Template·Graphic·Image가 Runtime Manifest부터 Artifact와 Export까지 공�
 
 ### 현재 구현
 
-조합과 HTML 렌더는 클라이언트에서 일어나며 서버 렌더링·이미지 생성·영속이 없습니다. 인쇄용 TIFF와 래스터 PDF는 브라우저가 렌더한 PNG를 서버에서 변환하고, 벡터 PDF는 브라우저가 만든 Vector Scene을 서버에서 CMYK PDF로 직렬화합니다.
+조합과 HTML 렌더는 클라이언트에서 일어나며 서버 렌더링·이미지 생성·영속이 없습니다. 인쇄용 TIFF와 래스터 PDF는 브라우저가 렌더한 PNG를 서버에서 변환하고, 벡터 PDF는 브라우저가 만든 Vector Scene을 서버에서 직렬화합니다. 🔴 **PDF는 CMYK가 아니라 RGB로 나갑니다** — PDF 안의 CMYK 이미지가 Adobe Illustrator에서 색이 반전돼 열리는 알려진 결함(pdf-lib·jsPDF·Prawn 공통) 때문에 색 관리를 미뤘습니다. CMYK로 나가는 것은 TIFF뿐입니다.
 
 - `TemplateGenerator`(`src/components/studio/template/`): 카테고리별 드롭다운에서 published 템플릿을 선택하고 canonical HTML의 열린 텍스트 슬롯을 편집해 미리보기를 렌더.
 - `studio-export`(`src/features/studio-export/`): Runtime Artifact를 Exporter가 변환할 수 있는 형식으로 투영하고 Admin `exportPolicy`로 좁혀 `StudioConfig.output`을 만듭니다. 실제 source adapter 존재 여부도 실행 직전 다시 검증합니다.
@@ -20,11 +20,11 @@ Template·Graphic·Image가 Runtime Manifest부터 Artifact와 Export까지 공�
 - `use-export`(`src/features/studio-export/hooks/`): 세 Studio의 형식 분기·진행·오류 상태·다운로드를 공유. Canvas는 형식을 해석하지 않고 Graphic runtime source만 Provider에 등록.
 - `render-template-raster-stage.client`(`src/features/template-customization/runtime/`): 검증된 HTML을 Shadow DOM의 공용 export stage로 구성.
 - `element-to-png.client`(`src/features/studio-export/adapters/`): 공용 export stage를 `html-to-image`로 PNG Blob으로 렌더.
-- `export-print.service`(`src/features/studio-export/services/`): 넘어온 PNG의 픽셀 크기를 `findPrintOutputBlocker`로 확인한 뒤 Sharp로 CMYK/ICC 변환해 TIFF 또는 래스터 PDF를 생성. 벡터 PDF는 `export-vector-print.service`가 Vector Scene을 pdf-lib으로 직렬화.
+- `export-print.service`(`src/features/studio-export/services/`): 넘어온 PNG의 픽셀 크기를 `findPrintOutputBlocker`로 확인한 뒤 TIFF는 Sharp로 CMYK/ICC 변환해 생성하고, 래스터 PDF는 그 PNG를 그대로 실음(`png-to-pdf.pdf-lib`). 벡터 PDF는 `export-vector-print.service`가 Vector Scene을 pdf-lib으로 직렬화하며 도형 색도 RGB로 둔다.
 
 - 입력: 발행된 템플릿의 canonical `html` + 열린 텍스트 슬롯 값. 슬롯은 `inputFormat`/`maxLength`/`maxLines`를 강제.
 - 🔴 사용자 미리보기는 `<iframe sandbox="">`(opaque origin)이라 CSS `mask-image` fetch가 CORS 모드로 나갑니다. ACAO 헤더가 없는 업로드 파일 경로(`/api/brand-logos/file/*`)가 차단되면 mask가 전체 투명 처리돼 로고가 사라집니다. 어드민은 same-origin 렌더라 재현되지 않습니다.
-- 출력: 클라이언트 PNG 다운로드와 CMYK TIFF·PDF 직접 다운로드. 인쇄 해상도는 `72`·`150`·`300`ppi 프리셋 드롭다운에서 고르고, 운영자가 `exportPolicy.print.allowedPpi`를 지정하면 그 목록이 프리셋을 대신함(`narrowPrintPpi` — 허용 목록이 아니라 프리셋 목록). 기본값은 목록에 `300`이 있으면 `300`, 없으면 가장 낮은 값(`resolveDefaultPrintPpi`). 서버가 받는 유효 범위는 목록이 아니라 1~1200 정수(`isPrintPpi`). Payload에는 아무것도 쓰지 않음(생성 세션/출력 레코드 없음).
+- 출력: 클라이언트 PNG 다운로드와 CMYK TIFF·**RGB** PDF 직접 다운로드. 인쇄 해상도는 `72`·`150`·`300`ppi 프리셋 드롭다운에서 고르고, 운영자가 `exportPolicy.print.allowedPpi`를 지정하면 그 목록이 프리셋을 대신함(`narrowPrintPpi` — 허용 목록이 아니라 프리셋 목록). 기본값은 목록에 `300`이 있으면 `300`, 없으면 가장 낮은 값(`resolveDefaultPrintPpi`). 서버가 받는 유효 범위는 목록이 아니라 1~1200 정수(`isPrintPpi`). Payload에는 아무것도 쓰지 않음(생성 세션/출력 레코드 없음).
 
 출력 capability는 `Runtime Artifact → 실제 Exporter 호환 형식 → Admin exportPolicy = Effective StudioConfig.output` 순서로 계산합니다. Raster는 PNG·JPEG·TIFF·PDF·정지 MP4, Vector는 SVG·PDF, Video는 MP4로 변환할 수 있습니다. Admin의 형식 목록을 비우면 실제 Exporter 호환 형식을 모두 허용하며, 호환되지 않는 형식으로 범위를 넓히면 발행 검증이 거부합니다. Controller의 현재 선택값과 버튼 배치는 이 capability와 별개입니다. Export Layer는 I/O 직전에도 Artifact, 요청값, Effective capability를 다시 확인합니다. 원본 다운로드 capability와 ZIP 묶음은 파일 형식과 분리합니다.
 

@@ -44,9 +44,11 @@ export async function exportPrint({
 		return tiff
 	}
 
-	return createRgbPrintPdf({
+	const pdf = await createRgbPrintPdf({
 		heightMm: pixelsToMillimeters(image.height, ppi),
 		png,
 		widthMm: pixelsToMillimeters(image.width, ppi),
 	})
+	if (!pdf) throw new PrintExportInputError()
+	return pdf
 }
