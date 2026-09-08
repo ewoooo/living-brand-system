@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui/typography'
 import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import type { BaseBlock } from '@/payload-types'
 
@@ -13,10 +14,17 @@ export function CardCaption({ caption }: { caption?: CardCaptionData | null }) {
 	if (!title && !description) return null
 
 	return (
-		<figcaption className="flex flex-col gap-1 px-4 py-6 font-body">
-			{/* Figma 135:488 — 제목 17px SemiBold. 공유 단계의 「카드 제목」 칸(text-base)이다(docs/09 §6). */}
-			{title ? <p className="font-semibold text-base">{title}</p> : null}
-			<GuidelineDescription description={description} />
+		// Figma 131:272 — 판 폭 안에서 최대 480px. 긴 캡션도 카드의 비율을 밀어내지 않는다.
+		<figcaption className="flex w-full max-w-120 flex-col px-4 py-8 font-body tracking-tight wrap-anywhere">
+			{title ? (
+				<Typography as="p" size="xl" weight="medium" className="leading-[1.55]">
+					{title}
+				</Typography>
+			) : null}
+			<GuidelineDescription
+				description={description}
+				className="pr-0 font-medium text-xl text-muted-foreground leading-[1.55] text-wrap"
+			/>
 		</figcaption>
 	)
 }

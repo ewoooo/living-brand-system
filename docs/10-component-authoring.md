@@ -413,7 +413,7 @@ PR을 올리기 전 자기 점검용입니다.
 - [ ] §4의 팔레트 탐지 grep(무채 + 유채 전체) 결과가 이 컴포넌트에서 0이다. 판정·상태 색은 상태 토큰(`success`/`info`/`warning`/`destructive`)이다.
 - [ ] `grep -rE 'className=.*#[0-9a-fA-F]{6}'`에 걸리는 생 hex가 없다(색 데이터 props는 예외).
 - [ ] `grep -rE '(grid-cols|col-span|gap)-\$\{'`에 걸리는 동적 클래스가 없다. 조건부 완전 클래스로 바꿨다.
-- [ ] 자기 `max-width`가 없다. 폭은 `ContentFrame`이 소유하고, 배경 설정은 갖지 않는다.
+- [ ] 자기 `max-width`가 없다(가이드라인 하단 캡션은 `docs/09` §7의 예외). 폭은 `ContentFrame`이 소유하고, 배경 설정은 갖지 않는다.
 - [ ] 아이콘은 `@carbon/icons-react`다. `@hugeicons`가 없다.
 - [ ] 색·폰트·로고를 props로 받는다. 하드코딩은 개발용 default 값뿐이다.
 - [ ] 색·전경색은 저장하지 않고 `@/lib/color`로 런타임 파생한다.

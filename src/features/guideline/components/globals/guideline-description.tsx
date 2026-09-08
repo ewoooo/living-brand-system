@@ -1,4 +1,5 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
+import { cn } from '@/lib/utils'
 import type { SectionBlock } from '@/payload-types'
 import { guidelineRichTextConverters } from './spec-table-converters'
 
@@ -6,8 +7,10 @@ import { guidelineRichTextConverters } from './spec-table-converters'
 // 표는 스펙 리스트로 그린다(spec-table-converters.tsx). 세 자리가 같은 컨버터를 타야 표기가 갈리지 않는다.
 export function GuidelineDescription({
 	description,
+	className,
 }: {
 	description: SectionBlock['description']
+	className?: string
 }) {
 	// 비어 있으면 아무것도 렌더하지 않는다 — 설명은 optional이라 경고 표시도 하지 않는다.
 	if (!description) return null
@@ -15,7 +18,7 @@ export function GuidelineDescription({
 	return (
 		<div className="text-balance">
 			<RichText
-				className="font-body font-normal text-sm space-y-2 pr-8"
+				className={cn('font-body font-normal text-sm space-y-2 pr-8', className)}
 				converters={guidelineRichTextConverters}
 				data={description}
 			/>

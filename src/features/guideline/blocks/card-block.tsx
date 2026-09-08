@@ -6,7 +6,7 @@ import { GuidelineHeader } from '@/features/guideline/components/globals/guideli
 import { cn } from '@/lib/utils'
 import type { BaseBlock } from '@/payload-types'
 import type { RowHeight } from './fields'
-import { CARD_ROW_HEIGHT, CARD_ROWS, RIGHT_HALF } from './rhythm'
+import { CARD_ROW_HEIGHT, CARD_ROWS } from './rhythm'
 
 /** 기본 블록과 슈거 블록이 공유하는 데이터 꼴. 슈거의 생성 타입은 이와 구조가 같다. */
 export type CardBlockData = Pick<
@@ -36,8 +36,13 @@ export function CardBlock({
 
 	const body =
 		block.layout === 'carousel' ? (
-			<Carousel opts={{ align: 'start' }} aria-label={heading ?? undefined}>
-				<CarouselContent>
+			<Carousel
+				opts={{ align: 'start' }}
+				aria-label={heading ?? undefined}
+				tabIndex={0}
+				className="outline-none focus-visible:ring-2 focus-visible:ring-ring"
+			>
+				<CarouselContent viewportClassName="overflow-visible">
 					{cards.map((card) => (
 						// 슬라이드 폭은 카드가 정한다(basis-auto) — shadcn 기본 basis-full을 md에서 푼다.
 						<CarouselItem key={card.id} className="md:basis-auto">
@@ -55,14 +60,15 @@ export function CardBlock({
 		)
 
 	return (
-		<section id={id} className="flex flex-col gap-12">
+		<section
+			id={id}
+			className={cn('flex flex-col gap-12', block.layout === 'carousel' && 'overflow-x-clip')}
+		>
 			{heading || block.description ? (
-				<ContentFrame>
-					<div className={RIGHT_HALF.grid}>
-						<div className={cn('flex flex-col gap-8', RIGHT_HALF.cell)}>
-							<GuidelineHeader variant="section" title={heading} />
-							<GuidelineDescription description={block.description} />
-						</div>
+				<ContentFrame variant="heading">
+					<div className="flex flex-col gap-8">
+						<GuidelineHeader variant="section" title={heading} />
+						<GuidelineDescription description={block.description} />
 					</div>
 				</ContentFrame>
 			) : null}
