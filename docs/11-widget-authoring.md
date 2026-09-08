@@ -7,15 +7,15 @@
 ## 1. 새 위젯 만드는 순서
 
 ```
-1. src/features/guideline/widgets/<kebab-name>/ 생성
+1. src/features/guideline/cards/displays/dynamics/<kebab-name>/ 생성
 2. schema.ts 작성 — 짧은 dbName 필수
 3. component.tsx 작성 (서버). 인터랙션이 있으면 view.tsx 추가 (클라이언트)
-4. 등록 3곳을 손으로 고친다 (§3)
+4. 등록 2곳을 손으로 고친다 (§3)
 5. /guideline/widgets 에서 렌더 확인
 6. admin에서 섹션 안에 넣어 실제 페이지로 확인
 ```
 
-블록은 `blocks/registry.ts`에 손으로 등록하지만 위젯은 그 레지스트리에 있지 않습니다. 등록 누락은 아래 §3의 세 곳을 직접 확인해야 하고, CI가 잡아주지 않습니다.
+블록은 `blocks/registry.ts`에 손으로 등록하지만 위젯은 그 레지스트리에 있지 않습니다. 등록 누락은 아래 §3의 두 곳을 직접 확인해야 하고, CI가 잡아주지 않습니다.
 
 ## 2. 폴더 계약
 
@@ -47,23 +47,22 @@
 
 🔴 **schema가 참조하는 모듈에는 react·이미지 import를 넣지 마십시오.** `payload.config`는 Node에서 로드되므로 webp/svg import나 react가 섞이면 설정 로딩이 깨집니다. 그래서 조합 키·라벨과 규칙 상수를 별 파일로 뺍니다(`layout-grid/samples.ts`·`manifest.ts`가 그 선례 — 매니페스트는 타입만 `import type`으로 가져옵니다).
 
-## 3. 등록 — 손으로 고치는 3곳
+## 3. 등록 — 손으로 고치는 2곳
 
 | 파일 | 무엇을 등록하나 |
 |---|---|
-`leaves/registry.ts` | **`LEAVES` 배열**에 스키마 추가. 공통 `span` 필드가 붙지만 카드 안에서는 뜻이 없다(이관 시 사라진다) |
-`cards/displays/registry.ts` · `registry.render.tsx` | **디스플레이 레지스트리 항목**(id·name·description·schema)과 렌더 맵. 여기 없으면 admin 카드에서 고를 수 없다 |
-`leaves/render-leaf.tsx` | 렌더 디스패치에 분기 추가(디스플레이 렌더가 위임한다) |
+`cards/displays/registry.ts` | **`DISPLAYS` 항목**(id·name·description·schema) 추가. 여기 없으면 admin 카드에서 고를 수 없다 |
+`cards/displays/registry.render.tsx` | `DISPLAY_RENDERERS`에 같은 id의 렌더 추가. 빠지면 typecheck가 잡는다 |
 `components/widgets/gallery.tsx` | `/guideline/widgets` 미리보기 목록 |
 `controllers/registry.ts` | (컨트롤러를 여는 위젯만) `blockType` → 매니페스트 (§4.1) |
 
-세 곳 중 하나만 빠뜨리면 조용히 실패합니다 — 스키마만 등록하면 admin에서 고를 수 있지만 화면이 비고, 갤러리만 등록하면 미리보기에서만 보입니다.
+레지스트리 항목만 넣고 렌더를 빠뜨리면 typecheck가 잡습니다. 갤러리(`components/widgets/gallery.tsx`)는 dev 미리보기용이라 별도이고, 여기만 등록하면 미리보기에서만 보입니다.
 
 🔴 **`dbName`은 필수입니다.** 중첩 블록의 이름이 길어지면 Postgres 식별자 63자 한계에 닿습니다. 예: `clearspaceViewerWidget` → `dbName: 'cvw'`. enum은 `enumName`으로 전역 이름을 공유합니다.
 
 한계에 실제로 닿는 것은 **FK 제약명**입니다. 최신 드리즐 스냅샷 실측으로 66~93자 제약명이 6개 있고(최장 90자대), 인덱스명은 최장 62자로 아직 아래에 있습니다. 🔴 **여기에 개수를 적어 두지 마십시오** — 스키마가 바뀔 때마다 낡습니다. 지금 값은 `migrations/`의 최신 `.json` 스냅샷에서 세십시오.
 
-이 한계는 `leaves/alias-length.test.ts`가 막고 있지만 **갤러리 통과 ≠ 페이지 통과**입니다 — 잘림은 조회 SQL의 별칭에서 일어납니다.
+이 한계는 `cards/displays/alias-length.test.ts`가 막고 있지만 **갤러리 통과 ≠ 페이지 통과**입니다 — 잘림은 조회 SQL의 별칭에서 일어납니다.
 
 ## 4. Section과 Widget의 책임
 
@@ -109,7 +108,7 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 
 | 누가 | 무엇을 | 🔴 모르는 것 |
 | --- | --- | --- |
-| `widgets/<name>/manifest.ts` | 이 블록이 여는 컨트롤 계약 | 화면 어디에 그려지는지 |
+| `cards/displays/dynamics/<name>/manifest.ts` | 이 블록이 여는 컨트롤 계약 | 화면 어디에 그려지는지 |
 | `controllers/registry.ts` | `blockType` → 매니페스트 + admin 값→제한 변환 | — (양쪽을 아는 **유일한** 자리) |
 | `controllers/provider.tsx` | 블록 단위 값 스코프 | 값의 뜻 |
 | `controllers/pill.tsx` | 그룹을 구분선으로 가른 한 줄 배치 | 도메인 |
@@ -126,7 +125,7 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 
 그래서 정본 지면 구성이 그대로 나옵니다: 가로형·세로형을 수평 병행, 표현 3종을 나란히. `layout-grid`는 같은 문제를 `override ?? 값`과 lock 플래그로 풉니다(`docs/11` 인스턴스 오버라이드 3형태).
 
-🔴 **dispatch가 인스턴스 필드를 props로 넘기지 않으면 두 번째 판의 admin 값이 조용히 버려집니다.** `leaves/render-leaf.tsx`의 case마다 `leaf.<필드>`를 넘겨야 합니다 — 에러도 경고도 없이 「저장했는데 안 바뀐다」로 나타납니다.
+🔴 **dispatch가 인스턴스 필드를 props로 넘기지 않으면 두 번째 판의 admin 값이 조용히 버려집니다.** `cards/displays/registry.render.tsx`의 렌더마다 `d.<필드>`를 넘겨야 합니다 — 에러도 경고도 없이 「저장했는데 안 바뀐다」로 나타납니다.
 
 🔴 **`select` 초기값이 options에 없으면 렌더가 던져 페이지가 죽습니다.** 선택지를 데이터에서 파생하는 위젯은 registry에서 값의 유효성을 확인하고 버려야 합니다(`ci-lockup`의 `usable`).
 
@@ -209,7 +208,7 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 | **스펙 판독** | 수치를 읽어주는 줄. `font-mono` + `tabular-nums` + `text-xs` + `text-muted-foreground`. 규정이 범위인데 화면이 한 값을 그리면 **적용값을 함께 적습니다**(`행간 150–160% · 150% 적용`).<br>🔴 **판 안에서만 씁니다** — 아래 「위젯은 판만 그립니다」를 보십시오 |
 | **캡션** | 🔴 **쓰지 않습니다.** 아래 「위젯은 판만 그립니다」가 이 자리를 대신합니다. `WIDGET_CAPTION`은 아직 지우지 않은 예외 하나(`layout-grid`의 admin `caption` 필드)를 위해 남아 있습니다 |
 | **판정 표식** | 상태 토큰만(`text-destructive` 등, `docs/09` §4). 생 팔레트로 위반을 칠하지 않습니다 |
-| **hairline 격자** | `widgets/hairline.ts`의 `HAIRLINE_GRID`/`HAIRLINE_CELL` |
+| **hairline 격자** | `cards/displays/dynamics/hairline.ts`의 `HAIRLINE_GRID`/`HAIRLINE_CELL` |
 
 ### 표본 면은 두 종류이고, 어느 쪽인지 **선언**합니다
 
@@ -222,7 +221,7 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 
 🔴 브랜드 면은 `docs/09` §4의 "색을 데이터로 다루는 컴포넌트" 예외에 해당합니다. 다만 **예외라는 사실을 코드에 남깁니다** — 어느 쪽인지 이름 붙이지 않으면 다음 사람이 토큰 위반으로 보고 "고칩니다".
 
-그 이름이 사는 자리는 `widgets/surface.ts` 하나입니다(`hairline.ts`·`readout.ts`와 같은 형태). 위젯은 생 팔레트를 직접 쓰지 않고 거기서 가져옵니다. `widgets/visual-vocabulary.test.ts`가 그 파일만 예외로 두고 나머지를 막으며, 위젯에서 `dark:` 분기도 함께 막습니다 — 블록 면이 토큰 스코프를 다시 선언하는 것과 `dark:`가 어긋나기 때문입니다(`docs/09` §5).
+그 이름이 사는 자리는 `cards/displays/dynamics/surface.ts` 하나입니다(`hairline.ts`·`readout.ts`와 같은 형태). 위젯은 생 팔레트를 직접 쓰지 않고 거기서 가져옵니다. `cards/displays/dynamics/visual-vocabulary.test.ts`가 그 파일만 예외로 두고 나머지를 막으며, 위젯에서 `dark:` 분기도 함께 막습니다 — 블록 면이 토큰 스코프를 다시 선언하는 것과 `dark:`가 어긋나기 때문입니다(`docs/09` §5).
 
 ### 규정을 겹쳐 보이는 두 방식 — 얹기와 갈아치우기
 

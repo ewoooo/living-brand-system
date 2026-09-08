@@ -1,5 +1,5 @@
+import type { GuidelineControllerManifest } from '@/features/guideline/controllers/contract'
 import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
-import type { GuidelineControllerManifest } from '../../controllers/contract'
 
 // Key Layout 정본 규칙 + 그것을 어떤 컨트롤로 조작하는지. 이 파일이 이 블록의 **매니페스트**다.
 //

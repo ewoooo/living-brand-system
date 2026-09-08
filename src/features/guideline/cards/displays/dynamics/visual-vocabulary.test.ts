@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest'
 // 예외는 `surface.ts` 하나다. 표본이 얹히는 브랜드 면은 흰 판/검은 판 자체가 규정의 일부라
 // 테마를 따르면 안 되고, 그 예외를 한 파일에 모아 두는 것이 이 규칙의 설계다.
 
-const WIDGETS = path.join(process.cwd(), 'src/features/guideline/widgets')
+const WIDGETS = path.join(process.cwd(), 'src/features/guideline/cards/displays/dynamics')
 
 /** 브랜드 면의 고정 팔레트를 갖는 유일한 자리. */
 const DECLARED_EXCEPTION = 'surface.ts'

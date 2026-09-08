@@ -1,5 +1,23 @@
 import type { Block } from 'payload'
-import { GUIDELINE_LEAVES } from '@/features/guideline/leaves/registry'
+import { CiLockupWidget } from './dynamics/ci-lockup/schema'
+import { CiLockupHeroWidget } from './dynamics/ci-lockup-hero/schema'
+import { ClearspaceOverlayWidget } from './dynamics/clearspace-overlay/schema'
+import { ClearspaceViewerWidget } from './dynamics/clearspace-viewer/schema'
+import { DoDontWidget } from './dynamics/do-dont/schema'
+import { HdColorPaletteWidget } from './dynamics/hd-color-palette/schema'
+import { IconGridWidget } from './dynamics/icon-grid/schema'
+import { LayoutGridWidget } from './dynamics/layout-grid/schema'
+import { LayoutGridOverlayWidget } from './dynamics/layout-grid-overlay/schema'
+import { LogoBgPickerWidget } from './dynamics/logo-bg-picker/schema'
+import { LogoColorVariantWidget } from './dynamics/logo-color-variant/schema'
+import { LogoDisplayWidget } from './dynamics/logo-display/schema'
+import { LogoOnBackgroundWidget } from './dynamics/logo-on-background/schema'
+import { StemClearSpaceWidget } from './dynamics/stem-clear-space/schema'
+import { TypeHierarchyWidget } from './dynamics/type-hierarchy/schema'
+import { TypeLanguageWidget } from './dynamics/type-language/schema'
+import { TypeScrambleWidget } from './dynamics/type-scramble/schema'
+import { TypeSpecimenWidget } from './dynamics/type-specimen/schema'
+import { TypeWeightWidget } from './dynamics/type-weight/schema'
 import { StaticDisplay } from './static/schema'
 
 /**
@@ -15,21 +33,14 @@ import { StaticDisplay } from './static/schema'
  * admin 고정값으로만 그려지며, 콘텐츠 높이형(icon-grid·hd-color-palette·type-hierarchy·logo-on-background)은
  * 규격 비율 판 안에서 스크롤된다. 컨트롤 전용 layout-grid-controls는 그릴 것이 없어 뺐다(이관 시 행 삭제).
  *
- * ponytail: 위젯 스키마는 leaf 레지스트리의 Block 객체를 **그대로** 쓴다(`span` 필드가 딸려 온다). 같은 slug가
- *   두 자리에서 다른 필드로 정의되면 스키마·타입이 갈리기 때문이다. 위젯 폴더가 `displays/`로 이관되면
- *   leaf 레지스트리와 함께 사라진다.
+ * 위젯 폴더는 `displays/dynamics/<kebab-name>/`에 있다(2026-09-08 이관). 새 위젯은 폴더를 만들고 여기 항목과
+ * `registry.render.tsx`의 렌더 하나를 더한다(docs/11 §3).
  */
 export interface DisplayEntry {
 	id: string
 	name: string
 	description: string
 	schema: Block
-}
-
-function leaf(slug: string): Block {
-	const block = GUIDELINE_LEAVES.find((candidate) => candidate.slug === slug)
-	if (!block) throw new Error(`leaf 레지스트리에 없는 위젯: ${slug}`)
-	return block
 }
 
 export const DISPLAYS = [
@@ -43,117 +54,117 @@ export const DISPLAYS = [
 		id: 'ciLockupHeroWidget',
 		name: 'CI 락업 히어로',
 		description: '자회사명·해외지사명이 도는 CI 락업. 판 높이가 심볼 크기를 정한다.',
-		schema: leaf('ciLockupHeroWidget'),
+		schema: CiLockupHeroWidget,
 	},
 	{
 		id: 'clearspaceOverlayWidget',
 		name: '클리어스페이스 오버레이',
 		description: '로고 위에 여백 격자를 겹쳐 보인다.',
-		schema: leaf('clearspaceOverlayWidget'),
+		schema: ClearspaceOverlayWidget,
 	},
 	{
 		id: 'logoBgPickerWidget',
 		name: '배경색 선택',
 		description: '배경색을 바꿔 가며 로고 표현을 확인한다.',
-		schema: leaf('logoBgPickerWidget'),
+		schema: LogoBgPickerWidget,
 	},
 	{
 		id: 'logoDisplayWidget',
 		name: '로고 크게 보기',
 		description: '로고 파일 하나를 판 가운데에 크게 놓는다.',
-		schema: leaf('logoDisplayWidget'),
+		schema: LogoDisplayWidget,
 	},
 	{
 		id: 'typeScrambleWidget',
 		name: '서체 스크램블',
 		description: '글자가 흩어졌다 모이는 서체 표본.',
-		schema: leaf('typeScrambleWidget'),
+		schema: TypeScrambleWidget,
 	},
 	{
 		id: 'typeWeightWidget',
 		name: '서체 굵기',
 		description: '슬라이더로 굵기를 바꿔 보는 서체 표본.',
-		schema: leaf('typeWeightWidget'),
+		schema: TypeWeightWidget,
 	},
 	{
 		id: 'typeSpecimenWidget',
 		name: '타입 스페시멘',
 		description: '크기·굵기를 바꿔 보는 서체 표본 판.',
-		schema: leaf('typeSpecimenWidget'),
+		schema: TypeSpecimenWidget,
 	},
 	{
 		id: 'layoutGridOverlayWidget',
 		name: '레이아웃 그리드 오버레이',
 		description: '리플릿 표본 위에 여백·열 격자를 겹친다.',
-		schema: leaf('layoutGridOverlayWidget'),
+		schema: LayoutGridOverlayWidget,
 	},
 	{
 		id: 'ciLockupWidget',
 		name: 'CI 락업',
 		description:
 			'꼴·언어·표현을 admin 고정값으로 정한 CI 락업 판. 컨트롤러 연결은 카드에서 끊겼다.',
-		schema: leaf('ciLockupWidget'),
+		schema: CiLockupWidget,
 	},
 	{
 		id: 'clearspaceViewerWidget',
 		name: '클리어스페이스 뷰어',
 		description: '가로·세로 로고의 여백 격자 뷰어. 컨트롤러 연결은 카드에서 끊겼다.',
-		schema: leaf('clearspaceViewerWidget'),
+		schema: ClearspaceViewerWidget,
 	},
 	{
 		id: 'layoutGridWidget',
 		name: '레이아웃 그리드',
 		description: '판형 표본 위의 여백·거터 격자. 컨트롤러 연결은 카드에서 끊겼다.',
-		schema: leaf('layoutGridWidget'),
+		schema: LayoutGridWidget,
 	},
 	{
 		id: 'doDontWidget',
 		name: 'Do/Don’t',
 		description: '권장·허용·금지 예시 격자. 카드로 대체될 예정.',
-		schema: leaf('doDontWidget'),
+		schema: DoDontWidget,
 	},
 	{
 		id: 'hdColorPaletteWidget',
 		name: 'HD 컬러 팔레트',
 		description: '컬러 그룹의 스와치 격자. 콘텐츠 높이형이라 판 안에서 스크롤된다.',
-		schema: leaf('hdColorPaletteWidget'),
+		schema: HdColorPaletteWidget,
 	},
 	{
 		id: 'iconGridWidget',
 		name: '아이콘 그리드',
 		description: '브랜드 아이콘 격자. 콘텐츠 높이형이라 판 안에서 스크롤된다.',
-		schema: leaf('iconGridWidget'),
+		schema: IconGridWidget,
 	},
 	{
 		id: 'stemClearSpaceWidget',
 		name: '여백 규정',
 		description: '심볼 stem 기준 여백 규정 도판.',
-		schema: leaf('stemClearSpaceWidget'),
+		schema: StemClearSpaceWidget,
 	},
 	{
 		id: 'logoColorVariantWidget',
 		name: '로고 색상 변형',
 		description: '기본형에서 파생한 WHITE·단색 변형을 나란히 본다.',
-		schema: leaf('logoColorVariantWidget'),
+		schema: LogoColorVariantWidget,
 	},
 	{
 		id: 'logoOnBgWidget',
 		name: '배경색 위 로고',
 		description:
 			'컬러 그룹의 배경마다 로고를 얹어 본다. 콘텐츠 높이형이라 판 안에서 스크롤된다.',
-		schema: leaf('logoOnBgWidget'),
+		schema: LogoOnBackgroundWidget,
 	},
 	{
 		id: 'typeHierarchyWidget',
 		name: '문단 위계 구성',
 		description: '제목·본문·캡션의 위계 표본. 콘텐츠 높이형이라 판 안에서 스크롤된다.',
-		schema: leaf('typeHierarchyWidget'),
+		schema: TypeHierarchyWidget,
 	},
 	{
 		id: 'typeLanguageWidget',
 		name: '언어별 조판 비교',
 		description: '국문·영문 조판을 나란히 비교한다.',
-		schema: leaf('typeLanguageWidget'),
+		schema: TypeLanguageWidget,
 	},
 ] as const satisfies readonly DisplayEntry[]
 

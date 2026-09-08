@@ -142,7 +142,7 @@ guideline 블록은 머리(제목·설명)와 카드 배치를 각각 `ContentFr
 | 폭 프레임 | `ContentFrame` | 최대 폭과 가로 여백(`max-w-[1540px] px-4 md:px-8`) |
 | 카드 배치 | `blocks/shared/rhythm.ts`의 `CARD_ROWS`·`CARD_ROW_HEIGHT` | 줄바꿈 행(격자) 또는 캐러셀. 카드는 **높이 기준**이라 블록의 줄 높이(낮게·보통·높게)를 갖고 폭은 카드 비율에서 나온다. 좁은 화면은 한 열·폭 기준 |
 
-폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록·카드는 자기 `max-width`를 선언하지 않습니다 — 카드가 정하는 값은 비율 하나고, 줄 높이가 얼마인지는 `CARD_ROW_HEIGHT` 한 곳이 정합니다. 배경(면) 설정은 2026-09-04에 전 계층에서 걷었습니다 — 브랜드 면(흰 판·검은 판)은 위젯이 `widgets/surface.ts`의 선언으로 그립니다(`docs/11` §8).
+폭과 가로 여백은 `ContentFrame`의 `padded` variant 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록·카드는 자기 `max-width`를 선언하지 않습니다 — 카드가 정하는 값은 비율 하나고, 줄 높이가 얼마인지는 `CARD_ROW_HEIGHT` 한 곳이 정합니다. 배경(면) 설정은 2026-09-04에 전 계층에서 걷었습니다 — 브랜드 면(흰 판·검은 판)은 위젯이 `cards/displays/dynamics/surface.ts`의 선언으로 그립니다(`docs/11` §8).
 
 세로 리듬은 두 층이 담당합니다. 프레임의 self-padding(`content-frame.tsx`의 `py-8`)은 요소 **안쪽**의 대칭 여백이고, 섹션 **사이**의 간격은 `blocks/shared/rhythm.ts`의 `SECTION_STACK`(부모 `gap`)이 소유합니다. 루트 블록은 섹션(`section`)과 카드 블록(`base`·슈거 `overview`·`examples`) 여럿이지만 전부 같은 스택에 앉으므로 리듬은 하나입니다. 섹션 안에서 제목과 격자 사이는 섹션 컴포넌트의 `gap-12`이고, 실제 간격은 `패딩 + gap + 패딩`의 합입니다. 본문 텍스트가 앉는 오른쪽 반칸은 같은 파일의 `RIGHT_HALF`가 소유합니다.
 
@@ -240,12 +240,12 @@ look은 언젠가 전부 바뀝니다. 그러므로 **겉모습이 어설픈 것
 | on/off 스위치 | `components/ui/switch.tsx` |
 | 패널 카드·알약 칩(어드민 대시보드·가이드라인 메인) | `components/shared/panel-card.tsx` — 두 표면(Payload 13px root ↔ frontend 16px root)에서 동일하게 그려져야 해서 수치를 px로 고정한 예외 |
 | 페이지 히어로 배너(shader 배경 + 락업) | `components/shared/page-hero.tsx` |
-| 표본 면(테마 면·브랜드 면) | `features/guideline/widgets/surface.ts` |
-| 수치·캡션 줄 | `features/guideline/widgets/readout.ts` |
-| hairline 격자 | `features/guideline/widgets/hairline.ts` |
+| 표본 면(테마 면·브랜드 면) | `features/guideline/cards/displays/dynamics/surface.ts` |
+| 수치·캡션 줄 | `features/guideline/cards/displays/dynamics/readout.ts` |
+| hairline 격자 | `features/guideline/cards/displays/dynamics/hairline.ts` |
 | 색·간격·radius·타입 원시값 | `app/(frontend)/theme.css` |
 
-🔴 이 목록이 늘어나는 것은 정상이고, **같은 요소가 두 자리에 생기는 것은 결함입니다.** `features/guideline/widgets/visual-vocabulary.test.ts`가 색에 대해서만 이것을 지킵니다 — 다른 축은 아직 사람이 봅니다.
+🔴 이 목록이 늘어나는 것은 정상이고, **같은 요소가 두 자리에 생기는 것은 결함입니다.** `features/guideline/cards/displays/dynamics/visual-vocabulary.test.ts`가 색에 대해서만 이것을 지킵니다 — 다른 축은 아직 사람이 봅니다.
 
 #### 값은 어디서 읽나 — `@carbon/layout` (devDependency)
 

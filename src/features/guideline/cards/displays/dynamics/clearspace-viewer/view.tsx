@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { controllerNumber, useGuidelineController } from '../../controllers/provider'
+import { controllerNumber, useGuidelineController } from '@/features/guideline/controllers/provider'
 import { SCALE } from './manifest'
 
 // 클리어스페이스 뷰어(클라). 레이아웃 규칙:

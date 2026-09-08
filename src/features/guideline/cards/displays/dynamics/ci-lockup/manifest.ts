@@ -1,5 +1,5 @@
+import type { GuidelineControllerManifest } from '@/features/guideline/controllers/contract'
 import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
-import type { GuidelineControllerManifest } from '../../controllers/contract'
 import {
 	branchLabel,
 	CLEAR_SPACE_MODE_LABEL,

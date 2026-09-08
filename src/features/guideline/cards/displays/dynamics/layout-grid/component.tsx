@@ -6,7 +6,7 @@ import {
 	controllerBoolean,
 	controllerNumber,
 	useGuidelineController,
-} from '../../controllers/provider'
+} from '@/features/guideline/controllers/provider'
 import { WIDGET_CAPTION } from '../readout'
 import {
 	CI_ART,

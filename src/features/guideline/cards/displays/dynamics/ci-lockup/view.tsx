@@ -8,7 +8,7 @@ import {
 	controllerNumber,
 	controllerString,
 	useGuidelineController,
-} from '../../controllers/provider'
+} from '@/features/guideline/controllers/provider'
 import {
 	CI_STAGE_CONTROL_DARK,
 	CI_STAGE_CONTROL_LIGHT,

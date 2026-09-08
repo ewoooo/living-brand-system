@@ -1,6 +1,6 @@
 import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
-import { displayBlocks } from '../cards/displays/registry'
+import { displayBlocks } from './registry'
 
 // Postgres 식별자 한계. 넘으면 에러가 아니라 **조용히 잘린다** — 그래서 서로 다른 별칭이 같아진다.
 const PG_IDENTIFIER_MAX = 63
@@ -36,7 +36,7 @@ function levels(fields: Field[], segment = ''): Level[] {
 	return [{ segment, hasLocales }, ...nested]
 }
 
-describe('중첩 위젯의 SQL 별칭 길이', () => {
+describe('디스플레이(위젯)의 SQL 별칭 길이', () => {
 	it.each(displayBlocks.map((w) => [w.slug, w] as const))('%s', (slug, widget) => {
 		for (const level of levels(widget.fields)) {
 			// locales 테이블은 그 레벨에 localized 필드가 있을 때만 생긴다.

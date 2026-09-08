@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest'
 //    디자이너 기기에서는 그대로 보이고, 설치 안 된 기기·CI·내보낸 PNG에서만 기본 폰트로 나온다.
 //    2026-08-20에 템플릿이 `HD OTF`(Figma 정본 이름)를 부르는데 별칭이 `HD`여서 실제로 그랬다.
 
-const WIDGETS = path.join(process.cwd(), 'src/features/guideline/widgets')
+const WIDGETS = path.join(process.cwd(), 'src/features/guideline/cards/displays/dynamics')
 const THEME_CSS = path.join(process.cwd(), 'src/app/(frontend)/theme.css')
 
 /** 서체 위반 표본은 일부러 브랜드 밖 서체를 쓴다 — 이 규칙의 유일한 예외다. */
