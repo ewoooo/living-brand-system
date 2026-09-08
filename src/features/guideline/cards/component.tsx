@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import type { BaseBlock } from '@/payload-types'
-import type { BlockMark } from '../blocks/shared/base-fields'
+import type { BlockMark } from '../blocks/fields'
 import { CardCaption } from './caption/component'
 import { CARD_RATIO_CLASS, type CardRatio } from './displays/ratio'
 import { renderDisplay } from './displays/registry.render'

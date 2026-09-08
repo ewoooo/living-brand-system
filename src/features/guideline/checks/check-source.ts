@@ -1,7 +1,8 @@
-export type { CheckBlockEvidence } from '../blocks/projection'
 export type {
 	BlockCheckSourceSnapshot,
+	CheckBlockEvidence,
 	CheckEvidence,
+	CheckReferenceAssetRef,
+	CheckReferenceAssetRole,
 	CheckSourceSnapshot,
-} from '../blocks/runtime/project-guideline-block'
-export type { CheckReferenceAssetRef, CheckReferenceAssetRole } from '../blocks/types'
+} from '../blocks/projection'

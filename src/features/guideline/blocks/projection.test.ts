@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { projectCardBlock } from './card-projection'
+import { projectCardBlock } from './projection'
 
 const lexical = (text: string) =>
 	({ root: { children: [{ type: 'paragraph', children: [{ text }] }] } }) as never

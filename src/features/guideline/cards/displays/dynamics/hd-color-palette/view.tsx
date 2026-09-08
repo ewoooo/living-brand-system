@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { copyText } from '@/features/guideline/blocks/shared/copy'
 import { getContrastingForeground, hexToRgb, isValidHex } from '@/lib/color'
+import { copyText } from './copy'
 
 export type PaletteSwatch = {
 	id: string

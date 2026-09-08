@@ -20,7 +20,7 @@ export const RIGHT_HALF = {
  * 비율에서 계산된다. 그래서 세로형·가로형이 한 줄에 섞여도 줄이 고르다. 값은 프레임 폭에 비례하고
  * (Figma 740/1655 ≈ 45%가 "보통") 상한을 둔다. 좁은 화면(md 미만)에서는 한 열·폭 기준으로 돌아간다 —
  * 높이 기준을 유지하면 세로형 카드가 손가락 하나 폭이 된다.
- * 단계의 뜻(낮게·보통·높게)은 `blocks/shared/base-fields.ts`의 `ROW_HEIGHTS`가 소유한다.
+ * 단계의 뜻(낮게·보통·높게)은 `blocks/fields.ts`의 `ROW_HEIGHTS`가 소유한다.
  */
 export const CARD_ROW_HEIGHT = {
 	low: 'md:h-[min(30vw,30rem)]',

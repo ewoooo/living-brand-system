@@ -1,5 +1,4 @@
-import type { CheckEvidence } from '../blocks/runtime/project-guideline-block'
-import { formatCardBlockEvidence } from '../blocks/shared/card-projection'
+import { type CheckEvidence, formatCardBlockEvidence } from '../blocks/projection'
 import { compact } from '../utils/block-text'
 
 /**

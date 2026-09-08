@@ -5,7 +5,7 @@ import { GuidelineDescription } from '@/features/guideline/components/globals/gu
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 import { cn } from '@/lib/utils'
 import type { BaseBlock } from '@/payload-types'
-import type { RowHeight } from './base-fields'
+import type { RowHeight } from './fields'
 import { CARD_ROW_HEIGHT, CARD_ROWS, RIGHT_HALF } from './rhythm'
 
 /** 기본 블록과 슈거 블록이 공유하는 데이터 꼴. 슈거의 생성 타입은 이와 구조가 같다. */

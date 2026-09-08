@@ -1,5 +1,5 @@
 import type { GuidelineDocument } from '@/payload-types'
-import { formatBlockForAgent } from '../blocks/runtime/project-guideline-block'
+import { formatBlockForAgent } from '../blocks/projection'
 import { compact } from './block-text'
 
 export interface GuidelineSearchRuleSummary {

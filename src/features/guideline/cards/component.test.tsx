@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { CardBlock } from '../blocks/shared/card-block'
+import { CardBlock } from '../blocks/card-block'
 import { Card } from './component'
 
 // embla는 jsdom에 없는 브라우저 API를 요구한다 — 리포 선례(review-canvas.test)대로 껍데기로 바꾼다.

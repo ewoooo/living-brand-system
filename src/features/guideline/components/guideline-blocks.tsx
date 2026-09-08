@@ -1,6 +1,6 @@
 import type { GuidelineDocument } from '@/payload-types'
 import { renderBlock } from '../blocks/registry.render'
-import { SECTION_STACK } from '../blocks/shared/rhythm'
+import { SECTION_STACK } from '../blocks/rhythm'
 
 export function GuidelineBlocks({
 	blocks,

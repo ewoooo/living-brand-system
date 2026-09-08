@@ -1,11 +1,11 @@
 import type { Block } from 'payload'
-import { anchorField } from './shared/anchor-field'
 import {
+	anchorField,
 	type BlockLayout,
 	baseContentFields,
 	presetFields,
 	type RowHeight,
-} from './shared/base-fields'
+} from './fields'
 
 /**
  * 블록 레지스트리 — 블록 종류는 **여기 항목 하나**로 정의된다(2026-09-07). 폴더도 3파일도 없다.

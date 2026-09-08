@@ -151,12 +151,10 @@ src/
       blocks/
         registry.ts
         registry.render.tsx
+        fields.ts
+        card-block.tsx
         projection.ts
-        runtime/
-          project-guideline-block.ts
-          build-check-source-snapshot.ts
-        shared/
-        types.ts
+        rhythm.ts
       cards/
         schema.ts
         component.tsx
@@ -269,7 +267,7 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 
 스키마 팩토리(`blockSchema`)·투영(`projection.ts`)·렌더(`registry.render.tsx`)는 각각 **하나**이고 전 블록이 공유합니다. 문서 `blocks` 필드는 `guidelineBlocks`(레지스트리 배열 그대로)를 받고, 배열 순서가 admin 선택기 순서입니다. `registry.test.ts`가 id·dbName 유일성과 문서 필드가 레지스트리를 그대로 받는지 지킵니다.
 
-`section`도 같은 팩토리에서 나옵니다 — `anchor: true`가 앵커 필드(`shared/anchor-field.ts`)를 앞에 붙일 뿐입니다. 옛 leaf `children`은 2026-09-07 마이그레이션 `add_guideline_card_blocks`가 카드로 옮겼습니다.
+`section`도 같은 팩토리에서 나옵니다 — `anchor: true`가 앵커 필드(`fields.ts`의 `anchorField`)를 앞에 붙일 뿐입니다. 옛 leaf `children`은 2026-09-07 마이그레이션 `add_guideline_card_blocks`가 카드로 옮겼습니다.
 
 #### 카드 블록과 슈거 블록
 
@@ -277,17 +275,19 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 
 | 자리 | 소유 |
 | --- | --- |
-| `blocks/shared/base-fields.ts` | 기본 블록 필드(`baseContentFields`)와 슈거용 `presetFields` |
-| `blocks/shared/card-block.tsx` · `card-projection.ts` | 카드 블록 공용 렌더·투영. 각 블록의 3파일은 이것을 부르는 얇은 껍데기 |
+| `blocks/fields.ts` | 블록 필드 전부 — rules 관계(`guidelineRulesField`, 문서도 씀), 기본 필드(`baseContentFields`), 슈거용 `presetFields`, 섹션 앵커(`anchorField`) |
+| `blocks/card-block.tsx` | 카드 블록 렌더 하나. 머리(제목·설명)와 카드 배치(격자·캐러셀) |
+| `blocks/projection.ts` | 기계(AI 챗·검색·검수)가 읽는 표현 하나 — `formatBlockForAgent`·`snapshotBlock`과 Check 근거 타입. 카드 이미지는 근거가 아니라 `referenceAssets`는 빈 배열 |
+| `blocks/rhythm.ts` | 세로 리듬·줄 높이·격자 어휘(docs/09 §7) |
 | `cards/schema.ts` | 카드 필드 — 규격 비율, 디스플레이 1개, 캡션(제목·설명). 폭 필드는 없다 |
 | `cards/displays/definition.ts` | `DisplayDefinition`(id·type·dbName·name·description·fields)과 `defineDisplay`·`displaySchema` 팩토리 |
 | `cards/displays/registry.ts` · `registry.render.tsx` | 디스플레이 레지스트리 — 각 폴더의 `definition.ts`를 순서대로 모은 `DISPLAYS`와, 같은 id로 폴더의 기본 export 컴포넌트를 모은 `DISPLAY_COMPONENTS`. 정의와 렌더를 파일로 가르는 이유는 정의 쪽을 Payload config가 Node에서 읽기 때문입니다(graphic-runtimes의 definition/runtime.client와 같은 꼴). 정적 디스플레이 1종 + 프리셋 패널 1종 + 위젯 19종(컨트롤 전용 layout-grid-controls 제외, Do/Don’t 위젯은 2026-09-08에 카드로 대체). 위젯 폴더는 `displays/dynamics/<kebab-name>/`에 있습니다(2026-09-08 이관, 옛 `widgets/`·`leaves/`는 삭제) |
 | `cards/displays/static/` | 정적 디스플레이(배경 이미지)의 스키마·컴포넌트 |
 | `cards/caption/` | 캡션 렌더. 설명 richText의 표를 스펙 리스트로 바꾸는 컨버터 자리 |
 
-🔴 슈거 블록(`overview`·`examples`)은 **새 필드를 만들지 않습니다.** `presetFields`로 기본 필드에 고정값을 덧씌우고 숨길 뿐입니다 — 저작 편의를 위한 사전 정의 블록이고, 데이터 모델과 렌더 규칙은 기본 블록과 같습니다. `base-fields.test.ts`가 필드 집합이 같은지 지킵니다.
+🔴 슈거 블록(`overview`·`examples`)은 **새 필드를 만들지 않습니다.** `presetFields`로 기본 필드에 고정값을 덧씌우고 숨길 뿐입니다 — 저작 편의를 위한 사전 정의 블록이고, 데이터 모델과 렌더 규칙은 기본 블록과 같습니다. `fields.test.ts`가 필드 집합이 같은지 지킵니다.
 
-`runtime`은 생성 map을 사용하는 동작만 소유합니다. `project-guideline-block.ts`는 Agent/Check projection, `build-check-source-snapshot.ts`는 문서 snapshot을 담당합니다. React 렌더 진입점은 `components/guideline-blocks.tsx`에 둡니다. 둘 이상의 블록이 실제로 공유하는 필드나 UI만 `shared`에 둡니다.
+`blocks/`는 이 여섯 파일이 전부입니다(2026-09-08, `shared/`·`runtime/`·`types.ts` 해체). 블록 폴더가 없어진 뒤로 "공유"할 상대가 없어 층을 걷었습니다 — 새 파일을 만들기 전에 이 여섯 중 하나에 들어가는지 먼저 봅니다. 문서 단위 Check snapshot(`build-check-source-snapshot.ts`)은 유일한 소비자인 `checks/`가 갖습니다. React 렌더 진입점은 `components/guideline-blocks.tsx`입니다.
 
 ### Graphic runtime 등록
 

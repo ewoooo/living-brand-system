@@ -1,8 +1,8 @@
 import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
 import { GuidelineDocuments } from '@/collections/GuidelineDocuments'
+import { guidelineRulesField } from './fields'
 import { BLOCKS, blockEntry, blockSchema, fixedTitle, guidelineBlocks } from './registry'
-import { guidelineRulesField } from './shared/fields'
 
 const fieldNames = (fields: Field[]) =>
 	fields.flatMap((field) =>

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
+import { CardBlock } from './card-block'
+import type { GuidelineBlock } from './projection'
 import { blockEntry, fixedTitle } from './registry'
-import { CardBlock } from './shared/card-block'
-import type { GuidelineBlock } from './types'
 
 /**
  * 블록 렌더 — `registry.ts`의 항목을 같은 id로 갈라 그린다. 렌더는 하나(`CardBlock`)고, 앵커 블록(section)은
