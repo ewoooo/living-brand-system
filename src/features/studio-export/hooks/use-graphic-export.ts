@@ -92,8 +92,10 @@ export function useGraphicExport({
 			pixelsToMillimeters(draft.height, ppi),
 			basePpiOptions,
 		)
-		// 하나도 안 남으면 목록을 비우지 않는다 — 고를 것이 없는 드롭다운은 고장으로 보인다.
-		return narrowed.length > 0 ? narrowed : basePpiOptions
+		// 🔴 하나도 안 남으면 **빈 목록을 그대로 돌려준다.** 원래 목록으로 되돌리면 못 만드는 값이
+		//    다시 떠서 목록이 거짓말을 한다 — 화면은 「고를 수 있다」고 하고 실제로는 거부된다.
+		//    비었을 때 무엇을 보여줄지는 `SizingControls`가 정한다.
+		return narrowed
 	}, [basePpiOptions, draft, ppi])
 
 	const setDraft = useCallback(

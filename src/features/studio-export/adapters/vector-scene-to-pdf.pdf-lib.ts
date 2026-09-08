@@ -142,7 +142,12 @@ async function draw(
 		case 'group': {
 			// 레이어 구조는 SVG가 갖는다(PDF에는 OCG를 만들지 않는다). 다만 **불투명도는 옮겨야 한다** —
 			// 흘리면 40% 딤 레이어가 100%로 인쇄된다.
-			// 🔑 자식마다 곱하지 않고 그룹 전체를 감싼다. 곱하면 겹친 자식끼리 서로 비쳐 보인다.
+			// 🔴 이것은 **진짜 그룹 투명도가 아니다.** ExtGState `ca`는 그룹이 아니라 그 안에서 그리는
+			//    **개별 요소**에 걸리므로, 자식이 자기 opacity를 가지면 둘이 곱해지고 겹친 자식끼리는
+			//    서로 비쳐 보인다. SVG의 `<g opacity>`와 결과가 갈리는 지점이다.
+			// 🔑 그래도 넣는 이유: 전에는 흘려서 40% 딤이 100%로 인쇄됐다 — 자식에 opacity가 없는
+			//    흔한 경우는 이걸로 맞는다. 진짜 그룹 투명도는 Transparency Group XObject가 필요하고
+			//    pdf-lib에 고수준 API가 없다.
 			const opacity = primitive.opacity
 			const grouped = opacity !== undefined && opacity < 1
 			if (grouped) {

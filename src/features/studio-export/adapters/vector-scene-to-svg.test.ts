@@ -112,10 +112,10 @@ describe('vectorSceneToSvg', () => {
 				300,
 			),
 		).toContain('fill="none"')
-		// 🔴 `xlink:href`가 없으면 Illustrator에서 사진이 통째로 안 보인다 — 둘 다 적는다.
-		expect(svg).toContain(
-			'xlink:href="data:image/png;base64,AAA" href="data:image/png;base64,AAA" preserveAspectRatio="none"',
-		)
+		// 🔴 `xlink:href`가 없으면 Illustrator에서 사진이 통째로 안 보인다.
+		expect(svg).toContain('xlink:href="data:image/png;base64,AAA" preserveAspectRatio="none"')
+		// 🔴 `href`를 함께 적으면 data URI가 두 번 실려 파일이 두 배가 된다.
+		expect(svg).not.toContain(' href="data:image/png;base64,AAA"')
 		expect(svg).toContain('font-family="Pretendard" font-size="24.00" font-weight="700"')
 		// 글자로 남긴다 — 받는 쪽에서 문구를 고칠 수 있어야 한다.
 		expect(svg).toContain('>HD &amp; &lt;현대&gt;</text>')

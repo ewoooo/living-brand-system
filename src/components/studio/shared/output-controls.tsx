@@ -264,8 +264,11 @@ export function SizingControls({
 			// 🔴 픽셀을 못 바꿨으면 해상도도 바꾸지 않는다 — 한쪽만 적용하면 판형이 조용히 줄어든다.
 			//    Select의 값이 `ppi`에서 파생되므로 선택이 눈에 보이게 원래 값으로 되돌아간다.
 			if (!applied) {
-				const max = Math.max(...ppiOptions)
-				reject(`이 판형은 최대 ${max}ppi까지 만들 수 있습니다.`)
+				reject(
+					ppiOptions.length > 0
+						? `이 판형은 최대 ${Math.max(...ppiOptions)}ppi까지 만들 수 있습니다.`
+						: '이 판형은 인쇄할 수 없습니다. 크기를 줄여 주세요.',
+				)
 				return
 			}
 		}
@@ -322,7 +325,12 @@ export function SizingControls({
 				suffix={unit}
 				onChange={(height) => resize('height', height)}
 			/>
-			{unit === 'mm' && (
+			{unit === 'mm' && ppiOptions.length === 0 && (
+				<Typography role="status" size="sm" className="text-warning">
+					이 판형은 인쇄할 수 없습니다. 크기를 줄여 주세요.
+				</Typography>
+			)}
+			{unit === 'mm' && ppiOptions.length > 0 && (
 				<>
 					<Controller.Row label="해상도">
 						<Controller.Select

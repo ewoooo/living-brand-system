@@ -45,10 +45,10 @@ function serialize(primitive: VectorPrimitive, indent: string, path: string): st
 		case 'text':
 			return `${indent}<text x="${fixed(primitive.x)}" y="${fixed(primitive.y)}" font-family="${attribute(primitive.fontFamily)}" font-size="${fixed(primitive.fontSize)}"${optionalInt('font-weight', primitive.fontWeight)}${optional('letter-spacing', primitive.letterSpacing)} fill="${attribute(primitive.fill)}"${optionalText('text-anchor', primitive.textAnchor)}${optional('opacity', primitive.opacity)}>${text(primitive.text)}</text>`
 		case 'image':
-			// 🔴 `href`만 적으면 Illustrator에서 **사진이 통째로 안 보인다** — SVG 1.1만 읽는 경로가
-			//    `xlink:href`를 요구한다. 브라우저는 `href`로 정상 표시되므로 눈으로는 안 잡힌다.
-			//    둘 다 적는다(SVG 2는 `href`가 이기고, 1.1 경로는 `xlink:href`를 본다).
-			return `${indent}<image x="${fixed(primitive.x)}" y="${fixed(primitive.y)}" width="${fixed(primitive.width)}" height="${fixed(primitive.height)}" xlink:href="${attribute(primitive.href)}" href="${attribute(primitive.href)}" preserveAspectRatio="${attribute(primitive.preserveAspectRatio ?? 'none')}"${optional('opacity', primitive.opacity)} />`
+			// 🔴 `href`가 아니라 `xlink:href`다 — SVG 1.1만 읽는 경로(Illustrator)가 `href`를 무시해
+			//    **사진이 통째로 안 보인다.** 브라우저는 둘 다 읽으므로 눈으로는 안 잡힌다.
+			//    🔑 둘 다 적으면 안 된다 — data URI가 두 번 실려 파일이 그대로 두 배가 된다.
+			return `${indent}<image x="${fixed(primitive.x)}" y="${fixed(primitive.y)}" width="${fixed(primitive.width)}" height="${fixed(primitive.height)}" xlink:href="${attribute(primitive.href)}" preserveAspectRatio="${attribute(primitive.preserveAspectRatio ?? 'none')}"${optional('opacity', primitive.opacity)} />`
 		case 'path':
 			return `${indent}<path d="${attribute(primitive.d)}"${transformOf(primitive.x, primitive.y, primitive.scale)}${optionalText('fill', primitive.fill)}${optionalText('stroke', primitive.stroke)}${optional('stroke-width', primitive.strokeWidth)}${optionalText('fill-rule', primitive.fillRule)}${optional('opacity', primitive.opacity)} />`
 		case 'group':

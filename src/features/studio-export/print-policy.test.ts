@@ -149,3 +149,14 @@ describe('maxPrintSize', () => {
 		expect(limit.width / limit.height).toBeCloseTo(1080 / 1527, 2)
 	})
 })
+
+describe('printablePpiOptions — 만들 수 없는 판', () => {
+	/**
+	 * 🔴 빈 목록을 원래 목록으로 되돌리면 안 된다. 못 만드는 값이 다시 떠서 화면이 거짓말을 한다 —
+	 * 「고를 수 있다」고 보여주고 고르면 거부된다. 비었다는 사실을 그대로 돌려줘야
+	 * 호출부가 「이 판형은 인쇄할 수 없습니다」를 띄울 수 있다.
+	 */
+	it('10m 현수막은 가장 낮은 해상도로도 못 만들어 목록이 빈다', () => {
+		expect(printablePpiOptions(10_000, 3_000, PRINT_PPI_VALUES)).toEqual([])
+	})
+})

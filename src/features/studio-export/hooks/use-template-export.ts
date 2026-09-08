@@ -345,9 +345,14 @@ function describeVectorDiagnostics(
 
 	const fonts = new Set(diagnostics.notOutlined.map(({ fontFamily }) => fontFamily))
 	if (fonts.size > 0) {
-		// 🔴 「서체가 필요합니다」는 거짓이었다 — PDF는 서체를 임베드하지 않으므로 서체가 있어도
-		//    그 글자는 안 그려진다. SVG는 `text`로 남아 정상이라 형식별로 결과가 다르다.
-		warnings.push(`이 서체의 글자는 PDF에서 빠집니다(SVG는 정상): ${[...fonts].join(' · ')}`)
+		// 🔴 문구가 실제 동작과 같아야 한다 — 아웃라인에 실패한 글줄이 남으면 `exportVectorPrint`가
+		//    PDF를 **만들지 않는다**(422). 「빠집니다」는 글자 없는 파일이 나온다는 뜻이 되어,
+		//    사용자가 그대로 눌렀다가 실패를 만난다.
+		// 🔑 SVG는 `text`로 남으므로 「정상」이 아니라 「글자로 남는다」가 사실이다 —
+		//    여는 쪽에 그 서체가 있어야 제대로 보인다.
+		warnings.push(
+			`이 서체의 글자를 윤곽선으로 바꾸지 못해 PDF를 만들 수 없습니다(SVG는 글자로 남습니다): ${[...fonts].join(' · ')}`,
+		)
 	}
 	return warnings
 }
