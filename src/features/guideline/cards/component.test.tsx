@@ -83,6 +83,56 @@ describe('Card', () => {
 })
 
 describe('CardBlock', () => {
+	it('카드 없이도 제목·앵커를 유지하고 카드 프레임은 만들지 않는다', () => {
+		const { container, rerender } = render(
+			<CardBlock
+				id="text-only"
+				block={{ title: '사용 원칙', cards: [], layout: 'grid', rowHeight: 'medium' }}
+			/>,
+		)
+		expect(
+			screen.getByRole('heading', { name: '사용 원칙', level: 2 }).closest('section'),
+		).toHaveAttribute('id', 'text-only')
+		expect(container.querySelector('section')?.children).toHaveLength(1)
+		rerender(<CardBlock block={{ title: ' ', cards: [{ display: [] }] } as never} />)
+		expect(container).toBeEmptyDOMElement()
+	})
+
+	it('제목과 카드가 없어도 설명을 표시한다', () => {
+		const description = {
+			root: {
+				type: 'root',
+				version: 1,
+				direction: null,
+				format: '',
+				indent: 0,
+				children: [
+					{
+						type: 'paragraph',
+						version: 1,
+						direction: null,
+						format: '',
+						indent: 0,
+						children: [
+							{
+								type: 'text',
+								version: 1,
+								text: '브랜드 사용 원칙',
+								format: 0,
+								detail: 0,
+								mode: 'normal',
+								style: '',
+							},
+						],
+					},
+				],
+			},
+		}
+		render(<CardBlock block={{ description, layout: 'carousel', cards: [] } as never} />)
+		expect(screen.getByText('브랜드 사용 원칙')).toBeInTheDocument()
+		expect(screen.queryByRole('heading')).toBeNull()
+	})
+
 	it.each([
 		'grid',
 		'carousel',

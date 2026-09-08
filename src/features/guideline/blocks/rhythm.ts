@@ -18,5 +18,5 @@ export const CARD_ROW_HEIGHT = {
 	medium: 'md:h-[min(45vw,46rem)]',
 	high: 'md:h-[min(60vw,60rem)]',
 } as const
-/** 격자 = 줄바꿈 행. 카드 판이 줄 높이를 갖고 줄이 차면 내려간다. 좁은 화면은 한 열. */
-export const CARD_ROWS = 'flex flex-col gap-4 md:flex-row md:flex-wrap'
+/** 격자 = 줄바꿈 행. 컨테이너 폭으로 카드 최대 높이를 제한해 비율을 유지한다. 좁은 화면은 한 열. */
+export const CARD_ROWS = '@container flex flex-col gap-4 md:flex-row md:flex-wrap'

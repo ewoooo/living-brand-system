@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 import type { BaseBlock } from '@/payload-types'
 import { CardCaption } from './caption/component'
@@ -26,11 +27,13 @@ export function Card({ card, panelClassName }: { card: CardData; panelClassName?
 	const display = card.display?.[0]
 	if (!display) return null
 	const ratio = CARD_RATIO_CLASS[(card.ratio ?? '16:9') as CardRatio]
+	const [width, height] = (card.ratio ?? '16:9').split(':').map(Number)
 	const mark = card.mark
 
 	return (
 		<figure className="relative flex w-full flex-col self-start md:w-min">
 			<div
+				style={{ '--card-ratio': width / height } as CSSProperties}
 				className={cn(
 					'relative w-full overflow-hidden rounded-3xl bg-muted md:w-auto',
 					ratio,

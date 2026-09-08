@@ -30,8 +30,8 @@ export function CardBlock({
 	id?: string
 }) {
 	const cards = (block.cards ?? []).filter((card) => card.display?.length)
-	if (cards.length === 0) return null
 	const heading = title?.trim() || null
+	if (!heading && !block.description && cards.length === 0) return null
 	const rowHeight = CARD_ROW_HEIGHT[(block.rowHeight ?? 'medium') as RowHeight]
 
 	const body =
@@ -54,7 +54,11 @@ export function CardBlock({
 		) : (
 			<div className={CARD_ROWS}>
 				{cards.map((card) => (
-					<Card key={card.id} card={card} panelClassName={rowHeight} />
+					<Card
+						key={card.id}
+						card={card}
+						panelClassName={cn(rowHeight, 'md:max-h-[calc(100cqw/var(--card-ratio))]')}
+					/>
 				))}
 			</div>
 		)
@@ -72,7 +76,7 @@ export function CardBlock({
 					</div>
 				</ContentFrame>
 			) : null}
-			<ContentFrame>{body}</ContentFrame>
+			{cards.length > 0 ? <ContentFrame>{body}</ContentFrame> : null}
 		</section>
 	)
 }
