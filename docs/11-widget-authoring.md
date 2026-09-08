@@ -223,7 +223,7 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 
 🔴 브랜드 면은 `docs/09` §4의 "색을 데이터로 다루는 컴포넌트" 예외에 해당합니다. 다만 **예외라는 사실을 코드에 남깁니다** — 어느 쪽인지 이름 붙이지 않으면 다음 사람이 토큰 위반으로 보고 "고칩니다".
 
-그 이름이 사는 자리는 `cards/displays/dynamics/surface.ts` 하나입니다(`hairline.ts`·`readout.ts`와 같은 형태). 위젯은 생 팔레트를 직접 쓰지 않고 거기서 가져옵니다. `cards/displays/dynamics/visual-vocabulary.test.ts`가 그 파일만 예외로 두고 나머지를 막으며, 위젯에서 `dark:` 분기도 함께 막습니다 — 블록 면이 토큰 스코프를 다시 선언하는 것과 `dark:`가 어긋나기 때문입니다(`docs/09` §5).
+그 이름이 사는 자리는 `cards/displays/dynamics/surface.ts` 하나입니다(`hairline.ts`·`readout.ts`와 같은 형태). 위젯은 생 팔레트를 직접 쓰지 않고 거기서 가져옵니다. `cards/displays/dynamics/visual-vocabulary.test.ts`가 그 파일만 예외로 두고 `features/guideline` 전체에서 생 팔레트와 `dark:` 분기를 함께 막습니다(2026-09-08부터 위젯 밖의 블록·카드·컴포넌트도 대상). 블록 면이 토큰 스코프를 다시 선언하는 것과 `dark:`가 어긋나기 때문입니다(`docs/09` §5). 단색형 로고 fill(`MONO_FILL`)도 같은 파일이 갖습니다.
 
 ### 규정을 겹쳐 보이는 두 방식 — 얹기와 갈아치우기
 
