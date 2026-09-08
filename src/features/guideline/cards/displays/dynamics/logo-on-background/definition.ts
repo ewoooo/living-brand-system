@@ -15,7 +15,7 @@ export const logoOnBackground = defineDisplay({
 	type: 'dynamic',
 	dbName: 'lob',
 	name: '배경색 위 로고',
-	description: '컬러 그룹의 배경마다 로고를 얹어 본다. 콘텐츠 높이형이라 판 안에서 스크롤된다.',
+	description: '컬러 그룹의 배경마다 로고를 얹어 본다. 카드가 준 영역 안에 배치한다.',
 	fields: [
 		{
 			name: 'group',

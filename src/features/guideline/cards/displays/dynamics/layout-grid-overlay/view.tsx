@@ -70,7 +70,7 @@ export function LayoutGridOverlay({
 	const { padding, gap, width, height } = params
 
 	return (
-		<div className="w-full">
+		<div className="flex size-full min-h-0 min-w-0 flex-col">
 			{/* 규칙 컨트롤 (모든 이미지 공통) */}
 			<div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
 				<NumberField
@@ -124,7 +124,7 @@ export function LayoutGridOverlay({
 			</div>
 
 			{/* 스테이지 — 공유 규칙·크기를 여러 이미지에 병렬 적용 */}
-			<div className="flex flex-col gap-4 sm:flex-row">
+			<div className="flex min-h-0 w-full flex-1 flex-col gap-4 sm:flex-row">
 				{images.map((image) => (
 					<GridStage
 						key={image.src}
@@ -173,10 +173,7 @@ function GridStage({
 	const columnIds = Array.from({ length: columns }, (_, i) => `col-${i}`)
 
 	return (
-		<div
-			className="relative w-full overflow-hidden border border-border"
-			style={{ aspectRatio: `${width} / ${height}` }}
-		>
+		<div className="relative min-h-0 min-w-0 flex-1 overflow-clip border border-border">
 			{/* biome-ignore lint/performance/noImgElement: 임의 data-URI/원격이라 next/image 미사용. */}
 			<img
 				src={src}

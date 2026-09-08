@@ -14,15 +14,6 @@ export type PaletteSwatch = {
 
 export type PaletteLayout = 'uniform' | 'ranked'
 
-/**
- * 위계 판형의 높이 단위(rem). 순위 가중치 × 이 값이 행 높이다.
- * 3그룹이면 3:2:1 → 16.5 / 11 / 5.5rem. 가운데(가중치 2)가 개편 전 높이(h-44 = 11rem)와 같다.
- */
-const RANK_UNIT_REM = 5.5
-
-/** 이 높이 이하인 칸은 hover에서 다섯 줄을 못 담으므로 여백·행간을 조인다. */
-const COMPACT_MAX_HEIGHT_REM = 6
-
 // 클릭하면 HEX를 복사하는 스와치. admin의 스와치 셀과 동작이 겹치지만 공유하지 않는다 —
 // 표면마다 판형·인터랙션이 달라 한쪽을 고치면 다른 쪽이 같이 변형된다.
 export function HdColorPaletteView({
@@ -30,13 +21,10 @@ export function HdColorPaletteView({
 	layout,
 	/** 균일 판형에서 모든 칸을 같은 크기로 만들기 위한 열 수. 위젯 안 최다 색 수다. */
 	columnCount,
-	/** 위계 판형의 순위 가중치(앞 그룹일수록 크다). 균일 판형에서는 무시된다. */
-	rankWeight,
 }: {
 	swatches: PaletteSwatch[]
 	layout: PaletteLayout
 	columnCount: number
-	rankWeight: number
 }) {
 	// 🔴 `1fr`은 `minmax(auto, 1fr)`이라 내용이 넓으면 안 줄어든다. `minmax(0, 1fr)`로 써야 균등해진다.
 	//
@@ -48,30 +36,17 @@ export function HdColorPaletteView({
 
 	return (
 		<div
-			className="grid w-full"
+			className="grid min-h-0 w-full flex-1"
 			style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
 		>
 			{swatches.map((swatch) => (
-				<Swatch
-					key={swatch.id}
-					swatch={swatch}
-					square={layout === 'uniform'}
-					heightRem={layout === 'ranked' ? rankWeight * RANK_UNIT_REM : undefined}
-				/>
+				<Swatch key={swatch.id} swatch={swatch} />
 			))}
 		</div>
 	)
 }
 
-function Swatch({
-	swatch,
-	square,
-	heightRem,
-}: {
-	swatch: PaletteSwatch
-	square: boolean
-	heightRem?: number
-}) {
+function Swatch({ swatch }: { swatch: PaletteSwatch }) {
 	const [copied, setCopied] = useState(false)
 	// hex가 깨진 데이터면 파생 계산이 던지므로 색면을 포기하고 텍스트만 남긴다.
 	const valid = isValidHex(swatch.hex)
@@ -79,10 +54,6 @@ function Swatch({
 	const surface = valid
 		? { backgroundColor: swatch.hex, color: getContrastingForeground(swatch.hex) }
 		: undefined
-
-	// 🔴 위계 판형의 가장 낮은 행은 이름 + 네 값 다섯 줄이 기본 여백·행간으로는 안 들어간다
-	//    (5.5rem = 88px에서 RGB 줄이 잘렸다). 그 행에서만 여백과 행간을 조인다 — 큰 칸까지 좁히지 않는다.
-	const compact = heightRem !== undefined && heightRem <= COMPACT_MAX_HEIGHT_REM
 
 	async function copy() {
 		// 성공했을 때만 "복사됨" 표시 — 거짓 피드백 방지(프리뷰 iframe은 clipboard 권한이 없다).
@@ -97,10 +68,8 @@ function Swatch({
 			type="button"
 			onClick={copy}
 			title={`${swatch.hex} 복사`}
-			className={`group relative flex cursor-pointer flex-col justify-between text-left font-body text-xs outline-none ring-foreground/60 transition-transform hover:z-20 hover:scale-105 focus-visible:z-20 focus-visible:ring-2 ${
-				square ? 'aspect-square' : ''
-			} ${compact ? 'gap-1 p-2 leading-tight' : 'p-3'}`}
-			style={{ ...surface, height: heightRem ? `${heightRem}rem` : undefined }}
+			className="group relative flex min-h-0 min-w-0 cursor-pointer flex-col justify-between gap-1 p-2 text-left font-body text-xs leading-tight outline-none ring-foreground/60 transition-transform hover:z-20 hover:scale-105 focus-visible:z-20 focus-visible:ring-2"
+			style={surface}
 		>
 			<span className="font-medium">{copied ? '✓ 복사됨' : swatch.name}</span>
 

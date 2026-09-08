@@ -36,7 +36,7 @@ export function TypeLanguageView({
 	const shown: LanguageKey[] = layout === 'compare' ? LANGUAGES.map((l) => l.key) : [language]
 
 	return (
-		<div className="flex w-full flex-col gap-3">
+		<div className="flex size-full min-h-0 min-w-0 flex-col gap-3">
 			{layout === 'single' ? (
 				// 언어 하나를 고르는 설정 전환이다 — 패널 내비게이션이 아니라 같은 판을 다르게 그린다.
 				// type="single"이면 Radix가 radiogroup/radio로 렌더해 "하나만 고른다"가 AT에도 전달된다.
@@ -58,7 +58,7 @@ export function TypeLanguageView({
 			) : null}
 
 			<div
-				className={`grid w-full ${HAIRLINE_GRID}`}
+				className={`grid min-h-0 w-full flex-1 ${HAIRLINE_GRID}`}
 				style={{
 					// 🔴 임의값 Tailwind 클래스는 CSS가 안 나오는 일이 있어 인라인으로 준다.
 					//    auto-fit이라 셀이 좁으면 스스로 줄을 접는다 — 브레이크포인트를 지어내지 않는다.

@@ -43,7 +43,7 @@ export function TypeSpecimenWidget() {
 
 	return (
 		// 서체를 얹지만 규정이 정한 판이 아니라 위젯 UI의 패널이다 — 테마를 따라간다.
-		<div className={`rounded-lg p-8 ${THEME_PANEL}`}>
+		<div className={`flex size-full min-h-0 min-w-0 flex-col rounded-lg p-8 ${THEME_PANEL}`}>
 			<div className="flex flex-wrap items-end gap-x-8 gap-y-4">
 				<Field label="Size">
 					<ToggleGroup
@@ -110,7 +110,7 @@ export function TypeSpecimenWidget() {
 				aria-label="타입 견본 입력"
 				value={texts[tier]}
 				onChange={(e) => setTexts((prev) => ({ ...prev, [tier]: e.target.value }))}
-				className="mt-16 min-h-64 w-full field-sizing-content resize-none overflow-hidden break-keep border-none bg-transparent text-foreground outline-none"
+				className="mt-16 min-h-0 w-full flex-1 resize-none overflow-hidden break-keep border-none bg-transparent text-foreground outline-none"
 				style={{
 					fontFamily,
 					fontSize: TIER_PRESETS[tier].size,

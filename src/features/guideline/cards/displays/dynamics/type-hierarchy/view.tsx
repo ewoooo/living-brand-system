@@ -57,7 +57,7 @@ export function TypeHierarchyView({ language }: { language: LanguageKey }) {
 	const leading = LEADING[language]
 
 	return (
-		<div className={`grid w-full md:grid-cols-3 ${HAIRLINE_GRID}`}>
+		<div className={`grid size-full min-h-0 min-w-0 md:grid-cols-3 ${HAIRLINE_GRID}`}>
 			{/* 좌 — 실제 렌더. 세 단이 한 문단으로 붙어 있어야 크기·행간 차이가 위계로 읽힌다. */}
 			<div
 				className={`flex flex-col gap-5 p-6 md:col-span-2 ${HAIRLINE_CELL}`}
@@ -135,7 +135,7 @@ export function TypeHierarchyView({ language }: { language: LanguageKey }) {
 									// 🔴 outline-none을 같이 주면 안 된다 — Tailwind v4의 outline-2는
 									// `outline-style: var(--tw-outline-style)`인데 outline-none이 그 변수를
 									// none으로 박아 포커스 링이 아예 안 그려진다(키보드로 이 칸을 못 찾는다).
-									className="w-full resize-y border-border border-t bg-background p-3 font-body text-foreground text-sm focus-visible:outline-2"
+									className="w-full field-sizing-content resize-none overflow-hidden border-border border-t bg-background p-3 font-body text-foreground text-sm focus-visible:outline-2"
 								/>
 							</li>
 						)

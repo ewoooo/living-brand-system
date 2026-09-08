@@ -104,9 +104,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 		{ name: 'logo-bg-picker', node: <LogoBgPickerWidget group={bgGroup} /> },
 		{
 			name: 'clearspace-overlay',
-			node: (
-				<ClearspaceOverlayWidget logoLayer={hLogo} gridLayer={hGrid} scalePercent={100} />
-			),
+			node: <ClearspaceOverlayWidget logoLayer={hLogo} gridLayer={hGrid} />,
 		},
 		{
 			name: 'clearspace-viewer',
@@ -123,7 +121,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 			// 프리셋 패널은 카드 판을 채우는 디스플레이라 판(비율·clip)을 여기서 흉내 낸다. 컬러(로고 얹음)·타이포 하나씩.
 			name: 'preset-panel (컬러 프리셋)',
 			node: (
-				<div className="relative aspect-video overflow-hidden rounded-3xl bg-muted">
+				<div className="relative size-full overflow-clip rounded-3xl bg-muted">
 					<PresetPanel preset="overlay-stack" logo={koLogo} />
 				</div>
 			),
@@ -131,7 +129,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 		{
 			name: 'preset-panel (타이포 프리셋)',
 			node: (
-				<div className="relative aspect-video overflow-hidden rounded-3xl bg-muted">
+				<div className="relative size-full overflow-clip rounded-3xl bg-muted">
 					<PresetPanel preset="slanted" />
 				</div>
 			),
@@ -160,7 +158,9 @@ export async function GuidelineWidgetGallery() {
 			{widgets.map(({ name, node }) => (
 				<section key={name} className="flex flex-col gap-4">
 					<h2 className="font-mono text-sm text-muted-foreground">{name}</h2>
-					{node}
+					<div className="relative aspect-video overflow-clip rounded-3xl bg-muted">
+						<div className="absolute inset-0">{node}</div>
+					</div>
 				</section>
 			))}
 		</div>

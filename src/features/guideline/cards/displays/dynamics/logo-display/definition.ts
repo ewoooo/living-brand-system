@@ -17,18 +17,18 @@ export const logoDisplay = defineDisplay({
 			required: true,
 			admin: { description: '표시할 이미지입니다.' },
 		},
-		// 유한 이미지 박스 사이징(레이아웃 아님 — width:100% 같은 건 block 몫). 비우면 이미지 본연 크기.
+		// 이전 저장값 호환용. 렌더는 무시하며 크기는 카드가 결정한다.
 		{
 			name: 'width',
 			type: 'number',
 			min: 1,
-			admin: { description: '폭(px). 비우면 본연 크기.' },
+			admin: { hidden: true },
 		},
 		{
 			name: 'height',
 			type: 'number',
 			min: 1,
-			admin: { description: '높이(px). 비우면 본연 크기.' },
+			admin: { hidden: true },
 		},
 		{
 			name: 'padding',

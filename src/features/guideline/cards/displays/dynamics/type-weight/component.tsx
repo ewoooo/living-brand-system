@@ -64,7 +64,7 @@ function TypeWeightSpecimen({ lang, weightKey }: { lang: LanguageKey; weightKey:
 		// 🔴 테두리를 스스로 그리지 않는다 — 맞붙인 그리드에서는 셀마다 테두리를 두면 맞닿은 자리가
 		//    2px이 된다. 선은 배치(Block)가 그리고, 셀은 틈을 가리도록 불투명하기만 하면 된다.
 		<div
-			className={`flex h-full w-full flex-col gap-6 px-6 py-8 ${HAIRLINE_CELL}`}
+			className={`flex size-full min-h-0 min-w-0 flex-col gap-6 px-6 py-8 ${HAIRLINE_CELL}`}
 			// 글자 크기가 그리드 셀이 아니라 이 판을 기준으로 잡히게 한다(TITLE_SIZE 주석 참고).
 			style={{ containerType: 'inline-size' }}
 		>

@@ -18,7 +18,6 @@ vi.mock('@/components/ui/carousel', () => ({
 vi.mock('@/components/ui/slider', () => ({ Slider: () => null }))
 afterEach(() => {
 	cleanup()
-	vi.unstubAllGlobals()
 })
 
 const image = (id: number) => ({ id, url: `/img-${id}.png`, alt: `그림 ${id}` })
@@ -31,13 +30,6 @@ const staticCard = (id: string, extra: object = {}) => ({
 
 describe('Card', () => {
 	it('동적 디스플레이는 판 내부 스크롤을 만들지 않는다', () => {
-		vi.stubGlobal(
-			'ResizeObserver',
-			class {
-				observe() {}
-				disconnect() {}
-			},
-		)
 		const { container } = render(
 			<Card
 				card={{ ratio: '1:1', display: [{ blockType: 'typeSpecimenWidget' }] } as never}
@@ -46,8 +38,54 @@ describe('Card', () => {
 		expect(container.querySelector('[data-slot="card-display"]')).toHaveClass('overflow-clip')
 		expect(container.querySelector('figure > div')).toHaveClass('overflow-clip')
 		expect(screen.getByRole('textbox', { name: '타입 견본 입력' })).toHaveClass(
-			'field-sizing-content',
+			'flex-1',
+			'min-h-0',
 		)
+	})
+
+	it('기존 로고 크기와 오버레이 배율은 카드 크기를 바꾸지 않는다', () => {
+		const { container, rerender } = render(
+			<Card
+				card={
+					{
+						display: [
+							{
+								blockType: 'logoDisplayWidget',
+								logo: image(1),
+								width: 2000,
+								height: 1000,
+							},
+						],
+					} as never
+				}
+			/>,
+		)
+		const displayRoot = () => container.querySelector('[data-slot="card-display"] > div')
+		expect(displayRoot()).toHaveClass('size-full')
+		expect(screen.getByRole('img')).toHaveClass('size-full', 'object-contain')
+		expect(screen.getByRole('img').style.width).toBe('')
+		expect(screen.getByRole('img').style.height).toBe('')
+		rerender(
+			<Card
+				card={
+					{
+						display: [
+							{
+								blockType: 'clearspaceOverlayWidget',
+								logoLayer: image(1),
+								gridLayer: image(2),
+								scalePercent: 200,
+							},
+						],
+					} as never
+				}
+			/>,
+		)
+		expect(displayRoot()).toHaveClass('size-full')
+		expect((displayRoot() as HTMLElement).style.transform).toBe('')
+		for (const layer of container.querySelectorAll('img')) {
+			expect(layer).toHaveClass('absolute', 'inset-0', 'size-full', 'object-contain')
+		}
 	})
 
 	it('정적 디스플레이와 캡션(제목만)을 그린다', () => {

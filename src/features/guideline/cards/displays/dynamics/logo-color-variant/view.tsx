@@ -17,7 +17,7 @@ export function LogoColorVariantView({ map }: Props) {
 	const colors = map[orient] ?? {}
 
 	return (
-		<div className="flex flex-col gap-4">
+		<div className="flex size-full min-h-0 min-w-0 flex-col gap-4">
 			{/* 방향 하나를 고르는 설정 전환이다 — 표본 면이 아니라 위젯 UI이므로 앱 프리미티브를 쓴다. */}
 			<ToggleGroup
 				type="single"
@@ -35,10 +35,10 @@ export function LogoColorVariantView({ map }: Props) {
 				))}
 			</ToggleGroup>
 			{/* 2×2: 기본형(좌 2행) · WHITE(우상) · 단색(우하).
-			    컨테이너 height 고정 + width 반응형 + gap → 셀 박스 결정.
+			    카드가 준 너비·높이와 gap으로 셀 박스를 결정한다.
 			    로고 박스는 셀의 40%(=1/2.5)이고 그 안에서 object-contain — 폭도 높이도 셀의 1/2.5를 넘지 않는다.
 			    (높이 %만 지정하면 종횡비에 따라 폭이 셀을 넘겨 여백이 사라진다.) */}
-			<div className="grid h-[600px] w-full grid-cols-2 grid-rows-2 gap-3">
+			<div className="grid min-h-0 w-full flex-1 grid-cols-2 grid-rows-2 gap-3">
 				{colors.default ? (
 					<div
 						className={`row-span-2 flex items-center justify-center ${BRAND_PANEL_LIGHT}`}

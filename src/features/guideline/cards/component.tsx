@@ -2,7 +2,6 @@ import type { CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 import type { BaseBlock } from '@/payload-types'
 import { CardCaption } from './caption/component'
-import { DisplayViewport } from './display-viewport'
 import { CARD_RATIO_CLASS, type CardRatio } from './displays/ratio'
 import { renderDisplay } from './displays/registry.render'
 
@@ -44,7 +43,9 @@ export function Card({ card, panelClassName }: { card: CardData; panelClassName?
 				{display.blockType === 'staticDisplay' ? (
 					renderDisplay(display, { alt: card.caption?.title ?? undefined })
 				) : (
-					<DisplayViewport>{renderDisplay(display)}</DisplayViewport>
+					<div data-slot="card-display" className="absolute inset-0 overflow-clip">
+						{renderDisplay(display)}
+					</div>
 				)}
 				{mark && mark !== 'none' ? (
 					<span

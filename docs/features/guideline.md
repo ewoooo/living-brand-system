@@ -76,7 +76,7 @@ Mark는 **저작자가 붙이는 사례 표식**입니다. 검수 Rule·검수 �
 | 토픽·블록 헤딩 | `components/globals/guideline-header.tsx` | h1·h2 의미와 텍스트 단계 |
 | 블록 설명 | `components/globals/guideline-description.tsx` | 설명의 기본 서식 |
 | 판·Mark | `cards/component.tsx` | 비율·클리핑·표식의 위치 |
-| 동적 디스플레이의 크기 맞춤 | `cards/display-viewport.tsx` | 내부 스크롤 없이 판 안으로 축소. Mark·캡션은 제외 |
+| 동적 디스플레이의 크기 | `cards/component.tsx`와 각 위젯 루트 | 카드 영역을 채움. 자체 고정 크기·내부 스크롤·전체 자동 축소 없음 |
 | 하단·오버레이 캡션 | `cards/caption/component.tsx` | 크기·굵기·행간·패딩·텍스트 폭 |
 | 2열 스펙 표 | `components/globals/spec-table-converters.tsx` | 라벨·값 목록. 다른 열 수는 기본 표 |
 | 브랜드 표본 면 | `cards/displays/dynamics/surface.ts` | 테마 면과 규정에 고정된 브랜드 면 구분 |
@@ -113,7 +113,9 @@ Mark는 **저작자가 붙이는 사례 표식**입니다. 검수 Rule·검수 �
 
 2차 정리에서는 `guideline-typography.ts`에 산문 역할을 모으고 헤딩·richText·캡션·스펙 표를 연결했습니다. h1/h2·문단·dt/dd의 의미는 각각의 렌더러가 유지합니다. 서체·기본 크기 토큰은 전역 CSS, 역할 매핑은 가이드라인, 배치와 간격은 각 프레임이 소유합니다. 이제 남은 순서는 세로 간격 → 판·Mark 모양 → 프리셋 구성입니다.
 
-동적 디스플레이는 별도 스크롤 없이 판 안에 맞춥니다. `DisplayViewport`는 판과 콘텐츠 크기 변경에 맞춰 축소 배율을 갱신하고, 콘텐츠를 확대하지 않습니다. 큰 도판의 글자도 함께 작아지므로 저작자는 적절한 비율·줄 높이를 선택해야 합니다. 정적 이미지의 크롭 정책과 카드 밖 캡션 크기는 바꾸지 않습니다.
+3차 정리에서는 19종 동적 디스플레이에 **카드가 크기를 결정하고 디스플레이가 채우는 계약**을 일괄 적용합니다. `DisplayViewport`의 전체 자동 축소를 제거하고, 자체 고정 너비·높이·최소 크기·종횡비를 카드 영역에 맞추는 배치로 바꿉니다. 로고 자체 비율과 CI 치수·서체 표본 크기는 콘텐츠 규칙으로 남깁니다. 내용이 넘칠 때 내부 스크롤이나 전체 축소로 보정하지 않고 개별 위젯의 배치를 수정합니다.
+
+이 단계는 모든 입력·카드 비율에서 내부 배치가 완성됐다는 뜻이 아닙니다. 작은 카드의 타입 입력·긴 문단·많은 아이콘·CI 치수 배치는 후속 조정 대상입니다. 크기 관련 기존 저장 필드(`logo-display.width/height`, `clearspace-overlay.scalePercent`, `type-scramble.panelHeight`)는 admin에서 숨기고 렌더에서 무시합니다. 저장 데이터·DB 스키마는 유지하며 정적 이미지의 크롭 정책과 카드 캡션·Mark 스타일도 유지합니다.
 
 ## 3. 표면
 
@@ -149,3 +151,6 @@ DB 쓰기는 임시 로컬 `mark_dev`·`mark_verify`에만 수행했습니다. �
 후속 1차 정리 검증(Node.js 22.23.2): `pnpm exec vitest run src/features/guideline` 535개 테스트, `pnpm typecheck`, `pnpm check` 통과. React Doctor는 기존과 같은 66점·38건입니다. 공통 렌더러 미리보기에서 390px·768px·1280px의 11개 카드 비율과 격자 폭 제한, 텍스트 전용 블록을 확인했습니다. 이 후속 변경은 DB에 쓰지 않습니다.
 
 2차 정리 검증(Node.js 22.23.2): `pnpm exec vitest run src/features/guideline src/components/ui/typography.test.ts` 35개 파일·550개 테스트 통과. `pnpm typecheck`, `pnpm check` 통과, React Doctor는 기존 66점·38건입니다. 공통 컴포넌트 미리보기에서 1280px·390px의 실제 글자 크기·굵기·행간, 타입 견본의 긴 입력과 내부 스크롤 없음, 가로 2000px 도판의 비율 유지 축소를 확인했습니다. 전체 CMS 콘텐츠·모든 위젯 입력 조합의 화면 검증이나 프로덕션 빌드는 수행하지 않았으며 DB 쓰기도 없습니다.
+
+
+3차 정리 검증(Node.js 22.23.2): `pnpm exec vitest run src/features/guideline src/components/ui/typography.test.ts` 35개 파일·549개 테스트, `pnpm typecheck`, `pnpm check` 통과. 실제 뷰 17개의 조사용 데이터 미리보기에서 360×300·720×405 카드와 390px 모바일 폭을 확인했고, 실제 Card 렌더러의 타입 견본은 644×644 영역을 그대로 채웠습니다. 내부 자동 축소와 세로 스크롤 컨테이너는 없습니다. 타입 위계·언어 비교의 긴 내용과 좁은 컬러 셀의 넘침은 후속 배치 조정 대상으로 남습니다. 나머지 위젯은 소스 계약을 확인했으며 전체 CMS 콘텐츠와 프로덕션 빌드는 검증하지 않았습니다. `npx react-doctor@latest --verbose --scope changed`는 maintainability 분석 실패로 점수가 나오지 않아 이전 점수와 비교할 수 없습니다. 이번 단계는 DB에 쓰지 않습니다.

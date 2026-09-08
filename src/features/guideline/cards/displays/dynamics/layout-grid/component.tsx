@@ -30,9 +30,6 @@ import type { LayoutGridSample } from './samples'
 /** 축별 트랙 비율. 좌상단부터 1:2:3 (가로·세로 동일 규칙, 단위는 축별로 다름). */
 const TRACKS = [1, 2, 3]
 
-/** 판형 = A4 세로. 폭은 컨테이너가 주고 높이는 이 비율로 나온다. */
-const ARTBOARD_ASPECT = '210 / 297'
-
 /** 마진·거터 영역 채움의 투명도. 밴드가 아니라 **그룹**에 적용해야 교차부가 진해지지 않는다. */
 const GRID_AREA_OPACITY = 0.3
 /** 그리드가 보일 때 콘텐츠 투명도 — 선과 영역이 읽히도록 죽인다. */
@@ -87,12 +84,11 @@ export function LayoutGridWidget({
 	const gutterHalf = { x: (marginPct * gutterX) / 100 / 2, y: (marginPct * gutterY) / 100 / 2 }
 
 	return (
-		<figure className="flex w-full flex-col gap-2">
-			{/* 판형 — 폭은 컨테이너를 채우고 높이는 A4 비율로 파생. cq 단위의 기준 컨테이너다. */}
+		<figure className="flex size-full min-h-0 min-w-0 flex-col gap-2">
+			{/* 판형 — 카드가 정한 너비·높이를 채운다. cq 단위의 기준 컨테이너다. */}
 			<div
-				className="relative w-full overflow-hidden"
+				className="relative min-h-0 w-full flex-1 overflow-clip"
 				style={{
-					aspectRatio: ARTBOARD_ASPECT,
 					containerType: 'size',
 					background: composition.background,
 					color: composition.color,

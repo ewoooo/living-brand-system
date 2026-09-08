@@ -1,6 +1,12 @@
 'use client'
 
-import { type PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from 'react'
+import {
+	type CSSProperties,
+	type PointerEvent as ReactPointerEvent,
+	useEffect,
+	useRef,
+	useState,
+} from 'react'
 import { WIDGET_CAPTION } from '../readout'
 
 /**
@@ -161,7 +167,6 @@ export function ClearSpaceView({
 	multiplier = 3,
 	tint = '120 120 120',
 	fallbackAspect = 891 / 185,
-	logoWidth = 420,
 }: {
 	logoSrc: string
 	/** 로고 폭 대비 A 비율(0~1). admin에서 측정·저장된 값. */
@@ -174,8 +179,6 @@ export function ClearSpaceView({
 	tint?: string
 	/** 로고 종횡비 폴백(로드 전). */
 	fallbackAspect?: number
-	/** 로고 표시 폭(px). 정보 전달용이라 고정. */
-	logoWidth?: number
 }) {
 	const [aspect, setAspect] = useState(fallbackAspect)
 
@@ -189,8 +192,8 @@ export function ClearSpaceView({
 	}, [logoSrc])
 
 	const n = multiplier
-	const logoW = logoWidth
-	const logoH = logoWidth / aspect
+	const logoW = 1
+	const logoH = 1 / aspect
 	const a = stemRatio * logoW
 	const margin = n * a
 	const outerW = logoW + margin * 2
@@ -200,26 +203,50 @@ export function ClearSpaceView({
 	const aLeft = stemX != null ? margin + stemX * logoW : margin + (logoW - a) / 2
 
 	return (
-		<div className="flex w-full flex-col gap-3 overflow-clip">
-			<div className="grid min-h-56 place-items-center rounded-lg border border-border bg-background p-8">
-				<div className="relative shrink-0" style={{ width: outerW, height: outerH }}>
+		<div className="flex size-full min-h-0 min-w-0 flex-col gap-3 overflow-clip">
+			<div
+				className="grid size-full min-h-0 min-w-0 place-items-center rounded-lg border border-border bg-background p-8"
+				style={{ containerType: 'size' }}
+			>
+				<div
+					className="relative shrink-0"
+					style={
+						{
+							'--clearspace-unit': `min(calc(100cqw / ${outerW}), calc(100cqh / ${outerH}))`,
+							width: `calc(${outerW} * var(--clearspace-unit))`,
+							height: `calc(${outerH} * var(--clearspace-unit))`,
+						} as CSSProperties
+					}
+				>
 					{/* 4개 padding 사각형 — 그룹 opacity로 코너에서 겹쳐도 색이 진해지지 않는다. */}
 					<div className="absolute inset-0" style={{ opacity: 0.14 }}>
 						<div
 							className="absolute top-0 right-0 left-0"
-							style={{ height: margin, background: color }}
+							style={{
+								height: `calc(${margin} * var(--clearspace-unit))`,
+								background: color,
+							}}
 						/>
 						<div
 							className="absolute right-0 bottom-0 left-0"
-							style={{ height: margin, background: color }}
+							style={{
+								height: `calc(${margin} * var(--clearspace-unit))`,
+								background: color,
+							}}
 						/>
 						<div
 							className="absolute top-0 bottom-0 left-0"
-							style={{ width: margin, background: color }}
+							style={{
+								width: `calc(${margin} * var(--clearspace-unit))`,
+								background: color,
+							}}
 						/>
 						<div
 							className="absolute top-0 right-0 bottom-0"
-							style={{ width: margin, background: color }}
+							style={{
+								width: `calc(${margin} * var(--clearspace-unit))`,
+								background: color,
+							}}
 						/>
 					</div>
 
@@ -229,8 +256,8 @@ export function ClearSpaceView({
 							key={pos}
 							className="absolute grid font-body font-medium text-xs"
 							style={{
-								width: margin,
-								height: margin,
+								width: `calc(${margin} * var(--clearspace-unit))`,
+								height: `calc(${margin} * var(--clearspace-unit))`,
 								placeItems: 'center',
 								top: pos[0] === 't' ? 0 : undefined,
 								bottom: pos[0] === 'b' ? 0 : undefined,
@@ -247,15 +274,19 @@ export function ClearSpaceView({
 					<div
 						className="absolute top-0 z-10"
 						style={{
-							left: aLeft,
-							width: a,
-							height: outerH,
+							left: `calc(${aLeft} * var(--clearspace-unit))`,
+							width: `calc(${a} * var(--clearspace-unit))`,
+							height: `calc(${outerH} * var(--clearspace-unit))`,
 							border: `1px solid ${color}`,
 						}}
 					/>
 					<span
 						className="absolute top-1 z-10 -translate-x-1/2 px-1 font-body font-semibold text-xs leading-none"
-						style={{ left: aLeft + a / 2, color, background: 'var(--background)' }}
+						style={{
+							left: `calc(${aLeft + a / 2} * var(--clearspace-unit))`,
+							color,
+							background: 'var(--background)',
+						}}
 					>
 						A
 					</span>
@@ -264,10 +295,10 @@ export function ClearSpaceView({
 					<div
 						className="absolute bg-background"
 						style={{
-							top: margin,
-							left: margin,
-							width: logoW,
-							height: logoH,
+							top: `calc(${margin} * var(--clearspace-unit))`,
+							left: `calc(${margin} * var(--clearspace-unit))`,
+							width: `calc(${logoW} * var(--clearspace-unit))`,
+							height: `calc(${logoH} * var(--clearspace-unit))`,
 							outline: `1px dashed rgb(${tint} / 0.55)`,
 						}}
 					>
