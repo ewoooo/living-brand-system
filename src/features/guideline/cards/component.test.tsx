@@ -38,11 +38,11 @@ describe('Card', () => {
 		expect(screen.getByText('Forward Mark')).toBeInTheDocument()
 	})
 
-	it('블록 표식이 있으면 판 모서리에 배지를 그리고 none이면 그리지 않는다', () => {
-		render(<Card card={staticCard('a') as never} mark="dont" />)
+	it('카드 표식이 있으면 판 모서리에 배지를 그리고 none이면 그리지 않는다', () => {
+		render(<Card card={staticCard('a', { mark: 'dont' }) as never} />)
 		expect(screen.getByRole('img', { name: "Don't" })).toHaveClass('text-destructive')
 		cleanup()
-		render(<Card card={staticCard('a') as never} mark="none" />)
+		render(<Card card={staticCard('a', { mark: 'none' }) as never} />)
 		expect(screen.queryByRole('img', { name: "Don't" })).toBeNull()
 	})
 
@@ -83,6 +83,32 @@ describe('Card', () => {
 })
 
 describe('CardBlock', () => {
+	it.each([
+		'grid',
+		'carousel',
+	])('%s 안에서 카드별 표식을 섞고 생략한 카드는 표시하지 않는다', (layout) => {
+		render(
+			<CardBlock
+				block={
+					{
+						layout,
+						cards: [
+							staticCard('a', { mark: 'do' }),
+							staticCard('b', { mark: 'ok' }),
+							staticCard('c', { mark: 'dont' }),
+							staticCard('d', { mark: 'none' }),
+							staticCard('e'),
+						],
+					} as never
+				}
+			/>,
+		)
+		for (const label of ['Do', 'OK', "Don't"]) {
+			expect(screen.getAllByRole('img', { name: label })).toHaveLength(1)
+		}
+		expect(screen.getAllByRole('img')).toHaveLength(8)
+	})
+
 	it('블록의 줄 높이를 모든 카드 판에 주고 폭은 카드 비율이 정한다', () => {
 		const { container } = render(
 			<CardBlock

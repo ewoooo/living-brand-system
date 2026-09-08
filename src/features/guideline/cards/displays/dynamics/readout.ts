@@ -25,7 +25,7 @@ export const CONTROL_LABEL = 'font-body text-muted-foreground text-xs font-mediu
 /**
  * 판 아래에 붙는 보조 설명.
  *
- * 🔴 **새로 쓰지 않는다.** 위젯이 그리는 것은 판(canvas) 하나뿐이고 판 밖 줄은 블록이 소유한다
+ * 🔴 **새로 쓰지 않는다.** 위젯이 그리는 것은 판(canvas) 하나뿐이고 판 밖 캡션은 카드가 소유한다
  *    (`docs/11` §8 「위젯은 판만 그립니다」). 아직 걷어내지 못한 두 자리를 위해 남아 있고,
  *    `visual-vocabulary.test.ts`의 `CAPTION_DEBT`가 그 목록이 늘어나는 것을 막는다.
  */

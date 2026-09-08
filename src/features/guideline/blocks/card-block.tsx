@@ -11,7 +11,7 @@ import { CARD_ROW_HEIGHT, CARD_ROWS } from './rhythm'
 /** 기본 블록과 슈거 블록이 공유하는 데이터 꼴. 슈거의 생성 타입은 이와 구조가 같다. */
 export type CardBlockData = Pick<
 	BaseBlock,
-	'title' | 'description' | 'layout' | 'rowHeight' | 'mark' | 'cards'
+	'title' | 'description' | 'layout' | 'rowHeight' | 'cards'
 >
 
 /**
@@ -46,7 +46,7 @@ export function CardBlock({
 					{cards.map((card) => (
 						// 슬라이드 폭은 카드가 정한다(basis-auto) — shadcn 기본 basis-full을 md에서 푼다.
 						<CarouselItem key={card.id} className="md:basis-auto">
-							<Card card={card} panelClassName={rowHeight} mark={block.mark} />
+							<Card card={card} panelClassName={rowHeight} />
 						</CarouselItem>
 					))}
 				</CarouselContent>
@@ -54,7 +54,7 @@ export function CardBlock({
 		) : (
 			<div className={CARD_ROWS}>
 				{cards.map((card) => (
-					<Card key={card.id} card={card} panelClassName={rowHeight} mark={block.mark} />
+					<Card key={card.id} card={card} panelClassName={rowHeight} />
 				))}
 			</div>
 		)

@@ -332,10 +332,6 @@ export interface SectionBlock {
    */
   rowHeight: 'low' | 'medium' | 'high';
   /**
-   * 모든 카드 판에 붙는 Do/OK/Don’t 표식입니다.
-   */
-  mark: 'none' | 'do' | 'ok' | 'dont';
-  /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
@@ -344,6 +340,10 @@ export interface SectionBlock {
          * 카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
+        /**
+         * 이 카드에만 붙는 표식입니다. 없음을 선택하면 표시하지 않습니다.
+         */
+        mark?: ('none' | 'do' | 'ok' | 'dont') | null;
         /**
          * 판에 무엇을 그릴지입니다. 이미지 하나 또는 위젯 하나.
          */
@@ -1115,10 +1115,6 @@ export interface BaseBlock {
    */
   rowHeight: 'low' | 'medium' | 'high';
   /**
-   * 모든 카드 판에 붙는 Do/OK/Don’t 표식입니다.
-   */
-  mark: 'none' | 'do' | 'ok' | 'dont';
-  /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
@@ -1127,6 +1123,10 @@ export interface BaseBlock {
          * 카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
+        /**
+         * 이 카드에만 붙는 표식입니다. 없음을 선택하면 표시하지 않습니다.
+         */
+        mark?: ('none' | 'do' | 'ok' | 'dont') | null;
         /**
          * 판에 무엇을 그릴지입니다. 이미지 하나 또는 위젯 하나.
          */
@@ -1221,10 +1221,6 @@ export interface OverviewBlock {
    */
   rowHeight: 'low' | 'medium' | 'high';
   /**
-   * 모든 카드 판에 붙는 Do/OK/Don’t 표식입니다.
-   */
-  mark: 'none' | 'do' | 'ok' | 'dont';
-  /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
@@ -1233,6 +1229,10 @@ export interface OverviewBlock {
          * 카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
+        /**
+         * 이 카드에만 붙는 표식입니다. 없음을 선택하면 표시하지 않습니다.
+         */
+        mark?: ('none' | 'do' | 'ok' | 'dont') | null;
         /**
          * 판에 무엇을 그릴지입니다. 이미지 하나 또는 위젯 하나.
          */
@@ -1327,10 +1327,6 @@ export interface ExamplesBlock {
    */
   rowHeight: 'low' | 'medium' | 'high';
   /**
-   * 모든 카드 판에 붙는 Do/OK/Don’t 표식입니다.
-   */
-  mark: 'none' | 'do' | 'ok' | 'dont';
-  /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
@@ -1339,6 +1335,10 @@ export interface ExamplesBlock {
          * 카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
+        /**
+         * 이 카드에만 붙는 표식입니다. 없음을 선택하면 표시하지 않습니다.
+         */
+        mark?: ('none' | 'do' | 'ok' | 'dont') | null;
         /**
          * 판에 무엇을 그릴지입니다. 이미지 하나 또는 위젯 하나.
          */
@@ -2640,11 +2640,11 @@ export interface SectionBlockSelect<T extends boolean = true> {
   description?: T;
   layout?: T;
   rowHeight?: T;
-  mark?: T;
   cards?:
     | T
     | {
         ratio?: T;
+        mark?: T;
         display?:
           | T
           | {
@@ -2909,11 +2909,11 @@ export interface BaseBlockSelect<T extends boolean = true> {
   description?: T;
   layout?: T;
   rowHeight?: T;
-  mark?: T;
   cards?:
     | T
     | {
         ratio?: T;
+        mark?: T;
         display?:
           | T
           | {
@@ -2961,11 +2961,11 @@ export interface OverviewBlockSelect<T extends boolean = true> {
   description?: T;
   layout?: T;
   rowHeight?: T;
-  mark?: T;
   cards?:
     | T
     | {
         ratio?: T;
+        mark?: T;
         display?:
           | T
           | {
@@ -3013,11 +3013,11 @@ export interface ExamplesBlockSelect<T extends boolean = true> {
   description?: T;
   layout?: T;
   rowHeight?: T;
-  mark?: T;
   cards?:
     | T
     | {
         ratio?: T;
+        mark?: T;
         display?:
           | T
           | {

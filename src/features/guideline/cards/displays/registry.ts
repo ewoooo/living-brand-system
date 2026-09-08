@@ -32,7 +32,7 @@ import { staticDisplay } from './static/definition'
  * clearspace-viewer·layout-grid)은 하단 Floating Controller를 잃고 admin 고정값으로만 그려지며, 콘텐츠 높이형
  * (icon-grid·hd-color-palette·type-hierarchy·logo-on-background)은 규격 비율 판 안에서 스크롤된다.
  * 컨트롤 전용 layout-grid-controls는 그릴 것이 없어 2026-09-08에 지웠고, Do/Don’t 위젯은 카드(프리셋 패널·정적
- * 디스플레이 + 블록 `mark`)로 대체됐다.
+ * 디스플레이 + 카드 `mark`)로 대체됐다.
  */
 export const DISPLAYS = [
 	staticDisplay,
