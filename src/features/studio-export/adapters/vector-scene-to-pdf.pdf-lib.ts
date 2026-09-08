@@ -34,19 +34,26 @@ import type { CmykColor } from './rgb-to-cmyk.sharp'
 export async function vectorSceneToPdf(
 	scene: VectorScene,
 	print?: {
-		colors: ReadonlyMap<string, CmykColor>
-		iccProfile: Buffer
-		iccProfileName: string
 		/** 씬의 px 좌표를 물리 크기로 읽는 해상도. 페이지 치수와 내용 배율을 함께 정한다. */
 		ppi: PrintPpi
+		/**
+		 * 주면 도형 색을 잉크로 찍고 OutputIntent를 붙인다. **안 주면 RGB로 나간다.**
+		 * 🔴 지금 호출부는 주지 않는다 — PDF 안의 CMYK 이미지가 Illustrator에서 반전돼 열리는
+		 *    알려진 결함 때문에 인쇄 PDF를 RGB로 내고 있다(`png-to-pdf.pdf-lib`에 근거).
+		 */
+		cmyk?: {
+			colors: ReadonlyMap<string, CmykColor>
+			iccProfile: Buffer
+			iccProfileName: string
+		}
 	},
 ): Promise<Buffer> {
 	const pdf = await PDFDocument.create()
 	const page = pdf.addPage([scene.width, scene.height])
-	const profileRef = print
-		? attachOutputIntent(pdf, print.iccProfile, print.iccProfileName)
+	const profileRef = print?.cmyk
+		? attachOutputIntent(pdf, print.cmyk.iccProfile, print.cmyk.iccProfileName)
 		: null
-	const color = (value: string | undefined) => resolveColor(value, print?.colors)
+	const color = (value: string | undefined) => resolveColor(value, print?.cmyk?.colors)
 
 	page.drawRectangle({
 		color: color(scene.background) ?? rgb(1, 1, 1),

@@ -1,9 +1,5 @@
 import type { VectorScene } from '@/modules/studio-artifact/studio-artifact'
-import { convertRgbToCmyk } from '../adapters/rgb-to-cmyk.sharp'
-import { convertSceneImagesToCmyk } from '../adapters/scene-images-to-cmyk.sharp'
-import { collectSceneColors, vectorSceneToPdf } from '../adapters/vector-scene-to-pdf.pdf-lib'
-import { DEFAULT_CMYK_ICC_PROFILE } from '../color-profile'
-import { readCmykIccProfile, resolveCmykIccProfilePath } from '../color-profile.server'
+import { vectorSceneToPdf } from '../adapters/vector-scene-to-pdf.pdf-lib'
 import type { CmykIccProfile } from '../export-contract'
 import type { PrintPpi } from '../print-policy'
 
@@ -20,13 +16,15 @@ export class VectorPrintTextError extends Error {}
 const MAX_PRIMITIVES = 20_000
 
 /**
- * Vector Scene을 인쇄용 CMYK PDF로 만든다. 색 변환과 pdf-lib I/O는 각 adapter가 소유한다.
+ * Vector Scene을 인쇄용 PDF로 만든다. pdf-lib I/O는 adapter가 소유한다.
  *
- * 🔑 래스터 인쇄 경로(`export-print.service`)와 **같은 ICC**를 탄다 — 같은 판의 이미지와 도형이
- *    다른 색으로 찍히지 않게 하는 것이 이 서비스가 서버에 있는 이유다.
+ * 🔴 **지금은 CMYK로 바꾸지 않는다.** PDF 안의 CMYK 이미지가 Illustrator에서 반전돼 열리는
+ *    알려진 결함(pdf-lib·jsPDF·Prawn 공통, Adobe 미해결) 때문에 RGB로 낸다 — 화면·SVG와 같은
+ *    그림이 열리는 것이 우선이다. 근거는 `png-to-pdf.pdf-lib`의 주석이 갖는다.
+ * 🔑 `colorProfile` 인자는 계약이 이미 실어 보내므로 남겨 둔다 — 색 관리를 되돌릴 때 이 자리가
+ *    출발점이다. 지금은 읽고 버린다.
  */
 export async function exportVectorPrint({
-	colorProfile = DEFAULT_CMYK_ICC_PROFILE,
 	ppi,
 	scene,
 }: {
@@ -39,17 +37,7 @@ export async function exportVectorPrint({
 	const unoutlined = countTextPrimitives(scene)
 	if (unoutlined > 0) throw new VectorPrintTextError(String(unoutlined))
 
-	const iccPath = resolveCmykIccProfilePath(colorProfile)
-	// 🔑 도형만 잉크로 바꾸면 사진이 RGB로 남아 같은 판에서 색이 갈린다 — 둘 다 같은 ICC를 탄다.
-	const { scene: inked } = await convertSceneImagesToCmyk(scene, iccPath)
-	const colors = await convertRgbToCmyk(collectSceneColors(inked), iccPath)
-
-	return vectorSceneToPdf(inked, {
-		colors,
-		iccProfile: await readCmykIccProfile(colorProfile),
-		iccProfileName: colorProfile,
-		ppi,
-	})
+	return vectorSceneToPdf(scene, { ppi })
 }
 
 /** 아웃라인 단계를 통과하지 못해 `text`로 남은 글줄 수. 0이 아니면 PDF를 만들지 않는다. */
