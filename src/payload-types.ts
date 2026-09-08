@@ -332,6 +332,10 @@ export interface SectionBlock {
    */
   rowHeight: 'low' | 'medium' | 'high';
   /**
+   * 모든 카드 판에 붙는 Do/OK/Don’t 표식입니다.
+   */
+  mark: 'none' | 'do' | 'ok' | 'dont';
+  /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
@@ -357,7 +361,7 @@ export interface SectionBlock {
               | CiLockupWidget
               | ClearspaceViewerWidget
               | LayoutGridWidget
-              | DoDontWidget
+              | PresetPanelDisplay
               | HdColorPaletteWidget
               | IconGridWidget
               | StemClearSpaceWidget
@@ -857,63 +861,32 @@ export interface LayoutGridWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "DoDontWidget".
+ * via the `definition` "PresetPanelDisplay".
  */
-export interface DoDontWidget {
+export interface PresetPanelDisplay {
   /**
-   * 예시 판형의 표시 비율입니다.
+   * 코드로 그리는 위반 예시입니다. 색·그라디언트·투명도 중첩처럼 이미지로 만들면 원본 값이 사라지는 예시에 씁니다.
    */
-  imageRatio?:
-    | ('original' | '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16')
-    | null;
+  preset:
+    | 'off-palette'
+    | 'gradient'
+    | 'low-contrast'
+    | 'unpaired-combo'
+    | 'overlay-stack'
+    | 'brightness-opacity'
+    | 'tight-tracking'
+    | 'loose-tracking'
+    | 'wrong-typeface'
+    | 'mixed-size'
+    | 'distorted'
+    | 'slanted';
   /**
-   * 넓은 화면에서 예시를 배치할 열 수입니다.
-   */
-  columns?: ('2' | '3' | '4') | null;
-  /**
-   * 예시마다 붙는 제목입니다. 뒤에 순번이 자동으로 붙습니다(INCORRECT USAGE 1, 2 …). 비우면 제목 없이 그림만 나옵니다.
-   */
-  itemLabel?: string | null;
-  /**
-   * 컬러 패널 프리셋에 올릴 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
+   * 컬러 패널에 올릴 기준 로고입니다. 같은 언어·방향의 기본형/WHITE/단색형을 파일명 규약으로 함께 찾습니다.
    */
   logo?: (number | null) | BrandLogo;
-  /**
-   * 예시입니다. 세트 헤딩은 없습니다.
-   */
-  examples?:
-    | {
-        /**
-         * 예시 이미지입니다.
-         */
-        image?: (number | null) | ApplicationImage;
-        kind: 'do' | 'ok' | 'dont';
-        /**
-         * 이미지 대신 쓸 컬러 패널입니다. 색·그라디언트·투명도 중첩처럼 이미지로 만들면 원본 값이 사라지는 예시에 씁니다. 이미지를 함께 지정하면 이미지가 이깁니다.
-         */
-        preset?:
-          | (
-              | 'off-palette'
-              | 'gradient'
-              | 'low-contrast'
-              | 'unpaired-combo'
-              | 'overlay-stack'
-              | 'brightness-opacity'
-              | 'tight-tracking'
-              | 'loose-tracking'
-              | 'wrong-typeface'
-              | 'mixed-size'
-              | 'distorted'
-              | 'slanted'
-            )
-          | null;
-        caption?: string | null;
-        id?: string | null;
-      }[]
-    | null;
   id?: string | null;
   blockName?: string | null;
-  blockType: 'doDontWidget';
+  blockType: 'presetPanelDisplay';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1141,6 +1114,10 @@ export interface BaseBlock {
    */
   rowHeight: 'low' | 'medium' | 'high';
   /**
+   * 모든 카드 판에 붙는 Do/OK/Don’t 표식입니다.
+   */
+  mark: 'none' | 'do' | 'ok' | 'dont';
+  /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
@@ -1166,7 +1143,7 @@ export interface BaseBlock {
               | CiLockupWidget
               | ClearspaceViewerWidget
               | LayoutGridWidget
-              | DoDontWidget
+              | PresetPanelDisplay
               | HdColorPaletteWidget
               | IconGridWidget
               | StemClearSpaceWidget
@@ -1242,6 +1219,10 @@ export interface OverviewBlock {
    */
   rowHeight: 'low' | 'medium' | 'high';
   /**
+   * 모든 카드 판에 붙는 Do/OK/Don’t 표식입니다.
+   */
+  mark: 'none' | 'do' | 'ok' | 'dont';
+  /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
@@ -1267,7 +1248,7 @@ export interface OverviewBlock {
               | CiLockupWidget
               | ClearspaceViewerWidget
               | LayoutGridWidget
-              | DoDontWidget
+              | PresetPanelDisplay
               | HdColorPaletteWidget
               | IconGridWidget
               | StemClearSpaceWidget
@@ -1343,6 +1324,10 @@ export interface ExamplesBlock {
    */
   rowHeight: 'low' | 'medium' | 'high';
   /**
+   * 모든 카드 판에 붙는 Do/OK/Don’t 표식입니다.
+   */
+  mark: 'none' | 'do' | 'ok' | 'dont';
+  /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
@@ -1368,7 +1353,7 @@ export interface ExamplesBlock {
               | CiLockupWidget
               | ClearspaceViewerWidget
               | LayoutGridWidget
-              | DoDontWidget
+              | PresetPanelDisplay
               | HdColorPaletteWidget
               | IconGridWidget
               | StemClearSpaceWidget
@@ -2651,6 +2636,7 @@ export interface SectionBlockSelect<T extends boolean = true> {
   description?: T;
   layout?: T;
   rowHeight?: T;
+  mark?: T;
   cards?:
     | T
     | {
@@ -2670,7 +2656,7 @@ export interface SectionBlockSelect<T extends boolean = true> {
               ciLockupWidget?: T | CiLockupWidgetSelect<T>;
               clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
               layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
-              doDontWidget?: T | DoDontWidgetSelect<T>;
+              presetPanelDisplay?: T | PresetPanelDisplaySelect<T>;
               hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
@@ -2836,22 +2822,11 @@ export interface LayoutGridWidgetSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "DoDontWidget_select".
+ * via the `definition` "PresetPanelDisplay_select".
  */
-export interface DoDontWidgetSelect<T extends boolean = true> {
-  imageRatio?: T;
-  columns?: T;
-  itemLabel?: T;
+export interface PresetPanelDisplaySelect<T extends boolean = true> {
+  preset?: T;
   logo?: T;
-  examples?:
-    | T
-    | {
-        image?: T;
-        kind?: T;
-        preset?: T;
-        caption?: T;
-        id?: T;
-      };
   id?: T;
   blockName?: T;
 }
@@ -2929,6 +2904,7 @@ export interface BaseBlockSelect<T extends boolean = true> {
   description?: T;
   layout?: T;
   rowHeight?: T;
+  mark?: T;
   cards?:
     | T
     | {
@@ -2948,7 +2924,7 @@ export interface BaseBlockSelect<T extends boolean = true> {
               ciLockupWidget?: T | CiLockupWidgetSelect<T>;
               clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
               layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
-              doDontWidget?: T | DoDontWidgetSelect<T>;
+              presetPanelDisplay?: T | PresetPanelDisplaySelect<T>;
               hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
@@ -2979,6 +2955,7 @@ export interface OverviewBlockSelect<T extends boolean = true> {
   description?: T;
   layout?: T;
   rowHeight?: T;
+  mark?: T;
   cards?:
     | T
     | {
@@ -2998,7 +2975,7 @@ export interface OverviewBlockSelect<T extends boolean = true> {
               ciLockupWidget?: T | CiLockupWidgetSelect<T>;
               clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
               layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
-              doDontWidget?: T | DoDontWidgetSelect<T>;
+              presetPanelDisplay?: T | PresetPanelDisplaySelect<T>;
               hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
@@ -3029,6 +3006,7 @@ export interface ExamplesBlockSelect<T extends boolean = true> {
   description?: T;
   layout?: T;
   rowHeight?: T;
+  mark?: T;
   cards?:
     | T
     | {
@@ -3048,7 +3026,7 @@ export interface ExamplesBlockSelect<T extends boolean = true> {
               ciLockupWidget?: T | CiLockupWidgetSelect<T>;
               clearspaceViewerWidget?: T | ClearspaceViewerWidgetSelect<T>;
               layoutGridWidget?: T | LayoutGridWidgetSelect<T>;
-              doDontWidget?: T | DoDontWidgetSelect<T>;
+              presetPanelDisplay?: T | PresetPanelDisplaySelect<T>;
               hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;

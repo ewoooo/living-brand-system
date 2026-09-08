@@ -13,7 +13,7 @@ const WIDGETS = path.join(process.cwd(), 'src/features/guideline/cards/displays/
 const THEME_CSS = path.join(process.cwd(), 'src/app/(frontend)/theme.css')
 
 /** 서체 위반 표본은 일부러 브랜드 밖 서체를 쓴다 — 이 규칙의 유일한 예외다. */
-const DECLARED_EXCEPTION = path.join('do-dont', 'presets.ts')
+const DECLARED_EXCEPTION = path.join('preset-panel', 'presets.ts')
 
 /** 폰트 지시어 바로 뒤의 따옴표 이름. `ctx.font`의 `700 1000px` 같은 앞머리는 건너뛴다. */
 const CALL =

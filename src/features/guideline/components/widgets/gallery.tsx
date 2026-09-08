@@ -7,7 +7,6 @@ import { CI_LOCKUP_MANIFEST } from '@/features/guideline/cards/displays/dynamics
 import { CiLockupHeroWidget } from '@/features/guideline/cards/displays/dynamics/ci-lockup-hero/component'
 import { ClearspaceOverlayWidget } from '@/features/guideline/cards/displays/dynamics/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from '@/features/guideline/cards/displays/dynamics/clearspace-viewer/component'
-import { DoDontWidget } from '@/features/guideline/cards/displays/dynamics/do-dont/component'
 import { HdColorPaletteWidget } from '@/features/guideline/cards/displays/dynamics/hd-color-palette/component'
 import { IconGridWidget } from '@/features/guideline/cards/displays/dynamics/icon-grid/component'
 import { LayoutGridWidget } from '@/features/guideline/cards/displays/dynamics/layout-grid/component'
@@ -17,6 +16,7 @@ import { LogoBgPickerWidget } from '@/features/guideline/cards/displays/dynamics
 import { LogoColorVariantWidget } from '@/features/guideline/cards/displays/dynamics/logo-color-variant/component'
 import { LogoDisplayWidget } from '@/features/guideline/cards/displays/dynamics/logo-display/component'
 import { LogoOnBackgroundWidget } from '@/features/guideline/cards/displays/dynamics/logo-on-background/component'
+import { PresetPanelDisplay } from '@/features/guideline/cards/displays/dynamics/preset-panel/component'
 import { StemClearSpaceWidget } from '@/features/guideline/cards/displays/dynamics/stem-clear-space/component'
 import { TypeHierarchyWidget } from '@/features/guideline/cards/displays/dynamics/type-hierarchy/component'
 import { TypeLanguageWidget } from '@/features/guideline/cards/displays/dynamics/type-language/component'
@@ -120,108 +120,20 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode }[]> {
 			),
 		},
 		{
-			// 이미지 예시(제목 없음)와 컬러 프리셋 예시(순번 제목)를 둘 다 걸어 두 경로를 함께 본다.
-			name: 'do-dont (이미지 예시)',
+			// 프리셋 패널은 카드 판을 채우는 디스플레이라 판(비율·clip)을 여기서 흉내 낸다. 컬러(로고 얹음)·타이포 하나씩.
+			name: 'preset-panel (컬러 프리셋)',
 			node: (
-				<DoDontWidget
-					imageRatio="1:1"
-					columns="3"
-					itemLabel=""
-					examples={[
-						{
-							id: 'do',
-							kind: 'do',
-							image: koLogo,
-							caption: '기본형을 그대로 사용합니다.',
-						},
-						{ id: 'ok', kind: 'ok', image: koLogo, caption: '배경 대비를 확인합니다.' },
-						{
-							id: 'dont',
-							kind: 'dont',
-							image: koLogo,
-							caption: '비율을 변경할 수 없습니다.',
-						},
-					]}
-				/>
+				<div className="relative aspect-video overflow-hidden rounded-3xl bg-muted">
+					<PresetPanelDisplay preset="overlay-stack" logo={koLogo} />
+				</div>
 			),
 		},
 		{
-			name: 'do-dont (컬러 프리셋)',
+			name: 'preset-panel (타이포 프리셋)',
 			node: (
-				<DoDontWidget
-					imageRatio="16:9"
-					columns="3"
-					itemLabel="INCORRECT USAGE"
-					examples={[
-						{
-							id: 'p1',
-							kind: 'dont',
-							preset: 'off-palette',
-							caption: '지정 컬러 외 컬러를 사용할 수 없습니다.',
-						},
-						{
-							id: 'p2',
-							kind: 'dont',
-							preset: 'gradient',
-							caption: '지정 컬러를 그라디언트로 적용할 수 없습니다.',
-						},
-						{
-							id: 'p3',
-							kind: 'dont',
-							preset: 'overlay-stack',
-							caption: '투명도 효과 적용 및 컬러 중첩을 사용할 수 없습니다.',
-						},
-					]}
-				/>
-			),
-		},
-		{
-			// Typography 사용 금지 6종. 위반이 글자 자체라 이미지 없이 프리셋으로 그린다(Artboard 49).
-			name: 'do-dont (타이포 프리셋)',
-			node: (
-				<DoDontWidget
-					imageRatio="16:9"
-					columns="3"
-					itemLabel="INCORRECT USAGE"
-					examples={[
-						{
-							id: 't1',
-							kind: 'dont',
-							preset: 'tight-tracking',
-							caption: '글자 사이 간격을 지나치게 좁힐 수 없습니다.',
-						},
-						{
-							id: 't2',
-							kind: 'dont',
-							preset: 'loose-tracking',
-							caption: '글자 사이 간격을 지나치게 넓힐 수 없습니다.',
-						},
-						{
-							id: 't3',
-							kind: 'dont',
-							preset: 'wrong-typeface',
-							caption: '지정된 서체 이외의 다른 서체를 사용할 수 없습니다.',
-						},
-						{
-							id: 't4',
-							kind: 'dont',
-							preset: 'mixed-size',
-							caption: '한 문장 안에서 각기 다른 글자 크기를 적용할 수 없습니다.',
-						},
-						{
-							id: 't5',
-							kind: 'dont',
-							preset: 'distorted',
-							caption: '글자의 형태를 변형할 수 없습니다.',
-						},
-						{
-							id: 't6',
-							kind: 'dont',
-							preset: 'slanted',
-							caption: '글자를 기울여 사용하실 수 없습니다.',
-						},
-					]}
-				/>
+				<div className="relative aspect-video overflow-hidden rounded-3xl bg-muted">
+					<PresetPanelDisplay preset="slanted" />
+				</div>
 			),
 		},
 		{ name: 'layout-grid', node: <LayoutGridWidget /> },

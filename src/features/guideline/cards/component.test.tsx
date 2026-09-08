@@ -38,6 +38,14 @@ describe('Card', () => {
 		expect(screen.getByText('Forward Mark')).toBeInTheDocument()
 	})
 
+	it('블록 표식이 있으면 판 모서리에 배지를 그리고 none이면 그리지 않는다', () => {
+		render(<Card card={staticCard('a') as never} mark="dont" />)
+		expect(screen.getByRole('img', { name: "Don't" })).toHaveClass('text-destructive')
+		cleanup()
+		render(<Card card={staticCard('a') as never} mark="none" />)
+		expect(screen.queryByRole('img', { name: "Don't" })).toBeNull()
+	})
+
 	it('캡션이 비면 figcaption을 만들지 않고, 디스플레이가 없으면 카드 자체를 그리지 않는다', () => {
 		const { container } = render(<Card card={staticCard('a') as never} />)
 		expect(container.querySelector('figcaption')).toBeNull()

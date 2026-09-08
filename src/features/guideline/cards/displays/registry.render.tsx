@@ -4,7 +4,6 @@ import { CiLockupWidget } from './dynamics/ci-lockup/component'
 import { CiLockupHeroWidget } from './dynamics/ci-lockup-hero/component'
 import { ClearspaceOverlayWidget } from './dynamics/clearspace-overlay/component'
 import { ClearspaceViewerWidget } from './dynamics/clearspace-viewer/component'
-import { DoDontWidget } from './dynamics/do-dont/component'
 import { HdColorPaletteWidget } from './dynamics/hd-color-palette/component'
 import { IconGridWidget } from './dynamics/icon-grid/component'
 import { LayoutGridWidget } from './dynamics/layout-grid/component'
@@ -13,6 +12,7 @@ import { LogoBgPickerWidget } from './dynamics/logo-bg-picker/component'
 import { LogoColorVariantWidget } from './dynamics/logo-color-variant/component'
 import { LogoDisplayWidget } from './dynamics/logo-display/component'
 import { LogoOnBackgroundWidget } from './dynamics/logo-on-background/component'
+import { PresetPanelDisplay } from './dynamics/preset-panel/component'
 import { StemClearSpaceWidget } from './dynamics/stem-clear-space/component'
 import { TypeHierarchyWidget } from './dynamics/type-hierarchy/component'
 import { TypeLanguageWidget } from './dynamics/type-language/component'
@@ -104,15 +104,7 @@ export const DISPLAY_RENDERERS: { [K in DisplayId]: DisplayRenderer<K> } = {
 			gutterY={d.gutterY}
 		/>
 	),
-	doDontWidget: (d) => (
-		<DoDontWidget
-			imageRatio={d.imageRatio}
-			columns={d.columns}
-			itemLabel={d.itemLabel}
-			logo={d.logo}
-			examples={d.examples}
-		/>
-	),
+	presetPanelDisplay: (d) => <PresetPanelDisplay preset={d.preset} logo={d.logo} />,
 	hdColorPaletteWidget: (d) => <HdColorPaletteWidget groups={d.groups} layout={d.layout} />,
 	iconGridWidget: () => <IconGridWidget />,
 	stemClearSpaceWidget: () => <StemClearSpaceWidget />,

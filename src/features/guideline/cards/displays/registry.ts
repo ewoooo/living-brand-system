@@ -3,7 +3,6 @@ import { CiLockupWidget } from './dynamics/ci-lockup/schema'
 import { CiLockupHeroWidget } from './dynamics/ci-lockup-hero/schema'
 import { ClearspaceOverlayWidget } from './dynamics/clearspace-overlay/schema'
 import { ClearspaceViewerWidget } from './dynamics/clearspace-viewer/schema'
-import { DoDontWidget } from './dynamics/do-dont/schema'
 import { HdColorPaletteWidget } from './dynamics/hd-color-palette/schema'
 import { IconGridWidget } from './dynamics/icon-grid/schema'
 import { LayoutGridWidget } from './dynamics/layout-grid/schema'
@@ -12,6 +11,7 @@ import { LogoBgPickerWidget } from './dynamics/logo-bg-picker/schema'
 import { LogoColorVariantWidget } from './dynamics/logo-color-variant/schema'
 import { LogoDisplayWidget } from './dynamics/logo-display/schema'
 import { LogoOnBackgroundWidget } from './dynamics/logo-on-background/schema'
+import { PresetPanelDisplay } from './dynamics/preset-panel/schema'
 import { StemClearSpaceWidget } from './dynamics/stem-clear-space/schema'
 import { TypeHierarchyWidget } from './dynamics/type-hierarchy/schema'
 import { TypeLanguageWidget } from './dynamics/type-language/schema'
@@ -31,7 +31,8 @@ import { StaticDisplay } from './static/schema'
  * 위젯은 **전부** 연다(사용자 결정 2026-09-07 "B") — 기존 문서의 leaf 128개를 카드로 옮기기 위해서다. 그 결과
  * 감수하는 것 둘: 컨트롤러 위젯(ci-lockup·clearspace-viewer·layout-grid)은 하단 Floating Controller를 잃고
  * admin 고정값으로만 그려지며, 콘텐츠 높이형(icon-grid·hd-color-palette·type-hierarchy·logo-on-background)은
- * 규격 비율 판 안에서 스크롤된다. 컨트롤 전용 layout-grid-controls는 그릴 것이 없어 뺐다(이관 시 행 삭제).
+ * 규격 비율 판 안에서 스크롤된다. 컨트롤 전용 layout-grid-controls는 그릴 것이 없어 뺐고(이관 시 행 삭제),
+ * Do/Don’t 위젯은 2026-09-08에 카드(프리셋 패널·정적 디스플레이 + 블록 `mark`)로 대체됐다.
  *
  * 위젯 폴더는 `displays/dynamics/<kebab-name>/`에 있다(2026-09-08 이관). 새 위젯은 폴더를 만들고 여기 항목과
  * `registry.render.tsx`의 렌더 하나를 더한다(docs/11 §3).
@@ -118,10 +119,11 @@ export const DISPLAYS = [
 		schema: LayoutGridWidget,
 	},
 	{
-		id: 'doDontWidget',
-		name: 'Do/Don’t',
-		description: '권장·허용·금지 예시 격자. 카드로 대체될 예정.',
-		schema: DoDontWidget,
+		id: 'presetPanelDisplay',
+		name: '프리셋 패널(위반 예시)',
+		description:
+			'코드로 그리는 컬러·타이포 위반 예시 판. 옛 Do/Don’t 위젯의 예시 하나가 이 카드 하나다.',
+		schema: PresetPanelDisplay,
 	},
 	{
 		id: 'hdColorPaletteWidget',
