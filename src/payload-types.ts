@@ -372,6 +372,7 @@ export interface SectionBlock {
             )[]
           | null;
         caption?: {
+          placement?: ('below' | 'overlay') | null;
           title?: string | null;
           /**
            * 텍스트 또는 표. 2열 표는 라벨·값 스펙 리스트로 그립니다.
@@ -1154,6 +1155,7 @@ export interface BaseBlock {
             )[]
           | null;
         caption?: {
+          placement?: ('below' | 'overlay') | null;
           title?: string | null;
           /**
            * 텍스트 또는 표. 2열 표는 라벨·값 스펙 리스트로 그립니다.
@@ -1259,6 +1261,7 @@ export interface OverviewBlock {
             )[]
           | null;
         caption?: {
+          placement?: ('below' | 'overlay') | null;
           title?: string | null;
           /**
            * 텍스트 또는 표. 2열 표는 라벨·값 스펙 리스트로 그립니다.
@@ -1364,6 +1367,7 @@ export interface ExamplesBlock {
             )[]
           | null;
         caption?: {
+          placement?: ('below' | 'overlay') | null;
           title?: string | null;
           /**
            * 텍스트 또는 표. 2열 표는 라벨·값 스펙 리스트로 그립니다.
@@ -2668,6 +2672,7 @@ export interface SectionBlockSelect<T extends boolean = true> {
         caption?:
           | T
           | {
+              placement?: T;
               title?: T;
               description?: T;
             };
@@ -2936,6 +2941,7 @@ export interface BaseBlockSelect<T extends boolean = true> {
         caption?:
           | T
           | {
+              placement?: T;
               title?: T;
               description?: T;
             };
@@ -2987,6 +2993,7 @@ export interface OverviewBlockSelect<T extends boolean = true> {
         caption?:
           | T
           | {
+              placement?: T;
               title?: T;
               description?: T;
             };
@@ -3038,6 +3045,7 @@ export interface ExamplesBlockSelect<T extends boolean = true> {
         caption?:
           | T
           | {
+              placement?: T;
               title?: T;
               description?: T;
             };
