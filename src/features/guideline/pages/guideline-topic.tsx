@@ -1,5 +1,9 @@
 import { ContentFrame } from '@/components/shared/content-frame'
 import { GuidelineHeader, GuidelineHeaderImage } from '../components/globals/guideline-header'
+import {
+	GuidelineHelperProvider,
+	GuidelineHelperSlot,
+} from '../components/globals/guideline-helper'
 import type { GuidelineVariant } from '../components/globals/guideline-variant'
 import { GuidelineBlocks } from '../components/guideline-blocks'
 import { RefreshRouteOnSave } from '../components/refresh-route-on-save'
@@ -28,30 +32,31 @@ export function GuidelineTopic({
 	const isPreview = previewDocumentId !== undefined
 
 	return (
-		// 🔴 하단 Floating Controller(`guideline-helper.tsx`)는 여기 마운트하지 않는다 — 카드 모델 전환(2026-09-07)에서
-		//    컨트롤러 연결이 빠져 등록하는 블록이 없다. 다시 연결하면 provider·slot을 이 <article>이 감싼다(docs/11 §4.1).
-		<article className="relative flex w-full flex-col">
-			{/* Payload Preview Functions */}
-			{isPreview && <RefreshRouteOnSave />}
+		<GuidelineHelperProvider>
+			<article className="relative flex w-full flex-col">
+				{/* Payload Preview Functions */}
+				{isPreview && <RefreshRouteOnSave />}
 
-			{/*
-			 * Section Heading — 제목이 이미지 **위에** 정중앙으로 얹힌다(Figma 61:3503).
-			 * 🔴 제목 자리에 `dark` 스코프를 선언한다. 히어로는 어두운 브랜드 이미지라
-			 *    라이트 팔레트의 near-black 제목이 그대로 묻힌다. 색 이름을 직접 쓰지 않고
-			 *    스코프를 뒤집는 것이 색을 주입한 면의 관용이다(docs/09 §5).
-			 */}
-			<ContentFrame>
-				<div className="relative">
-					<GuidelineHeaderImage image={topic.headerImage} />
-					<div className="dark absolute inset-0 grid place-items-center text-foreground">
-						<GuidelineHeader variant={variant} title={topic.title} />
+				{/*
+				 * Section Heading — 제목이 이미지 **위에** 정중앙으로 얹힌다(Figma 61:3503).
+				 * 🔴 제목 자리에 `dark` 스코프를 선언한다. 히어로는 어두운 브랜드 이미지라
+				 *    라이트 팔레트의 near-black 제목이 그대로 묻힌다. 색 이름을 직접 쓰지 않고
+				 *    스코프를 뒤집는 것이 색을 주입한 면의 관용이다(docs/09 §5).
+				 */}
+				<ContentFrame>
+					<div className="relative">
+						<GuidelineHeaderImage image={topic.headerImage} />
+						<div className="dark absolute inset-0 grid place-items-center text-foreground">
+							<GuidelineHeader variant={variant} title={topic.title} />
+						</div>
 					</div>
-				</div>
-			</ContentFrame>
+				</ContentFrame>
 
-			{topic.blocks?.length ? (
-				<GuidelineBlocks blocks={topic.blocks} betterEditor={isPreview} />
-			) : null}
-		</article>
+				{topic.blocks?.length ? (
+					<GuidelineBlocks blocks={topic.blocks} betterEditor={isPreview} />
+				) : null}
+				<GuidelineHelperSlot />
+			</article>
+		</GuidelineHelperProvider>
 	)
 }

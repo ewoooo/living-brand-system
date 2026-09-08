@@ -12,7 +12,13 @@ export type HelperCandidate = { element: Element; visibleArea: number }
  * 비율로 재면 화면에 꽉 찬 큰 판형(비율 0.4)이 구석에 다 보이는 작은 판형(비율 1)에게 진다.
  * 같은 면적이면 문서 순서가 앞선 쪽 — 스크롤 방향과 무관하게 같은 답이 나와야 바가 깜빡이지 않는다.
  */
-export function pickActiveRegion(candidates: HelperCandidate[]): Element | null {
+export function pickActiveRegion(
+	candidates: HelperCandidate[],
+	selected?: Element | null,
+): Element | null {
+	// 조작 중인 카드가 보이는 동안에는 다른 카드로 컨트롤을 바꾸지 않는다.
+	if (selected && candidates.some((c) => c.element === selected && c.visibleArea > 0))
+		return selected
 	let best: HelperCandidate | null = null
 
 	for (const candidate of candidates) {

@@ -13,6 +13,27 @@ function regions(count: number): HTMLElement[] {
 }
 
 describe('pickActiveRegion', () => {
+	it('선택한 카드가 보이는 동안 유지하고 화면에서 사라지면 자동 선택한다', () => {
+		const [a, b] = regions(2)
+		expect(
+			pickActiveRegion(
+				[
+					{ element: a, visibleArea: 900 },
+					{ element: b, visibleArea: 100 },
+				],
+				b,
+			),
+		).toBe(b)
+		expect(
+			pickActiveRegion(
+				[
+					{ element: a, visibleArea: 900 },
+					{ element: b, visibleArea: 0 },
+				],
+				b,
+			),
+		).toBe(a)
+	})
 	it('보이는 영역이 없으면 아무도 고르지 않는다', () => {
 		const [a, b] = regions(2)
 		expect(pickActiveRegion([])).toBeNull()

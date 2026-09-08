@@ -29,7 +29,7 @@ export function cardFields(): Field[] {
 			options: [...CARD_RATIO_OPTIONS],
 			admin: {
 				description:
-					'카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.',
+					'카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 높이는 블록의 줄 높이를 따릅니다.',
 			},
 		},
 		{

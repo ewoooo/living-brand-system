@@ -14,9 +14,9 @@ import {
 import type { GuidelineControllerManifest } from './contract'
 
 /**
- * 한 블록의 컨트롤 값 스코프.
+ * 카드별 컨트롤 값 스코프. 기존 블록 공유 위젯은 블록 단위를 유지한다.
  *
- * 🔴 스코프는 **블록 단위**여야 한다. 모듈 스토어로 두면 토픽 라우트가 여러 Page를 한 화면에
+ * 🔴 스코프는 조작 대상별로 격리한다. 모듈 스토어로 두면 토픽 라우트가 여러 Page를 한 화면에
  *    렌더할 때 페이지마다 놓인 컨트롤이 전부 같은 값을 물어, 하나를 움직이면 다른 페이지의
  *    판형까지 따라 움직인다(2026-08-04에 실제로 12개가 함께 움직였다).
  *
@@ -30,6 +30,7 @@ type GuidelineControllerScopeValue = {
 	/** 지금 값. 조작하면 여기가 바뀐다. */
 	values: ControllerValues
 	set: (controlId: string, value: ControllerControlValue) => void
+	reset: () => void
 }
 
 const GuidelineControllerContext = createContext<GuidelineControllerScopeValue | null>(null)
@@ -75,9 +76,14 @@ export function GuidelineControllerScope({
 		[],
 	)
 
+	const reset = useCallback(
+		() => setState({ signature, values: createControllerValues(groups) }),
+		[signature, groups],
+	)
+
 	const scope = useMemo<GuidelineControllerScopeValue>(
-		() => ({ groups, values, set }),
-		[groups, values, set],
+		() => ({ groups, values, set, reset }),
+		[groups, values, set, reset],
 	)
 
 	return (
@@ -87,7 +93,12 @@ export function GuidelineControllerScope({
 	)
 }
 
-const EMPTY: GuidelineControllerScopeValue = { groups: [], values: {}, set: () => {} }
+const EMPTY: GuidelineControllerScopeValue = {
+	groups: [],
+	values: {},
+	set: () => {},
+	reset: () => {},
+}
 
 /** 스코프 밖(컨트롤 없이 그림만 둔 경우)이면 빈 값을 읽기 전용으로 준다. */
 export function useGuidelineController(): GuidelineControllerScopeValue {

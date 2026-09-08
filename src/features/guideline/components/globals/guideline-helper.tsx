@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { ControllerBar } from '@/components/shared/controller'
+import { cn } from '@/lib/utils'
 import { pickActiveRegion } from './guideline-active-region'
 import { helperLabel } from './guideline-helper-label'
 
@@ -30,6 +31,7 @@ type HelperRegistry = {
 	slot: HTMLElement | null
 	setSlot: (element: HTMLElement | null) => void
 	activeRegion: Element | null
+	setActiveRegion: (element: Element) => void
 	/** 관측을 시작하고 해제 함수를 돌려준다. */
 	observe: (element: Element) => () => void
 }
@@ -42,15 +44,21 @@ const THRESHOLDS = [0, 0.1, 0.25, 0.5, 0.75, 1]
 export function GuidelineHelperProvider({ children }: { children: ReactNode }) {
 	const [slot, setSlot] = useState<HTMLElement | null>(null)
 	const [activeRegion, setActiveRegion] = useState<Element | null>(null)
+	const selectedRegion = useRef<Element | null>(null)
 	const areas = useRef(new Map<Element, number>())
 	const observerRef = useRef<IntersectionObserver | null>(null)
 
 	const sync = useCallback(() => {
-		setActiveRegion(
-			pickActiveRegion(
-				[...areas.current].map(([element, visibleArea]) => ({ element, visibleArea })),
-			),
+		const next = pickActiveRegion(
+			[...areas.current].map(([element, visibleArea]) => ({ element, visibleArea })),
+			selectedRegion.current,
 		)
+		if (next !== selectedRegion.current) selectedRegion.current = null
+		setActiveRegion(next)
+	}, [])
+	const selectRegion = useCallback((element: Element) => {
+		selectedRegion.current = element
+		setActiveRegion(element)
 	}, [])
 
 	// 🔴 root는 뷰포트가 아니라 토픽 스크롤 컨테이너다. 본문이 중첩 스크롤 안에 있어서
@@ -91,8 +99,8 @@ export function GuidelineHelperProvider({ children }: { children: ReactNode }) {
 	}, [])
 
 	const registry = useMemo<HelperRegistry>(
-		() => ({ slot, setSlot, activeRegion, observe }),
-		[slot, activeRegion, observe],
+		() => ({ slot, setSlot, activeRegion, setActiveRegion: selectRegion, observe }),
+		[slot, activeRegion, selectRegion, observe],
 	)
 
 	return <HelperContext.Provider value={registry}>{children}</HelperContext.Provider>
@@ -127,10 +135,12 @@ export function GuidelineHelperSlot() {
  */
 export function GuidelineHelperRegion({
 	label,
+	className,
 	controls,
 	children,
 }: {
 	label?: string | null
+	className?: string
 	controls: ReactNode
 	children: ReactNode
 }) {
@@ -148,12 +158,34 @@ export function GuidelineHelperRegion({
 
 	return (
 		<>
-			<div ref={regionRef}>{children}</div>
+			{/* biome-ignore lint/a11y/useSemanticElements: 폼 필드 묶음이 아니라 조작할 표본을 선택하는 영역이다. */}
+			<div
+				ref={regionRef}
+				role="group"
+				aria-label={helperLabel(label)}
+				// biome-ignore lint/a11y/noNoninteractiveTabindex: 포커스로 이 카드의 외부 컨트롤러를 활성화한다.
+				tabIndex={0}
+				onPointerDown={() =>
+					regionRef.current && registry?.setActiveRegion(regionRef.current)
+				}
+				onFocus={() => regionRef.current && registry?.setActiveRegion(regionRef.current)}
+				className={cn(
+					'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+					className,
+				)}
+			>
+				{children}
+			</div>
 			{active && registry?.slot
 				? createPortal(
 						// portal로 내려와 자기 그림에서 DOM상 떨어지므로, 어느 블록의 컨트롤인지는
 						// 이름이 유일한 단서다.
-						<ControllerBar placement="scroll" aria-label={helperLabel(label)}>
+						<ControllerBar
+							placement="scroll"
+							aria-label={helperLabel(label)}
+							// 문구 편집은 Head/Sub/Body 세 칸을 같은 폭으로, 초기화는 내용 폭으로 배치한다.
+							className="flex max-h-[50vh] max-w-full flex-wrap justify-center overflow-y-auto has-[textarea]:grid has-[textarea]:w-full has-[textarea]:grid-cols-1 has-[textarea]:items-start sm:has-[textarea]:grid-cols-[repeat(3,minmax(0,1fr))_auto]"
+						>
 							{controls}
 						</ControllerBar>,
 						registry.slot,

@@ -10,9 +10,7 @@ export function TypeHierarchyWidget({ language }: { language?: LanguageKey | nul
 	// 갤러리는 props 없이 렌더하므로 기본값이 있어야 화면이 비지 않는다.
 	const resolved = language ?? 'ko'
 
-	// 🔴 key로 언어를 물린다. 편집한 문구는 뷰의 state라, admin에서 언어를 바꿔도 state가 살아남으면
-	//    국문 예시가 영문 규정 위에 남는다. 언어가 바뀌면 뷰를 새로 만든다.
-	return <TypeHierarchyView key={resolved} language={resolved} />
+	return <TypeHierarchyView language={resolved} />
 }
 
 /** 카드 디스플레이 진입점 — 자기 행을 받아 뷰로 넘긴다. `displays/registry.render.tsx`가 부른다. */

@@ -1,8 +1,13 @@
 import type { CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 import type { BaseBlock } from '@/payload-types'
+import { GuidelineHelperRegion } from '../components/globals/guideline-helper'
+import { GuidelineControllerPill } from '../controllers/pill'
+import { GuidelineControllerScope } from '../controllers/provider'
+import { cardControllerFor } from '../controllers/registry'
 import { CardCaption } from './caption/component'
-import { CARD_RATIO_CLASS, type CardRatio } from './displays/ratio'
+import { DisplaySpecs, TypeLanguageCaptionTitle } from './caption/display-specs'
+import { CARD_RATIO_CLASS, DYNAMIC_CARD_RATIO } from './displays/ratio'
 import { renderDisplay } from './displays/registry.render'
 
 export type CardData = NonNullable<BaseBlock['cards']>[number]
@@ -26,11 +31,18 @@ const MARK_STYLE: Record<
 export function Card({ card, panelClassName }: { card: CardData; panelClassName?: string }) {
 	const display = card.display?.[0]
 	if (!display) return null
-	const ratio = CARD_RATIO_CLASS[(card.ratio ?? '16:9') as CardRatio]
-	const [width, height] = (card.ratio ?? '16:9').split(':').map(Number)
+	const cardRatio = DYNAMIC_CARD_RATIO[display.blockType] ?? card.ratio ?? '16:9'
+	const ratio = CARD_RATIO_CLASS[cardRatio]
+	const [width, height] = cardRatio.split(':').map(Number)
 	const mark = card.mark
 
-	return (
+	const controller = cardControllerFor(display)
+	const typeCard =
+		display.blockType === 'typeLanguageWidget' || display.blockType === 'typeHierarchyWidget'
+	const specs = ['typeLanguageWidget', 'typeHierarchyWidget', 'layoutGridOverlayWidget'].includes(
+		display.blockType,
+	)
+	const content = (
 		<figure className="relative flex w-full flex-col self-start md:w-min">
 			<div
 				style={{ '--card-ratio': width / height } as CSSProperties}
@@ -43,8 +55,24 @@ export function Card({ card, panelClassName }: { card: CardData; panelClassName?
 				{display.blockType === 'staticDisplay' ? (
 					renderDisplay(display, { alt: card.caption?.title ?? undefined })
 				) : (
-					<div data-slot="card-display" className="absolute inset-0 overflow-clip">
-						{renderDisplay(display)}
+					<div
+						data-slot="card-display"
+						className={cn(
+							'absolute inset-0 overflow-clip',
+							display.blockType === 'layoutGridOverlayWidget' && 'inset-[10%]',
+						)}
+					>
+						{controller ? (
+							<GuidelineHelperRegion
+								className="absolute inset-0"
+								label={card.caption?.title ?? controller.manifest.id}
+								controls={<GuidelineControllerPill />}
+							>
+								{renderDisplay(display)}
+							</GuidelineHelperRegion>
+						) : (
+							renderDisplay(display)
+						)}
 					</div>
 				)}
 				{mark && mark !== 'none' ? (
@@ -60,7 +88,25 @@ export function Card({ card, panelClassName }: { card: CardData; panelClassName?
 					</span>
 				) : null}
 			</div>
-			<CardCaption caption={card.caption} />
+			<CardCaption
+				caption={card.caption}
+				title={
+					display.blockType === 'typeLanguageWidget' ? (
+						<TypeLanguageCaptionTitle display={display} />
+					) : undefined
+				}
+				layout={typeCard ? 'split' : 'stack'}
+				fallbackTitle={
+					display.blockType === 'typeHierarchyWidget' ? '타입 위계' : undefined
+				}
+			>
+				{specs ? <DisplaySpecs display={display} /> : null}
+			</CardCaption>
 		</figure>
+	)
+	return controller ? (
+		<GuidelineControllerScope {...controller}>{content}</GuidelineControllerScope>
+	) : (
+		content
 	)
 }

@@ -1,10 +1,11 @@
 import { ContentFrame } from '@/components/shared/content-frame'
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel'
-import { Card } from '@/features/guideline/cards/component'
+import { Card, type CardData } from '@/features/guideline/cards/component'
 import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
 import { GuidelineHeader } from '@/features/guideline/components/globals/guideline-header'
 import { cn } from '@/lib/utils'
 import type { BaseBlock } from '@/payload-types'
+import { LANGUAGES } from '../cards/displays/dynamics/brand-typeface'
 import type { RowHeight } from './fields'
 import { CARD_ROW_HEIGHT, CARD_ROWS } from './rhythm'
 
@@ -29,7 +30,19 @@ export function CardBlock({
 	title?: string | null
 	id?: string
 }) {
-	const cards = (block.cards ?? []).filter((card) => card.display?.length)
+	const cards = (block.cards ?? [])
+		.filter((card) => card.display?.length)
+		.flatMap<CardData>((card, index) => {
+			const display = card.display?.[0]
+			if (display?.blockType !== 'typeLanguageWidget' || display.layout !== 'compare')
+				return [card]
+			// 비교는 언어별 카드로 배치한다. CMS 원본과 저작 캡션은 보존한다.
+			return LANGUAGES.map(({ key }) => ({
+				...card,
+				id: `${card.id ?? index}-${key}`,
+				display: [{ ...display, layout: 'single', initialLanguage: key }],
+			}))
+		})
 	const heading = title?.trim() || null
 	if (!heading && !block.description && cards.length === 0) return null
 	const rowHeight = CARD_ROW_HEIGHT[(block.rowHeight ?? 'medium') as RowHeight]

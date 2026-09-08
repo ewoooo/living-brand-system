@@ -6,10 +6,7 @@ import type {
 } from '@payloadcms/richtext-lexical'
 import type { SerializedLexicalNode } from '@payloadcms/richtext-lexical/lexical'
 import type { JSXConvertersFunction } from '@payloadcms/richtext-lexical/react'
-import { Fragment } from 'react'
-import { typographyVariants } from '@/components/ui/typography-variants'
-import { cn } from '@/lib/utils'
-import { GUIDELINE_TYPOGRAPHY } from './guideline-typography'
+import { GuidelineSpecTable } from './spec-table'
 
 const isRow = (node: SerializedLexicalNode): node is SerializedTableRowNode =>
 	node.type === 'tablerow'
@@ -41,24 +38,12 @@ export const guidelineRichTextConverters: JSXConvertersFunction<DefaultNodeTypes
 				: null
 		}
 		return (
-			<dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
-				{cells.map(([label, value], index) => (
-					// biome-ignore lint/suspicious/noArrayIndexKey: 표 행은 id가 없고 순서가 곧 정체성이다.
-					<Fragment key={index}>
-						<dt className={typographyVariants(GUIDELINE_TYPOGRAPHY.specLabel)}>
-							{args.nodesToJSX({ nodes: label.children ?? [], parent: label })}
-						</dt>
-						<dd
-							className={cn(
-								typographyVariants(GUIDELINE_TYPOGRAPHY.specValue),
-								'text-muted-foreground',
-							)}
-						>
-							{args.nodesToJSX({ nodes: value.children ?? [], parent: value })}
-						</dd>
-					</Fragment>
-				))}
-			</dl>
+			<GuidelineSpecTable
+				rows={cells.map(([label, value]) => [
+					args.nodesToJSX({ nodes: label.children ?? [], parent: label }),
+					args.nodesToJSX({ nodes: value.children ?? [], parent: value }),
+				])}
+			/>
 		)
 	},
 })
