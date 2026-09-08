@@ -1,6 +1,7 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, expect, it } from 'vitest'
-import { LayoutGridOverlay, overlayGeometry } from './view'
+import { overlayGeometry } from './geometry'
+import { LayoutGridOverlay } from './view'
 
 afterEach(cleanup)
 
