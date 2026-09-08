@@ -1,4 +1,4 @@
-import { formatBlockForAgent } from '@/features/guideline/blocks/runtime/project-guideline-block'
+import { formatBlockForAgent } from '@/features/guideline/blocks/projection'
 import { collectGuidelineCheckSources } from '@/features/guideline/checks/collect-guideline-check-sources'
 import { compact } from '@/features/guideline/utils/block-text'
 import {

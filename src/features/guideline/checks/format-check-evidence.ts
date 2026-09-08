@@ -1,4 +1,4 @@
-import type { CheckEvidence } from '../blocks/runtime/project-guideline-block'
+import { type CheckEvidence, formatCardBlockEvidence } from '../blocks/projection'
 import { compact } from '../utils/block-text'
 
 /**
@@ -51,11 +51,14 @@ export function formatCheckEvidence(evidence: CheckEvidence | string): string {
 		case 'section':
 			// 동결 스냅샷의 섹션 근거는 블록 층이 있던 시절의 `blocks`를 가질 수 있다 — 있으면 함께 읽는다.
 			return compact([
-				evidence.title,
-				evidence.description,
+				formatCardBlockEvidence(evidence),
 				...((evidence as { blocks?: CheckEvidence[] }).blocks ?? []).map(
 					formatCheckEvidence,
 				),
 			]).join('\n\n')
+		case 'base':
+		case 'overview':
+		case 'examples':
+			return formatCardBlockEvidence(evidence)
 	}
 }

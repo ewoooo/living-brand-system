@@ -40,7 +40,7 @@ grep -rl "Badge\|Card\|Typography" src/components src/features
 | className 병합 | `@/lib/utils`의 `cn` |
 | 색 파생(전경색·RGB) | `@/lib/color` (`hexToRgb`, `getContrastingForeground`) |
 | 콘텐츠 최대 폭 | `ContentFrame` (`src/components/shared/content-frame.tsx`) |
-| leaf 폭·섹션 간격 | `blocks/shared/rhythm.ts` (`LEAF_GRID`·`LEAF_SPAN`·`SECTION_STACK`) |
+| 카드 줄 높이·섹션 간격 | `blocks/rhythm.ts` (`CARD_ROW_HEIGHT`·`CARD_ROWS`·`SECTION_STACK`) |
 
 shadcn 4.12의 공식 아이콘 목록에는 Carbon이 없어 `components.json`은 `radix-mira`가 지원하는 `hugeicons` 값을 유지합니다. 이 값은 생성기 호환용일 뿐 저장소의 아이콘 정책이 아닙니다. shadcn 컴포넌트를 추가한 같은 변경에서 생성된 아이콘을 `@carbon/icons-react`로 바꾸고, `@hugeicons/*` import가 0건인지 확인한 뒤 커밋합니다. `iconLibrary`를 임의의 `carbon` 문자열로 바꾸면 레지스트리의 `IconPlaceholder`가 변환되지 않으므로 금지합니다.
 
@@ -122,7 +122,7 @@ function Card({ className, size = 'default', ...props }:
 | 다형 렌더링 | `asChild` + `radix-ui` `Slot`, 별도 `as` prop 금지 | `badge.tsx` |
 | 아이콘 | `@carbon/icons-react` | repo 컨벤션(저장소 24개 파일 채택) |
 | 이미지 | `next/image` 기본. 생성 이미지·데이터 URL 미리보기처럼 최적화가 성립하지 않는 곳만 생 `<img>` + biome-ignore 사유 주석 | `agent-chat-generated-images.tsx` |
-| 파일명 | kebab-case (`widgets/type-specimen/component.tsx`) | `docs/06` §10 |
+| 파일명 | kebab-case (`cards/displays/dynamics/type-specimen/component.tsx`) | `docs/06` §10 |
 | export | PascalCase named export, `default` export 금지 | `badge.tsx`, `card.tsx`, `typography.tsx` |
 | 타입 import | `import type … from 'react'` | `card.tsx`, `typography.tsx` |
 | `use client` | 자기 코드에 상태·이벤트·브라우저 API가 있거나, client 전용 의존성(radix 프리미티브, `motion`, `next-themes`)을 직접 감쌀 때만. 둘 다 아닌 순수 조합엔 금지 | `docs/06` |
@@ -298,7 +298,7 @@ className과 style에는 시맨틱 토큰만 씁니다(닫힌 토큰 규칙 전�
 | ✅ Do | ❌ Don't | ❌를 본 자리 |
 | --- | --- | --- |
 | `border-border` | `border border-neutral-200` | 옛 `blocks/callout`(2026-09-04 삭제) |
-| `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `widgets/type-specimen/component.tsx` — ✅ 2026-08-12에 `THEME_PANEL`로 고침 |
+| `bg-muted` / `bg-fill-muted` | `bg-neutral-50 … dark:bg-neutral-950` | `cards/displays/dynamics/type-specimen/component.tsx` — ✅ 2026-08-12에 `THEME_PANEL`로 고침 |
 | 조건부 완전 클래스 룩업 | `` `grid gap-4 md:grid-cols-${variant}` `` | 옛 `blocks/content-columns`(2026-09-04 삭제) |
 | 심볼 + 텍스트로 상태 구분 | 색만으로 판정 구분 | 옛 `blocks/callout`의 kind별 badge(삭제됨) |
 | 상태 토큰 `bg-success/15 text-success` | 유채 팔레트 `bg-emerald-500/15 text-emerald-700 …` | `studio/review/result/check-status.ts` — ✅ 고쳐짐(이제 Badge variant 키만 갖는다) |
@@ -347,15 +347,15 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 ### 폭·표면색·세로 리듬은 프레임이 소유
 
 - 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1540px]`). 예외는 프리미티브의 **내재 콘텐츠 폭**뿐입니다 — `dialog`의 `max-w-sm`, `tooltip`의 `max-w-xs`, `bubble`의 `max-w-[80%]`처럼 오버레이·말풍선이 자기 판형을 갖는 것은 페이지 폭 소유가 아닙니다. 금지 대상은 화면·블록 컴포넌트가 페이지 폭을 스스로 좁히는 것(`<Card className="max-w-2xl">` 등)입니다.
-- 표면 배경색은 컴포넌트 안에 칠하지 않습니다. 가이드라인 섹션·leaf는 배경 설정을 갖지 않습니다(2026-09-04에 걷음). 브랜드 면(흰 판·검은 판)은 위젯이 `widgets/surface.ts`의 선언으로 그립니다(`docs/11` §8).
-- 블록 간 세로 리듬은 프레임 패딩(`content-frame.tsx`의 `py-8`)과 `blocks/shared/rhythm.ts`의 `BLOCK_SPACING`이 소유합니다(`docs/09` §7). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
+- 표면 배경색은 컴포넌트 안에 칠하지 않습니다. 가이드라인 섹션·leaf는 배경 설정을 갖지 않습니다(2026-09-04에 걷음). 브랜드 면(흰 판·검은 판)은 위젯이 `cards/displays/dynamics/surface.ts`의 선언으로 그립니다(`docs/11` §8).
+- 블록 간 세로 리듬은 프레임 패딩(`content-frame.tsx`의 `py-8`)과 `blocks/rhythm.ts`의 `SECTION_STACK`이 소유합니다(`docs/09` §7). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
 
 ## 5. 브랜드 무관
 
 색·폰트·로고는 props로 주입받습니다. 코드에 브랜드를 하드코딩하지 않습니다. 하드코딩은 개발용 default 값(HD현대 팔레트)으로만 허용합니다.
 
 - 컴포넌트가 받는 색은 hex string props입니다. RGB·전경색 같은 파생값은 저장하지 않고 런타임에 `@/lib/color`로 파생합니다: `hexToRgb`로 0–255 RGB를, `getContrastingForeground`로 배경 대비가 더 높은 흑/백 전경색을 얻습니다.
-- 원형은 `src/features/guideline/widgets/hd-color-palette/view.tsx`입니다. Swatch는 `{ id, name, hex, cmyk?, pantone? }` 형태로 받고, RGB·전경색은 hex에서 파생하며, 값은 전부 `brand-colors`에서 옵니다 — 하드코딩된 기본 팔레트가 없습니다.
+- 원형은 `src/features/guideline/cards/displays/dynamics/hd-color-palette/view.tsx`입니다. Swatch는 `{ id, name, hex, cmyk?, pantone? }` 형태로 받고, RGB·전경색은 hex에서 파생하며, 값은 전부 `brand-colors`에서 옵니다 — 하드코딩된 기본 팔레트가 없습니다.
 
 ```tsx
 import { getContrastingForeground, hexToRgb } from '@/lib/color'
@@ -377,7 +377,7 @@ const MAIN: Swatch[] = [
 - **키보드 조작**: 커스텀 인터랙션 요소는 `role`과 `aria-*`, 화살표 키 이동을 갖춥니다. 슬라이더면 `role="slider"` + `aria-valuenow`처럼 역할에 맞는 속성을 붙입니다.
 - **focus 가시성**: `focus-visible:ring` 계열로 포커스를 시각적으로 드러냅니다. `badge.tsx`의 `focus-visible:ring-[3px] focus-visible:ring-ring/50`이 참고입니다.
 - **색만으로 상태 구분 금지**: 판정·상태는 심볼 + 텍스트를 함께 씁니다. 검수 결과 배지처럼 kind별 심볼과 라벨을 같이 노출합니다.
-- **label 연결**: 입력 요소는 `label`/`aria-label`/`aria-labelledby`로 접근 가능한 이름을 갖습니다. `widgets/type-specimen/component.tsx`의 textarea는 `aria-label="타입 견본 입력"`을 답니다.
+- **label 연결**: 입력 요소는 `label`/`aria-label`/`aria-labelledby`로 접근 가능한 이름을 갖습니다. `cards/displays/dynamics/type-specimen/component.tsx`의 textarea는 `aria-label="타입 견본 입력"`을 답니다.
 - **실패 상태 텍스트 설명**: 검수 실패·저장 실패 같은 조치가 필요한 상태는 텍스트로 원인과 다음 행동을 설명합니다(`docs/08` §2).
 
 ## 7. 자기 검증

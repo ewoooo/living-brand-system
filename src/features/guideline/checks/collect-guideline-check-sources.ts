@@ -1,11 +1,15 @@
 import type { ApplicationImage, GuidelineDocument, Rule } from '@/payload-types'
 import {
+	type CheckEvidence,
+	type CheckReferenceAssetRole,
+	type GuidelineBlock,
+	snapshotBlock,
+} from '../blocks/projection'
+import { relationshipId } from '../utils/block-text'
+import {
 	buildCheckSourceSnapshot,
 	type GuidelineCheckDocument,
-} from '../blocks/runtime/build-check-source-snapshot'
-import { type CheckEvidence, snapshotBlock } from '../blocks/runtime/project-guideline-block'
-import type { CheckReferenceAssetRole, GuidelineBlock } from '../blocks/types'
-import { relationshipId } from '../utils/block-text'
+} from './build-check-source-snapshot'
 
 /** 근거가 놓인 섹션. 문서 자신의 rule이면 null이다. */
 export interface GuidelineCheckSection {
