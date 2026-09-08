@@ -6,6 +6,8 @@ import {
 import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
+export const maxDuration = 30
+
 /** 한 판의 글줄 수 상한. 넘으면 템플릿이 아니라 잘못된 호출이다. */
 const MAX_RUNS = 500
 

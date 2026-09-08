@@ -67,7 +67,9 @@ export type ExportRequest =
 			artifact: 'vector'
 			format: 'svg'
 			colorProfile: RgbColorProfile
-			options: { width: number; height: number; outlineText: boolean }
+			// 🔑 `ppi`는 화질이 아니라 **문서의 물리 크기**를 정한다. 없으면 뷰어가 단위 없는 숫자를
+			//    pt로 읽어(72dpi) A4 판이 874×1237mm로 열린다 — Illustrator에서 실제로 그랬다.
+			options: { width: number; height: number; outlineText: boolean; ppi: PrintPpi }
 	  }
 	// 인쇄용 벡터 PDF. 판 전체를 굽는 래스터 PDF와 달리 도형과 윤곽선을 그대로 싣는다.
 	// 🔑 `ppi`는 화질이 아니라 **페이지 치수**를 정한다 — 벡터라 해상도 개념이 없다.

@@ -14,7 +14,7 @@ import { canvasFramesToMp4 } from '../adapters/canvas-frames-to-mp4.mediabunny.c
 import { elementToJpeg } from '../adapters/element-to-jpeg.client'
 import { elementToPng } from '../adapters/element-to-png.client'
 import { vectorSceneToSvg } from '../adapters/vector-scene-to-svg'
-import type { ExportRequest, ExportResult } from '../export-contract'
+import type { CmykIccProfile, ExportRequest, ExportResult } from '../export-contract'
 import type { PrintPpi } from '../print-policy'
 import { requestPrintExport } from './export-print.client'
 
@@ -61,8 +61,13 @@ export async function executeArtifactExport({
 						fileName,
 						artifact as VectorSceneArtifact,
 						request.options.ppi,
+						request.colorProfile.icc,
 					)
-				: exportVectorArtifactAsSvg(fileName, artifact as VectorSceneArtifact)
+				: exportVectorArtifactAsSvg(
+						fileName,
+						artifact as VectorSceneArtifact,
+						request.options.ppi,
+					)
 		case 'video':
 			return exportVideoArtifactAsMp4(
 				fileName,
@@ -76,9 +81,10 @@ export async function executeArtifactExport({
 export function exportVectorArtifactAsSvg(
 	fileName: string,
 	artifact: VectorSceneArtifact,
+	ppi: PrintPpi,
 ): ExportResult {
 	return {
-		data: new Blob([vectorSceneToSvg(artifact)], { type: 'image/svg+xml' }),
+		data: new Blob([vectorSceneToSvg(artifact, ppi)], { type: 'image/svg+xml' }),
 		filename: `${fileName}.svg`,
 		mimeType: 'image/svg+xml',
 	}
@@ -92,13 +98,25 @@ export async function exportVectorArtifactAsPrintPdf(
 	fileName: string,
 	artifact: VectorSceneArtifact,
 	ppi: PrintPpi,
+	colorProfile: CmykIccProfile,
 ): Promise<ExportResult> {
 	const response = await fetch('/api/studio-exports/vector-print', {
-		body: JSON.stringify({ ppi, scene: artifact.source }),
+		// 🔴 프로파일을 안 실으면 서버가 기본값으로 떨어진다. 지금은 CMYK 프로파일이 하나뿐이라
+		//    결과가 같지만, 두 번째가 들어오는 순간 같은 판의 벡터 PDF만 조용히 다른 잉크로 나간다.
+		//    래스터 경로는 이미 싣고 있다.
+		body: JSON.stringify({ colorProfile, ppi, scene: artifact.source }),
 		headers: { 'Content-Type': 'application/json' },
 		method: 'POST',
 	})
-	if (!response.ok) throw new Error('인쇄용 PDF를 만들지 못했습니다.')
+	if (!response.ok) {
+		// 🔴 서버는 이유를 구분해서 주는데 여기서 한 문구로 접으면 「잠시 후 다시」가 거짓말이 된다.
+		const body = (await response.json().catch(() => null)) as { code?: string } | null
+		throw new Error(
+			body?.code === 'text-not-outlined'
+				? '윤곽선으로 바꾸지 못한 글자가 있어 PDF를 만들지 않았습니다 — 그대로 내보내면 그 글자가 PDF에서 빠집니다.'
+				: '인쇄용 PDF를 만들지 못했습니다.',
+		)
+	}
 	return {
 		data: await response.blob(),
 		filename: `${fileName}.pdf`,

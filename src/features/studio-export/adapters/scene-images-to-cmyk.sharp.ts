@@ -63,11 +63,19 @@ async function toCmykJpeg(href: string, icc: string): Promise<string | null> {
 		const image = sharp(input, { limitInputPixels: MAX_PRINT_PIXELS })
 		const { hasAlpha } = await image.metadata()
 		if (hasAlpha) return null
+		// 🔴 `toColourspace('cmyk')`를 먼저 부르면 ICC가 그 CMYK를 또 변환한다(이중 변환).
+		//    `withIccProfile`이 한 번만 옮기게 둔다.
 		const output = await image
-			.toColourspace('cmyk')
-			.withIccProfile(icc)
+			// 🔴 프로파일을 JPEG에 첨부하지 않는다 — 이 JPEG은 PDF 안으로만 들어가고, 프로파일은
+			//    PDF의 `/ColorSpace`(ICCBased)가 이미 문서에 한 벌 싣는다. 첨부하면 같은 3.46MB가
+			//    이미지마다 또 붙는다. 실측: 64×64 한 장이 241바이트 → 3,463,511바이트.
+			//    APP2 세그먼트만 빠지고 나머지 바이트는 완전히 동일하다(픽셀 안 바뀐다).
+			.withIccProfile(icc, { attach: false })
 			.jpeg({ chromaSubsampling: '4:4:4', quality: 95 })
 			.toBuffer()
+		// 🔴 ICC 변환이 조용히 건너뛰어졌으면 sRGB다 — 호출부가 `colorSpace: 'cmyk'`를 붙여
+		//    `/N 4` ICCBased를 씌우므로 여기서 끊는다. `metadata()`는 헤더만 읽는다.
+		if ((await sharp(output).metadata()).space !== 'cmyk') return null
 		return `data:image/jpeg;base64,${output.toString('base64')}`
 	} catch {
 		return null

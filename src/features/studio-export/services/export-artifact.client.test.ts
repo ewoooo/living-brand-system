@@ -106,7 +106,7 @@ describe('Artifact export', () => {
 			},
 		} as const
 
-		expect(exportVectorArtifactAsSvg('graphic', vector)).toMatchObject({
+		expect(exportVectorArtifactAsSvg('graphic', vector, 300)).toMatchObject({
 			filename: 'graphic.svg',
 			mimeType: 'image/svg+xml',
 		})

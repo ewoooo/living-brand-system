@@ -153,6 +153,7 @@ export function useTemplateExport({
 					outlineText: false,
 				}
 				if (candidate === 'svg') {
+					if (!isPrintPpi(effectivePpi)) return null
 					return {
 						artifact: 'vector',
 						format: 'svg',
@@ -160,7 +161,7 @@ export function useTemplateExport({
 							space: 'rgb',
 							icc: capability.colorProfiles?.rgb?.[0] ?? 'srgb',
 						},
-						options,
+						options: { ...options, ppi: effectivePpi },
 					}
 				}
 				// 🔴 인쇄용 벡터 PDF는 해상도 없이 만들 수 없다 — 페이지 치수가 거기서 나오고,
@@ -344,7 +345,9 @@ function describeVectorDiagnostics(
 
 	const fonts = new Set(diagnostics.notOutlined.map(({ fontFamily }) => fontFamily))
 	if (fonts.size > 0) {
-		warnings.push(`글자를 윤곽선으로 바꾸지 못해 서체가 필요합니다: ${[...fonts].join(' · ')}`)
+		// 🔴 「서체가 필요합니다」는 거짓이었다 — PDF는 서체를 임베드하지 않으므로 서체가 있어도
+		//    그 글자는 안 그려진다. SVG는 `text`로 남아 정상이라 형식별로 결과가 다르다.
+		warnings.push(`이 서체의 글자는 PDF에서 빠집니다(SVG는 정상): ${[...fonts].join(' · ')}`)
 	}
 	return warnings
 }

@@ -4,6 +4,7 @@ import { parsePrintPpi } from '@/features/studio-export/print-policy'
 import {
 	exportVectorPrint,
 	VectorPrintInputError,
+	VectorPrintTextError,
 } from '@/features/studio-export/services/export-vector-print.service'
 import { isPayloadUser } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
@@ -29,7 +30,9 @@ const requestSchema = z.object({
  * Vector Scene을 인쇄용 CMYK PDF로 바꿔 준다.
  *
  * 🔴 서버에 있는 이유는 두 가지다 — ICC 색 변환(sharp)이 서버 전용이고, pdf-lib을 클라이언트
- *    번들에 넣지 않기 위해서다. SVG는 변환이 필요 없어 브라우저에서 바로 만든다.
+ *    번들에 넣지 않기 위해서다. SVG 직렬화 자체는 브라우저에서 끝난다.
+ * 🔴 다만 Template의 SVG도 `/api/studio-exports/outline` 왕복은 탄다 — 씬을 만드는 단계가
+ *    형식과 무관하게 글자를 윤곽선으로 바꾼다. 「SVG는 서버를 안 탄다」가 아니다.
  */
 export async function POST(request: Request) {
 	if (isCrossOriginRequest(request)) {
@@ -42,7 +45,13 @@ export async function POST(request: Request) {
 	if (body.length > MAX_SCENE_BYTES) {
 		return Response.json({ message: 'Scene is too large.' }, { status: 413 })
 	}
-	const parsed = requestSchema.safeParse(JSON.parse(body || 'null'))
+	// 🔴 `JSON.parse`가 try 밖이면 잘린 전송의 SyntaxError가 라우트를 터뜨려 400이 500으로 집계된다.
+	//    다른 두 라우트(outline·print)가 쓰는 처방과 같게 맞춘다.
+	const parsed = requestSchema.safeParse(
+		await Promise.resolve()
+			.then(() => JSON.parse(body || 'null') as unknown)
+			.catch(() => null),
+	)
 	if (!parsed.success) return Response.json({ message: 'Invalid request.' }, { status: 400 })
 
 	const { colorProfile, scene } = parsed.data
@@ -68,6 +77,13 @@ export async function POST(request: Request) {
 			},
 		})
 	} catch (error) {
+		if (error instanceof VectorPrintTextError) {
+			// 🔑 code를 함께 준다 — 클라이언트가 이 원인만 다른 문구로 올린다.
+			return Response.json(
+				{ code: 'text-not-outlined', message: 'Text is not outlined.' },
+				{ status: 422 },
+			)
+		}
 		if (error instanceof VectorPrintInputError) {
 			return Response.json({ message: 'Scene is too complex.' }, { status: 413 })
 		}
