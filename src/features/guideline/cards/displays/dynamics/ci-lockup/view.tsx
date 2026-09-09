@@ -408,7 +408,7 @@ function LockupFigure({
 		if (!root) throw new Error('내보낼 로고가 없습니다.')
 		return {
 			filename: `${lockup.label} 로고.svg`,
-			blob: new Blob([await lockupSvg(root, false)], { type: 'image/svg+xml' }),
+			blob: new Blob([await lockupSvg(root)], { type: 'image/svg+xml' }),
 		}
 	}
 

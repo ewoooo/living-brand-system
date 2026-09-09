@@ -17,6 +17,7 @@ it('화면 맞춤 배율과 관계없이 같은 로고 좌표를 내보낸다', 
 	const fit = document.createElement('div')
 	fit.setAttribute('data-display-fit-content', '')
 	const root = document.createElement('div')
+	root.style.backgroundColor = 'rgb(12, 34, 56)'
 	root.innerHTML =
 		'<div data-ink="text" style="font-size:20px;color:black">HD</div><div data-ink="bar"></div>'
 	fit.append(root)
@@ -33,9 +34,10 @@ it('화면 맞춤 배율과 관계없이 같은 로고 좌표를 내보낸다', 
 	root.children[0].getBoundingClientRect = box(20, 30, 100, 20)
 	root.children[1].getBoundingClientRect = box(130, 30, 4, 30)
 	fit.style.setProperty('--display-scale', '1')
-	const full = await lockupSvg(root, false)
+	const full = await lockupSvg(root)
 	scale = 0.4
 	fit.style.setProperty('--display-scale', '0.4')
-	expect(await lockupSvg(root, false)).toBe(full)
+	expect(await lockupSvg(root)).toBe(full)
 	expect(full).toContain('viewBox="0 0 200 100"')
+	expect(full).not.toContain('rgb(12, 34, 56)')
 })

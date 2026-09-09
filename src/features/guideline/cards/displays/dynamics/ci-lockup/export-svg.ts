@@ -66,11 +66,8 @@ async function outlines(
 	}
 }
 
-/**
- * `root` 안의 잉크(심볼·글자·구분바)를 SVG 문자열로 옮긴다.
- * `withBackground`면 `root`의 배경색을 판으로 깔고 `root` 크기를 그대로 문서 크기로 쓴다.
- */
-export async function lockupSvg(root: HTMLElement, withBackground: boolean): Promise<string> {
+/** `root` 안의 잉크(심볼·글자·구분바)만 투명 배경의 SVG로 옮긴다. */
+export async function lockupSvg(root: HTMLElement): Promise<string> {
 	// 화면 맞춤 배율을 걷어내 SVG는 원래 H 기준의 좌표와 글자 크기를 유지한다.
 	const fit = root.closest<HTMLElement>('[data-display-fit-content]')
 	const scale = fit
@@ -87,11 +84,6 @@ export async function lockupSvg(root: HTMLElement, withBackground: boolean): Pro
 	}
 	const box = rect(root)
 	const body: string[] = []
-
-	if (withBackground)
-		body.push(
-			`<rect width="100%" height="100%" fill="${getComputedStyle(root).backgroundColor}"/>`,
-		)
 
 	// 구분바 — 글자가 아니라 면이다(계열사 락업).
 	for (const bar of root.querySelectorAll<HTMLElement>('[data-ink="bar"]')) {
