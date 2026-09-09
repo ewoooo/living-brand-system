@@ -4,12 +4,13 @@ import { millimetersToPdfPoints } from '../print-policy'
 /**
  * PNG를 지정한 mm × mm 크기의 단일 페이지 PDF로 싣는다.
  *
- * 🔴 **CMYK로 바꾸지 않는다.** PDF 안의 CMYK JPEG은 Illustrator에서 색이 반전돼 열리는
- *    알려진 결함이 있다 — pdf-lib·jsPDF·Prawn에 각각 보고돼 있고 Adobe 버그 트래커에도 올라가
- *    있으며, 라이브러리 층에서 고칠 방법이 없다. 실물로도 확인했다(초록 판이 마젠타로 열렸다).
- *    그래서 인쇄 PDF는 **일단 RGB로 낸다** — 화면·SVG와 같은 그림이 열리는 것이 우선이다.
- * 🔑 CMYK 파이프라인(`png-to-cmyk-jpeg`·`rgb-to-cmyk`·`scene-images-to-cmyk`·`cmyk-jpeg-to-pdf`)은
- *    지우지 않고 남겨 뒀다. TIFF는 계속 CMYK로 나가고, PDF의 색 관리는 별도 작업으로 되돌린다.
+ * 🔑 **이 경로는 RGB로 낸다.** 판 전체를 구운 이미지 한 장이므로 파일에 색 공간이 하나뿐이고,
+ *    「한 파일 한 색상 모드」를 어기지 않는다. 인쇄용 CMYK가 필요한 판은 벡터 경로가 소유한다
+ *    (`vector-scene-to-pdf` + `image-to-cmyk-samples`) — 거기서는 잉크 샘플을 그대로 싣는다.
+ * 🔴 여기 있던 「CMYK JPEG은 Illustrator에서 반전돼 열리고 라이브러리 층에서 고칠 방법이 없다」는
+ *    서술은 2026-09-09에 해소됐다. 원인은 JPEG을 CMYK 운반체로 쓴 것이었고(APP14 Adobe 관례),
+ *    벡터 경로는 컨테이너를 없애 그 관례를 통째로 피한다. 그 근거로 이 경로를 CMYK로 바꾸지 말 것 —
+ *    바꿔야 할 이유가 생기면 여기도 잉크 샘플을 쓴다.
  */
 export async function createRgbPrintPdf({
 	heightMm,

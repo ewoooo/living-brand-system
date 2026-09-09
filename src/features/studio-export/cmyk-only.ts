@@ -37,11 +37,29 @@ export async function findNonCmykColors(pdf: Buffer): Promise<string[]> {
 		if (!(object instanceof PDFRawStream)) continue
 		if (String(object.dict.get(PDFName.of('Subtype'))) !== '/Image') continue
 		const space = String(object.dict.get(PDFName.of('ColorSpace')))
-		if (/DeviceRGB|DeviceGray|Indexed|CalRGB|CalGray/.test(space))
+		if (/DeviceRGB|Indexed|CalRGB|CalGray/.test(space))
 			problems.push(`이미지 색 공간이 CMYK가 아니다: ${space.replace(/\s+/g, ' ')}`)
+		// 🔴 알파 마스크(`/SMask`)는 DeviceGray가 정상이다 — 색이 아니라 투명도를 싣는다.
+		if (/DeviceGray/.test(space) && !isSoftMask(doc, object))
+			problems.push(`이미지 색 공간이 CMYK가 아니다: ${space.replace(/\s+/g, ' ')}`)
+		// 🔴 CMYK를 JPEG으로 실으면 APP14 Adobe 반전 관례가 딸려와 `/Decode` 선언 하나에 색이
+		//    뒤집힌다(2026-09-09 실물). 그 표현을 쓰지 않기로 정했으므로 여기서 집행한다 —
+		//    결정을 주석에만 두면 다음 사람이 되살린다.
+		if (String(object.dict.get(PDFName.of('Filter'))).includes('DCTDecode'))
+			problems.push('CMYK 이미지를 JPEG(DCTDecode)으로 실었다 — 잉크 샘플로 실어야 한다')
 	}
 
 	return problems
+}
+
+/** 이 스트림이 다른 이미지의 알파 마스크인가. 마스크는 DeviceGray가 정상이다. */
+function isSoftMask(doc: PDFDocument, candidate: PDFRawStream): boolean {
+	for (const [ref, object] of doc.context.enumerateIndirectObjects()) {
+		if (!(object instanceof PDFRawStream)) continue
+		const mask = object.dict.get(PDFName.of('SMask'))
+		if (mask && doc.context.lookup(mask) === candidate) return Boolean(ref)
+	}
+	return false
 }
 
 /** flate 스트림을 펼친다. 압축이 아니면 원본 바이트를 그대로 읽는다. */

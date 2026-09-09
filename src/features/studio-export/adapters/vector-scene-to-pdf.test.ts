@@ -12,6 +12,7 @@ import { parseColor, roundedRectPath, vectorSceneToPdf } from './vector-scene-to
 const printOptions = (ppi: number) => ({
 	cmyk: {
 		colors: new Map(),
+		images: new Map(),
 		iccProfile: Buffer.alloc(0),
 		iccProfileName: 'cgats21-crpc6',
 	},

@@ -1,6 +1,8 @@
 import { inflateSync } from 'node:zlib'
+import sharp from 'sharp'
 import { describe, expect, it, vi } from 'vitest'
 import type { VectorScene } from '@/modules/studio-artifact/studio-artifact'
+import { findNonCmykColors } from '../cmyk-only'
 import {
 	exportVectorPrint,
 	VectorPrintColorError,
@@ -147,13 +149,44 @@ describe('exportVectorPrint', () => {
 	})
 
 	/**
-	 * 🔴 CMYK JPEG는 알파를 담지 못한다. RGB로 남기면 혼재가 되고, 흰색으로 눌러 담으면 오려 낸
-	 * 레이어가 불투명 사각형으로 되살아난다. 둘 다 인쇄 사고라 만들지 않는다.
+	 * 🔑 예전에는 투명 이미지가 내보내기를 **막았다** — CMYK JPEG이 알파를 구조적으로 못 담아서였다.
+	 * 잉크 샘플 경로는 알파를 `/SMask`로 따로 싣기 때문에 그 제약이 사라졌다. 거부가 되살아나면
+	 * 오려 낸 레이어가 든 판을 인쇄할 수 없게 되므로 여기서 「통과한다」를 잠근다.
 	 */
-	it('투명이 있어 CMYK로 못 바꾸는 이미지가 있으면 PDF를 만들지 않는다', async () => {
-		// 40×30 반투명 PNG. sharp 없이 만들 수 있는 최소 알파 이미지다.
-		const alphaPng =
-			'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg=='
+	it('투명이 있는 이미지도 PDF로 나간다', async () => {
+		// 2×2 반투명 PNG. 알파가 살아 있는 최소 입력이다.
+		const png = await sharp({
+			create: {
+				background: { alpha: 0.5, b: 65, g: 175, r: 0 },
+				channels: 4,
+				height: 2,
+				width: 2,
+			},
+		})
+			.png()
+			.toBuffer()
+		const pdf = await exportVectorPrint({
+			colorProfile: 'cgats21-crpc6',
+			ppi: 300,
+			scene: scene([
+				{
+					kind: 'image',
+					x: 0,
+					y: 0,
+					width: 50,
+					height: 50,
+					href: `data:image/png;base64,${png.toString('base64')}`,
+				},
+			]),
+		})
+
+		expect(pdf.subarray(0, 5).toString('latin1')).toBe('%PDF-')
+		// 알파가 버려지지 않았는지 — SMask가 없으면 오려 낸 자리가 불투명하게 인쇄된다.
+		expect(await findNonCmykColors(pdf)).toEqual([])
+		expect(pdf.toString('latin1')).toContain('SMask')
+	})
+
+	it('data URI가 아닌 이미지가 있으면 PDF를 만들지 않는다', async () => {
 		await expect(
 			exportVectorPrint({
 				colorProfile: 'cgats21-crpc6',
@@ -165,7 +198,7 @@ describe('exportVectorPrint', () => {
 						y: 0,
 						width: 50,
 						height: 50,
-						href: `data:image/png;base64,${alphaPng}`,
+						href: '/api/media/file/x.png',
 					},
 				]),
 			}),

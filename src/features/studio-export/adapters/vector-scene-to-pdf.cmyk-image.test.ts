@@ -1,71 +1,109 @@
 // @vitest-environment node
-// 🔴 jsdom에서는 pdf-lib이 node Buffer를 자기 realm의 Uint8Array로 못 알아봐 이미지 임베드가
-//    타입 오류로 죽는다. 제품은 서버(node)에서만 도는 경로라 이 파일만 node 환경으로 돈다.
+// 🔴 jsdom에서는 pdf-lib이 node Buffer를 자기 realm의 Uint8Array로 못 알아본다. 제품은 서버에서만
+//    도는 경로라 이 파일만 node 환경으로 돈다.
+import { inflateSync } from 'node:zlib'
 import { PDFDocument, PDFName, PDFRawStream } from 'pdf-lib'
-import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import type { VectorScene } from '@/modules/studio-artifact/studio-artifact'
-import { readCmykIccProfile, resolveCmykIccProfilePath } from '../color-profile.server'
+import type { CmykSamples } from './image-to-cmyk-samples.sharp'
 import { vectorSceneToPdf } from './vector-scene-to-pdf.pdf-lib'
 
-/**
- * 🔴 APP14 Adobe 마커가 붙은 CMYK JPEG은 샘플을 반전해 저장하고, PDF 리더는 그 마커를 보지
- * 않는다 — 되뒤집는 일은 `Decode [1 0 …]`이 한다. 이 배열을 지우면 초록이 검정으로, 파랑이
- * 노랑으로 열린다(2026-09-09 실측). JPEG 자체는 정상이라 파일만 열어 보면 결함이 안 보이고
- * PDF 안에서만 드러나므로, 「불필요한 배열」로 보여 지워지기 쉽다. 그래서 여기서 잠근다.
- */
-describe('CMYK 이미지의 Decode 배열', () => {
-	it('지워지지 않는다', async () => {
-		// 🔴 4KB를 넘겨야 한다 — 그 아래 JPEG은 pdf-lib이 byteOffset을 무시해 embed가 터진다.
-		//    평탄한 색은 너무 작게 압축되므로 노이즈로 채운다.
-		const raw = Buffer.alloc(200 * 200 * 3)
-		let state = 1
-		for (let index = 0; index < raw.length; index++) {
-			state = (state * 1103515245 + 12345) & 0x7fffffff
-			raw[index] = (state >>> 16) & 255
-		}
-		const jpeg = await sharp(raw, { raw: { channels: 3, height: 200, width: 200 } })
-			.withIccProfile(resolveCmykIccProfilePath('cgats21-crpc6'), { attach: false })
-			.jpeg({ quality: 100 })
-			.toBuffer()
-		expect((await sharp(jpeg).metadata()).space).toBe('cmyk')
-		expect(jpeg.byteLength).toBeGreaterThan(4096)
+/** 2×1 판에 이미지 하나. 잉크 바이트는 「초록, 흰색」 두 픽셀이다. */
+const GREEN_AND_WHITE = Buffer.from([194, 0, 243, 3, 0, 0, 0, 0])
 
-		const scene: VectorScene = {
-			width: 100,
-			height: 100,
-			background: '#ffffff',
-			primitives: [
-				{
-					kind: 'image',
-					x: 0,
-					y: 0,
-					width: 50,
-					height: 50,
-					colorSpace: 'cmyk',
-					href: `data:image/jpeg;base64,${jpeg.toString('base64')}`,
-				},
-			],
-		}
-		const pdf = await vectorSceneToPdf(scene, {
+function sceneWith(href: string): VectorScene {
+	return {
+		width: 100,
+		height: 100,
+		background: '#ffffff',
+		primitives: [{ kind: 'image', x: 0, y: 0, width: 50, height: 50, href }],
+	}
+}
+
+async function render(samples: CmykSamples | null) {
+	const href = 'data:image/png;base64,IGNORED'
+	return vectorSceneToPdf(sceneWith(href), {
+		cmyk: {
+			colors: new Map(),
+			iccProfile: Buffer.alloc(0),
+			iccProfileName: 'cgats21-crpc6',
+			images: samples ? new Map([[href, samples]]) : new Map(),
+		},
+		ppi: 150,
+	})
+}
+
+async function images(pdf: Buffer) {
+	const doc = await PDFDocument.load(new Uint8Array(pdf.buffer, pdf.byteOffset, pdf.byteLength))
+	return doc.context
+		.enumerateIndirectObjects()
+		.map(([, object]) => object)
+		.filter(
+			(object): object is PDFRawStream =>
+				object instanceof PDFRawStream &&
+				String(object.dict.get(PDFName.of('Subtype'))) === '/Image',
+		)
+}
+
+/**
+ * 🔴 이 표현을 고른 이유가 반전이다. CMYK를 JPEG으로 운반하면 libjpeg이 APP14 Adobe 마커를 붙이고
+ * 샘플을 반전해 저장하는데, PDF 리더는 그 마커를 읽지 않아 `/Decode [1 0 …]`가 되뒤집어야 한다.
+ * 그 선언 한 줄이 지워지면 초록이 검정으로 열린다(2026-09-09 실물). raw 샘플에는 반전 관례가
+ * **존재할 수 없으므로** `Decode`도 필요 없다 — 그래서 여기서 「없음」을 잠근다.
+ */
+describe('CMYK 잉크 샘플을 PDF에 싣기', () => {
+	it('raw 샘플을 FlateDecode로 싣고 Decode를 넣지 않는다', async () => {
+		const pdf = await render({ cmyk: GREEN_AND_WHITE, height: 1, width: 2 })
+		const [image, ...rest] = await images(pdf)
+
+		expect(rest).toHaveLength(0)
+		expect(String(image.dict.get(PDFName.of('Filter')))).toBe('/FlateDecode')
+		expect(String(image.dict.get(PDFName.of('BitsPerComponent')))).toBe('8')
+		expect(String(image.dict.get(PDFName.of('Width')))).toBe('2')
+		expect(String(image.dict.get(PDFName.of('Height')))).toBe('1')
+		// 🔴 JPEG 경로가 심던 `Decode [1 0 …]`가 여기 있으면 색이 반전돼 인쇄된다.
+		expect(image.dict.get(PDFName.of('Decode'))).toBeUndefined()
+		// 잉크 바이트가 손실 없이 그대로 실렸는지 — 무손실이 이 경로의 이득이다.
+		expect(inflateSync(Buffer.from(image.contents))).toEqual(GREEN_AND_WHITE)
+	})
+
+	it('알파가 있으면 같은 크기의 DeviceGray를 SMask로 문다', async () => {
+		const alpha = Buffer.from([255, 0])
+		const pdf = await render({ alpha, cmyk: GREEN_AND_WHITE, height: 1, width: 2 })
+		const found = await images(pdf)
+		const parent = found.find((image) => image.dict.get(PDFName.of('SMask')))
+		const mask = found.find((image) => !image.dict.get(PDFName.of('SMask')))
+
+		expect(parent).toBeDefined()
+		expect(mask).toBeDefined()
+		expect(String(mask?.dict.get(PDFName.of('ColorSpace')))).toBe('/DeviceGray')
+		expect(String(mask?.dict.get(PDFName.of('Decode')))).toBe('[ 0 1 ]')
+		expect(inflateSync(Buffer.from(mask?.contents ?? []))).toEqual(alpha)
+	})
+
+	it('알파가 없으면 SMask 키를 만들지 않는다', async () => {
+		const pdf = await render({ cmyk: GREEN_AND_WHITE, height: 1, width: 2 })
+		const [image] = await images(pdf)
+
+		expect(image.dict.get(PDFName.of('SMask'))).toBeUndefined()
+	})
+
+	/**
+	 * 🔴 샘플을 주지 않으면 그 이미지는 잉크 경로를 타지 않는다 — RGB로 나가 파일이 혼재가 되므로
+	 * 호출부(`exportVectorPrint`)가 씬의 이미지를 **전수로** 채우고 못 채우면 거부해야 한다.
+	 */
+	it('샘플이 없는 이미지는 잉크 경로를 타지 않는다', async () => {
+		// data URI가 아닌 href는 RGB 경로도 못 실어 아무것도 안 그린다.
+		const pdf = await vectorSceneToPdf(sceneWith('/asset/photo.png'), {
 			cmyk: {
 				colors: new Map(),
-				iccProfile: await readCmykIccProfile('cgats21-crpc6'),
+				iccProfile: Buffer.alloc(0),
 				iccProfileName: 'cgats21-crpc6',
+				images: new Map(),
 			},
 			ppi: 150,
 		})
 
-		const doc = await PDFDocument.load(pdf)
-		const images = doc.context
-			.enumerateIndirectObjects()
-			.map(([, object]) => object)
-			.filter(
-				(object): object is PDFRawStream =>
-					object instanceof PDFRawStream &&
-					String(object.dict.get(PDFName.of('Subtype'))) === '/Image',
-			)
-		expect(images).toHaveLength(1)
-		expect(String(images[0].dict.get(PDFName.of('Decode')))).toBe('[ 1 0 1 0 1 0 1 0 ]')
+		expect(await images(pdf)).toHaveLength(0)
 	})
 })
