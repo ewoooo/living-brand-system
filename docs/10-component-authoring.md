@@ -141,6 +141,10 @@ studio·global·home 같은 표면의 화면 컴포넌트도 위 계약을 그�
 
 ### 컨트롤러 컨트롤 계약 (§3.6)
 
+공용 `ControllerBar`는 배치 방식과 텍스트 입력 유무에 관계없이 바깥 모서리를 `rounded-xl`(24px)로 통일합니다. 내부 패딩 `p-3`(12px)와 입력 필드 `rounded-lg`(12px)가 동심 관계를 이룹니다.
+
+`ControllerControlRenderer`의 여러 줄 텍스트 입력은 본문 3줄 높이(`rows=3`, `field-sizing: fixed`)로 고정합니다. 긴 값은 내부 세로 스크롤로 읽고 스크롤바만 숨깁니다. 입력값과 키보드 편집은 제한하지 않습니다. 일반 `Textarea`와 직접 사용하는 `Controller.Textarea`의 크기 정책은 별도로 유지합니다.
+
 스튜디오 컨트롤러의 개별 컨트롤은 아래 계약을 따릅니다. 디자인 정본은 Figma HD_LBS_UI의 **Controller API**(node `4:5578`), 구현 원형은 `src/components/shared/controller/`의 **Controller 컴파운드 킷**입니다(Studio와 가이드라인이 함께 쓰므로 `components/shared/`에 있습니다). 패널은 `Root` → `Header`·`Content`·`Footer`, 본문은 `Group` → 개별 컨트롤로 조합합니다. `Group`은 제목과 접힘 상태를 직접 소유합니다. 기존 `Panel`은 `Root`·`Content`·`Footer`를 묶은 호환 래퍼입니다.
 
 Runtime Manifest부터 Effective Config, Provider, Artifact, Export까지 이어지는 전체 데이터 흐름은 [Studio](features/studio.md)를 정본으로 삼습니다. 이 절은 Controller의 표현과 상호작용 계약만 설명합니다.

@@ -3,9 +3,11 @@ import { cn } from '@/lib/utils'
 import type { BaseBlock } from '@/payload-types'
 import { GuidelineControllerScope } from '../controllers/provider'
 import { cardControllerFor } from '../controllers/registry'
+import { CardActions, CardActionsProvider } from './actions'
 import { DisplayCaption } from './caption/display-caption'
 import { CardDisplay } from './displays/card-display'
-import { CARD_RATIO_CLASS, DYNAMIC_CARD_RATIO } from './displays/ratio'
+import { CARD_RATIO_CLASS } from './displays/ratio'
+import { displayDefinition } from './displays/registry'
 import { CardMark } from './mark'
 
 export type CardData = NonNullable<BaseBlock['cards']>[number]
@@ -22,7 +24,8 @@ export function GuidelineCard({
 }) {
 	const display = card.display?.[0]
 	if (!display) return null
-	const cardRatio = DYNAMIC_CARD_RATIO[display.blockType] ?? card.ratio ?? '16:9'
+	const definition = displayDefinition(display.blockType)
+	const cardRatio = definition.ratio ?? card.ratio ?? '16:9'
 	const [width, height] = cardRatio.split(':').map(Number)
 	const controller = cardControllerFor(display)
 	const content = (
@@ -44,13 +47,19 @@ export function GuidelineCard({
 					controllerLabel={controller?.manifest.id}
 				/>
 				<CardMark mark={card.mark} />
+				<CardActions />
 			</div>
 			<DisplayCaption caption={card.caption} display={display} />
 		</figure>
 	)
-	return controller ? (
-		<GuidelineControllerScope {...controller}>{content}</GuidelineControllerScope>
+	const cardContent = definition.downloads?.length ? (
+		<CardActionsProvider formats={definition.downloads}>{content}</CardActionsProvider>
 	) : (
 		content
+	)
+	return controller ? (
+		<GuidelineControllerScope {...controller}>{cardContent}</GuidelineControllerScope>
+	) : (
+		cardContent
 	)
 }

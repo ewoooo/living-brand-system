@@ -50,6 +50,9 @@ function initialValueField(control: (typeof CI_LOCKUP_CONTROLS)[number]): Field 
 export const ciLockup = defineDisplay({
 	id: 'ciLockupWidget',
 	type: 'dynamic',
+	category: 'identity',
+	sizing: 'contain',
+	downloads: ['svg'],
 	dbName: 'cil',
 	name: 'CI 락업',
 	description:

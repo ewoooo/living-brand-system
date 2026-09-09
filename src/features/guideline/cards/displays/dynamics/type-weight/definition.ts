@@ -13,6 +13,8 @@ import { LANGUAGES, WEIGHTS } from '../brand-typeface'
 export const typeWeight = defineDisplay({
 	id: 'typeWeightWidget',
 	type: 'dynamic',
+	category: 'typography',
+	sizing: 'responsive',
 	dbName: 'twt',
 	name: '서체 굵기',
 	description: '슬라이더로 굵기를 바꿔 보는 서체 표본.',

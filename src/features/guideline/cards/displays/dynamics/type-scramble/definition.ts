@@ -13,6 +13,8 @@ import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 export const typeScramble = defineDisplay({
 	id: 'typeScrambleWidget',
 	type: 'dynamic',
+	category: 'typography',
+	sizing: 'responsive',
 	dbName: 'tsw',
 	name: '서체 스크램블',
 	description: '글자가 흩어졌다 모이는 서체 표본.',

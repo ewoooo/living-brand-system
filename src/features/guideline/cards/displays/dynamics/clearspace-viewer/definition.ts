@@ -8,6 +8,8 @@ import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 export const clearspaceViewer = defineDisplay({
 	id: 'clearspaceViewerWidget',
 	type: 'dynamic',
+	category: 'identity',
+	sizing: 'responsive',
 	dbName: 'cvw',
 	name: '클리어스페이스 뷰어',
 	description: '가로·세로 로고의 여백 격자 뷰어. 컨트롤러 연결은 카드에서 끊겼다.',

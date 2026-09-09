@@ -150,11 +150,11 @@ HTML 의미와 시각 역할은 분리합니다. `GuidelineHeader`가 h1/h2를 �
 | `GuidelineTitleDisplay` | 토픽 대표 이미지와 h1 배치 |
 | `GuidelineSections` | 섹션 순서와 섹션 사이 `gap-72`, Better Editor ID |
 | `GuidelineSection` | 앵커, 제목/콘텐츠 사이 `gap-12`, 캐러셀의 섹션 끝 clipping |
-| `SectionHeadings` | `ContentFrame` heading 여백, 제목/설명 `gap-8`, 설명 최대 폭 767px |
+| `SectionHeadings` | `ContentFrame` heading 여백과 최대 폭 1540px·중앙 배치, 제목/설명 `gap-8`, 설명 최대 폭 767px |
 | `SectionContents` | 공용 `ContentFrame`의 padded 폭·여백과 배치 방식 선택 |
 | `GridContainer` | 동일 너비·첫 열부터 배치·카드 간격, 콘텐츠 폭에 따른 열 수 제한 |
 | `CarouselContainer` | 가로 넘김·스냅·카드 간격 |
-| `GuidelineCard` | 비율·프레임과 Display·Mark·Caption 조합, 카드별 조작 스코프 |
+| `GuidelineCard` | 비율·프레임과 Display·Mark·Actions·Caption 조합, 카드별 조작 스코프 |
 | `GuidelineFooter` | 본문 다음의 빈 footer 위치. 높이·콘텐츠 미지정 |
 
 모바일(md 미만)에서는 카드가 부모 폭을 채우며, 격자는 한 열로 쌓이고 캐러셀은 한 카드씩 넘깁니다. 그리드 영역은 `ContentFrame` 안에 중앙 배치하고, 카드는 `justify-content: flex-start`로 마지막 행까지 첫 열부터 채웁니다. 설명의 오른쪽 32px 패딩은 최대 폭 767px 안에 포함됩니다.
@@ -309,3 +309,5 @@ Carbon에서 가져오는 범위를 좁게 고정합니다.
 그리드는 `columns` 1~4열(기본 2열)을 최대값으로 사용합니다. 화면 너비 767px 이하에서는 항상 1열입니다. 그 외에는 그리드 콘텐츠 폭 640px 미만은 1열, 640px 이상은 최대 2열, 960px 이상은 최대 3열, 1280px 이상은 최대 4열입니다. 열 수는 저작값을 넘지 않습니다. 사이드바와 프레임 여백을 제외한 실제 콘텐츠 폭이 기준입니다.
 
 간격은 공통 `gap-4`에 해당하는 값을 사용하고, 카드 너비는 간격을 제외한 폭을 균등하게 나눕니다. 마지막 행도 같은 너비를 유지하며 첫 열부터 채웁니다. 디스플레이 높이는 카드 비율로 계산하고, 하단 캡션은 내용에 따라 늘어납니다. 그리드에서는 `rowHeight`를 노출하거나 적용하지 않으며 기존 값은 캐러셀 전환을 위해 보존합니다.
+
+CI Lockup의 contain 표시는 `DisplayFit`이 내부 콘텐츠에만 적용합니다. 공용 카드·배경·컨트롤·캡션을 통째로 축소하지 않습니다. 다운로드 버튼 위치와 상태는 `CardActions`가 소유합니다([위젯 공통 계약](11-widget-authoring.md#8-디스플레이-공통-인터페이스)).

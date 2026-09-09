@@ -19,6 +19,9 @@ export const HERO_SOURCES = [
 export const ciLockupHero = defineDisplay({
 	id: 'ciLockupHeroWidget',
 	type: 'dynamic',
+	category: 'identity',
+	sizing: 'contain',
+	downloads: ['svg'],
 	dbName: 'cih',
 	name: 'CI 락업 히어로',
 	description: '자회사명·해외지사명이 도는 CI 락업. 판 높이가 심볼 크기를 정한다.',

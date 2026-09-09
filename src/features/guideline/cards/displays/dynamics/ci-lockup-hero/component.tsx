@@ -1,5 +1,5 @@
+import { findCiLockupColors } from '@/features/guideline/repositories/ci-lockup-colors.payload.repository'
 import type { CiLockupHeroWidget as CiLockupHeroWidgetRow } from '@/payload-types'
-import { brandColors } from '../ci-lockup/component'
 import { type CiLockupHeroSource, CiLockupHeroView } from './view'
 
 // 위젯(서버): 색만 컬렉션에서 꺼내 뷰에 넘긴다 — `ci-lockup`과 같은 조회를 재사용한다.
@@ -12,7 +12,7 @@ export async function CiLockupHeroWidget({
 }) {
 	return (
 		<CiLockupHeroView
-			colors={await brandColors()}
+			colors={await findCiLockupColors()}
 			source={source === 'branch' ? 'branch' : ('subsidiary' satisfies CiLockupHeroSource)}
 			h={h ?? 160}
 		/>

@@ -12,7 +12,7 @@ export function SectionHeadings({
 }) {
 	if (!title && !description) return null
 	return (
-		<ContentFrame variant="heading">
+		<ContentFrame variant="heading" className="mx-auto max-w-[1540px]">
 			<div data-slot="section-headings" className="flex flex-col gap-8">
 				<GuidelineHeader variant="section" title={title} />
 				<GuidelineDescription description={description} className="max-w-[767px]" />

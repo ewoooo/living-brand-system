@@ -23,14 +23,14 @@ import { staticDisplay } from './static/definition'
 
 /**
  * 디스플레이 레지스트리 — 카드 판에 무엇을 그릴 수 있는지의 목록(2026-09-08). 정의는 각 폴더의 `definition.ts`가
- * 소유하고(id·type·dbName·name·description·fields), 렌더는 같은 폴더 `component.tsx`의 기본 export다.
+ * 소유하고(id·type·category·sizing·downloads·dbName·name·description·fields), 렌더는 같은 폴더 `component.tsx`의 기본 export다.
  * 여기는 순서만 정한다 — 배열 순서가 admin 선택기 순서다. 렌더 맵은 `registry.render.tsx`가 같은 id로 갖는다.
  *
  * 🔴 이 모듈은 payload.config가 Node에서 읽는다(`cards/schema.ts` 경유) — React를 넣지 말 것.
  *
  * 위젯은 **전부** 연다(사용자 결정 2026-09-07 "B"). 현재 제한: 컨트롤러 위젯(ci-lockup·
  * clearspace-viewer·layout-grid)은 하단 Floating Controller를 잃고 admin 고정값으로만 그려진다.
- * 모든 동적 디스플레이는 카드의 너비·높이를 채우며 내부 스크롤이나 전체 자동 축소를 만들지 않는다.
+ * responsive는 카드 안에서 재배치하고 contain은 로고·보호 공간 등 콘텐츠만 비례 맞춤한다.
  * 컨트롤 전용 layout-grid-controls는 그릴 것이 없어 2026-09-08에 지웠고, Do/Don’t 위젯은 카드(프리셋 패널·정적
  * 디스플레이 + 카드 `mark`)로 대체됐다.
  */
@@ -61,3 +61,10 @@ export type DisplayId = (typeof DISPLAYS)[number]['id']
 
 /** 카드 `display` 필드가 받는 Payload Block 목록. */
 export const displayBlocks: Block[] = DISPLAYS.map(displaySchema)
+
+/** 정적 메타데이터만 소비하고 Payload 필드나 렌더 함수를 클라이언트에 넘기지 않는다. */
+export function displayDefinition(id: DisplayId) {
+	const definition = DISPLAYS.find((entry) => entry.id === id)
+	if (!definition) throw new Error(`등록되지 않은 디스플레이: ${id}`)
+	return definition
+}

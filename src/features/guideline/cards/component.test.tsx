@@ -37,10 +37,8 @@ describe('GuidelineCard', () => {
 		)
 		expect(container.querySelector('[data-slot="card-display"]')).toHaveClass('overflow-clip')
 		expect(container.querySelector('figure > div')).toHaveClass('overflow-clip')
-		expect(screen.getByRole('textbox', { name: '타입 견본 입력' })).toHaveClass(
-			'flex-1',
-			'min-h-0',
-		)
+		expect(container.querySelector('[data-slot="type-specimen-text"]')).toHaveClass('min-h-0')
+		expect(container.querySelector('[data-slot="card-display"] textarea')).toBeNull()
 	})
 
 	it('기존 로고 크기와 오버레이 배율은 카드 크기를 바꾸지 않는다', () => {

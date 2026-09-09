@@ -10,6 +10,8 @@ import { SAMPLE_OPTIONS } from './samples'
 export const layoutGrid = defineDisplay({
 	id: 'layoutGridWidget',
 	type: 'dynamic',
+	category: 'layout',
+	sizing: 'responsive',
 	dbName: 'lgw',
 	name: '레이아웃 그리드',
 	description: '판형 표본 위의 여백·거터 격자. 컨트롤러 연결은 카드에서 끊겼다.',
