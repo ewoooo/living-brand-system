@@ -8,23 +8,23 @@
 
 ```
 1. src/features/guideline/cards/displays/dynamics/<kebab-name>/ 생성
-2. definition.ts 작성 — `defineDisplay({ id, type, dbName, name, description, fields })`. 짧은 dbName 필수
+2. definition.ts 작성 — `defineDisplay({ id, type, category, sizing, dbName, name, description, fields })`. 짧은 dbName 필수
 3. component.tsx 작성 (서버). 기본 export는 `({ display })`를 받는 진입점. 인터랙션이 있으면 view.tsx 추가 (클라이언트)
 4. 등록 2곳을 손으로 고친다 (§3)
 5. /guideline/widgets 에서 렌더 확인
 6. admin에서 섹션 안에 넣어 실제 페이지로 확인
 ```
 
-블록은 `blocks/registry.ts`에 손으로 등록하지만 위젯은 그 레지스트리에 있지 않습니다. 등록 누락은 아래 §3의 두 곳을 직접 확인해야 하고, CI가 잡아주지 않습니다.
+블록은 `blocks/registry.ts`에 손으로 등록하지만 위젯은 그 레지스트리에 있지 않습니다. 정의와 렌더의 등록 일치는 typecheck가 검사합니다. 갤러리 등록은 별도로 확인합니다.
 
 ## 2. 폴더 계약
 
 | 파일 | 역할 | 필수 |
 |---|---|---|
-`definition.ts` | 디스플레이 정의 하나 — `defineDisplay({ id, type, dbName, name, description, fields })`. slug·라벨·interfaceName은 여기서 파생된다(`displays/definition.ts`의 `displaySchema`) | ✅ |
+`definition.ts` | 디스플레이 정의 하나 — `defineDisplay({ id, type, category, sizing, dbName, name, description, fields })`. slug·라벨·interfaceName은 여기서 파생된다(`displays/definition.ts`의 `displaySchema`) | ✅ |
 `component.tsx` | 서버 컴포넌트. **기본 export**가 자기 행 `{ display }`를 받아 뷰로 넘기는 진입점이다. 관계 해석·URL 계산은 여기서 끝낸다 | ✅ |
 `view.tsx` | 클라이언트 뷰. 인터랙션이 있을 때만 | 선택 |
-`manifest.ts` | 이 위젯이 여는 **컨트롤 계약** — 범위·초기값·단위·프리미티브 종류(§4.1) | 선택 |
+`manifest.ts` | 이 위젯이 여는 **컨트롤 계약** — 범위·초기값·단위·프리미티브 종류와 저장값→제한 변환(§4.1) | 선택 |
 그 외 (`compositions.ts`·`samples.ts`·`images/`) | 데이터·에셋 분리 | 선택 |
 
 🔴 **`projection.ts`는 만들지 않습니다.** 블록 계약에는 있지만 위젯에는 없습니다. 카탈로그가 읽지 않는 파일이 됩니다.
@@ -34,6 +34,14 @@
 `component.tsx`를 서버로 두는 이유는 **관계 해석·URL 계산**을 서버에서 끝내기 위한 것입니다. 그 일이 없는 위젯 — 정적 데이터나 형제 공유 context만 읽는 위젯 — 은 `component.tsx`에 `'use client'`를 달고 `view.tsx`를 두지 않습니다. 빈 서버 래퍼를 한 겹 더 만드는 것은 계약을 지키는 것이 아니라 껍데기를 늘리는 것입니다.
 
 현재 그런 위젯은 `layout-grid`·`type-specimen` 둘입니다. 🔴 **이 문단이 없으면 다음 사람이 이것을 계약 위반으로 보고 빈 래퍼를 세 개 만듭니다** — 반대로, Payload 관계를 받는 위젯이 `'use client'`를 달고 있으면 그것은 진짜 위반입니다.
+
+#### 파일 책임과 의존 방향
+
+- `definition.ts`는 CMS 필드와 디스플레이 메타데이터를 정의합니다. React·에셋·조회 코드를 import하지 않습니다.
+- `manifest.ts`는 컨트롤 정의와 해당 위젯의 저장값 해석을 함께 소유합니다. 언어별 표본 초기값이나 CI 선택지 계산을 공통 레지스트리에 두지 않습니다.
+- `component.tsx`는 데이터 연결과 렌더 진입점입니다. 서버 조회가 없는 단순 위젯은 이 파일에서 바로 그립니다. `view.tsx`를 형식적으로 추가하지 않습니다.
+- 조회를 재사용할 때는 다른 위젯의 `component.tsx`를 import하지 않습니다. CI Lockup과 Hero는 `repositories/ci-lockup-colors.payload.repository.ts`의 같은 조회를 사용합니다.
+- 규정 계산·SVG 생성처럼 독립 역할이 있는 코드만 `rules.ts`·`export-svg.ts`로 분리합니다. 카테고리는 메타데이터이며 중간 폴더를 만들지 않습니다.
 
 #### 브랜드 데이터가 비면 그리지 않습니다
 
@@ -66,7 +74,7 @@
 
 ## 4. Section과 Widget의 책임
 
-**블록이 소유하는 것**(2026-09-07 카드 모델) — 제목·설명·rules·에셋 다운로드 유무, 카드 **레이아웃과 줄 높이**, 그리고 섹션만 앵커. 카드 목록(`cards`)을 품습니다. 🔴 **폭과 면은 갖지 않습니다** — 카드 폭은 카드 비율에서 나오고, 배경 설정은 2026-09-04에 전 계층에서 걷었습니다.
+**블록이 소유하는 것**(2026-09-07 카드 모델) — 제목·설명·rules·에셋 다운로드 유무, 카드 **레이아웃·그리드 열 수·캐러셀 높이**, 그리고 섹션만 앵커. 카드 목록(`cards`)을 품습니다. 🔴 **폭과 면은 갖지 않습니다** — 카드 크기는 그리드 열 수 또는 캐러셀 높이와 카드 비율에서 나오고, 배경 설정은 2026-09-04에 전 계층에서 걷었습니다.
 
 **카드가 소유하는 것** — 일반 카드의 저작 비율 또는 동적 카드의 위젯 규격, 디스플레이 하나(정적 이미지 또는 위젯), 선택 판정 표식(`mark`: none·do·ok·dont), 캡션(제목·설명, 각각 선택)과 캡션 배치(카드 아래·판 위 하단). 배치·텍스트 스타일은 [09 §6](09-design-system.md)가 소유합니다. 위젯은 카드 디스플레이의 한 종류이고 판 안을 채우기만 합니다(`cards/`).
 
@@ -88,7 +96,9 @@
 
 ### 조작값은 해당 카드가 소유합니다
 
-카드로 이관한 `type-language`·`type-hierarchy`·`layout-grid-overlay`는 `Card`가 기존 `GuidelineControllerScope`를 열고, 같은 스코프 안에서 표본·파생 명세·컨트롤을 연결합니다. 카드별 초기값과 편집값은 독립적입니다. CMS 초기값이 바뀌면 해당 카드의 값만 초기화됩니다. 새 콘텐츠 계층이나 저장 필드를 추가하지 않습니다.
+카드로 이관한 `type-language`·`type-hierarchy`·`layout-grid-overlay`·`type-specimen`·`type-weight`의 조작형은 `GuidelineCard`가 기존 `GuidelineControllerScope`를 열고, 같은 스코프 안에서 표본·파생 명세·컨트롤을 연결합니다. 카드별 초기값과 편집값은 독립적입니다. CMS 초기값이 바뀌면 해당 카드의 값만 초기화됩니다. 새 콘텐츠 계층이나 저장 필드를 추가하지 않습니다.
+
+`CardDisplay`는 정적·동적 디스플레이와 조작 영역을 연결하고, `DisplayCaption`은 저작 캡션과 파생 명세를 선택합니다. 섹션 배치는 `SectionContents` 아래 `GridContainer`·`CarouselContainer`가 소유합니다. 위젯은 이 배치나 캡션을 직접 만들지 않습니다.
 
 기존 `ci-lockup`·`clearspace-viewer`·`layout-grid`의 블록 공유 컨트롤러 등록은 유지하지만 본문 연결은 아직 이관하지 않았습니다. 새 카드의 조작을 기존 블록 공유 스코프에 넣지 않습니다. 모듈 스코프 스토어는 금지합니다.
 
@@ -107,7 +117,7 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 | 누가 | 무엇을 | 🔴 모르는 것 |
 | --- | --- | --- |
 | `cards/displays/dynamics/<name>/manifest.ts` | 이 블록이 여는 컨트롤 계약 | 화면 어디에 그려지는지 |
-| `controllers/registry.ts` | `blockType` → 매니페스트 + admin 값→제한 변환 | — (양쪽을 아는 **유일한** 자리) |
+| `controllers/registry.ts` | `blockType` → 위젯의 컨트롤 설정 연결 | 규정값·언어별 표본·허용 범위 계산 |
 | `controllers/provider.tsx` | 카드 단위 값 스코프(기존 공유 위젯은 블록 단위) | 값의 뜻 |
 | `controllers/pill.tsx` | 그룹을 구분선으로 가른 한 줄 배치 | 도메인 |
 | `GuidelineHelperProvider` | 관측(IntersectionObserver)과 "누가 활성인가" | **값** |
@@ -115,6 +125,12 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 | `GuidelineHelperSlot` | 알약이 앉는 **자리 상자**(`absolute inset-0`인 세로 flex 열). sticky는 바가 갖는다 | 무엇이 들어오는지 |
 
 🔴 `GuidelineHelperProvider`·`GuidelineHelperSlot`은 토픽 화면에 연결되어 있습니다. 이관한 카드는 디스플레이 영역을 `GuidelineHelperRegion`으로 등록합니다. 화면에서 보이는 면적이 가장 큰 카드의 컨트롤이 하단에 표시됩니다. 나란히 놓인 카드는 클릭하거나 키보드 포커스로 조작 대상을 선택합니다. 선택한 카드가 화면에 보이는 동안 대상을 유지하고, 화면에서 벗어나면 면적 기준으로 다시 선택합니다. 좁은 화면에서는 컨트롤이 줄바꿈합니다. 바의 세로 공간을 넘는 조작 항목은 컨트롤러 안에서 스크롤할 수 있습니다. 디스플레이 내부 스크롤과는 별개입니다.
+
+#### 공통 컨트롤 이관 범위
+
+`type-specimen`은 Size·Align·Leading과 세 표본 문구를 매니페스트로 선언합니다. 디스플레이에는 결과만 그리며 문구별 편집값은 전환 후에도 유지됩니다. `type-weight` 조작형은 Light·Medium·Bold를 하단 세그먼트로 선택하고, `layout=specimen`은 컨트롤 없이 저작 굵기를 표시합니다. 둘 다 카드별 초기화와 갤러리의 실제 카드 경로를 사용합니다.
+
+`logo-bg-picker`의 배경 선택·드래그, `logo-color-variant`의 로고 방향, `icon-grid`의 다중 필터·반전·섞기는 기존 뷰 안의 조작을 유지합니다. 이들은 데이터에서 선택지를 구성하거나 직접 조작·일회성 액션을 포함하므로 이번 정리의 정적 매니페스트 이관과 별도입니다. 신규 위젯이 이 예외를 복제하지 않습니다.
 
 #### 기존 블록 공유 위젯의 「뺀 축만 자기 값」
 
@@ -127,7 +143,7 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 
 🔴 **dispatch가 인스턴스 필드를 props로 넘기지 않으면 두 번째 판의 admin 값이 조용히 버려집니다.** `cards/displays/registry.render.tsx`의 렌더마다 `d.<필드>`를 넘겨야 합니다 — 에러도 경고도 없이 「저장했는데 안 바뀐다」로 나타납니다.
 
-🔴 **`select` 초기값이 options에 없으면 렌더가 던져 페이지가 죽습니다.** 선택지를 데이터에서 파생하는 위젯은 registry에서 값의 유효성을 확인하고 버려야 합니다(`ci-lockup`의 `usable`).
+🔴 **`select` 초기값이 options에 없으면 렌더가 던져 페이지가 죽습니다.** 선택지를 데이터에서 파생하는 위젯은 자기 manifest의 제한 변환에서 값의 유효성을 확인하고 버려야 합니다(`ci-lockup`의 `usable`).
 
 #### 타입 계약은 새로 만들지 않고 받아씁니다
 
@@ -143,7 +159,7 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 
 🔴 **표면을 새로 만들지 마십시오.** 한때 `Fixed`/`Sticky` 두 컴포넌트였는데, 접미사는 "붙는 방식만 다르다"고 약속해 놓고 실제로는 모서리·패딩·면·모바일·pointer-events·모션까지 6가지가 갈라져 있었습니다(2026-08-18에 합침). 이름이 거짓말을 하면 다음 사람이 둘 중 아무거나 고릅니다.
 
-🔴 알약 안의 컨트롤에는 **최소폭**을 줍니다(`min-w-[150px]`). 없으면 값이 바뀔 때마다 컨트롤이 늘었다 줄었다 하고 이웃까지 함께 움직입니다. 고정폭이 아닌 이유는 라벨 길이가 컨트롤마다 다르기 때문입니다.
+🔴 알약 안의 컨트롤에는 **최소폭**을 줍니다(`min-w-[200px]`). 없으면 값이 바뀔 때마다 컨트롤이 늘었다 줄었다 하고 이웃까지 함께 움직입니다. 고정폭이 아닌 이유는 라벨 길이가 컨트롤마다 다르기 때문입니다.
 
 🔴 알약은 `readonly` 컨트롤을 **싣지 않습니다.** 떠 있는 바에 못 만지는 줄이 끼면 폭만 먹고, 고정된 값은 그림 자체가 보여줍니다. 값은 그대로 남으므로 판형은 고정값으로 그려집니다.
 
@@ -247,7 +263,7 @@ cap height 가정 | 큰 글자 아래가 잘림 | 둥근 대문자는 베이스�
 
 디스플레이의 너비·높이는 카드가 결정합니다(사용자 지정 2026-09-08). 동적 디스플레이의 루트는 카드가 준 영역을 `size-full` 또는 `absolute inset-0`으로 채우며, 자체 고정 너비·높이·최소 크기·종횡비로 카드 크기를 다시 정하지 않습니다. 내부 스크롤과 디스플레이 전체의 자동 축소도 사용하지 않습니다. 로고의 원본 비율·브랜드 치수·표본 글자 크기는 내부 콘텐츠 규칙으로 유지합니다. 내용이 넘치면 해당 위젯의 배치를 수정합니다. 새 계층은 추가하지 않습니다.
 
-일반 카드와 동적 카드는 같은 Card 렌더러를 사용하되 비율 정책을 구분합니다. 이번에 이관한 Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2를 적용합니다(`cards/displays/ratio.ts`의 `DYNAMIC_CARD_RATIO`). 이 세 위젯은 저장된 공통 `ratio`보다 위젯 규격이 우선하며, 기존 저장값을 변경하지 않습니다. 그 밖의 카드는 저작한 `ratio`를 따릅니다. 카드의 실제 크기는 블록 줄 높이와 사용 가능한 폭으로 계산하고, 좁은 화면에서는 한 열로 배치합니다. 위젯 규격은 고정 px 크기가 아닙니다.
+일반 카드와 동적 카드는 같은 Card 렌더러를 사용하되 비율 정책을 구분합니다. 이번에 이관한 Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2를 적용합니다(각 `definition.ts`의 `ratio`). 이 세 위젯은 저장된 공통 `ratio`보다 위젯 규격이 우선하며, 기존 저장값을 변경하지 않습니다. 그 밖의 카드는 저작한 `ratio`를 따릅니다. 카드의 실제 크기는 그리드 열 수 또는 캐러셀 높이와 사용 가능한 폭으로 계산하고, 좁은 화면에서는 한 열로 배치합니다. 위젯 규격은 고정 px 크기가 아닙니다.
 
 Type Language·Type Hierarchy는 Figma 142:1008의 카드 레이아웃을 따릅니다. 디스플레이는 5:7 비율 안에서 좌우 약 8% 여백을 두고 표본을 세로 중앙에 배치합니다. 하단 캡션은 카드 폭을 채우며 좌우 24px·상하 18px 여백, 데스크톱(md 이상)에서 6px 간격의 두 `minmax(0, 1fr)` 열을 사용합니다. 모바일(md 미만)은 제목·설명 다음 명세가 오는 한 열이며 간격은 16px입니다. 왼쪽은 제목·설명, 오른쪽은 현재 명세입니다. Type Language의 제목은 현재 언어(국문·영문·영문 All Caps)이며 언어 전환에 맞춰 바뀝니다. 블록 제목인 ‘언어별 표본’이나 오른쪽 언어명을 중복 표시하지 않습니다. 저장된 캡션 제목은 렌더에서 대체하고 설명은 유지합니다. Type Hierarchy는 저작한 제목을 사용하며 없으면 ‘타입 위계’를 표시합니다. 위계 명세 묶음 간격은 10px입니다. 명세 헤더는 Figma처럼 키 열과 같은 크기를 사용하며 `GUIDELINE_TYPOGRAPHY.specLabel`을 공유합니다. 오버레이 캡션은 기존 배치를 유지합니다. 사용자 선택에 따라 표본 문구·색상·규정값·텍스트 스타일은 기존 값을 유지합니다.
 
@@ -289,3 +305,52 @@ Layout Grid Overlay는 카드가 상하에 높이의 10%, 좌우에 너비의 10
 - `type-hierarchy`: 디스플레이는 Head/Sub/Body 조합, 문구 입력은 카드 컨트롤러, 역할별 명세는 캡션입니다. 세 문구 입력은 `minmax(0, 1fr)` 세 열로 균등하게 나누고 초기화는 내용 폭을 사용합니다. 좁은 화면에서는 한 열로 쌓습니다. 좁은 영역에서 규정 크기보다 작아지는 표본은 캡션에 그 사실을 표시합니다.
 - `layout-grid-overlay`: 이미지와 격자는 같은 SVG 원본 좌표에서 `meet`로 배치합니다. 폭·높이 입력은 없고 각 이미지 원본 크기로 계산합니다. 섹션·열·패딩·갭·가이드 전환과 초기화는 컨트롤러, 설정값과 단위는 캡션입니다. 패딩·갭은 이미지별 셀 경계 안으로 제한합니다.
 - 컬러·아이콘·나머지 로고/타입 위젯의 캡션·컨트롤 분리는 후속 이관입니다. 명세 분리 전후 모두 카드가 디스플레이 크기를 결정합니다.
+
+## 8. 디스플레이 공통 인터페이스
+
+정의는 각 폴더의 `definition.ts` 한 곳에 둡니다. `id`는 기존 Payload slug, `type`은 static/dynamic, `category`는 콘텐츠 분야입니다. 이 메타데이터를 CMS 필드로 저장하거나 별도 분류 컬렉션으로 만들지 않습니다. `displaySchema`는 기존 fields만 사용하므로 DB 스키마는 바뀌지 않습니다.
+
+| 계약 | 소유자 | 동작 |
+| --- | --- | --- |
+| `type`, `category` | definition | 표현 방식과 콘텐츠 분야를 각각 분류 |
+| `sizing: responsive` | 위젯 | 카드가 준 영역 안에서 기존 레이아웃·줄바꿈 적용 |
+| `sizing: contain` | DisplayFit | 위젯이 넘긴 로고·보호 공간 전체를 가용 너비·높이에 맞춰 동일 배율로 축소. 확대하지 않음 |
+| `ratio`, `inset` | definition → Card/Display | 위젯 규격과 콘텐츠 안전 여백. 없는 경우 카드 저작 비율·기본 여백 사용 |
+| 컨트롤 | 기존 manifest + controllers/registry | 기존 카드 스코프와 하단 컨트롤러 재사용. 분류를 위해 지원 여부를 중복 선언하지 않음 |
+| `downloads` | definition | 지원 형식. 현재 CI Lockup·Hero의 SVG만 제공 |
+| `DisplayDownload` | 클라이언트 위젯 | label·format·download 콜백 제공. 콜백은 파일명과 Blob 반환 |
+
+카드는 `Display → Mark → Actions → Caption`을 조합합니다. `CardActionsProvider`는 카드별 액션 자리를 연결하고, `CardActions`는 프레임 안쪽 우상단 위치, 공용 버튼은 실행 중 비활성·오류 알림·재시도를 소유합니다. 실행 콜백을 서버 props로 넘기지 않고 위젯의 클라이언트 트리에 두며 버튼 DOM만 해당 카드의 자리로 보냅니다. 미지원 형식과 다운로드 없는 위젯에는 버튼을 만들지 않습니다. 하단 컨트롤러와 Actions는 별도입니다.
+
+CI Lockup·Hero는 내부 버튼을 제거하고 공통 Actions를 사용합니다. 배경은 카드 영역 전체를 채우며 `DisplayFit`은 사방 16px 안쪽에서 로고·보호 공간 또는 치수 콘텐츠만 맞춥니다. 이 여백은 화면 표시용이며 로고 보호 공간 규정에 합산하거나 SVG로 내보내지 않습니다. H와 규정 비례는 그대로 유지하며 SVG 내보내기는 화면 맞춤 배율을 걷어낸 좌표를 사용합니다. 나머지 위젯은 responsive 계약으로 기존 배치를 유지합니다.
+
+### 내보내기 공용화 경계
+
+CI의 `export-svg.ts`는 위젯 안에 둡니다. CI DOM·베이스라인·서체 폴백을 해석해 로고만 투명 배경의 SVG로 만들며, Hero도 같은 구현을 재사용합니다. 버튼·진행·실패 표시는 `cards/actions.tsx`, 파일 저장은 `lib/object-url.ts`가 소유합니다.
+
+지원 형식은 기존 `definition.downloads`에 선언하고 실행 콜백은 위젯에서 직접 제공합니다. 별도 내보내기 실행 레지스트리나 중간 벡터 변환 계층은 추가하지 않습니다. 다른 위젯에서 같은 변환 코드가 실제로 반복될 때 겹치는 부분만 추출합니다.
+
+### 현재 디스플레이 분류
+
+| id | type | category | sizing | 다운로드 |
+| --- | --- | --- | --- | --- |
+| ciLockupHeroWidget | dynamic | identity | contain | SVG |
+| ciLockupWidget | dynamic | identity | contain | SVG |
+| clearspaceOverlayWidget | dynamic | identity | responsive | 없음 |
+| clearspaceViewerWidget | dynamic | identity | responsive | 없음 |
+| hdColorPaletteWidget | dynamic | color | responsive | 없음 |
+| iconGridWidget | dynamic | iconography | responsive | 없음 |
+| layoutGridOverlayWidget | dynamic | layout | responsive | 없음 |
+| layoutGridWidget | dynamic | layout | responsive | 없음 |
+| logoBgPickerWidget | dynamic | identity | responsive | 없음 |
+| logoColorVariantWidget | dynamic | identity | responsive | 없음 |
+| logoDisplayWidget | dynamic | identity | responsive | 없음 |
+| logoOnBgWidget | dynamic | identity | responsive | 없음 |
+| presetPanelDisplay | dynamic | media | responsive | 없음 |
+| stemClearSpaceWidget | dynamic | identity | responsive | 없음 |
+| typeHierarchyWidget | dynamic | typography | responsive | 없음 |
+| typeLanguageWidget | dynamic | typography | responsive | 없음 |
+| typeScrambleWidget | dynamic | typography | responsive | 없음 |
+| typeSpecimenWidget | dynamic | typography | responsive | 없음 |
+| typeWeightWidget | dynamic | typography | responsive | 없음 |
+| staticDisplay | static | media | responsive | 없음 |

@@ -5,6 +5,8 @@ import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 export const stemClearSpace = defineDisplay({
 	id: 'stemClearSpaceWidget',
 	type: 'dynamic',
+	category: 'identity',
+	sizing: 'responsive',
 	dbName: 'scs',
 	name: '여백 규정',
 	description: '심볼 stem 기준 여백 규정 도판.',

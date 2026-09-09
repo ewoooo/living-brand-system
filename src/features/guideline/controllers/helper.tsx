@@ -11,10 +11,10 @@ import {
 	useState,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { ControllerBar } from '@/components/shared/controller'
+import { ControllerBar } from '@/components/shared/controller/index'
 import { cn } from '@/lib/utils'
-import { pickActiveRegion } from './guideline-active-region'
-import { helperLabel } from './guideline-helper-label'
+import { pickActiveRegion } from './active-region'
+import { helperLabel } from './helper-label'
 
 /**
  * 하단 Floating Controller("Helper") — 지금 보고 있는 블록의 컨트롤만 화면 아래 알약에 띄운다.

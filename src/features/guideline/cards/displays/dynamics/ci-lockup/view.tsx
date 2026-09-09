@@ -1,22 +1,17 @@
 'use client'
 
-import { Download } from '@carbon/icons-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { DisplayDownload } from '@/features/guideline/cards/actions'
 import {
 	controllerBoolean,
 	controllerNumber,
 	controllerString,
 	useGuidelineController,
 } from '@/features/guideline/controllers/provider'
-import {
-	CI_STAGE_CONTROL_DARK,
-	CI_STAGE_CONTROL_LIGHT,
-	CI_STAGE_DARK,
-	CI_STAGE_LIGHT,
-} from '../surface'
+import { DisplayFit } from '../../display-fit'
+import { CI_STAGE_DARK, CI_STAGE_LIGHT } from '../surface'
 import { guideColorOf, guideTint, LockupDiagram } from './diagram'
-import { downloadSvg, lockupSvg } from './export-svg'
+import { lockupSvg } from './export-svg'
 import {
 	BRANCH_VALUES,
 	ciLockupHiddenAxes,
@@ -407,37 +402,25 @@ function LockupFigure({
 	const shown = peeking ? diagram : null
 
 	const stageRef = useRef<HTMLDivElement>(null)
-	/* 🔑 내보내기는 **화면에 있는 것을 옮겨 적는다** — 좌표를 다시 만들지 않는다(`export-svg.ts`).
-	   🔴 치수 도판이 켜져 있으면 락업이 판에서 빠져 있어 내보낼 잉크가 없다.
-	   🔴 판(배경)째로 내보내는 갈래는 지웠다(사용자 지정 2026-08-20) — 아이콘 하나로 합치면서
-	      「가져다 쓸 수 있는 것」인 로고만 남겼다. 되살리려면 `lockupSvg`의 둘째 인자가 그 갈래다.
-	   🔴 치수를 가진 판에서는 내보내기가 없다 — hover가 도판을 부르는 순간 락업이 판에서 빠지므로
-	      버튼이 뜰 창이 없다. 로고를 받는 자리는 치수 없는 판(색상 변형)이다. */
+	// 파일 생성은 위젯, 버튼·진행·실패 표시는 카드 Actions가 소유한다.
 	const download = async () => {
 		const root = stageRef.current?.querySelector<HTMLElement>('[data-lockup]')
-		if (!root) return
-		downloadSvg(`${lockup.label} 로고.svg`, await lockupSvg(root, false))
+		if (!root) throw new Error('내보낼 로고가 없습니다.')
+		return {
+			filename: `${lockup.label} 로고.svg`,
+			blob: new Blob([await lockupSvg(root)], { type: 'image/svg+xml' }),
+		}
 	}
 
 	return (
-		// 판 자체가 hover 대상이자 버튼의 기준면이다. 버튼은 도판의 클리핑 영역 밖에 둔다.
-		// 🔴 pointer 이벤트로 잡는다 — 도판 교체는 CSS hover로 표현할 수 없다(보이고 숨는 것이 아니라
-		//    다른 트리로 바뀐다).
-		// 🔴 focus로는 열지 않는다. 도판이 나오면 내보내기 버튼이 판에서 빠지는데, 그 버튼에 포커스가
-		//    닿아 도판이 열리면 **포커스를 쥔 요소 자신이 사라져** 포커스가 body로 튄다. 키보드에서
-		//    치수를 여는 길은 아직 없고, 그 사실은 `docs/11` §7에 결함으로 적어 두었다.
-		// 🔴 `h-full`은 판을 **셀에 맞추기 위한 것**이다. 배치가 첫 칸을 두 줄 높이로 늘리면
-		//    (`featuredSide`) 고정 높이 판이 위쪽에만 붙고 아래가 통째로 빈다 — 실측 656 대 320.
+		// hover는 콘텐츠 전환만 소유한다. 다운로드는 카드 Actions에서 독립적으로 동작한다.
 		<div
-			className="group/export relative size-full min-h-0 min-w-0"
+			className="relative size-full min-h-0 min-w-0"
 			onPointerEnter={() => setPeeking(true)}
 			onPointerLeave={() => setPeeking(false)}
 		>
 			{/* 기본형 Full Color는 밝은 배경 전용이다. 도판은 스크롤 없이 판 경계에서 자른다. */}
-			{/* 🔴 안쪽 패딩을 두지 않는다(사용자 지정 2026-08-19) — 판은 캔버스이고, 그 안의 것이
-				판 끝까지 닿을 수 있어야 한다. 여백이 필요한 것은 판이 아니라 락업이고 그것은
-				클리어스페이스가 규정으로 갖는다. */}
-			{/* 카드 크기는 유지하고 내부 락업과 배경만 바꾼다. */}
+			{/* 배경은 카드 영역을 채우고, 로고·보호 공간만 가용 영역 안에 맞춘다. */}
 			<div
 				ref={stageRef}
 				className="relative flex size-full min-h-0 min-w-0 items-center justify-center overflow-clip border border-border"
@@ -450,6 +433,7 @@ function LockupFigure({
 					툭 바뀌면 다른 것으로 갈아탄 것처럼 읽힌다. 겹쳐 두는 덕에 도판이 마운트를
 					반복하지 않아 그 안의 FLIP도 흔들리지 않는다. */}
 				<div
+					className="absolute inset-0"
 					style={{
 						opacity: shown ? 0 : 1,
 						transition: `opacity ${MORPH}`,
@@ -458,15 +442,17 @@ function LockupFigure({
 						transitionDelay: shown ? `${MORPH_HOLD_MS}ms` : '0ms',
 					}}
 				>
-					<ClearSpaceFrame h={h} clearSpace={clearSpace} guide={guide} tone={tone}>
-						<Composed
-							lockup={lockup}
-							h={h}
-							color={color}
-							symbolT={symbolT}
-							symbolColors={symbolColors}
-						/>
-					</ClearSpaceFrame>
+					<DisplayFit>
+						<ClearSpaceFrame h={h} clearSpace={clearSpace} guide={guide} tone={tone}>
+							<Composed
+								lockup={lockup}
+								h={h}
+								color={color}
+								symbolT={symbolT}
+								symbolColors={symbolColors}
+							/>
+						</ClearSpaceFrame>
+					</DisplayFit>
 				</div>
 				{diagram ? (
 					<div
@@ -477,26 +463,16 @@ function LockupFigure({
 							transitionDelay: shown ? '0ms' : `${MORPH_HOLD_MS}ms`,
 						}}
 					>
-						{diagram}
+						<DisplayFit>{diagram}</DisplayFit>
 					</div>
 				) : null}
 			</div>
-			{/* 🔴 도판이 나와 있는 동안에는 락업이 판에 없다 — 내보낼 것이 없으므로 그리지 않는다.
-				🔴 hover에만 나타나지만 키보드에서도 닿아야 하므로 focus-visible에도 연다. */}
 			{shown ? null : (
-				<Button
-					type="button"
-					variant="outline"
-					size="icon-sm"
-					shape="sharp"
-					aria-label={`${lockup.label} SVG 내려받기`}
-					className={`absolute top-2 right-2 opacity-0 transition-opacity group-hover/export:opacity-100 focus-visible:opacity-100 ${
-						tone === 'dark' ? CI_STAGE_CONTROL_DARK : CI_STAGE_CONTROL_LIGHT
-					}`}
-					onClick={() => void download()}
-				>
-					<Download />
-				</Button>
+				<DisplayDownload
+					format="svg"
+					label={`${lockup.label} SVG 내려받기`}
+					download={download}
+				/>
 			)}
 		</div>
 	)

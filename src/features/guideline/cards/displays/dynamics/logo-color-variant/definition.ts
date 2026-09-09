@@ -7,6 +7,8 @@ import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 export const logoColorVariant = defineDisplay({
 	id: 'logoColorVariantWidget',
 	type: 'dynamic',
+	category: 'identity',
+	sizing: 'responsive',
 	dbName: 'lcv',
 	name: '로고 색상 변형',
 	description: '기본형에서 파생한 WHITE·단색 변형을 나란히 본다.',

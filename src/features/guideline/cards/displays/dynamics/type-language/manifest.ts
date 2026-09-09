@@ -1,4 +1,8 @@
-import type { GuidelineControllerManifest } from '@/features/guideline/controllers/contract'
+import type {
+	CardController,
+	GuidelineControllerManifest,
+} from '@/features/guideline/controllers/contract'
+import type { TypeLanguageWidget } from '@/payload-types'
 import { LANGUAGES } from '../brand-typeface'
 
 export const LANGUAGE = {
@@ -12,3 +16,13 @@ export const TYPE_LANGUAGE_MANIFEST = {
 	id: 'type-language',
 	groups: [{ id: 'language', title: '언어', controls: [LANGUAGE] }],
 } satisfies GuidelineControllerManifest
+
+export function typeLanguageController(display: TypeLanguageWidget): CardController | null {
+	if (display.layout === 'compare') return null
+	return {
+		manifest: TYPE_LANGUAGE_MANIFEST,
+		restrictions: {
+			controls: [{ controlId: LANGUAGE.id, defaultValue: display.initialLanguage ?? 'ko' }],
+		},
+	}
+}

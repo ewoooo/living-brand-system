@@ -23,7 +23,7 @@ export const BLOCK_LAYOUTS = [
 ] as const
 export type BlockLayout = (typeof BLOCK_LAYOUTS)[number]['value']
 
-/** 줄 높이 단계. 실제 높이는 `rhythm.ts`의 `CARD_ROW_HEIGHT`가 소유한다. */
+/** 줄 높이 단계. 실제 높이는 `components/sections/row-height.ts`의 `CARD_ROW_HEIGHT`가 소유한다. */
 export const ROW_HEIGHTS = [
 	{ label: '낮게', value: 'low' },
 	{ label: '보통', value: 'medium' },
@@ -35,8 +35,7 @@ export type RowHeight = (typeof ROW_HEIGHTS)[number]['value']
  * 기본 블록의 필드. 블록의 책임은 다섯이다(2026-09-07 모델): 카드 레이아웃, 제목·설명, 에셋 다운로드 유무,
  * rules, 그리고 앵커(섹션만 — `anchorField`). 그 밖의 것은 카드가 갖는다.
  *
- * 🔴 배치는 **높이 기준**이다. 블록이 줄 높이(`rowHeight`)를 정하고 카드 폭은 각 카드의 비율에서 나온다.
- *    캐러셀은 그 줄 하나를 가로로 넘기고, 격자는 줄이 차면 다음 줄로 내려간다.
+ * 격자는 열 수로 동일 너비를 배분하고, 캐러셀은 줄 높이와 카드 비율로 너비를 정한다.
  */
 export function baseContentFields(): Field[] {
 	return [
@@ -55,6 +54,19 @@ export function baseContentFields(): Field[] {
 					admin: { width: '50%', description: '카드를 어떻게 놓을지입니다.' },
 				},
 				{
+					name: 'columns',
+					label: '열 수',
+					type: 'select',
+					defaultValue: '2',
+					options: ['1', '2', '3', '4'].map((value) => ({ label: `${value}열`, value })),
+					admin: {
+						width: '50%',
+						condition: (_, siblingData) => siblingData?.layout !== 'carousel',
+						description:
+							'최대 열 수입니다. 좁은 영역에서는 열 수가 줄고, 모바일은 1열입니다.',
+					},
+				},
+				{
 					name: 'rowHeight',
 					type: 'select',
 					required: true,
@@ -63,7 +75,9 @@ export function baseContentFields(): Field[] {
 					options: [...ROW_HEIGHTS],
 					admin: {
 						width: '50%',
-						description: '카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.',
+						condition: (_, siblingData) => siblingData?.layout === 'carousel',
+						description:
+							'캐러셀 카드의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.',
 					},
 				},
 			],

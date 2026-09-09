@@ -15,8 +15,8 @@ export const CARD_MARKS = [
  *
  * 🔴 비율은 규격 타입에서 고른다(`displays/ratio.ts`). 디스플레이는 정적(이미지) 또는 다이나믹(위젯)
  *    중 **하나**다. 캡션은 선택이고 제목·설명도 각각 단독으로 쓸 수 있다 — 빈 자리는 렌더하지 않는다.
- * 🔴 카드는 폭을 갖지 않는다. 줄 높이는 블록이 정하고(`rowHeight`) 폭은 비율에서 계산된다 — 그래서
- *    카드의 크기를 정하는 값은 비율 하나다. Mark와 캡션은 카드별 선택 속성이다.
+ * 🔴 카드는 자체 폭을 갖지 않는다. 격자는 열 수로 너비를 배분하고 캐러셀은 줄 높이로 너비를 계산한다.
+ *    카드는 비율을 소유한다. Mark와 캡션은 카드별 선택 속성이다.
  */
 export function cardFields(): Field[] {
 	return [
@@ -29,7 +29,7 @@ export function cardFields(): Field[] {
 			options: [...CARD_RATIO_OPTIONS],
 			admin: {
 				description:
-					'카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 높이는 블록의 줄 높이를 따릅니다.',
+					'카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 격자는 열 수로 너비를, 캐러셀은 줄 높이로 높이를 정합니다.',
 			},
 		},
 		{

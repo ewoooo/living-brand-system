@@ -2,7 +2,7 @@ import { render } from '@testing-library/react'
 import { createElement } from 'react'
 import { describe, expect, it } from 'vitest'
 import type { GuidelineDocument } from '@/payload-types'
-import { GuidelineBlocks } from './guideline-blocks'
+import { GuidelineSections } from './guideline-sections'
 
 const card = {
 	id: 'card-1',
@@ -19,15 +19,15 @@ const section = (extra: object): NonNullable<GuidelineDocument['blocks']>[number
 		...extra,
 	}) as never
 
-describe('GuidelineBlocks', () => {
+describe('GuidelineSections', () => {
 	it('Better Editor preview에서만 블록 선택 ID를 노출한다', () => {
 		const blocks = [section({ title: 'Color', anchor: 'color' })]
-		const { container, rerender } = render(createElement(GuidelineBlocks, { blocks }))
+		const { container, rerender } = render(createElement(GuidelineSections, { blocks }))
 
 		expect(container.querySelector('[data-better-editor-id]')).toBeNull()
 		expect(container.querySelector('section')?.id).toBe('color')
 
-		rerender(createElement(GuidelineBlocks, { blocks, betterEditor: true }))
+		rerender(createElement(GuidelineSections, { blocks, betterEditor: true }))
 
 		expect(container.querySelector('[data-better-editor-id]')).toHaveAttribute(
 			'data-better-editor-id',
@@ -37,7 +37,7 @@ describe('GuidelineBlocks', () => {
 
 	it('제목 없는 섹션은 헤딩과 앵커를 만들지 않는다', () => {
 		const { container } = render(
-			createElement(GuidelineBlocks, { blocks: [section({ id: 'hero', anchor: 'hero' })] }),
+			createElement(GuidelineSections, { blocks: [section({ id: 'hero', anchor: 'hero' })] }),
 		)
 
 		expect(container.querySelector('h2')).toBeNull()

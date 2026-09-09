@@ -331,6 +331,8 @@ function ControllerControl({
 						disabled={disabled}
 					>
 						<Controller.Textarea
+							rows={3}
+							className="field-sizing-fixed min-h-0 overflow-y-auto scrollbar-none"
 							value={text}
 							maxLength={definition.maxLength}
 							placeholder={definition.placeholder}

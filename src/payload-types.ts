@@ -328,16 +328,20 @@ export interface SectionBlock {
    */
   layout: 'grid' | 'carousel';
   /**
-   * 카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   * 최대 열 수입니다. 좁은 영역에서는 열 수가 줄고, 모바일은 1열입니다.
    */
-  rowHeight: 'low' | 'medium' | 'high';
+  columns?: ('1' | '2' | '3' | '4') | null;
+  /**
+   * 캐러셀 카드의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   */
+  rowHeight?: ('low' | 'medium' | 'high') | null;
   /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
     | {
         /**
-         * 카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.
+         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 격자는 열 수로 너비를, 캐러셀은 줄 높이로 높이를 정합니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
         /**
@@ -451,9 +455,6 @@ export interface ClearspaceOverlayWidget {
    * 그리드 레이어(clearSpace). 로고와 같은 canvas.
    */
   gridLayer: number | BrandLogo;
-  /**
-   * 표시 배율(%). 100 = 자기 크기 그대로. 자기 크기 × (값/100).
-   */
   scalePercent?: number | null;
   id?: string | null;
   blockName?: string | null;
@@ -578,13 +579,7 @@ export interface LogoDisplayWidget {
    * 표시할 이미지입니다.
    */
   logo: number | BrandLogo;
-  /**
-   * 폭(px). 비우면 본연 크기.
-   */
   width?: number | null;
-  /**
-   * 높이(px). 비우면 본연 크기.
-   */
   height?: number | null;
   /**
    * 이미지 주변 여백(px).
@@ -607,9 +602,6 @@ export interface TypeScrambleWidget {
    * 글자 크기(px)입니다. 줄 수와 판 높이에 맞춰 정합니다.
    */
   fontSize?: number | null;
-  /**
-   * 판 높이(px)입니다. 고정이라 스크램블 중에도 판형이 흔들리지 않습니다. 글자는 가운데 서므로 위아래 여백은 이 높이에서 글자 높이를 뺀 만큼입니다.
-   */
   panelHeight?: number | null;
   /**
    * 글자 색입니다. 비우면 기본 전경색을 씁니다.
@@ -981,7 +973,7 @@ export interface TypeLanguageWidget {
    */
   initialLanguage?: ('ko' | 'en' | 'enCaps') | null;
   /**
-   * 나란히 두면 세 언어를 한 화면에서 비교합니다(원본은 국문·영문을 좌우로 놓았습니다). 좁은 자리에서는 전환이 낫습니다.
+   * 비교를 고르면 언어별 카드로 나누고, 각 카드에 해당 언어의 명세를 표시합니다.
    */
   layout?: ('single' | 'compare') | null;
   id?: string | null;
@@ -1111,16 +1103,20 @@ export interface BaseBlock {
    */
   layout: 'grid' | 'carousel';
   /**
-   * 카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   * 최대 열 수입니다. 좁은 영역에서는 열 수가 줄고, 모바일은 1열입니다.
    */
-  rowHeight: 'low' | 'medium' | 'high';
+  columns?: ('1' | '2' | '3' | '4') | null;
+  /**
+   * 캐러셀 카드의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   */
+  rowHeight?: ('low' | 'medium' | 'high') | null;
   /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
     | {
         /**
-         * 카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.
+         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 격자는 열 수로 너비를, 캐러셀은 줄 높이로 높이를 정합니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
         /**
@@ -1217,16 +1213,20 @@ export interface OverviewBlock {
    */
   layout: 'grid' | 'carousel';
   /**
-   * 카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   * 최대 열 수입니다. 좁은 영역에서는 열 수가 줄고, 모바일은 1열입니다.
    */
-  rowHeight: 'low' | 'medium' | 'high';
+  columns?: ('1' | '2' | '3' | '4') | null;
+  /**
+   * 캐러셀 카드의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   */
+  rowHeight?: ('low' | 'medium' | 'high') | null;
   /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
     | {
         /**
-         * 카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.
+         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 격자는 열 수로 너비를, 캐러셀은 줄 높이로 높이를 정합니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
         /**
@@ -1323,16 +1323,20 @@ export interface ExamplesBlock {
    */
   layout: 'grid' | 'carousel';
   /**
-   * 카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   * 최대 열 수입니다. 좁은 영역에서는 열 수가 줄고, 모바일은 1열입니다.
    */
-  rowHeight: 'low' | 'medium' | 'high';
+  columns?: ('1' | '2' | '3' | '4') | null;
+  /**
+   * 캐러셀 카드의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   */
+  rowHeight?: ('low' | 'medium' | 'high') | null;
   /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
     | {
         /**
-         * 카드 판의 비율입니다. 높이는 블록의 줄 높이를 따르고 폭이 여기서 나옵니다.
+         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 격자는 열 수로 너비를, 캐러셀은 줄 높이로 높이를 정합니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
         /**
@@ -2639,6 +2643,7 @@ export interface SectionBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   layout?: T;
+  columns?: T;
   rowHeight?: T;
   cards?:
     | T
@@ -2908,6 +2913,7 @@ export interface BaseBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   layout?: T;
+  columns?: T;
   rowHeight?: T;
   cards?:
     | T
@@ -2960,6 +2966,7 @@ export interface OverviewBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   layout?: T;
+  columns?: T;
   rowHeight?: T;
   cards?:
     | T
@@ -3012,6 +3019,7 @@ export interface ExamplesBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   layout?: T;
+  columns?: T;
   rowHeight?: T;
   cards?:
     | T

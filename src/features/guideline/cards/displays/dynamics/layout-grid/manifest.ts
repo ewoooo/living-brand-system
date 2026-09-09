@@ -1,5 +1,9 @@
 import type { GuidelineControllerManifest } from '@/features/guideline/controllers/contract'
-import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
+import type {
+	ControllerControlDefinition,
+	ControllerControlRestriction,
+	StudioControllerRestrictions,
+} from '@/modules/studio-controller/controller-definition'
 
 // Key Layout 정본 규칙 + 그것을 어떤 컨트롤로 조작하는지. 이 파일이 이 블록의 **매니페스트**다.
 //
@@ -59,3 +63,31 @@ export const LAYOUT_GRID_MANIFEST = {
 		{ id: 'guides', title: '표시', controls: [GUIDES] },
 	],
 } as const satisfies GuidelineControllerManifest
+
+/** 저장값과 조절 허용 여부는 이 위젯이 해석한다. */
+export function layoutGridRestrictions(
+	fields: Record<string, unknown>,
+): StudioControllerRestrictions {
+	return {
+		controls: [
+			foldRestriction('marginPct', fields.marginPct, fields.marginAdjustable),
+			foldRestriction('gutterX', fields.gutterX, fields.gutterXAdjustable),
+			foldRestriction('gutterY', fields.gutterY, fields.gutterYAdjustable),
+			foldRestriction('guidesOn', fields.guidesOn, fields.guidesAdjustable),
+		],
+	}
+}
+
+/** 미설정은 허용하고 명시한 false만 readonly로 만든다. */
+function foldRestriction(
+	controlId: string,
+	value: unknown,
+	adjustable: unknown,
+): ControllerControlRestriction {
+	const allowed = (adjustable ?? true) !== false
+	return {
+		controlId,
+		...(typeof value === 'number' || typeof value === 'boolean' ? { defaultValue: value } : {}),
+		...(allowed ? {} : { availability: 'readonly' as const }),
+	}
+}

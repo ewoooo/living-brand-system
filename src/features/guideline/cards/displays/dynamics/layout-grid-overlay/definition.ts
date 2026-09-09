@@ -5,6 +5,10 @@ import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 export const layoutGridOverlay = defineDisplay({
 	id: 'layoutGridOverlayWidget',
 	type: 'dynamic',
+	category: 'layout',
+	sizing: 'responsive',
+	ratio: '3:2',
+	inset: '10%',
 	dbName: 'lgo',
 	name: '레이아웃 그리드 오버레이',
 	description: '리플릿 표본 위에 여백·열 격자를 겹친다.',

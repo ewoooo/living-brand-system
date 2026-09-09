@@ -1,8 +1,8 @@
 'use client'
 
 import { Typography } from '@/components/ui/typography'
-import { GUIDELINE_TYPOGRAPHY } from '@/features/guideline/components/globals/guideline-typography'
-import { GuidelineSpecTable } from '@/features/guideline/components/globals/spec-table'
+import { GUIDELINE_TYPOGRAPHY } from '@/features/guideline/components/typography/guideline-typography'
+import { GuidelineSpecTable } from '@/features/guideline/components/typography/spec-table'
 import {
 	controllerNumber,
 	controllerString,

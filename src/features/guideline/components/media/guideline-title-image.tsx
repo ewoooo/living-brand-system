@@ -1,37 +1,5 @@
-import { ContentHeading } from '@/components/shared/content-heading'
 import type { GuidelineDocument } from '@/payload-types'
 import { GuidelineImage } from './guideline-image'
-import { GUIDELINE_TYPOGRAPHY } from './guideline-typography'
-import type { GuidelineVariant } from './guideline-variant'
-
-const HEADER_STYLE = {
-	topic: { level: 1, ...GUIDELINE_TYPOGRAPHY.topicTitle },
-	section: { level: 2, ...GUIDELINE_TYPOGRAPHY.blockTitle },
-} as const
-
-export function GuidelineHeader({
-	title,
-	variant,
-	className,
-}: {
-	title?: string | null
-	variant: GuidelineVariant
-	className?: string
-}) {
-	if (!title) return null
-	const style = HEADER_STYLE[variant]
-
-	return (
-		<ContentHeading
-			title={title}
-			level={style.level}
-			size={style.size}
-			weight={style.weight}
-			className={className}
-			titleClassName={style.className}
-		/>
-	)
-}
 
 /**
  * 히어로가 없는 토픽의 폴백. 🔴 리포의 정적 에셋이라 **환경마다 업로드하지 않아도** 뜬다 —
@@ -40,7 +8,7 @@ export function GuidelineHeader({
  */
 const HERO_FALLBACK = { url: '/images/hero_guideline.png' }
 
-export function GuidelineHeaderImage({ image }: { image?: GuidelineDocument['headerImage'] }) {
+export function GuidelineTitleImage({ image }: { image?: GuidelineDocument['headerImage'] }) {
 	const value = typeof image === 'object' && image?.url ? image : HERO_FALLBACK
 
 	return (

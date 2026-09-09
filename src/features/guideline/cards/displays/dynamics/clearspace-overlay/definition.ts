@@ -7,6 +7,8 @@ import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 export const clearspaceOverlay = defineDisplay({
 	id: 'clearspaceOverlayWidget',
 	type: 'dynamic',
+	category: 'identity',
+	sizing: 'responsive',
 	dbName: 'cso',
 	name: '클리어스페이스 오버레이',
 	description: '로고 위에 여백 격자를 겹쳐 보인다.',

@@ -1,5 +1,9 @@
-import type { GuidelineControllerManifest } from '@/features/guideline/controllers/contract'
-import { SAMPLE_PARAGRAPH, TIERS } from '../brand-typeface'
+import type {
+	CardController,
+	GuidelineControllerManifest,
+} from '@/features/guideline/controllers/contract'
+import type { TypeHierarchyWidget } from '@/payload-types'
+import { LANGUAGES, SAMPLE_PARAGRAPH, TIERS } from '../brand-typeface'
 
 export const TYPE_HIERARCHY_MANIFEST = {
 	id: 'type-hierarchy',
@@ -17,3 +21,16 @@ export const TYPE_HIERARCHY_MANIFEST = {
 		},
 	],
 } satisfies GuidelineControllerManifest
+
+export function typeHierarchyController(display: TypeHierarchyWidget): CardController | null {
+	const language = LANGUAGES.find((l) => l.key === display.language)?.key ?? 'ko'
+	return {
+		manifest: TYPE_HIERARCHY_MANIFEST,
+		restrictions: {
+			controls: TIERS.map((tier) => ({
+				controlId: tier.key,
+				defaultValue: SAMPLE_PARAGRAPH[language][tier.key],
+			})),
+		},
+	}
+}

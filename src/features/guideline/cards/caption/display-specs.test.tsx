@@ -3,7 +3,7 @@ import { afterEach, expect, it } from 'vitest'
 import { CardBlock } from '../../blocks/card-block'
 import { GuidelineControllerScope, useGuidelineController } from '../../controllers/provider'
 import { cardControllerFor } from '../../controllers/registry'
-import { Card } from '../component'
+import { GuidelineCard } from '../component'
 import { TypeLanguageView } from '../displays/dynamics/type-language/view'
 import type { DisplayData } from '../displays/registry.render'
 import { CardCaption } from './component'
@@ -74,7 +74,7 @@ it('언어 표본과 캡션은 함께 바뀌고 다른 카드 및 초기화와 �
 
 it('위계 명세는 디스플레이 밖 캡션에 있고 저작 캡션도 보존한다', () => {
 	const { container } = render(
-		<Card
+		<GuidelineCard
 			card={{
 				ratio: '16:9',
 				caption: { title: '저작한 설명' },

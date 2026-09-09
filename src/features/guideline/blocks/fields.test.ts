@@ -80,3 +80,17 @@ describe('section anchor', () => {
 		expect(runHook('key-layout', 'Grid System Overview')).toBe('key-layout')
 	})
 })
+
+it('그리드 열 수와 캐러셀 높이는 배치에 맞는 설정만 노출한다', () => {
+	const fields = baseContentFields()
+	const columns = named(fields, 'columns')
+	const height = named(fields, 'rowHeight')
+	expect(columns).toMatchObject({
+		defaultValue: '2',
+		options: [1, 2, 3, 4].map((n) => ({ label: `${n}열`, value: String(n) })),
+	})
+	for (const layout of ['grid', 'carousel']) {
+		expect(columns.admin?.condition?.({}, { layout }, {} as never)).toBe(layout === 'grid')
+		expect(height.admin?.condition?.({}, { layout }, {} as never)).toBe(layout === 'carousel')
+	}
+})

@@ -1,18 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { Slider } from '@/components/ui/slider'
+import { controllerString, useGuidelineController } from '@/features/guideline/controllers/provider'
 import { AVAILABLE_WEIGHTS, BRAND_FONT_STACK, WEIGHTS, type WeightKey } from '../brand-typeface'
-import { CONTROL_VALUE } from '../readout'
+import { WEIGHT } from './manifest'
 
-// 문구·크기·행간을 묶어 두고 굵기만 갈아 끼운다. 화면에서 달라지는 게 하나뿐이라 그 하나가 보인다.
-//
-// 🔴 3단에만 선다. HD체는 가변 폰트가 아니라 Light/Medium/Bold 세 파일이라 중간값이 존재하지 않는다 —
-//    연속 슬라이더는 브라우저가 합성한 자형을 원본인 척 보여주는 거짓말이 된다.
-//    가변 폰트(wght 축)가 들어오면 STOPS 대신 축의 min/max를 쓰고 step만 잘게 낮추면 연속이 된다.
+// 문구·크기·행간을 유지하고 카드 컨트롤에서 고른 굵기만 바꾼다.
 
-/** 슬라이더와 눈금 라벨이 같은 폭이어야 눈금이 단에 붙어 보인다. */
-const CONTROL_WIDTH = 'w-52'
 /**
  * 표본 크기. 판 폭에 비례해 어느 셀에 놓여도 같은 그림이 나온다.
  * 🔴 `%`가 아니라 `cqi`인 이유: `%` 글꼴 크기는 부모 글꼴 기준이고, 판이 그리드 셀 안에 있으면
@@ -36,19 +29,19 @@ export function TypeWeightView({
 	bodyLeading: number
 	initialWeight: WeightKey
 }) {
-	const [index, setIndex] = useState(() =>
-		Math.max(
-			0,
-			WEIGHTS.findIndex((candidate) => candidate.key === initialWeight),
-		),
+	const { values } = useGuidelineController()
+	const key = controllerString(
+		values,
+		WEIGHT.id,
+		WEIGHTS.map((candidate) => candidate.key),
+		initialWeight,
 	)
-	const weight = WEIGHTS[index] ?? WEIGHTS[0]
+	const weight = WEIGHTS.find((candidate) => candidate.key === key) ?? WEIGHTS[0]
 
 	// 파일에 없는 굵기는 브라우저가 합성한다. 그 사실을 안 알리면 합성 자형을 규정 서체로 오해한다.
 	const synthesized = !AVAILABLE_WEIGHTS.includes(weight.value)
 
 	return (
-		// 컨트롤도 판 안에 둔다 — 굵기를 바꾸는 손잡이와 그 결과가 한 테두리 안에 있어야 한 화면으로 읽힌다.
 		<div
 			className="flex size-full min-h-0 min-w-0 flex-col gap-8 border border-border px-8 py-10"
 			// 표본 크기가 셀이 아니라 이 판을 기준으로 잡히게 한다(TITLE_SIZE 주석 참고).
@@ -82,40 +75,6 @@ export function TypeWeightView({
 			</div>
 
 			<div className="flex flex-col gap-3">
-				{/* 컨트롤은 유한 폭을 지킨다 — 판의 폭은 프레임 소관이고 컨트롤이 늘어날 이유가 없다. */}
-				<div className="flex w-fit items-end gap-4">
-					<div className="flex flex-col gap-2">
-						<Slider
-							min={0}
-							max={WEIGHTS.length - 1}
-							step={1}
-							value={[index]}
-							onValueChange={([next]) => setIndex(next ?? 0)}
-							aria-label="서체 굵기"
-							// 순번(0·1·2)이 아니라 굵기 이름이 읽히게 한다.
-							aria-valuetext={`${weight.label} ${weight.value}`}
-							className={CONTROL_WIDTH}
-						/>
-						{/* 슬라이더가 aria-valuetext로 이미 말하므로 눈금은 시각 전용이다. */}
-						<div className={`flex ${CONTROL_WIDTH} justify-between`} aria-hidden="true">
-							{WEIGHTS.map((candidate, i) => (
-								<span
-									key={candidate.key}
-									className={`font-body text-xs ${
-										i === index ? 'text-foreground' : 'text-muted-foreground'
-									}`}
-								>
-									{candidate.label}
-								</span>
-							))}
-						</div>
-					</div>
-
-					<span className={`${CONTROL_VALUE} text-sm`}>
-						{weight.label} {weight.value}
-					</span>
-				</div>
-
 				{/*
 					안내와 경고가 같은 자리를 쓴다 — 굵기를 바꿀 때마다 줄이 생겼다 사라지면 판이 들썩인다.
 					role="status"라 합성 경고가 스크린리더에도 전달된다.
@@ -128,7 +87,7 @@ export function TypeWeightView({
 				>
 					{synthesized
 						? `${weight.label}(${weight.value})는 아직 서체 파일에 없어 브라우저가 대신 그린 굵기입니다. 원본 자형과 다릅니다.`
-						: '슬라이더를 움직여 굵기 3종을 비교해 보세요. 굵기는 세 단에만 멈춥니다.'}
+						: '하단 컨트롤에서 굵기 3종을 비교해 보세요.'}
 				</p>
 			</div>
 		</div>

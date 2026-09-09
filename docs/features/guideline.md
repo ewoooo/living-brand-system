@@ -25,20 +25,20 @@
             └─ caption — 선택 제목·설명과 배치
 ```
 
-트리의 `cards[]`는 네 블록 모두에 적용됩니다. **section 안에 base가 중첩되는 구조는 아닙니다.** 이름이 달라도 네 블록은 같은 `CardBlock`으로 렌더합니다. 따라서 일반 블록의 제목을 자동으로 h3로 낮추지 않습니다. 카드 캡션은 `figcaption`이고, 제목도 문서 헤딩이 아닌 문단입니다.
+트리의 `cards[]`는 네 블록 모두에 적용됩니다. **section 안에 base가 중첩되는 구조는 아닙니다.** 이름이 달라도 네 블록은 `CardBlock` 어댑터를 통해 같은 `GuidelineSection`으로 렌더합니다. 따라서 일반 블록의 제목을 자동으로 h3로 낮추지 않습니다. 카드 캡션은 `figcaption`이고, 제목도 문서 헤딩이 아닌 문단입니다.
 
 Figma의 `Section Heading`(61:3503)은 코드의 토픽 히어로입니다. `Overview Section`(117:882)·`Incorrect Usage Section`(136:213)이라는 이름만으로 코드의 `section` 타입이나 중첩 관계를 결정하지 않습니다. 코드에서 `section`의 차이는 앵커와 목차입니다.
 
 제목·설명은 카드 유무와 독립적으로 표시합니다. 카드가 없는 텍스트 전용 블록에는 카드 프레임을 만들지 않습니다. 제목이 있는 `section`은 카드가 없어도 앵커와 목차를 유지합니다. 제목·설명·유효한 디스플레이가 모두 없으면 블록을 숨깁니다.
 
-격자는 카드 판의 비율을 유지하고, 판 폭이 격자의 콘텐츠 폭을 넘으면 높이도 함께 줄입니다. `rowHeight`는 목표 높이이며 가용 폭 제한이 우선합니다. 캐러셀은 가로 넘김을 제공하므로 목표 높이를 유지합니다. 모바일에서는 두 배치 모두 한 카드가 가용 폭을 채웁니다.
+격자는 `columns` 1~4열(기본 2열)로 카드 너비를 균등 배분하고 높이는 카드 비율로 계산합니다. 마지막 행은 같은 너비를 유지하며 첫 열부터 채웁니다. 모바일은 1열이며, 콘텐츠 폭에 따른 열 수 제한은 [디자인 시스템 §7](../09-design-system.md)이 소유합니다. `rowHeight`는 캐러셀에서만 노출·적용하고 그리드의 기존 값은 보존합니다.
 
 ### 2.2 저작 설정의 소유권
 
 | 소유 계층 | 설정·책임 | 경계 |
 | --- | --- | --- |
 | 토픽 문서 | 챕터 관계, 제목·슬러그·히어로 이미지, 발행 상태, 블록 순서, 문서 rules | 카드의 Mark·비율을 일괄 지정하지 않음 |
-| 블록 | 제목·설명, 카드 목록, `layout`, `rowHeight`, 블록 rules | 개별 카드 상태·이미지 크롭을 소유하지 않음 |
+| 블록 | 제목·설명, 카드 목록, `layout`, `columns`, `rowHeight`, 블록 rules | 개별 카드 상태·이미지 크롭을 소유하지 않음 |
 | section 추가 속성 | `anchor`, 목차 항목 | 다른 블록의 부모가 아님 |
 | 카드 | `ratio`, `mark`, 디스플레이 하나, 캡션 | 줄 높이·열 수·페이지 폭을 다시 정하지 않음 |
 | 디스플레이 | 이미지·위젯의 콘텐츠와 입력값 | 카드 캡션·Mark·블록 rules를 소유하지 않음 |
@@ -55,7 +55,7 @@ Figma의 `Section Heading`(61:3503)은 코드의 토픽 히어로입니다. `Ove
 | `ok` | 허용 사례 | △와 접근 가능한 이름 OK |
 | `dont` | 금지 사례 | ✕와 접근 가능한 이름 Don't |
 
-옵션은 `cards/schema.ts`, 렌더링은 `cards/component.tsx`가 소유합니다. 새 카드의 기본값은 `none`입니다. 격자·캐러셀 모두 같은 섹션에서 서로 다른 값을 사용할 수 있습니다. Mark는 디스플레이나 캡션 배치와 독립이며 오버레이 캡션 위에도 표시됩니다. 표식의 모양·위치는 이번 이관에서 기존 스타일을 유지합니다.
+옵션은 `cards/schema.ts`, 렌더링은 `cards/mark.tsx`가 소유합니다. 새 카드의 기본값은 `none`입니다. 격자·캐러셀 모두 같은 섹션에서 서로 다른 값을 사용할 수 있습니다. Mark는 디스플레이나 캡션 배치와 독립이며 오버레이 캡션 위에도 표시됩니다. 표식의 모양·위치는 이번 이관에서 기존 스타일을 유지합니다.
 
 Mark는 **저작자가 붙이는 사례 표식**입니다. 검수 Rule·검수 실행 결과·이미지의 정답 여부를 자동 생성하지 않습니다.
 
@@ -71,14 +71,15 @@ Mark는 **저작자가 붙이는 사례 표식**입니다. 검수 Rule·검수 �
 | 기본 본문·rem | `src/app/(frontend)/styles.css` | 앱 기본값 |
 | 셸·스크롤·main | `src/components/global/section-layout.tsx` | 가이드라인 외 화면도 공유 |
 | 본문 최대 폭·가로 패딩 | `src/components/shared/content-frame.tsx` | `padded`는 도판, `heading`은 블록 제목 |
-| 블록 간격·카드 줄 높이·격자 간격 | `blocks/rhythm.ts` | 블록 목록과 카드 목록 |
-| 산문의 역할별 크기·굵기·행간·자간 | `components/globals/guideline-typography.ts` | 제목·블록 설명·캡션·스펙. 도판 내부 표본은 제외 |
-| 토픽·블록 헤딩 | `components/globals/guideline-header.tsx` | h1·h2 의미와 텍스트 단계 |
-| 블록 설명 | `components/globals/guideline-description.tsx` | 설명의 기본 서식 |
-| 판·Mark | `cards/component.tsx` | 비율·클리핑·표식의 위치 |
+| 섹션 간격 | `components/guideline-sections.tsx` | 섹션 목록 |
+| 카드 줄 높이·격자 간격 | `components/sections/row-height.ts`·`grid-container.tsx`·`carousel-container.tsx` | 콘텐츠 배치 |
+| 산문의 역할별 크기·굵기·행간·자간 | `components/typography/guideline-typography.ts` | 제목·블록 설명·캡션·스펙. 도판 내부 표본은 제외 |
+| 토픽·블록 헤딩 | `components/typography/guideline-header.tsx` | h1·h2 의미와 텍스트 단계 |
+| 블록 설명 | `components/typography/guideline-description.tsx` | 설명의 기본 서식 |
+| 카드 프레임·Mark | `cards/component.tsx`·`cards/mark.tsx` | 비율·클리핑·표식의 위치 |
 | 동적 디스플레이의 크기 | `cards/component.tsx`와 각 위젯 루트 | 카드 영역을 채움. 자체 고정 크기·내부 스크롤·전체 자동 축소 없음 |
 | 하단·오버레이 캡션 | `cards/caption/component.tsx` | 크기·굵기·행간·패딩·텍스트 폭 |
-| 2열 스펙 표 | `components/globals/spec-table-converters.tsx` | 라벨·값 목록. 다른 열 수는 기본 표 |
+| 2열 스펙 표 | `components/typography/spec-table-converters.tsx` | 라벨·값 목록. 다른 열 수는 기본 표 |
 | 브랜드 표본 면 | `cards/displays/dynamics/surface.ts` | 테마 면과 규정에 고정된 브랜드 면 구분 |
 | 위젯 판독·컨트롤 값 | `cards/displays/dynamics/readout.ts` | 캡션과 별개의 도판 내부 텍스트 |
 
@@ -117,11 +118,11 @@ Mark는 **저작자가 붙이는 사례 표식**입니다. 검수 Rule·검수 �
 
 이 단계는 모든 입력·카드 비율에서 내부 배치가 완성됐다는 뜻이 아닙니다. 작은 카드의 타입 입력·긴 문단·많은 아이콘·CI 치수 배치는 후속 조정 대상입니다. 크기 관련 기존 저장 필드(`logo-display.width/height`, `clearspace-overlay.scalePercent`, `type-scramble.panelHeight`)는 admin에서 숨기고 렌더에서 무시합니다. 저장 데이터·DB 스키마는 유지하며 정적 이미지의 크롭 정책과 카드 캡션·Mark 스타일도 유지합니다.
 
-일반 카드와 동적 카드는 공통 Card 안에서 규격 정책을 구분합니다. 이번 세 위젯은 `DYNAMIC_CARD_RATIO`의 비율이 공통 저작 비율보다 우선합니다(Type Language·Type Hierarchy 5:7, Layout Grid Overlay 3:2). 블록의 줄 높이·가용 폭으로 크기를 계산하고 모바일에서는 한 열로 배치합니다. DB의 기존 비율 값은 보존하며, 나머지 위젯의 규격 정책은 후속 작업입니다.
+일반 카드와 동적 카드는 공통 Card 안에서 규격 정책을 구분합니다. 이번 세 위젯은 각 디스플레이 정의의 `ratio`이 공통 저작 비율보다 우선합니다(Type Language·Type Hierarchy 5:7, Layout Grid Overlay 3:2). 그리드는 열 수로 배정한 너비, 캐러셀은 줄 높이로 크기를 계산하며 모바일에서는 한 카드가 가용 폭을 채웁니다. DB의 기존 비율 값은 보존하며, 나머지 위젯의 규격 정책은 후속 작업입니다.
 
 ## 3. 표면
 
-- **Page**: 토픽 서비스 → `GuidelineTopic` → `GuidelineBlocks` → `renderBlock` → `CardBlock` → `Card` → 디스플레이·캡션 순서입니다. 셸은 `main`, 토픽은 `article`, 각 블록은 h2 제목을 가진 영역을 구성합니다. 제목 없는 블록에는 헤딩이 없습니다.
+- **Page**: 토픽 서비스 → `GuidelineTopic` → `GuidelineSections` → `renderBlock` → `CardBlock` → `GuidelineSection` → `SectionContents` → `GridContainer`/`CarouselContainer` → `GuidelineCard` → 디스플레이·캡션 순서입니다. 셸은 `main`, 토픽은 `article`, 각 블록은 h2 제목을 가진 영역을 구성합니다. 제목 없는 블록에는 헤딩이 없습니다.
 - **Admin**: `registry.ts`가 네 블록 스키마를 만들고 `cards/schema.ts`가 공통 카드 필드를 제공합니다. Mark는 각 카드의 `판정 표식`, 캡션 배치는 캡션 그룹에서 편집합니다.
 - **검색·AI·검수**: `blocks/projection.ts`가 제목·설명·앵커·카드 캡션을 평문으로 조립합니다. 검수 규칙의 출처는 문서와 루트 블록입니다. Mark와 카드 이미지를 검수 결과나 참조 자산으로 자동 변환하지 않습니다.
 - **목차**: `section` 타입의 제목·앵커에서만 항목을 만듭니다. 제목 없는 도판과 일반 블록은 목차 항목을 만들지 않습니다. 텍스트 전용 섹션도 같은 조건으로 본문과 목차에 표시합니다.
@@ -177,3 +178,30 @@ React Doctor 0.9.13을 PR 대상 `origin/stage`(기준 커밋 `3d6e16c80`)와 �
 | 로고·클리어스페이스의 `<img>` 3건 | 원본 업로드 URL의 로고와 격자 레이어를 같은 영역에 contain 배치하는 경로입니다. 실제 이미지 용량·전송 병목은 측정하지 않았으므로 과대 전송 문제로 확정하지 않습니다. 이미지 최적화 경로 변경은 이 구조 수정에 포함하지 않았습니다. |
 
 검증: Node.js 22에서 `pnpm exec vitest run src/features/guideline --reporter=dot` 37개 파일·582개 테스트, `pnpm typecheck`, `pnpm check` 통과. `npx -y react-doctor@0.9.13 --json --blocking none --yes --scope changed --base origin/stage --include-untracked`로 전후를 같은 범위·전체 카테고리에서 검사해 새 진단이 없음을 확인했습니다. 이 후속 변경은 계산 코드의 파일 분리로, 시각·데이터 계약은 유지하며 DB에 쓰지 않습니다. 프로덕션 빌드는 직전 서비스 반영 검증에서 통과했으며 이번 파일 분리 후에는 재실행하지 않았습니다.
+
+### 컴포넌트 축척 정리 (2026-09-09)
+
+```text
+GuidelineTopic
+├─ GuidelineTitleDisplay
+├─ GuidelineSections
+│  └─ GuidelineSection
+│     ├─ SectionHeadings
+│     └─ SectionContents
+│        └─ GridContainer 또는 CarouselContainer
+│           └─ GuidelineCard
+│              ├─ CardDisplay
+│              ├─ CardMark
+│              └─ DisplayCaption → CardCaption
+└─ GuidelineFooter
+```
+
+페이지는 구성을, 섹션은 제목과 콘텐츠의 관계를, 카드는 표본·표식·캡션의 관계를 보여줍니다. CMS 데이터는 기존 블록 타입과 필드를 유지하며 `CardBlock`·`prepareCards`가 화면 모델로 연결합니다. Provider·Helper와 편집 프리뷰는 이 표현 계층을 지원하는 별도 동작입니다.
+
+`components/globals`는 역할별로 분리했습니다. 탐색은 `components/navigation`, 서체·설명·명세 표는 `components/typography`, 이미지는 `components/media`, 섹션 배치는 `components/sections`, 조작 상태·활성 영역·하단 컨트롤러는 `controllers`가 소유합니다. 개별 위젯의 렌더 진입점과 브랜드 규정·계산은 `cards/displays`에 유지합니다. 인덱스도 `GuidelineOnboardDisplay`·`GuidelineChapters`·빈 `GuidelineFooter` 조합으로 읽힙니다.
+
+푸터는 본문 다음의 빈 요소로 위치만 선언합니다. 임의 높이·메뉴·저작권 문구를 추가하지 않습니다. 설명 최대 폭 767px, 그리드 영역의 중앙 배치, 기존 카드 비율·캡션 모바일 전환·서버 데이터 조회·앵커·카드별 조작 상태를 유지합니다.
+
+`add_guideline_grid_columns` 마이그레이션은 네 블록과 버전 테이블에 열 수 필드를 추가하며 기존 행의 기본값은 2열입니다. 카드·캡션·규정·발행 상태는 변경하지 않습니다. 공유 환경에는 마이그레이션 적용 후 애플리케이션을 배포합니다.
+
+카드의 공통 구조는 Display·Mark·Actions·Caption입니다. 디스플레이별 분류·크기·다운로드 계약은 [위젯 저작 §8](../11-widget-authoring.md#8-디스플레이-공통-인터페이스)에 정의합니다.

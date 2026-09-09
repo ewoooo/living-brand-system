@@ -10,6 +10,8 @@ import { PRESET_OPTIONS } from './presets'
 export const presetPanel = defineDisplay({
 	id: 'presetPanelDisplay',
 	type: 'dynamic',
+	category: 'media',
+	sizing: 'responsive',
 	dbName: 'ppd',
 	name: '프리셋 패널(위반 예시)',
 	description:

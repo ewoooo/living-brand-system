@@ -6,6 +6,8 @@ import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 export const hdColorPalette = defineDisplay({
 	id: 'hdColorPaletteWidget',
 	type: 'dynamic',
+	category: 'color',
+	sizing: 'responsive',
 	dbName: 'hcp',
 	name: 'HD 컬러 팔레트',
 	description: '컬러 그룹의 스와치 격자. 카드 높이를 균등 또는 순위 비율로 나눈다.',

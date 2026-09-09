@@ -5,6 +5,8 @@ import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 export const typeSpecimen = defineDisplay({
 	id: 'typeSpecimenWidget',
 	type: 'dynamic',
+	category: 'typography',
+	sizing: 'responsive',
 	dbName: 'tsp',
 	name: '타입 스페시멘',
 	description: '크기·굵기를 바꿔 보는 서체 표본 판.',
