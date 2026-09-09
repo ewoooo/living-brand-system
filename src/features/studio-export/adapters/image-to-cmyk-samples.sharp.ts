@@ -29,7 +29,17 @@ const DATA_URL = /^data:image\/(?:png|jpeg|jpg);base64,(.+)$/
 export async function imageToCmykSamples(href: string, icc: string): Promise<CmykSamples | null> {
 	const match = href.match(DATA_URL)
 	if (!match) return null
-	const input = Buffer.from(match[1], 'base64')
+	// 🔴 sharp는 디코드 실패와 픽셀 상한 초과를 **던진다**. 밖으로 새면 라우트가 500을 내는데
+	//    이건 서버 결함이 아니라 입력 문제다 — 호출부가 이미 「못 바꾼 이미지」를 422로 거부하고
+	//    사람이 읽을 문구를 띄우므로 여기서 null로 합류시킨다.
+	try {
+		return await convert(Buffer.from(match[1], 'base64'), icc)
+	} catch {
+		return null
+	}
+}
+
+async function convert(input: Buffer, icc: string): Promise<CmykSamples | null> {
 	const { hasAlpha } = await sharp(input, { limitInputPixels: MAX_PRINT_PIXELS }).metadata()
 	// 🔴 `toColourspace('cmyk')`를 먼저 부르면 ICC가 그 CMYK를 또 변환한다(이중 변환). 실측:
 	//    K가 3에서 32로 튄다. `withIccProfile`이 프로파일의 색 공간으로 한 번만 옮기게 둔다.

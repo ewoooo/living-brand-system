@@ -36,9 +36,19 @@ export async function findNonCmykColors(pdf: Buffer): Promise<string[]> {
 	for (const [, object] of doc.context.enumerateIndirectObjects()) {
 		if (!(object instanceof PDFRawStream)) continue
 		if (String(object.dict.get(PDFName.of('Subtype'))) !== '/Image') continue
-		const space = String(object.dict.get(PDFName.of('ColorSpace')))
+		const colorSpace = object.dict.get(PDFName.of('ColorSpace'))
+		const space = String(colorSpace)
 		if (/DeviceRGB|Indexed|CalRGB|CalGray/.test(space))
 			problems.push(`이미지 색 공간이 CMYK가 아니다: ${space.replace(/\s+/g, ' ')}`)
+		// 🔴 `[/ICCBased ref]`라는 것만으로는 CMYK가 아니다 — 채널 수는 프로파일 스트림의 `/N`이
+		//    갖는다. 이름만 보고 통과시키면 RGB 프로파일(N=3)을 단 이미지가 검사를 지난다.
+		if (colorSpace instanceof PDFArray && String(colorSpace.get(0)) === '/ICCBased') {
+			const profile = doc.context.lookup(colorSpace.get(1))
+			const channels =
+				profile instanceof PDFRawStream ? String(profile.dict.get(PDFName.of('N'))) : '없음'
+			if (channels !== '4')
+				problems.push(`이미지 ICC 프로파일이 4채널이 아니다: N=${channels}`)
+		}
 		// 🔴 알파 마스크(`/SMask`)는 DeviceGray가 정상이다 — 색이 아니라 투명도를 싣는다.
 		if (/DeviceGray/.test(space) && !isSoftMask(doc, object))
 			problems.push(`이미지 색 공간이 CMYK가 아니다: ${space.replace(/\s+/g, ' ')}`)
