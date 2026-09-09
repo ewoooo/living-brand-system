@@ -1,7 +1,12 @@
 import { inflateSync } from 'node:zlib'
 import { describe, expect, it, vi } from 'vitest'
 import type { VectorScene } from '@/modules/studio-artifact/studio-artifact'
-import { exportVectorPrint, VectorPrintTextError } from './export-vector-print.service'
+import {
+	exportVectorPrint,
+	VectorPrintColorError,
+	VectorPrintImageError,
+	VectorPrintTextError,
+} from './export-vector-print.service'
 
 // 정본 조회는 Payload를 부팅하므로 repository를 세운다. HD HERITAGE GREEN에 ICC 계산값과 절대
 // 겹치지 않는 잉크를 심어, 어느 쪽이 찍혔는지 바이트로 가를 수 있게 한다(계산값은 C76 M0 Y95 K1).
@@ -92,6 +97,79 @@ describe('exportVectorPrint', () => {
 
 		expect(content).not.toContain(' rg\n')
 		expect(content).toContain(' k\n')
+	})
+
+	/**
+	 * 🔴 씬 계약은 `#rrggbb`를 약속하지만 `resolveColor`가 `#rgb`·`rgb(...)`도 관용적으로 받는다.
+	 * 그 표기가 ICC 변환기의 hex 필터에서 탈락하면 **그 도형만 RGB로 나가 파일이 혼재가 되고**,
+	 * Illustrator가 문서 모드를 하나 골라 나머지를 변환하면서 정본 CMYK 수치까지 깨진다.
+	 */
+	it.each([
+		['#rgb 3자리 축약', '#f0a'],
+		['rgb(...) 표기', 'rgb(200, 30, 40)'],
+	])('%s도 CMYK로 찍는다 — RGB가 한 칸도 남지 않는다', async (_label, fill) => {
+		const content = contentStream(
+			await exportVectorPrint({
+				colorProfile: 'cgats21-crpc6',
+				ppi: 300,
+				scene: scene([{ kind: 'rect', x: 0, y: 0, width: 50, height: 50, fill }]),
+			}),
+		)
+
+		expect(content).not.toContain(' rg\n')
+		expect(content).toContain(' k\n')
+	})
+
+	/** 🔴 정본은 표기가 축약이어도 이긴다 — 정규화한 hex로 찾지 않으면 계산값으로 새 나간다. */
+	it('축약 표기로 적힌 브랜드 색도 정본 잉크로 찍는다', async () => {
+		const content = contentStream(
+			await exportVectorPrint({
+				colorProfile: 'cgats21-crpc6',
+				ppi: 300,
+				// mock 정본의 `#00af41`을 `rgb()` 표기로 적었다. 같은 색이므로 정본 잉크가 나와야 한다.
+				scene: scene([
+					{ kind: 'rect', x: 0, y: 0, width: 50, height: 50, fill: 'rgb(0, 175, 65)' },
+				]),
+			}),
+		)
+
+		expect(content).toContain('0.5 0.1 0.2 0.3 k')
+	})
+
+	it('읽을 수 없는 색이 있으면 PDF를 만들지 않는다', async () => {
+		await expect(
+			exportVectorPrint({
+				colorProfile: 'cgats21-crpc6',
+				ppi: 300,
+				scene: scene([{ kind: 'rect', x: 0, y: 0, width: 50, height: 50, fill: 'red' }]),
+			}),
+		).rejects.toBeInstanceOf(VectorPrintColorError)
+	})
+
+	/**
+	 * 🔴 CMYK JPEG는 알파를 담지 못한다. RGB로 남기면 혼재가 되고, 흰색으로 눌러 담으면 오려 낸
+	 * 레이어가 불투명 사각형으로 되살아난다. 둘 다 인쇄 사고라 만들지 않는다.
+	 */
+	it('투명이 있어 CMYK로 못 바꾸는 이미지가 있으면 PDF를 만들지 않는다', async () => {
+		// 40×30 반투명 PNG. sharp 없이 만들 수 있는 최소 알파 이미지다.
+		const alphaPng =
+			'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg=='
+		await expect(
+			exportVectorPrint({
+				colorProfile: 'cgats21-crpc6',
+				ppi: 300,
+				scene: scene([
+					{
+						kind: 'image',
+						x: 0,
+						y: 0,
+						width: 50,
+						height: 50,
+						href: `data:image/png;base64,${alphaPng}`,
+					},
+				]),
+			}),
+		).rejects.toBeInstanceOf(VectorPrintImageError)
 	})
 
 	it('프로파일이 없으면 RGB로 낸다 — 안 준 판을 임의로 CMYK로 바꾸지 않는다', async () => {
