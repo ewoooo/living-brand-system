@@ -242,10 +242,10 @@ function TemplateAttachmentFrame({
 				)}
 				{onExportPdf && (
 					<AttachmentAction
-						aria-label="CMYK PDF로 내보내기"
+						aria-label="PDF로 내보내기"
 						disabled={isExporting}
 						onClick={onExportPdf}
-						title="CMYK PDF로 내보내기"
+						title="PDF로 내보내기"
 					>
 						<DocumentPdf />
 					</AttachmentAction>

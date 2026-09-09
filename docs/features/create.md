@@ -12,7 +12,7 @@ Template·Graphic·Image가 Runtime Manifest부터 Artifact와 Export까지 공�
 
 ### 현재 구현
 
-조합과 HTML 렌더는 클라이언트에서 일어나며 서버 렌더링·이미지 생성·영속이 없습니다. 인쇄용 TIFF와 래스터 PDF는 브라우저가 렌더한 PNG를 서버에서 변환하고, 벡터 PDF는 브라우저가 만든 Vector Scene을 서버에서 CMYK PDF로 직렬화합니다.
+조합과 HTML 렌더는 클라이언트에서 일어나며 서버 렌더링·이미지 생성·영속이 없습니다. 인쇄용 TIFF와 래스터 PDF는 브라우저가 렌더한 PNG를 서버에서 변환하고, 벡터 PDF는 브라우저가 만든 Vector Scene을 서버에서 직렬화합니다. 🔴 **PDF는 CMYK가 아니라 RGB로 나갑니다** — PDF 안의 CMYK 이미지가 Adobe Illustrator에서 색이 반전돼 열리는 알려진 결함(pdf-lib·jsPDF·Prawn 공통) 때문에 색 관리를 미뤘습니다. CMYK로 나가는 것은 TIFF뿐입니다.
 
 - `TemplateGenerator`(`src/components/studio/template/`): 카테고리별 드롭다운에서 published 템플릿을 선택하고 canonical HTML의 열린 텍스트 슬롯을 편집해 미리보기를 렌더.
 - `studio-export`(`src/features/studio-export/`): Runtime Artifact를 Exporter가 변환할 수 있는 형식으로 투영하고 Admin `exportPolicy`로 좁혀 `StudioConfig.output`을 만듭니다. 실제 source adapter 존재 여부도 실행 직전 다시 검증합니다.
@@ -20,11 +20,11 @@ Template·Graphic·Image가 Runtime Manifest부터 Artifact와 Export까지 공�
 - `use-export`(`src/features/studio-export/hooks/`): 세 Studio의 형식 분기·진행·오류 상태·다운로드를 공유. Canvas는 형식을 해석하지 않고 Graphic runtime source만 Provider에 등록.
 - `render-template-raster-stage.client`(`src/features/template-customization/runtime/`): 검증된 HTML을 Shadow DOM의 공용 export stage로 구성.
 - `element-to-png.client`(`src/features/studio-export/adapters/`): 공용 export stage를 `html-to-image`로 PNG Blob으로 렌더.
-- `export-print.service`(`src/features/studio-export/services/`): 넘어온 PNG의 픽셀 크기를 `findPrintOutputBlocker`로 확인한 뒤 Sharp로 CMYK/ICC 변환해 TIFF 또는 래스터 PDF를 생성. 벡터 PDF는 `export-vector-print.service`가 Vector Scene을 pdf-lib으로 직렬화.
+- `export-print.service`(`src/features/studio-export/services/`): 넘어온 PNG의 픽셀 크기를 `findPrintOutputBlocker`로 확인한 뒤 TIFF는 Sharp로 CMYK/ICC 변환해 생성하고, 래스터 PDF는 그 PNG를 그대로 실음(`png-to-pdf.pdf-lib`). 벡터 PDF는 `export-vector-print.service`가 Vector Scene을 pdf-lib으로 직렬화하며 도형 색도 RGB로 둔다.
 
 - 입력: 발행된 템플릿의 canonical `html` + 열린 텍스트 슬롯 값. 슬롯은 `inputFormat`/`maxLength`/`maxLines`를 강제.
 - 🔴 사용자 미리보기는 `<iframe sandbox="">`(opaque origin)이라 CSS `mask-image` fetch가 CORS 모드로 나갑니다. ACAO 헤더가 없는 업로드 파일 경로(`/api/brand-logos/file/*`)가 차단되면 mask가 전체 투명 처리돼 로고가 사라집니다. 어드민은 same-origin 렌더라 재현되지 않습니다.
-- 출력: 클라이언트 PNG 다운로드와 CMYK TIFF·PDF 직접 다운로드. 인쇄 해상도는 `72`·`150`·`300`ppi 프리셋 드롭다운에서 고르고, 운영자가 `exportPolicy.print.allowedPpi`를 지정하면 그 목록이 프리셋을 대신함(`narrowPrintPpi` — 허용 목록이 아니라 프리셋 목록). 기본값은 목록에 `300`이 있으면 `300`, 없으면 가장 낮은 값(`resolveDefaultPrintPpi`). 서버가 받는 유효 범위는 목록이 아니라 1~1200 정수(`isPrintPpi`). Payload에는 아무것도 쓰지 않음(생성 세션/출력 레코드 없음).
+- 출력: 클라이언트 PNG 다운로드와 CMYK TIFF·**RGB** PDF 직접 다운로드. 인쇄 해상도는 `72`·`150`·`300`ppi 프리셋 드롭다운에서 고르고, 운영자가 `exportPolicy.print.allowedPpi`를 지정하면 그 목록이 프리셋을 대신함(`narrowPrintPpi` — 허용 목록이 아니라 프리셋 목록). 기본값은 목록에 `300`이 있으면 `300`, 없으면 가장 낮은 값(`resolveDefaultPrintPpi`). 서버가 받는 유효 범위는 목록이 아니라 1~1200 정수(`isPrintPpi`). Payload에는 아무것도 쓰지 않음(생성 세션/출력 레코드 없음).
 
 출력 capability는 `Runtime Artifact → 실제 Exporter 호환 형식 → Admin exportPolicy = Effective StudioConfig.output` 순서로 계산합니다. Raster는 PNG·JPEG·TIFF·PDF·정지 MP4, Vector는 SVG·PDF, Video는 MP4로 변환할 수 있습니다. Admin의 형식 목록을 비우면 실제 Exporter 호환 형식을 모두 허용하며, 호환되지 않는 형식으로 범위를 넓히면 발행 검증이 거부합니다. Controller의 현재 선택값과 버튼 배치는 이 capability와 별개입니다. Export Layer는 I/O 직전에도 Artifact, 요청값, Effective capability를 다시 확인합니다. 원본 다운로드 capability와 ZIP 묶음은 파일 형식과 분리합니다.
 
@@ -32,7 +32,7 @@ Controller 그룹 구조는 Runtime Manifest가 소유합니다. Admin은 배경
 
 Template의 텍스트·이미지·벡터 레이어는 같은 Creator 정책을 사용합니다. `hidden`은 Creator 패널에서 레이어를 숨기고, `readonly`는 값을 보여주되 바꾸지 못하게 하며, `editable`은 편집을 허용합니다. Visibility는 `editable` 레이어에서만 설정할 수 있습니다. Admin은 기본 표시값과 Creator의 표시 전환 허용 여부를 각각 정합니다. Creator의 현재 표시값은 미리보기와 export가 공유하는 합성 HTML에 반영합니다.
 
-인쇄 렌더는 캔버스 픽셀을 그대로 쓰지 않습니다. 스튜디오가 고른 배율이 `ExportRequest`의 `options.scale`이 되어 브라우저가 그 배율로 PNG를 굽고, 서버는 그 PNG를 리샘플링하지 않습니다. TIFF는 거기에 PPI 메타데이터만 기록하고, 래스터 PDF는 문서 전체 DPI 메타데이터 대신 같은 PPI로 계산한 실제 `가로 mm × 세로 mm` 페이지 크기를 씁니다. 따라서 두 형식의 인쇄 크기는 `px ÷ ppi × 25.4mm`로 정해집니다. 두 형식 모두 투명 영역을 흰색으로 평탄화하고 Sharp 내장 기본 CMYK ICC 프로파일로 변환합니다. 래스터 PDF는 변환된 CMYK JPEG를 원본 픽셀 크기 그대로 배치한 단일 페이지이며 이미지 색공간은 `DeviceCMYK`입니다. 벡터 PDF는 판을 굽지 않는 대신, 다 그린 뒤 페이지 전체를 `pixelsToPdfPoints(1, ppi)`로 되읽어 같은 물리 크기를 냅니다.
+인쇄 렌더는 캔버스 픽셀을 그대로 쓰지 않습니다. 스튜디오가 고른 배율이 `ExportRequest`의 `options.scale`이 되어 브라우저가 그 배율로 PNG를 굽고, 서버는 그 PNG를 리샘플링하지 않습니다. TIFF는 거기에 PPI 메타데이터만 기록하고, 래스터 PDF는 문서 전체 DPI 메타데이터 대신 같은 PPI로 계산한 실제 `가로 mm × 세로 mm` 페이지 크기를 씁니다. 따라서 두 형식의 인쇄 크기는 `px ÷ ppi × 25.4mm`로 정해집니다. TIFF만 투명 영역을 흰색으로 평탄화하고 Sharp 내장 기본 CMYK ICC 프로파일로 변환합니다. 래스터 PDF는 그 PNG를 변환 없이 원본 픽셀 크기 그대로 배치한 단일 페이지이며 이미지 색공간은 RGB입니다. 벡터 PDF는 판을 굽지 않는 대신, 다 그린 뒤 페이지 전체를 `pixelsToPdfPoints(1, ppi)`로 되읽어 같은 물리 크기를 냅니다.
 
 인쇄 크기 한도는 나눠서 겁니다. `maxPrintSize()`가 변 하나 `16,384`px(브라우저 캔버스 한계)와 판 전체 `67,108,864`픽셀 안에 들어가는 가장 큰 판을 돌려주고, 변환 서비스(`exportPrint`)가 실제로 올라온 PNG의 픽셀로 같은 검사를 다시 합니다. 서버로 올리는 PNG `20MB`(`MAX_PRINT_PNG_BYTES`)는 픽셀이 아니라 바이트 한도라 업로드 Route가 `413`으로 막습니다. Template 저장 hook(`prepareTemplateSave`)도 같은 `findPrintOutputBlocker`를 부르지만, 그것은 발행 시점에 `exportPolicy.allowedFormats`가 `tiff`·`pdf`를 허용할 때 저장된 판형(`width`·`height`)만 보는 별개 검사이고 PPI나 실제 출력 크기와는 무관합니다.
 
@@ -71,7 +71,7 @@ Template의 텍스트·이미지·벡터 레이어는 같은 Creator 정책을 �
 ## 4. 의존
 
 - 클라이언트 라이브러리: `html-to-image`(PNG 캡처).
-- 서버 라이브러리: 기존 `sharp`(흰 배경 평탄화, CMYK/ICC 변환, TIFF LZW·JPEG 인코딩, PPI 메타데이터), 기존 `pdf-lib`(CMYK JPEG를 mm 단일 페이지 PDF로 직렬화). 별도 인쇄 라이브러리는 추가하지 않습니다.
+- 서버 라이브러리: 기존 `sharp`(흰 배경 평탄화, CMYK/ICC 변환, TIFF LZW·JPEG 인코딩, PPI 메타데이터), 기존 `pdf-lib`(PNG를 mm 단일 페이지 PDF로 직렬화). 별도 인쇄 라이브러리는 추가하지 않습니다.
 - 공유 클라이언트 renderer: `render-template-raster-stage.client`(`src/features/template-customization/runtime/`). `template-runtime.client`의 Raster·Vector·Video Artifact가 모두 이 stage를 거칩니다.
 - Payload 컬렉션: `templates`·`template-categories`·`application-images`·`generated-images`(`template-assets`는 레거시 import staging 참조만 유지). 템플릿은 Rule 또는 Check 참조를 저장하지 않습니다. 모든 HTML 저장은 구조 파서와 허용 목록으로 실행 가능한 마크업·외부 URL을 먼저 차단하고, **발행(publish) 시** 공개 URL을 published 공식 에셋 참조와 추가 대조합니다. `generatedImageId`와 canonical URL을 함께 저장한 AI 배경 이미지는 `generated-images`의 ID·URL과 일치할 때 발행할 수 있고, 구조화 참조가 없는 `template-assets`와 raster data URI 배경은 draft에서만 허용합니다. Draft 원본(`baseHtml`)과 staging 에셋은 manager/admin만 읽을 수 있고, Admin Draft 미리보기는 script 없는 iframe으로 격리합니다. `templates`·`brand-logos`·`application-images`·`generated-images`의 공개/worker 읽기는 published 문서만, 쓰기는 manager/admin만 허용합니다. 이미지 배정 가능한 표면(클립 프레임의 외동 이미지 자식·자식 없는 이미지 fill 노드·래스터 폴백 img)은 import가 전부 이미지 캐리어로 확정하고, 이미지 배정·이동·회전·컬러 치환은 캐리어 전용입니다 — 캐리어로 마킹되지 않은 노드의 이미지 배정은 무시되고, 배정·편집의 주소는 캐리어당 가시 창 하나로 고정됩니다(캐리어를 하나만 가진 클립 프레임이면 그 프레임, 스탠드얼론 캐리어면 표면 자신 — 같은 캐리어를 두 nodeId로 주소지정할 수 없습니다). `imageTransform`·`imageColorize` override와 AI 배경 배정의 Admin 저작 UI는 2026-08-20 간소화로 제거했습니다(이미지 슬롯 정책은 허용 프로파일 목록 + 창작자 변형 허용만 남고, 프로파일 고정은 허용 목록 한 개로 수렴) — compose와 발행 검증은 기존 저장값을 계속 처리하므로 레거시 템플릿은 그대로 렌더됩니다. compose는 `imageTransform`을 캐리어 요소의 CSS `transform`으로만 적용하고(`baseHtml` 불변), 이미지 프로파일이 color-adjustment feature를 열었을 때만 `imageColorize`로 선·배경 브랜드 컬러가 바뀝니다. compose는 생성 이미지와 canonical 이미지를 같은 luminance mask 경로로 다시 칠합니다. 기본은 선만 칠하고 배경을 투명하게 두며, background를 지정하면 바닥은 선 색, overlay는 배경 색으로 구성합니다.
 - Figma import(`src/features/template-import/`): frame을 normalize(판단)→에셋 해석→emit(방출) 파이프라인으로 `baseHtml`/`html`에 변환합니다. CSS로 보존 가능한 레이어는 편집 구조를 유지하고, 벡터는 SVG로 받습니다. 단일 IMAGE fill은 서브트리를 굽지 않고 fill 원본을 `background-image` + 에셋 메타데이터로 낮추고(하위 텍스트 레이어 보존), SOLID/GRADIENT 스택은 다중 배경 레이어로, 순수 회전은 CSS `transform`으로 옮깁니다. TEXT_PATH·알 수 없는 leaf node·PATTERN/VIDEO fill·겹쳐진 IMAGE fill·마스크 합성·스케일/기울임 변환·지원 밖 효과·비 CSS 블렌드만 PNG Figma render로 고정하며, 고정된 레이어는 이유·삼킨 텍스트 수를 진단으로 Admin 가져오기 경고에 노출합니다. 렌더·fill 에셋은 `application-images` draft로 저장하며, Template publish 때 최종 HTML에도 남은 Figma import 에셋만 같은 트랜잭션에서 함께 publish합니다(배경 fill 참조는 div의 `data-asset-*` + 단일 style url로 대조). Template 문서를 자동 생성하지는 않고 manager가 Admin에서 저장합니다.

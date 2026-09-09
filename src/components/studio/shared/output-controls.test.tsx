@@ -29,9 +29,13 @@ function unitRadio(name: 'px' | 'mm') {
 type SizingProps = React.ComponentProps<typeof SizingControls>
 
 function renderSizing(
-	props: Omit<Partial<SizingProps>, 'onChange' | 'onPpiChange'> & { value: SizingProps['value'] },
+	props: Omit<Partial<SizingProps>, 'onChange' | 'onPpiChange'> & {
+		value: SizingProps['value']
+		/** 크기 변경을 거부하는 상황을 재현한다. 기본은 받아들임이다. */
+		accepts?: boolean
+	},
 ) {
-	const onChange = vi.fn()
+	const onChange = vi.fn<SizingProps['onChange']>(() => props.accepts ?? true)
 	const onPpiChange = vi.fn()
 	render(
 		<SizingControls
@@ -137,6 +141,34 @@ describe('해상도는 인쇄(mm)에서만 묻는다', () => {
 		expect(onPpiChange).toHaveBeenCalledWith(150)
 		// 2480px@350ppi = 179.9mm → 150ppi에서 1063px. 판은 그대로 179.9mm다.
 		expect(onChange).toHaveBeenCalledWith({ width: 1063, height: 1503 })
+	})
+
+	/**
+	 * 🔴 이 두 케이스가 2026-09-08 회귀의 가드다. 해상도 변경은 「픽셀을 다시 잡고 → ppi 확정」
+	 * 하는 한 쌍인데, 앞쪽이 거부됐는데 뒤쪽이 통과해 **600×1800mm 배너가 144×432mm로 조용히
+	 * 줄어** 나갔다. 크기를 못 바꿨으면 해상도도 그대로여야 한다.
+	 */
+	it('크기 변경이 거부되면 해상도도 바꾸지 않는다', () => {
+		const { onChange, onPpiChange } = renderSizing({
+			value: { width: 2480, height: 3508 },
+			ppi: 350,
+			accepts: false,
+		})
+
+		fireEvent.click(unitRadio('mm'))
+		fireEvent.blur(manualPpiInput() as HTMLElement, { target: { value: '1200' } })
+
+		expect(onChange).toHaveBeenCalled()
+		expect(onPpiChange).not.toHaveBeenCalled()
+	})
+
+	it('거부되면 이유를 화면에 남긴다 — 조용히 무시하지 않는다', () => {
+		renderSizing({ value: { width: 2480, height: 3508 }, ppi: 350, accepts: false })
+
+		fireEvent.click(unitRadio('mm'))
+		fireEvent.blur(manualPpiInput() as HTMLElement, { target: { value: '1200' } })
+
+		expect(screen.getByRole('status')).toHaveTextContent('최대')
 	})
 
 	it('px 모드에서는 해상도를 바꿔도 판을 건드리지 않는다 — 픽셀이 정본이다', () => {

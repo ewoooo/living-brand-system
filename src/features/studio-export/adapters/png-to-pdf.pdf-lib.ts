@@ -19,11 +19,21 @@ export async function createRgbPrintPdf({
 	heightMm: number
 	png: Buffer
 	widthMm: number
-}): Promise<Buffer> {
-	const pdf = await PDFDocument.create()
-	const image = await pdf.embedPng(Uint8Array.from(png))
-	const page = pdf.addPage([millimetersToPdfPoints(widthMm), millimetersToPdfPoints(heightMm)])
-	const { height, width } = page.getSize()
-	page.drawImage(image, { height, width, x: 0, y: 0 })
-	return Buffer.from(await pdf.save())
+}): Promise<Buffer | null> {
+	try {
+		const pdf = await PDFDocument.create()
+		// 🔴 `embedPng`는 다루지 못하는 PNG(16bit·인터레이스 등)에서 던진다. 밖으로 새면 라우트가
+		//    500을 내는데, 이건 서버 결함이 아니라 **입력 문제**다 — TIFF 분기와 같이 null로 답해
+		//    호출부가 400을 내게 한다.
+		const image = await pdf.embedPng(Uint8Array.from(png))
+		const page = pdf.addPage([
+			millimetersToPdfPoints(widthMm),
+			millimetersToPdfPoints(heightMm),
+		])
+		const { height, width } = page.getSize()
+		page.drawImage(image, { height, width, x: 0, y: 0 })
+		return Buffer.from(await pdf.save())
+	} catch {
+		return null
+	}
 }

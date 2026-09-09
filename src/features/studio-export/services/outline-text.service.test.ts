@@ -43,6 +43,28 @@ describe('outlineTextRun', () => {
 		expect(new Set(paths).size).toBe(3)
 	})
 
+	/**
+	 * 🔴 이 케이스는 **Pretendard여야** 의미가 있다. HD OTF는 CFF(3차 곡선)라 변환을 되돌려도
+	 * `Q`가 0개로 나와, HD OTF에 얹으면 **되돌려도 통과하는 가짜 가드**가 된다.
+	 * 실측: 같은 글자에서 pretendard의 `toSVG()`는 Q 118개, hd는 0개다.
+	 *
+	 * 왜 Q를 남기면 안 되는가 — pdf-lib의 `drawSvgPath`가 `Q`를 PDF `v` 연산자로 내보내는데
+	 * `v`는 첫 제어점을 현재점으로 대체한다. (P0, Q, E)가 (P0, P0, Q, E)로 찍혀 곡선이 눌린다.
+	 */
+	it('아웃라인 path에 2차 곡선을 남기지 않는다 — pdf-lib이 Q를 잘못 내보낸다', async () => {
+		const result = await outlineTextRun({
+			text: '픽셀 Google',
+			fontFamily: 'Pretendard',
+			fontSize: 40,
+		})
+
+		expect(result.outlined).toBe(true)
+		if (!result.outlined) return
+		expect(result.d).not.toMatch(/[Qq]/)
+		// 곡선이 통째로 사라진 것이 아니라 3차로 옮겨진 것이어야 한다.
+		expect(result.d).toMatch(/C/)
+	})
+
 	it('가진 서체가 아니면 다른 서체로 대신 그리지 않고 돌려보낸다', async () => {
 		const result = await outlineTextRun({
 			text: '없는서체',

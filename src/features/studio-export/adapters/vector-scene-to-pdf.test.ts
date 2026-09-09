@@ -4,11 +4,17 @@ import { describe, expect, it } from 'vitest'
 import type { VectorScene } from '@/modules/studio-artifact/studio-artifact'
 import { parseColor, roundedRectPath, vectorSceneToPdf } from './vector-scene-to-pdf.pdf-lib'
 
-/** 인쇄 옵션의 색 관련 필드는 페이지 치수와 무관하다 — 치수 검증에서는 빈 값으로 채운다. */
+/**
+ * 인쇄 옵션의 색 관련 필드는 페이지 치수와 무관하다 — 치수 검증에서는 빈 값으로 채운다.
+ * 🔴 `cmyk`를 빠뜨리면 색 분기가 테스트에서 **한 번도 실행되지 않는다.** 지금 제품 경로는
+ *    `cmyk` 없이(=RGB로) 부르지만, 그 분기가 살아 있는 한 테스트는 지나가야 한다.
+ */
 const printOptions = (ppi: number) => ({
-	colors: new Map(),
-	iccProfile: Buffer.alloc(0),
-	iccProfileName: 'cgats21-crpc6',
+	cmyk: {
+		colors: new Map(),
+		iccProfile: Buffer.alloc(0),
+		iccProfileName: 'cgats21-crpc6',
+	},
 	ppi,
 })
 

@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import {
 	findPrintOutputBlocker,
+	fitsPrintOutput,
 	isPrintPpi,
 	MAX_PRINT_PIXELS,
 	MAX_PRINT_PPI,
 	MAX_PRINT_SIDE_PIXELS,
 	maxPrintSize,
 	millimetersToPixels,
+	PRINT_PPI_VALUES,
 	parsePrintPpi,
 	pixelsToMillimeters,
 	pixelsToPdfPoints,
+	printablePpiOptions,
 } from './print-policy'
 
 describe('findPrintOutputBlocker', () => {
@@ -42,6 +45,44 @@ describe('findPrintOutputBlocker', () => {
 				width: MAX_PRINT_PIXELS,
 			}),
 		).toBeNull()
+	})
+})
+
+describe('printablePpiOptions', () => {
+	/**
+	 * 🔴 이 케이스가 이 함수의 존재 이유다. 배너에서 300ppi를 고를 수 있게 두면
+	 * 7,087×21,260px이 되어 브라우저가 못 만든다. 예전에는 목록에 남겨 둔 탓에,
+	 * 크기 갱신만 거부되고 해상도는 통과해 **600×1800mm 판이 144×432mm로 조용히 줄어** 나갔다.
+	 */
+	it('X배너에서는 300ppi를 뺀다', () => {
+		expect(printablePpiOptions(600, 1800, PRINT_PPI_VALUES)).toEqual([72, 150])
+	})
+
+	it('A4는 프리셋 셋을 모두 남긴다', () => {
+		expect(printablePpiOptions(210, 297, PRINT_PPI_VALUES)).toEqual([72, 150, 300])
+	})
+
+	it('A0는 저해상도만 남는다 — 대형 인쇄는 원래 해상도를 낮춘다', () => {
+		expect(printablePpiOptions(841, 1189, PRINT_PPI_VALUES)).toEqual([72, 150])
+	})
+
+	it('빈 목록을 받으면 빈 목록이다', () => {
+		expect(printablePpiOptions(210, 297, [])).toEqual([])
+	})
+
+	// 되돌림 금지의 근거는 `use-graphic-export`의 `ppiOptions`가 갖는다.
+	it('10m 현수막은 가장 낮은 해상도로도 못 만들어 목록이 빈다', () => {
+		expect(printablePpiOptions(10_000, 3_000, PRINT_PPI_VALUES)).toEqual([])
+	})
+})
+
+describe('fitsPrintOutput', () => {
+	it('변 한도와 총 픽셀 한도를 서버와 같은 기준으로 본다', () => {
+		expect(fitsPrintOutput(2480, 3508)).toBe(true)
+		// 한 변이 16,384를 넘으면 총 픽셀이 남아도 안 된다
+		expect(fitsPrintOutput(16_385, 100)).toBe(false)
+		// 양 변은 한도 안인데 총 픽셀이 넘는 경우
+		expect(fitsPrintOutput(9000, 9000)).toBe(false)
 	})
 })
 

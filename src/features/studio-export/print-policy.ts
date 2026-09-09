@@ -95,6 +95,36 @@ export function maxPrintSize(width: number, height: number): { width: number; he
 	return { width: Math.max(1, Math.round(maxHeight * ratio)), height: maxHeight }
 }
 
+/**
+ * 이 픽셀 크기를 인쇄 출력으로 만들 수 있는가. 서버가 쓰는 `findPrintOutputBlocker`와 **같은
+ * 기준**을 쓴다 — 화면과 서버가 다른 잣대를 들면 「화면에선 고를 수 있는데 저장만 실패」가 된다.
+ */
+export function fitsPrintOutput(width: number, height: number): boolean {
+	return findPrintOutputBlocker({ enabled: true, height, width }) === null
+}
+
+/**
+ * 이 물리 크기를 채울 수 있는 해상도만 남긴다.
+ *
+ * 🔴 판이 커질수록 고를 수 있는 해상도가 줄어든다 — A0를 300ppi로 채우면 1억 4천만 픽셀이라
+ *    브라우저 캔버스가 못 만든다. 창작자에게는 「너무 큽니다」가 아니라 **고를 수 있는 것만**
+ *    보이는 편이 낫다.
+ * 🔑 비활성이 아니라 목록에서 빼는 이유는 `ControllerOption`에 `disabled`가 없어서다 —
+ *    비활성으로 남기면 고를 수 있어 보이는데 조용히 무시된다.
+ */
+export function printablePpiOptions(
+	widthMillimeters: number,
+	heightMillimeters: number,
+	options: readonly PrintPpi[],
+): readonly PrintPpi[] {
+	return options.filter((ppi) =>
+		fitsPrintOutput(
+			millimetersToPixels(widthMillimeters, ppi),
+			millimetersToPixels(heightMillimeters, ppi),
+		),
+	)
+}
+
 export function findPrintOutputBlocker(candidate: {
 	enabled?: unknown
 	height?: unknown

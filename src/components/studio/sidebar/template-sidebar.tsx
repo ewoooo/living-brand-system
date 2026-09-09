@@ -158,7 +158,12 @@ export function TemplateSidebar({
 									}
 								/>
 							</Controller.Row>
-							{(exporting.format === 'tiff' || exporting.format === 'pdf') &&
+							{/* 🔴 svg도 포함한다 — SVG의 물리 크기(mm)도 ppi가 정한다. 빼 두면 SVG에는
+							    행이 안 뜨는데 값은 살아 있어, 직전에 PDF를 만졌는지에 따라 같은 SVG가
+							    53mm 또는 222mm로 나간다. */}
+							{(exporting.format === 'tiff' ||
+								exporting.format === 'pdf' ||
+								exporting.format === 'svg') &&
 								exporting.ppiApplies &&
 								config.output.print && (
 									<PrintControls

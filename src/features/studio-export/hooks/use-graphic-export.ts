@@ -1,15 +1,17 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import type { GraphicBrowserArtifacts } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { getGraphicStudioVectorArtifact } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../export-contract'
 import {
-	maxPrintSize,
+	fitsPrintOutput,
 	PRINT_PPI_VALUES,
 	type PrintPpi,
+	pixelsToMillimeters,
+	printablePpiOptions,
 	resolveDefaultPrintPpi,
 } from '../print-policy'
 import { createRasterExportRequest } from '../services/create-raster-export-request'
@@ -60,7 +62,7 @@ export function useGraphicExport({
 	values: ControllerValues
 	viewport: GraphicOutputSize | null
 }) {
-	const ppiOptions = config.output.print?.ppi ?? PRINT_PPI_VALUES
+	const basePpiOptions = config.output.print?.ppi ?? PRINT_PPI_VALUES
 	const [ppi, setPpi] = useState<PrintPpi>(() => resolveDefaultPrintPpi(config.output.print?.ppi))
 	const [draftState, setDraftState] = useState(() => ({
 		profileId: config.id,
@@ -70,6 +72,31 @@ export function useGraphicExport({
 		draftState.profileId === config.id
 			? draftState.draft
 			: createGraphicOutputDraft(config, undefined, viewport)
+
+	/**
+	 * 고를 수 있는 해상도. **현재 판형에서 실제로 만들 수 있는 것만** 남긴다.
+	 * 🔴 좁히지 않으면 배너에서 300ppi를 고를 수 있는데 그 픽셀을 브라우저가 못 만든다 —
+	 *    예전에는 그 상태로 서버까지 가서 400 「Invalid PNG」로 돌아왔다.
+	 */
+	const ppiOptions = useMemo(() => {
+		if (
+			!draft ||
+			!isPrintFormat(draft.format) ||
+			draft.width === null ||
+			draft.height === null
+		) {
+			return basePpiOptions
+		}
+		const narrowed = printablePpiOptions(
+			pixelsToMillimeters(draft.width, ppi),
+			pixelsToMillimeters(draft.height, ppi),
+			basePpiOptions,
+		)
+		// 🔴 하나도 안 남으면 **빈 목록을 그대로 돌려준다.** 원래 목록으로 되돌리면 못 만드는 값이
+		//    다시 떠서 목록이 거짓말을 한다 — 화면은 「고를 수 있다」고 하고 실제로는 거부된다.
+		//    비었을 때 무엇을 보여줄지는 `SizingControls`가 정한다.
+		return narrowed
+	}, [basePpiOptions, draft, ppi])
 
 	const setDraft = useCallback(
 		(update: (current: GraphicOutputDraft | null) => GraphicOutputDraft | null) => {
@@ -101,28 +128,32 @@ export function useGraphicExport({
 		},
 		[config, setDraft, viewport],
 	)
+	/**
+	 * 크기를 바꾼다. **거부하면 `false`를 돌려준다.**
+	 *
+	 * 🔴 반환값이 있어야 하는 이유: 해상도 변경은 「픽셀을 다시 잡고 → ppi를 확정」하는 **한 쌍**인데,
+	 *    앞쪽만 거부하고 뒤쪽이 통과하면 `mm = px ÷ ppi`가 깨져 **판형이 조용히 바뀐다.**
+	 *    실제로 600×1800mm 배너가 144×432mm로 나갔다. 호출부가 실패를 알아야 뒤쪽을 멈출 수 있다.
+	 * 🔑 판정을 `setDraft` 콜백 밖에서 한다 — 안에서 하면 결과를 밖으로 꺼낼 수 없다.
+	 */
 	const setSize = useCallback(
-		(size: GraphicOutputSize) => {
-			if (!validOutputSize(size)) return
-			setDraft((current) => {
-				if (!current) return current
-				if (current.format === 'mp4') {
-					const video = config.output.video?.mp4
-					if (!video || size.width > video.maxWidth || size.height > video.maxHeight) {
-						return current
-					}
+		(size: GraphicOutputSize): boolean => {
+			if (!validOutputSize(size) || !draft) return false
+			if (draft.format === 'mp4') {
+				const video = config.output.video?.mp4
+				if (!video || size.width > video.maxWidth || size.height > video.maxHeight) {
+					return false
 				}
-				// 🔴 인쇄 형식은 서버가 픽셀 한도를 판정하고 그 결과가 400 「Invalid PNG」로 온다 —
-				//    화면 문구가 크기 얘기를 못 하므로 렌더는 되고 저장만 실패한다. 여기서 막는다.
-				//    Template은 배율 목록 밖을 애초에 고를 수 없어 같은 실수가 불가능하다.
-				if (current.format === 'tiff' || current.format === 'pdf') {
-					const limit = maxPrintSize(size.width, size.height)
-					if (size.width > limit.width || size.height > limit.height) return current
-				}
-				return { ...current, ...size }
-			})
+			}
+			// 🔴 인쇄 형식은 서버가 픽셀 한도를 판정하고 그 결과가 400 「Invalid PNG」로 온다 —
+			//    화면 문구가 크기 얘기를 못 하므로 렌더는 되고 저장만 실패한다. 여기서 막는다.
+			if (isPrintFormat(draft.format) && !fitsPrintOutput(size.width, size.height)) {
+				return false
+			}
+			setDraft((current) => (current ? { ...current, ...size } : current))
+			return true
 		},
-		[config.output.video, setDraft],
+		[config.output.video, draft, setDraft],
 	)
 	const setFps = useCallback(
 		(fps: VideoExportSpec['fps']) => {
@@ -209,6 +240,11 @@ export function useGraphicExport({
 			},
 		},
 	}
+}
+
+/** 픽셀 한도가 걸리는 형식. 서버가 판정하는 대상과 같다. */
+function isPrintFormat(format: GraphicOutputDraft['format']): boolean {
+	return format === 'tiff' || format === 'pdf'
 }
 
 function createGraphicOutputDraft(

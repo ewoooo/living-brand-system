@@ -42,8 +42,8 @@ export async function requestPrintExport({
 	return response.blob()
 }
 
-/** 상태코드를 「사용자가 다음에 무엇을 해야 하나」로 옮긴다. */
-function printFailureMessage(format: PrintExportFormat, status: number): string {
+/** 상태코드를 「사용자가 다음에 무엇을 해야 하나」로 옮긴다. 벡터 PDF 경로도 같은 표를 쓴다. */
+export function printFailureMessage(format: PrintExportFormat, status: number): string {
 	const label = `${format.toUpperCase()} 내보내기`
 	switch (status) {
 		case 401:
