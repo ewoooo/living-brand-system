@@ -379,7 +379,12 @@ function drawCmykSamples(
 async function embedImage(pdf: PDFDocument, href: string) {
 	const match = href.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/)
 	if (!match) return null
-	const bytes = Buffer.from(match[2], 'base64')
+	// 🔴 오프셋 없는 사본으로 넘긴다. pdf-lib의 `JpegEmbedder`가 `imageData.buffer`를 읽으면서
+	//    `byteOffset`을 무시하기 때문이다 — Node의 Buffer 풀(4KB 이하)에서 잘라 온 버퍼는 오프셋이
+	//    0이 아니어서 `SOI not found in JPEG`으로 **내보내기가 통째로 죽는다**(실측: 317B JPEG →
+	//    byteOffset 6000). 작은 아이콘 사진 한 장으로 판 전체가 안 나가던 결함이다.
+	//    PNG는 영향이 없지만 같은 형태로 넘겨 둔다 — 어느 쪽이 안전한지 부르는 쪽이 기억할 필요가 없다.
+	const bytes = Uint8Array.from(Buffer.from(match[2], 'base64'))
 	return match[1] === 'png' ? pdf.embedPng(bytes) : pdf.embedJpg(bytes)
 }
 

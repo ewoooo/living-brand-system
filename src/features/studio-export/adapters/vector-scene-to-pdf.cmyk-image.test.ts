@@ -3,6 +3,7 @@
 //    도는 경로라 이 파일만 node 환경으로 돈다.
 import { inflateSync } from 'node:zlib'
 import { PDFDocument, PDFName, PDFRawStream } from 'pdf-lib'
+import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import type { VectorScene } from '@/modules/studio-artifact/studio-artifact'
 import type { CmykSamples } from './image-to-cmyk-samples.sharp'
@@ -105,5 +106,29 @@ describe('CMYK 잉크 샘플을 PDF에 싣기', () => {
 		})
 
 		expect(await images(pdf)).toHaveLength(0)
+	})
+})
+
+/**
+ * 🔴 pdf-lib의 `JpegEmbedder`가 `imageData.buffer`를 읽으면서 `byteOffset`을 무시한다. Node의
+ * Buffer 풀(4KB 이하)에서 잘라 온 버퍼는 오프셋이 0이 아니어서 `SOI not found in JPEG`으로
+ * **내보내기가 통째로 죽었다**. 이 결함은 **이미지 크기에 달려 있다** — 큰 이미지로 테스트를 쓰면
+ * 조용히 통과하므로 여기서는 반드시 4KB 아래를 쓴다.
+ */
+describe('4KB 이하 JPEG', () => {
+	it('RGB 경로에서 내보내기를 죽이지 않는다', async () => {
+		const jpeg = await sharp({
+			create: { background: '#00AF41', channels: 3, height: 40, width: 40 },
+		})
+			.jpeg()
+			.toBuffer()
+		expect(jpeg.byteLength).toBeLessThan(4096)
+
+		const pdf = await vectorSceneToPdf(
+			sceneWith(`data:image/jpeg;base64,${jpeg.toString('base64')}`),
+			{ ppi: 150 },
+		)
+
+		expect(pdf.subarray(0, 5).toString('latin1')).toBe('%PDF-')
 	})
 })
