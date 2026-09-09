@@ -40,8 +40,9 @@ export async function vectorSceneToPdf(
 		ppi: PrintPpi
 		/**
 		 * 주면 도형 색을 잉크로 찍고 OutputIntent를 붙인다. **안 주면 RGB로 나간다.**
-		 * 🔴 지금 호출부는 주지 않는다 — PDF 안의 CMYK 이미지가 Illustrator에서 반전돼 열리는
-		 *    알려진 결함 때문에 인쇄 PDF를 RGB로 내고 있다(`png-to-pdf.pdf-lib`에 근거).
+		 * 🔑 인쇄 경로(`exportVectorPrint`)는 프로파일이 있으면 항상 준다 — 「한 파일 한 색상 모드」라
+		 *    RGB가 한 칸도 남으면 Illustrator가 문서 모드를 골라 정본 CMYK 수치를 깨뜨린다.
+		 *    프로파일이 없는 화면용 호출만 안 준다.
 		 */
 		cmyk?: {
 			colors: ReadonlyMap<string, CmykColor>
@@ -108,7 +109,7 @@ export function collectSceneImages(scene: VectorScene): string[] {
 	return collect(scene.primitives)
 }
 
-/** PDF/X가 요구하는 출력 의도. `cmyk-jpeg-to-pdf`와 같은 형태다. 이미지 색 공간도 이 프로파일을 쓴다. */
+/** 출력 의도. 이미지 색 공간(`drawCmykSamples`의 `ICCBased`)도 같은 프로파일 스트림을 재사용한다. */
 function attachOutputIntent(pdf: PDFDocument, iccProfile: Buffer, iccProfileName: string): PDFRef {
 	const profile = pdf.context.flateStream(Uint8Array.from(iccProfile), {
 		Alternate: 'DeviceCMYK',
@@ -294,7 +295,6 @@ async function draw(
 	}
 }
 
-/** data: URI만 임베드한다 — 외부 URL을 서버에서 받아 오는 순간 SSRF 표면이 된다. */
 /**
  * CMYK 잉크 샘플을 raw + FlateDecode 이미지 XObject로 싣는다.
  *
@@ -376,6 +376,7 @@ function drawCmykSamples(
 	)
 }
 
+/** data: URI만 임베드한다 — 외부 URL을 서버에서 받아 오는 순간 SSRF 표면이 된다. */
 async function embedImage(pdf: PDFDocument, href: string) {
 	const match = href.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/)
 	if (!match) return null
