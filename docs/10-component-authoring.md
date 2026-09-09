@@ -40,7 +40,7 @@ grep -rl "Badge\|Card\|Typography" src/components src/features
 | className 병합 | `@/lib/utils`의 `cn` |
 | 색 파생(전경색·RGB) | `@/lib/color` (`hexToRgb`, `getContrastingForeground`) |
 | 콘텐츠 최대 폭 | `ContentFrame` (`src/components/shared/content-frame.tsx`) |
-| 카드 줄 높이·섹션 간격 | `blocks/rhythm.ts` (`CARD_ROW_HEIGHT`·`CARD_ROWS`·`SECTION_STACK`) |
+| 카드 줄 높이·섹션 간격 | `GuidelineSections`·`GridContainer`·`CarouselContainer`, 공유 높이는 `components/sections/row-height.ts` |
 
 shadcn 4.12의 공식 아이콘 목록에는 Carbon이 없어 `components.json`은 `radix-mira`가 지원하는 `hugeicons` 값을 유지합니다. 이 값은 생성기 호환용일 뿐 저장소의 아이콘 정책이 아닙니다. shadcn 컴포넌트를 추가한 같은 변경에서 생성된 아이콘을 `@carbon/icons-react`로 바꾸고, `@hugeicons/*` import가 0건인지 확인한 뒤 커밋합니다. `iconLibrary`를 임의의 `carbon` 문자열로 바꾸면 레지스트리의 `IconPlaceholder`가 변환되지 않으므로 금지합니다.
 
@@ -348,7 +348,7 @@ grep -rnE '(grid-cols|col-span|gap|w|h|text)-\$\{' src
 
 - 개별 블록·컴포넌트가 자기 `max-width`를 갖지 않습니다. 콘텐츠 최대 폭은 `ContentFrame`에만 있습니다(`content-frame.tsx:22`의 `max-w-[1540px]`). 예외는 프리미티브의 **내재 콘텐츠 폭**뿐입니다 — `dialog`의 `max-w-sm`, `tooltip`의 `max-w-xs`, `bubble`의 `max-w-[80%]`처럼 오버레이·말풍선이 자기 판형을 갖는 것은 페이지 폭 소유가 아닙니다. 금지 대상은 화면·블록 컴포넌트가 페이지 폭을 스스로 좁히는 것(`<Card className="max-w-2xl">` 등)입니다.
 - 표면 배경색은 컴포넌트 안에 칠하지 않습니다. 가이드라인 섹션·leaf는 배경 설정을 갖지 않습니다(2026-09-04에 걷음). 브랜드 면(흰 판·검은 판)은 위젯이 `cards/displays/dynamics/surface.ts`의 선언으로 그립니다(`docs/11` §8).
-- 블록 간 세로 리듬은 프레임 패딩(`content-frame.tsx`의 `py-8`)과 `blocks/rhythm.ts`의 `SECTION_STACK`이 소유합니다(`docs/09` §7). 개별 컴포넌트가 자기 상하 여백을 다시 잡지 않습니다.
+- 섹션 간격은 `GuidelineSections`, 제목과 콘텐츠 간격은 `GuidelineSection`, 가로 여백은 `ContentFrame`이 소유합니다(`docs/09` §7). 위젯이 이 여백을 중복해서 잡지 않습니다.
 
 ## 5. 브랜드 무관
 

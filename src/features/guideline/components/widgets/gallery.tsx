@@ -20,12 +20,12 @@ import { StemClearSpaceWidget } from '@/features/guideline/cards/displays/dynami
 import { TypeScrambleWidget } from '@/features/guideline/cards/displays/dynamics/type-scramble/component'
 import { TypeSpecimenWidget } from '@/features/guideline/cards/displays/dynamics/type-specimen/component'
 import { TypeWeightWidget } from '@/features/guideline/cards/displays/dynamics/type-weight/component'
-import { helperLabel } from '@/features/guideline/components/globals/guideline-helper-label'
+import { helperLabel } from '@/features/guideline/controllers/helper-label'
 import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
 import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
 import type { BrandLogo } from '@/payload-types'
 import { CardBlock } from '../../blocks/card-block'
-import { GuidelineHelperProvider, GuidelineHelperSlot } from '../globals/guideline-helper'
+import { GuidelineHelperProvider, GuidelineHelperSlot } from '../../controllers/helper'
 
 // dev 전용 위젯 갤러리. 위젯 스타일 통일 + 성능 확인용 (로컬에서만 노출, nav 미등록).
 // ponytail: registry = 배열 하나, 제너레이터는 반복이 지겨워질 때.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pickActiveRegion } from './guideline-active-region'
+import { pickActiveRegion } from './active-region'
 
 /** 문서 순서가 tie-break에 쓰이므로 실제 DOM에 붙여야 compareDocumentPosition이 답한다. */
 function regions(count: number): HTMLElement[] {

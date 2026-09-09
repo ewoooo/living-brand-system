@@ -88,7 +88,9 @@
 
 ### 조작값은 해당 카드가 소유합니다
 
-카드로 이관한 `type-language`·`type-hierarchy`·`layout-grid-overlay`는 `Card`가 기존 `GuidelineControllerScope`를 열고, 같은 스코프 안에서 표본·파생 명세·컨트롤을 연결합니다. 카드별 초기값과 편집값은 독립적입니다. CMS 초기값이 바뀌면 해당 카드의 값만 초기화됩니다. 새 콘텐츠 계층이나 저장 필드를 추가하지 않습니다.
+카드로 이관한 `type-language`·`type-hierarchy`·`layout-grid-overlay`는 `GuidelineCard`가 기존 `GuidelineControllerScope`를 열고, 같은 스코프 안에서 표본·파생 명세·컨트롤을 연결합니다. 카드별 초기값과 편집값은 독립적입니다. CMS 초기값이 바뀌면 해당 카드의 값만 초기화됩니다. 새 콘텐츠 계층이나 저장 필드를 추가하지 않습니다.
+
+`CardDisplay`는 정적·동적 디스플레이와 조작 영역을 연결하고, `DisplayCaption`은 저작 캡션과 파생 명세를 선택합니다. 섹션 배치는 `SectionContents` 아래 `GridContainer`·`CarouselContainer`가 소유합니다. 위젯은 이 배치나 캡션을 직접 만들지 않습니다.
 
 기존 `ci-lockup`·`clearspace-viewer`·`layout-grid`의 블록 공유 컨트롤러 등록은 유지하지만 본문 연결은 아직 이관하지 않았습니다. 새 카드의 조작을 기존 블록 공유 스코프에 넣지 않습니다. 모듈 스코프 스토어는 금지합니다.
 

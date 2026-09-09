@@ -47,7 +47,7 @@ export const BLOCKS = [
 		id: 'base',
 		dbName: 'bse',
 		name: '블록',
-		description: '카드 목록과 레이아웃(격자·캐러셀)·줄 높이를 직접 정하는 기본 블록.',
+		description: '카드 목록과 레이아웃과 격자 열 수·캐러셀 높이를 직접 정하는 기본 블록.',
 	},
 	{
 		id: 'overview',

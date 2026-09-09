@@ -2,7 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CardBlock } from '../blocks/card-block'
-import { Card } from './component'
+import { GuidelineCard } from './component'
 
 // embla는 jsdom에 없는 브라우저 API를 요구한다 — 리포 선례(review-canvas.test)대로 껍데기로 바꾼다.
 vi.mock('@/components/ui/carousel', () => ({
@@ -28,10 +28,10 @@ const staticCard = (id: string, extra: object = {}) => ({
 	...extra,
 })
 
-describe('Card', () => {
+describe('GuidelineCard', () => {
 	it('동적 디스플레이는 판 내부 스크롤을 만들지 않는다', () => {
 		const { container } = render(
-			<Card
+			<GuidelineCard
 				card={{ ratio: '1:1', display: [{ blockType: 'typeSpecimenWidget' }] } as never}
 			/>,
 		)
@@ -45,7 +45,7 @@ describe('Card', () => {
 
 	it('기존 로고 크기와 오버레이 배율은 카드 크기를 바꾸지 않는다', () => {
 		const { container, rerender } = render(
-			<Card
+			<GuidelineCard
 				card={
 					{
 						display: [
@@ -66,7 +66,7 @@ describe('Card', () => {
 		expect(screen.getByRole('img').style.width).toBe('')
 		expect(screen.getByRole('img').style.height).toBe('')
 		rerender(
-			<Card
+			<GuidelineCard
 				card={
 					{
 						display: [
@@ -90,7 +90,7 @@ describe('Card', () => {
 
 	it('정적 디스플레이와 캡션(제목만)을 그린다', () => {
 		const { container } = render(
-			<Card
+			<GuidelineCard
 				card={
 					staticCard('a', { ratio: '1:1', caption: { title: 'Forward Mark' } }) as never
 				}
@@ -102,29 +102,31 @@ describe('Card', () => {
 	})
 
 	it('카드 표식이 있으면 판 모서리에 배지를 그리고 none이면 그리지 않는다', () => {
-		render(<Card card={staticCard('a', { mark: 'dont' }) as never} />)
+		render(<GuidelineCard card={staticCard('a', { mark: 'dont' }) as never} />)
 		expect(screen.getByRole('img', { name: "Don't" })).toHaveClass('text-destructive')
 		cleanup()
-		render(<Card card={staticCard('a', { mark: 'none' }) as never} />)
+		render(<GuidelineCard card={staticCard('a', { mark: 'none' }) as never} />)
 		expect(screen.queryByRole('img', { name: "Don't" })).toBeNull()
 	})
 
 	it('캡션이 비면 figcaption을 만들지 않고, 디스플레이가 없으면 카드 자체를 그리지 않는다', () => {
-		const { container } = render(<Card card={staticCard('a') as never} />)
+		const { container } = render(<GuidelineCard card={staticCard('a') as never} />)
 		expect(container.querySelector('figcaption')).toBeNull()
 
-		const empty = render(<Card card={{ id: 'b', ratio: '16:9', display: [] } as never} />)
+		const empty = render(
+			<GuidelineCard card={{ id: 'b', ratio: '16:9', display: [] } as never} />,
+		)
 		expect(empty.container).toBeEmptyDOMElement()
 	})
 
 	it('기존 캡션은 아래에 두고 오버레이는 figure의 접근 가능한 마지막 자식으로 그린다', () => {
 		const { container, rerender } = render(
-			<Card card={staticCard('a', { caption: { title: '기존 캡션' } }) as never} />,
+			<GuidelineCard card={staticCard('a', { caption: { title: '기존 캡션' } }) as never} />,
 		)
 		expect(container.querySelector('figcaption')).toHaveAttribute('data-placement', 'below')
 		expect(container.querySelector('figcaption')).not.toHaveAttribute('tabindex')
 		rerender(
-			<Card
+			<GuidelineCard
 				card={
 					staticCard('a', {
 						caption: { placement: 'overlay', title: '오버레이 캡션' },
@@ -137,7 +139,7 @@ describe('Card', () => {
 		expect(caption).toHaveAttribute('tabindex', '0')
 		expect(screen.getByText('오버레이 캡션')).toBeInTheDocument()
 		rerender(
-			<Card
+			<GuidelineCard
 				card={staticCard('a', { caption: { placement: 'overlay', title: ' ' } }) as never}
 			/>,
 		)
@@ -247,11 +249,13 @@ describe('CardBlock', () => {
 		expect(container.querySelector('[data-slot="slide"]')).toHaveClass('md:basis-auto')
 	})
 
-	it('격자는 줄바꿈 행이고 rowHeight가 비면 보통이다', () => {
+	it('격자는 기본 2열이며 높이 설정을 적용하지 않는다', () => {
 		const { container } = render(
 			<CardBlock block={{ layout: 'grid', cards: [staticCard('a')] } as never} />,
 		)
-		expect(container.querySelector('.md\\:flex-wrap')).not.toBeNull()
-		expect(container.querySelector('figure > div')).toHaveClass('md:h-[min(45vw,46rem)]')
+		expect(container.querySelector('[data-slot="grid-container"]')).toHaveStyle({
+			'--grid-columns': '2',
+		})
+		expect(container.querySelector('figure > div')).not.toHaveClass('md:h-[min(45vw,46rem)]')
 	})
 })

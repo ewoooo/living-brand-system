@@ -1,8 +1,8 @@
 import { cva } from 'class-variance-authority'
 import type { ReactNode } from 'react'
 import { Typography } from '@/components/ui/typography'
-import { GuidelineDescription } from '@/features/guideline/components/globals/guideline-description'
-import { GUIDELINE_TYPOGRAPHY } from '@/features/guideline/components/globals/guideline-typography'
+import { GuidelineDescription } from '@/features/guideline/components/typography/guideline-description'
+import { GUIDELINE_TYPOGRAPHY } from '@/features/guideline/components/typography/guideline-typography'
 import { cn } from '@/lib/utils'
 import type { BaseBlock } from '@/payload-types'
 
