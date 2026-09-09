@@ -57,5 +57,10 @@ export async function imageToCmykSamples(href: string, icc: string): Promise<Cmy
 		data.copy(cmyk, index * 4, index * 5, index * 5 + 4)
 		alpha[index] = data[index * 5 + 4]
 	}
-	return { alpha, cmyk, height: info.height, width: info.width }
+	// 🔴 알파 채널이 있다는 것과 실제로 투명하다는 것은 다르다 — sharp의 `composite`는 불투명한
+	//    입력에도 알파를 붙인다(실측). 전부 255면 아무것도 가리지 않는 `/SMask`를 싣는 셈이라
+	//    바이트가 25% 늘고, 뷰어·RIP가 쓸데없이 투명 합성 경로를 탄다.
+	return alpha.every((byte) => byte === 255)
+		? { cmyk, height: info.height, width: info.width }
+		: { alpha, cmyk, height: info.height, width: info.width }
 }

@@ -61,13 +61,28 @@ describe('imageToCmykSamples', () => {
 		expect(samples?.cmyk.subarray(0, 4).some((byte) => byte > 0)).toBe(true)
 	})
 
+	/**
+	 * 🔴 알파 채널이 **있다**는 것과 실제로 투명하다는 것은 다르다. sharp의 `composite`는 불투명한
+	 * 입력에도 알파를 붙이므로(실측), 채널 유무만 보고 `/SMask`를 만들면 아무것도 가리지 않는
+	 * 마스크가 바이트를 25% 늘리고 뷰어를 투명 합성 경로로 보낸다.
+	 */
+	it('알파가 전부 불투명하면 돌려주지 않는다', async () => {
+		const samples = await imageToCmykSamples(
+			await dataUrl({ alpha: 1, b: 65, g: 175, r: 0 }, 4),
+			ICC,
+		)
+
+		expect(samples?.alpha).toBeUndefined()
+		expect(samples?.cmyk.byteLength).toBe(2 * 2 * 4)
+	})
+
 	it('data URI가 아니면 읽지 않는다', async () => {
 		expect(await imageToCmykSamples('/api/media/file/photo.png', ICC)).toBeNull()
 	})
 
 	it('픽셀 수와 실제 데이터 길이가 어긋나지 않는다 — 알파 분리가 인덱스를 밀지 않는다', async () => {
 		const samples = await imageToCmykSamples(
-			await dataUrl({ alpha: 1, b: 0, g: 0, r: 255 }, 4),
+			await dataUrl({ alpha: 0.4, b: 0, g: 0, r: 255 }, 4),
 			ICC,
 		)
 		const first = [...(samples?.cmyk.subarray(0, 4) ?? [])]
