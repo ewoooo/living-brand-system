@@ -117,7 +117,7 @@ export async function exportVectorArtifactAsPrintPdf(
 				: body?.code === 'color-not-convertible'
 					? '인쇄 잉크로 바꿀 수 없는 색이 있어 PDF를 만들지 않았습니다.'
 					: body?.code === 'image-not-convertible'
-						? '인쇄 색으로 바꿀 수 없는 이미지가 있어 PDF를 만들지 않았습니다.'
+						? '인쇄 색으로 바꿀 수 없는 이미지가 있어 PDF를 만들지 않았습니다. PNG·JPEG만 인쇄 색으로 바꿀 수 있습니다.'
 						: // 래스터 경로와 같은 표를 쓴다 — 같은 401·413이 형식에 따라 다른 문구로 보이면 안 된다.
 							printFailureMessage('pdf', response.status),
 		)

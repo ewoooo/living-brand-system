@@ -572,6 +572,14 @@ export function TemplateStudioProvider({
 	 */
 	const exportHtml = useCallback((): string => {
 		if (background.state.type !== 'graphic') return composedHtml
+		// 🔴 **내보내기는 미리보기와 같은 조건으로 판단한다.** 캔버스는 고른 그래픽 설정이 있을 때만
+		//    셰이더를 그리므로(`template-canvas`의 `graphicConfig &&`), 목록이 비었거나 id가 안 맞으면
+		//    화면에도 그래픽이 없다. 그때 아래 가드가 걸리면 **모든 형식의 내보내기가 영구 차단된다** —
+		//    창작자가 고칠 방법이 없는 「막힌 실패」다. 그릴 것이 없으면 화면처럼 그래픽 없이 낸다.
+		const selected = background.graphicConfigs.some(
+			(candidate) => candidate.id === background.state.graphicConfigId,
+		)
+		if (!selected) return composedHtml
 		// 🔴 캡처가 등록되기 전에 내보내면 배경이 **조용히 빠진 판**이 나간다 — `composedHtml`은
 		//    캔버스 자리를 transparent로 비워 두기 때문이다. 창작자가 스스로 고칠 수 있는 사유이므로
 		//    거부하고 알린다(`useExport`가 이 message를 화면에 그대로 띄운다).
@@ -584,7 +592,7 @@ export function TemplateStudioProvider({
 			{},
 			{ canvasBackground: { imageUrl: graphicFrame } },
 		)
-	}, [background.state.type, composedHtml])
+	}, [background.graphicConfigs, background.state, composedHtml])
 	const artifact = useCallback(
 		(): TemplateRasterArtifact =>
 			createTemplateRasterArtifact({ height, html: exportHtml(), width }),

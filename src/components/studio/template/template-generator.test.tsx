@@ -480,6 +480,28 @@ describe('TemplateGenerator', () => {
 	})
 
 	/**
+	 * 🔴 **내보내기는 미리보기와 같은 조건으로 판단한다.** 캔버스는 고른 그래픽 설정이 있을 때만
+	 * 셰이더를 그리므로, 목록이 비면 화면에도 그래픽이 없다. 그때 프레임을 요구하면 **모든 형식의
+	 * 내보내기가 영구 차단된다** — 창작자가 고칠 방법이 없는 「막힌 실패」다.
+	 */
+	it('그릴 그래픽이 없으면 차단하지 않는다', () => {
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateStudioConfig(template, imageConfigs, [])}
+				template={template}
+				categoryTitle="카드"
+			>
+				<GraphicCaptureProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic for export' }))
+		fireEvent.click(screen.getByRole('button', { name: 'unregister graphic frame' }))
+
+		expect(() => mocks.templateArtifact?.()).not.toThrow()
+	})
+
+	/**
 	 * 🔴 캡처가 등록되기 전에 내보내면 배경이 조용히 빠진 판이 나간다. 창작자가 「미리보기를 기다렸다
 	 * 다시」로 고칠 수 있는 사유이므로 거부하고 알린다 — 조용한 누락이 이 작업의 고치는 대상이다.
 	 */
