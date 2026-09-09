@@ -571,15 +571,19 @@ export function TemplateStudioProvider({
 	 *    그려야 하므로 `videoArtifact`가 따로 합성한다.
 	 */
 	const exportHtml = useCallback((): string => {
-		const graphicFrame =
-			background.state.type === 'graphic' ? graphicFrameRef.current?.() : undefined
-		return graphicFrame
-			? composeTemplateHtml(
-					composedHtml,
-					{},
-					{ canvasBackground: { imageUrl: graphicFrame } },
-				)
-			: composedHtml
+		if (background.state.type !== 'graphic') return composedHtml
+		// 🔴 캡처가 등록되기 전에 내보내면 배경이 **조용히 빠진 판**이 나간다 — `composedHtml`은
+		//    캔버스 자리를 transparent로 비워 두기 때문이다. 창작자가 스스로 고칠 수 있는 사유이므로
+		//    거부하고 알린다(`useExport`가 이 message를 화면에 그대로 띄운다).
+		const graphicFrame = graphicFrameRef.current?.()
+		if (!graphicFrame) {
+			throw new Error('그래픽 배경 미리보기가 준비된 뒤 다시 시도해 주세요.')
+		}
+		return composeTemplateHtml(
+			composedHtml,
+			{},
+			{ canvasBackground: { imageUrl: graphicFrame } },
+		)
 	}, [background.state.type, composedHtml])
 	const artifact = useCallback(
 		(): TemplateRasterArtifact =>

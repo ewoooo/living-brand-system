@@ -311,9 +311,14 @@ function GraphicCaptureProbe() {
 		}
 	}, [canvas])
 	return (
-		<button type="button" onClick={() => background.selectType('graphic')}>
-			select graphic for export
-		</button>
+		<>
+			<button type="button" onClick={() => background.selectType('graphic')}>
+				select graphic for export
+			</button>
+			<button type="button" onClick={() => canvas.registerGraphicFrame(null)}>
+				unregister graphic frame
+			</button>
+		</>
 	)
 }
 
@@ -472,6 +477,30 @@ describe('TemplateGenerator', () => {
 		void mocks.templateVectorArtifact?.()
 
 		expect(mocks.captureGraphicFrame).toHaveBeenCalledTimes(1)
+	})
+
+	/**
+	 * 🔴 캡처가 등록되기 전에 내보내면 배경이 조용히 빠진 판이 나간다. 창작자가 「미리보기를 기다렸다
+	 * 다시」로 고칠 수 있는 사유이므로 거부하고 알린다 — 조용한 누락이 이 작업의 고치는 대상이다.
+	 */
+	it('그래픽 프레임이 없으면 내보내기를 거부한다', () => {
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				template={template}
+				categoryTitle="카드"
+			>
+				<GraphicCaptureProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic for export' }))
+		fireEvent.click(screen.getByRole('button', { name: 'unregister graphic frame' }))
+
+		// 🔑 두 producer 모두 `exportHtml()`을 본문 진입 전에 평가하므로 **동기로** 던진다.
+		//    `useExport`의 try가 그것을 잡아 message를 화면에 띄운다.
+		expect(() => mocks.templateArtifact?.()).toThrow('미리보기가 준비된 뒤')
+		expect(() => mocks.templateVectorArtifact?.()).toThrow('미리보기가 준비된 뒤')
 	})
 
 	it('출력 캔버스 비율을 작업 영역에 맞춰 프리뷰에 반영한다', () => {
