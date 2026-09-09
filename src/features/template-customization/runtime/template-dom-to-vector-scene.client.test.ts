@@ -47,6 +47,31 @@ function stageWith(html: string): HTMLElement {
 describe('templateDomToVectorScene', () => {
 	beforeEach(() => document.body.replaceChildren())
 
+	/**
+	 * 🔴 판의 배경 이미지는 **stage 자신**에게 얹힌다(`composeTemplateHtml`이 루트 프레임의
+	 * `backgroundImage`를 덮는다). 걷기는 `stage.children`부터 시작하므로 stage만 「배경색 하나만
+	 * 읽히는 특별한 요소」였고, 그래서 image·graphic 배경이 PDF·SVG에서 **경고도 없이 사라졌다.**
+	 */
+	it('판 자신의 배경 이미지를 맨 아래 image로 옮긴다', async () => {
+		const stage = stageWith(
+			'<div data-node-id="frame-1" style="background-color:#eeeeee"></div>',
+		)
+		stage.style.backgroundImage = 'url("https://example.test/plate.png")'
+		measure(stage.firstElementChild as Element, { x: 10, y: 20, width: 100, height: 50 })
+
+		const { scene } = await templateDomToVectorScene(stage, { width: 400, height: 300 })
+
+		expect(scene.primitives[0]).toEqual({
+			kind: 'image',
+			x: 0,
+			y: 0,
+			width: 400,
+			height: 300,
+			href: 'data:image/png;base64,BAKED',
+			preserveAspectRatio: 'none',
+		})
+	})
+
 	it('div 배경과 테두리를 판 좌표계의 rect로 옮긴다', async () => {
 		const stage = stageWith(
 			'<div data-node-id="frame-1" data-name="Card" style="background-color:#eeeeee;border:2px solid #112233;border-top-left-radius:8px;border-top-right-radius:8px;border-bottom-right-radius:8px;border-bottom-left-radius:8px"></div>',

@@ -559,26 +559,36 @@ export function TemplateStudioProvider({
 			templateControllerValues(config, textSlots, text.values, text.color, background.state),
 		[background.state, config, text.color, text.values, textSlots],
 	)
-	const artifact = useCallback((): TemplateRasterArtifact => {
+	/**
+	 * 내보내기용 합성 HTML. 배경이 graphic이면 셰이더 캔버스를 그 시점의 한 장으로 굳혀 판의 배경
+	 * 이미지로 얹는다 — `composedHtml`은 미리보기용이라 캔버스 자리를 transparent로 비워 둔다.
+	 *
+	 * 🔴 **래스터와 벡터가 같은 HTML을 쓴다.** 예전에는 벡터만 이걸 건너뛰었고(「래스터 프레임이 판
+	 *    전체를 이미지로 덮어 인쇄용 벡터의 목적을 없앤다」), 그 결과 PDF·SVG에서 배경이 통째로
+	 *    사라졌다. 거짓 이항대립이었다 — 셰이더 그라디언트는 원리적으로 벡터가 될 수 없고, 벡터의
+	 *    목적(글자·로고가 선명한 것)은 전경이 지킨다. 조용히 없어지는 쪽이 훨씬 나쁘다.
+	 * 🔑 정지 이미지 계열(png·jpeg·tiff·pdf·svg)이 이걸 공유한다. MP4만 프레임마다 셰이더를 다시
+	 *    그려야 하므로 `videoArtifact`가 따로 합성한다.
+	 */
+	const exportHtml = useCallback((): string => {
 		const graphicFrame =
 			background.state.type === 'graphic' ? graphicFrameRef.current?.() : undefined
-		return createTemplateRasterArtifact({
-			height,
-			html: graphicFrame
-				? composeTemplateHtml(
-						composedHtml,
-						{},
-						{ canvasBackground: { imageUrl: graphicFrame } },
-					)
-				: composedHtml,
-			width,
-		})
-	}, [background.state.type, composedHtml, height, width])
-	// 벡터는 배경 graphic을 래스터 프레임으로 깔지 않는다 — 그 프레임이 판 전체를 이미지 한 장으로
-	// 덮어 인쇄용 벡터의 목적을 없앤다. 배경은 씬의 바닥색으로만 남는다.
+		return graphicFrame
+			? composeTemplateHtml(
+					composedHtml,
+					{},
+					{ canvasBackground: { imageUrl: graphicFrame } },
+				)
+			: composedHtml
+	}, [background.state.type, composedHtml])
+	const artifact = useCallback(
+		(): TemplateRasterArtifact =>
+			createTemplateRasterArtifact({ height, html: exportHtml(), width }),
+		[exportHtml, height, width],
+	)
 	const vectorArtifact = useCallback(
-		() => createTemplateVectorArtifact({ height, html: composedHtml, width }),
-		[composedHtml, height, width],
+		() => createTemplateVectorArtifact({ height, html: exportHtml(), width }),
+		[exportHtml, height, width],
 	)
 	// 배경이 graphic이어도 video artifact를 내지 않는 runtime이 있다(forward-straight는 vector·raster뿐).
 	// 타입만 보고 MP4를 Video 경로로 돌리면 producer가 던진다 — 선언을 보고 정적 MP4로 떨어뜨린다.

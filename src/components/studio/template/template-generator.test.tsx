@@ -41,6 +41,7 @@ const mocks = vi.hoisted(() => ({
 	resizeGraphicPreview: vi.fn(),
 	resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
 	templateArtifact: undefined as TemplateRasterArtifactProducer | undefined,
+	templateVectorArtifact: undefined as (() => Promise<unknown>) | undefined,
 	updateGraphicPreview: vi.fn(),
 }))
 
@@ -301,9 +302,11 @@ function GraphicCaptureProbe() {
 	const { background, canvas } = useTemplateStudio()
 	useEffect(() => {
 		mocks.templateArtifact = canvas.artifact
+		mocks.templateVectorArtifact = canvas.vectorArtifact
 		canvas.registerGraphicFrame(mocks.captureGraphicFrame)
 		return () => {
 			mocks.templateArtifact = undefined
+			mocks.templateVectorArtifact = undefined
 			canvas.registerGraphicFrame(null)
 		}
 	}, [canvas])
@@ -445,6 +448,30 @@ describe('TemplateGenerator', () => {
 			kind: 'raster',
 			source: { withSurface: expect.any(Function) },
 		})
+	})
+
+	/**
+	 * 🔴 벡터도 그래픽 배경을 굳혀 실어야 한다. 예전에는 벡터만 이걸 건너뛰어(「래스터 프레임이 판
+	 * 전체를 이미지로 덮어 인쇄용 벡터의 목적을 없앤다」) PDF·SVG에서 배경이 통째로 사라졌다.
+	 * 래스터와 벡터가 **같은 합성 HTML**을 쓰는 것이 그 재발을 막는 불변식이다.
+	 */
+	it('Vector Artifact producer도 export 실행 시점의 그래픽 프레임을 합성한다', () => {
+		mocks.captureGraphicFrame.mockReturnValue('/graphic-frame.png')
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				template={template}
+				categoryTitle="카드"
+			>
+				<GraphicCaptureProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic for export' }))
+		mocks.captureGraphicFrame.mockClear()
+		void mocks.templateVectorArtifact?.()
+
+		expect(mocks.captureGraphicFrame).toHaveBeenCalledTimes(1)
 	})
 
 	it('출력 캔버스 비율을 작업 영역에 맞춰 프리뷰에 반영한다', () => {
