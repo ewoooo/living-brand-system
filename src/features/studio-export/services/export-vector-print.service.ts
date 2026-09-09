@@ -1,7 +1,10 @@
 import type { VectorScene } from '@/modules/studio-artifact/studio-artifact'
-import { vectorSceneToPdf } from '../adapters/vector-scene-to-pdf.pdf-lib'
+import { convertRgbToCmyk } from '../adapters/rgb-to-cmyk.sharp'
+import { collectSceneColors, vectorSceneToPdf } from '../adapters/vector-scene-to-pdf.pdf-lib'
+import { readCmykIccProfile, resolveCmykIccProfilePath } from '../color-profile.server'
 import type { CmykIccProfile } from '../export-contract'
 import type { PrintPpi } from '../print-policy'
+import { listBrandInks } from '../repositories/brand-ink.payload.repository'
 
 export class VectorPrintInputError extends Error {}
 
@@ -18,13 +21,17 @@ const MAX_PRIMITIVES = 20_000
 /**
  * Vector Scene을 인쇄용 PDF로 만든다. pdf-lib I/O는 adapter가 소유한다.
  *
- * 🔴 **지금은 CMYK로 바꾸지 않는다.** PDF 안의 CMYK 이미지가 Illustrator에서 반전돼 열리는
- *    알려진 결함(pdf-lib·jsPDF·Prawn 공통, Adobe 미해결) 때문에 RGB로 낸다 — 화면·SVG와 같은
- *    그림이 열리는 것이 우선이다. 근거는 `png-to-pdf.pdf-lib`의 주석이 갖는다.
- * 🔑 `colorProfile` 인자는 계약이 이미 실어 보내므로 남겨 둔다 — 색 관리를 되돌릴 때 이 자리가
- *    출발점이다. 지금은 읽고 버린다.
+ * 도형 색은 **브랜드 정본이 지정한 잉크값**으로 찍는다. 정본이 말하지 않는 색만 ICC로 계산한다.
+ * 🔴 정본 값을 검사하거나 보정하지 않는다 — 총 잉크량이 상한을 넘든 순수 검정을 안 쓰든 그대로
+ *    옮긴다. 인쇄 사고가 나면 고칠 곳은 코드가 아니라 가이드라인이다(사용자 지시, 2026-09-09).
+ * 🔴 **사진은 아직 RGB로 남는다.** 씬의 `image`를 CMYK로 바꾸려면 `colorSpace: 'cmyk'`를 채워야
+ *    하는데, PDF 안의 CMYK 이미지가 Illustrator에서 반전돼 열리는 결함이 아직 실물로 확인되지
+ *    않았다. 도형만 먼저 정본대로 찍는다.
+ * 🔑 `colorProfile`이 없으면 RGB로 낸다 — 인쇄 프로파일을 갖는 것은 템플릿이고, 안 준 판을
+ *    임의로 CMYK로 바꾸지 않는다.
  */
 export async function exportVectorPrint({
+	colorProfile,
 	ppi,
 	scene,
 }: {
@@ -37,7 +44,23 @@ export async function exportVectorPrint({
 	const unoutlined = countTextPrimitives(scene)
 	if (unoutlined > 0) throw new VectorPrintTextError(String(unoutlined))
 
-	return vectorSceneToPdf(scene, { ppi })
+	if (!colorProfile) return vectorSceneToPdf(scene, { ppi })
+
+	const canon = await listBrandInks()
+	// 정본에 없는 색만 계산한다. 브랜드 색을 계산값으로 덮으면 가이드라인과 다른 잉크가 찍힌다.
+	const uncanonical = collectSceneColors(scene).filter((hex) => !canon.has(hex.toLowerCase()))
+	const computed = await convertRgbToCmyk(uncanonical, resolveCmykIccProfilePath(colorProfile))
+
+	return vectorSceneToPdf(scene, {
+		// 정본이 계산값에 덮이지 않게 하는 것은 위의 필터다. 순서는 두 번째 잠금일 뿐이다 —
+		// 필터가 이미 겹침을 없애므로 이 줄만 뒤집어도 결과는 같다.
+		cmyk: {
+			colors: new Map([...computed, ...canon]),
+			iccProfile: await readCmykIccProfile(colorProfile),
+			iccProfileName: colorProfile,
+		},
+		ppi,
+	})
 }
 
 /** 아웃라인 단계를 통과하지 못해 `text`로 남은 글줄 수. 0이 아니면 PDF를 만들지 않는다. */
