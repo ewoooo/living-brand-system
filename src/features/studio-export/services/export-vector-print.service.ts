@@ -6,6 +6,7 @@ import {
 	parseColor,
 	vectorSceneToPdf,
 } from '../adapters/vector-scene-to-pdf.pdf-lib'
+import { findNonCmykColors } from '../cmyk-only'
 import { readCmykIccProfile, resolveCmykIccProfilePath } from '../color-profile.server'
 import type { CmykIccProfile } from '../export-contract'
 import type { PrintPpi } from '../print-policy'
@@ -35,6 +36,13 @@ export class VectorPrintColorError extends Error {}
  *    인쇄 사고이므로 여기서 끊는다.
  */
 export class VectorPrintImageError extends Error {}
+
+/**
+ * 다 만든 PDF에 CMYK 아닌 색이 남았다.
+ * 🔴 상류 가드를 다 통과했는데도 걸렸다는 뜻이라 원인은 코드에 있다. 그래도 파일을 내보내지 않는다 —
+ *    혼재된 파일을 Illustrator가 열면 문서 모드를 하나 골라 정본 CMYK 수치를 통째로 깨뜨린다.
+ */
+export class VectorPrintMixedModeError extends Error {}
 
 /** 판 하나가 가질 수 있는 도형 수 상한. 넘으면 템플릿이 아니라 잘못된 입력이다. */
 const MAX_PRIMITIVES = 20_000
@@ -102,7 +110,7 @@ export async function exportVectorPrint({
 	}
 	if (unconvertible.length > 0) throw new VectorPrintColorError(String(unconvertible.length))
 
-	return vectorSceneToPdf(cmykScene, {
+	const pdf = await vectorSceneToPdf(cmykScene, {
 		cmyk: {
 			colors,
 			iccProfile: await readCmykIccProfile(colorProfile),
@@ -110,6 +118,13 @@ export async function exportVectorPrint({
 		},
 		ppi,
 	})
+
+	// 🔴 출구에서 한 번 본다. 상류 분기가 하나 늘 때마다 혼재가 새는 길도 하나 늘어나므로,
+	//    분기를 믿는 대신 결과를 검사한다 — 2026-09-09에 이 검사가 없어 혼재 파일을 세 번 냈다.
+	const mixed = await findNonCmykColors(pdf)
+	if (mixed.length > 0) throw new VectorPrintMixedModeError(mixed.join(' · '))
+
+	return pdf
 }
 
 /** 씬이 허용하는 색 표기를 `#rrggbb` 하나로 편다. 못 읽는 표기는 `undefined`. */

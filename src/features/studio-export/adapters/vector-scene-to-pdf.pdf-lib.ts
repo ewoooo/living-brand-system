@@ -230,9 +230,12 @@ async function draw(
 						PDFName.of('ColorSpace'),
 						pdf.context.obj([PDFName.of('ICCBased'), profileRef]),
 					)
-					// 🔴 ColorSpace만 덮으면 pdf-lib이 심은 반전 보정이 남아 이중 반전이 된다 —
-					//    자세한 근거는 `cmyk-jpeg-to-pdf`의 같은 자리에 있다.
-					stream.dict.delete(PDFName.of('Decode'))
+					// 🔴 pdf-lib이 심는 `Decode [1 0 1 0 1 0 1 0]`을 **지우지 않는다.** APP14 Adobe
+					//    마커가 붙은 CMYK JPEG은 샘플을 반전해서 저장하는데, PDF 리더는 APP14를
+					//    보지 않으므로 되뒤집는 일을 이 배열이 해야 한다. 지우면 반전된 샘플이 그대로
+					//    잉크로 읽혀 초록이 검정으로, 파랑이 노랑으로 열린다(2026-09-09 실측).
+					//    🔑 JPEG 자체는 정상이다 — libjpeg·ColorSync는 마커를 보고 초록으로 읽는다.
+					//    그래서 파일만 열어 보면 결함이 안 보이고 PDF 안에서만 드러난다.
 				}
 			}
 			page.drawImage(embedded, {

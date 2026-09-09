@@ -6,6 +6,7 @@ import {
 	VectorPrintColorError,
 	VectorPrintImageError,
 	VectorPrintInputError,
+	VectorPrintMixedModeError,
 	VectorPrintTextError,
 } from '@/features/studio-export/services/export-vector-print.service'
 import { isPayloadUser } from '@/lib/auth'
@@ -102,6 +103,14 @@ export async function POST(request: Request) {
 					message: 'Scene image is not convertible to CMYK.',
 				},
 				{ status: 422 },
+			)
+		}
+		if (error instanceof VectorPrintMixedModeError) {
+			// 원인이 코드에 있으므로 서버 로그에 무엇이 남았는지 적는다.
+			console.error(`vector-print: CMYK 아닌 색이 남았습니다 — ${error.message}`)
+			return Response.json(
+				{ code: 'mixed-color-mode', message: 'PDF still contains non-CMYK color.' },
+				{ status: 500 },
 			)
 		}
 		if (error instanceof VectorPrintInputError) {
