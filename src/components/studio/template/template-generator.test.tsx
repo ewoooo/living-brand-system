@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import userEvent from '@testing-library/user-event'
 import { type ComponentProps, useEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { TemplateLayerPanel } from '@/components/studio/sidebar/template-layer-panel'
 import { TemplateSidebar } from '@/components/studio/sidebar/template-sidebar'
 import type {
 	GraphicRuntimeManifest,
@@ -237,8 +238,12 @@ function TemplateOutputProbe() {
 
 function TemplateSidebarTestBridge() {
 	return (
-		// 🔑 미리보기는 페이지 선택 카드가 쓰는 값이고, 그 카드는 왼쪽 헤더가 소유한다.
-		<TemplateSidebar exporting={useTestTemplateExport()} />
+		<>
+			{/* 🔴 레이어 패널은 **좌측 패널**에 산다 — 컨트롤은 여기서 묶음을 고른 그때만 나오므로,
+			    사이드바만 세운 테스트는 아무 컨트롤도 못 본다. 미리보기 카드는 좌측 소관이라 뺀다. */}
+			<TemplateLayerPanel />
+			<TemplateSidebar exporting={useTestTemplateExport()} />
+		</>
 	)
 }
 
@@ -857,7 +862,7 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 		const rows = Array.from(
-			container.querySelectorAll('[data-slot="studio-sidebar"] li button[aria-pressed]'),
+			container.querySelectorAll('[data-slot="studio-left-panel"] li button[aria-pressed]'),
 		).map((row) => row.textContent)
 
 		// 슬롯은 5개(텍스트 3 · 이미지 1 · 배경)인데 줄은 3개다. 텍스트 묶음에만 개수가 붙는다.
@@ -880,6 +885,7 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
+		// 🔑 레이어 패널은 좌측이므로 `Layers`는 여기 안 잡힌다 — 우측은 메인 필드다.
 		const titles = () =>
 			Array.from(
 				container.querySelectorAll(
@@ -887,7 +893,7 @@ describe('TemplateGenerator', () => {
 				),
 			).map((group) => group.querySelector('span')?.textContent?.trim())
 
-		expect(titles()).toEqual(['Layers'])
+		expect(titles()).toEqual([])
 		selectGroup('Image')
 		// 이미지 둘이 한 번에 — 묶음이 선택 단위라서다.
 		expect(titles()).toContain('Image 1')

@@ -5,6 +5,7 @@ import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import { PreviewRefreshSlot } from '@/components/studio/shared/preview-refresh-slot'
 import type { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { StudioLeftPanel } from '@/components/studio/sidebar/studio-left-panel'
+import { TemplateLayerPanel } from '@/components/studio/sidebar/template-layer-panel'
 import { TemplateProfilePicker } from '@/components/studio/template/template-profile-picker'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 
@@ -13,8 +14,8 @@ import { useTemplateStudio } from '@/features/template-customization/hooks/use-t
  *
  * 🔑 좌우 기준은 「좌 → 우로 갈수록 구체적이고 자주 만지는 것」이다(사용자 지시, 2026-09-10).
  *    LTR 읽기 방향과 같다.
- * 🔴 **공통 자리는 지금 비어 있다**(사용자 지시). 배경은 레이어 패널의 한 줄이 되어 컨트롤도
- *    우측으로 갔다 — 「판 전체에 걸리니 좌측」이었던 앞 판이 뒤집혔다.
+ * 🔴 아래 상자는 **레이어 패널**이다(사용자 지시, 2026-09-10). 무엇을 고르는 자리는 좌측이고,
+ *    고른 것을 만지는 자리가 우측이다 — 「좌 → 우로 갈수록 구체적이고 자주 만지는 것」.
  * 🔴 값은 prop으로 받지 않고 컨텍스트에서 직접 읽는다 — 사이드바가 넘겨 주던 22개 prop이
  *    전부 `useTemplateStudio()`에서 나오던 것이라, 옮기면서 그 경유를 없앤다.
  */
@@ -58,10 +59,10 @@ export function TemplateLeftPanel({
 					</Controller.AssetCard>
 				</PreviewRefreshSlot>
 			}
-			empty={{
-				title: '아직 공통 컨트롤이 없습니다',
-				description: '판 전체에 걸리는 설정이 이 자리에 옵니다.',
-			}}
-		/>
+		>
+			{/* 🔴 위치를 정하는 것은 이 한 줄뿐이다 — 패널은 자기 자리를 모른다(컨텍스트에서 직접
+			    읽는다). 우측이나 헤더로 옮기려면 이 줄을 그쪽으로 옮기면 된다. */}
+			<TemplateLayerPanel />
+		</StudioLeftPanel>
 	)
 }
