@@ -307,13 +307,13 @@ function useTemplateLayerSession(
 			}),
 		[editable],
 	)
-	const [selected, setSelected] = useState<TemplateStudioConfigSlot['kind'] | null>(null)
-	// 🔴 읽을 때 걸러 낸다 — 템플릿을 바꾸면 있는 묶음이 달라지고(이미지 없는 템플릿 등), 그때
-	//    남은 선택은 아무 컨트롤도 못 내면서 「고른 상태」로 보인다. 초기화 effect 대신 유도한다.
-	const selectedGroup = selected && all.some((slot) => slot.kind === selected) ? selected : null
+	const [selected, setSelected] = useState<string | null>(null)
+	// 🔴 읽을 때 걸러 낸다 — 템플릿을 바꾸면 슬롯 id가 통째로 달라지고, 그때 남은 선택은
+	//    아무 컨트롤도 못 내면서 「고른 상태」로 보인다. 초기화 effect를 두는 대신 유도한다.
+	const selectedId = selected && all.some((slot) => slot.id === selected) ? selected : null
 	return useMemo(
-		() => ({ visibility, setVisible, selectedGroup, select: setSelected }),
-		[selectedGroup, setVisible, visibility],
+		() => ({ visibility, setVisible, selectedId, select: setSelected }),
+		[selectedId, setVisible, visibility],
 	)
 }
 
