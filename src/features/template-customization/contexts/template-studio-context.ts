@@ -7,6 +7,7 @@ import type {
 	ResolvedTemplateImageConfig,
 	TemplateBackgroundType,
 	TemplateStudioConfig,
+	TemplateStudioConfigSlot,
 	TemplateVectorSlot,
 } from '@/features/template-customization/domain/template-studio-config'
 import type {
@@ -138,13 +139,15 @@ export type TemplateStudioValue = {
 		visibility: Record<string, boolean>
 		setVisible: (slotId: string, visible: boolean) => void
 		/**
-		 * 레이어 패널에서 고른 레이어. 🔴 **`focus`와 다른 것이다.** 컨트롤러는 평소에 아무것도
-		 * 보여주지 않고 이 값이 있을 때만 그 레이어의 컨트롤을 낸다(사용자 지시, 2026-09-10) —
-		 * `focus`로 대신하면 입력칸에 커서를 넣는 것만으로 대상이 섹션으로 바뀌어 방금 고른 것이
-		 * 사라진다(`focus`는 「지금 만지는 자리」이고 이것은 「고른 것」이다).
+		 * 레이어 패널에서 고른 **묶음**. 슬롯 하나가 아니라 text·image·CI·background 중 하나다
+		 * (사용자 지시, 2026-09-10 — 「좀 더 포괄적으로 묶음」).
+		 *
+		 * 🔴 **`focus`와 다른 것이다.** 컨트롤러는 평소에 아무것도 보여주지 않고 이 값이 있을 때만
+		 *    그 묶음의 컨트롤을 낸다 — `focus`로 대신하면 입력칸에 커서를 넣는 것만으로 대상이
+		 *    바뀌어 방금 고른 것이 사라진다(`focus`는 「지금 만지는 자리」이고 이것은 「고른 것」이다).
 		 */
-		selectedId: string | null
-		select: (slotId: string | null) => void
+		selectedGroup: TemplateStudioConfigSlot['kind'] | null
+		select: (kind: TemplateStudioConfigSlot['kind'] | null) => void
 	}
 	background: {
 		state: TemplateBackgroundState

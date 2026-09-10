@@ -375,6 +375,43 @@ export const isBackgroundSlot = (slot: TemplateStudioConfigSlot): slot is Templa
 	slot.kind === 'background'
 
 /** slot kind 추가 시 모든 소비 경로가 한 exhaustive switch에서 컴파일 실패하도록 분류한다. */
+/**
+ * 레이어 패널이 보여 주는 **묶음(그룹)** — 슬롯 하나하나가 아니다(사용자 지시, 2026-09-10).
+ *
+ * 🔑 「좀 더 포괄적으로 묶음」: text는 title·subtitle·body 등 **모든 텍스트**를, image는 n개의
+ *    이미지를, CI는 CI를, background는 판의 배경(solid color·image·graphic)을 하나로 묶는다.
+ *    그래서 슬롯이 7개인 템플릿(`poster`)도 목록은 4줄이다 — 「컨트롤러가 너무 많다」의 답이다.
+ * 🔴 순서는 **고정**이다. 그룹은 겹침에서 한 자리를 갖지 않으므로(텍스트와 이미지가 z에서
+ *    엇갈린다) 겹침 순서로 정렬할 수 없다 — 대신 모든 템플릿에서 목록이 같은 모양이 된다.
+ *    배경만은 언제나 맨 아래라서 마지막이다.
+ * 🔴 비어 있는 그룹은 줄을 내지 않는다. 배경은 노드가 아니라 도화지라 항상 있다.
+ */
+export type TemplateLayerGroup = {
+	kind: TemplateStudioConfigSlot['kind']
+	label: string
+	/** 이 묶음에 든 슬롯 — 캔버스 하이라이트가 한 번에 집는 대상이다. */
+	nodeIds: readonly string[]
+}
+
+const LAYER_GROUP_ORDER = [
+	{ kind: 'text', label: 'Text' },
+	{ kind: 'image', label: 'Image' },
+	// 벡터 슬롯의 실제 이름은 12개 템플릿에서 CI 10 · Logo 1 · Vector 1이다 — 묶음 이름은 CI다.
+	{ kind: 'vector', label: 'CI' },
+	{ kind: 'background', label: 'Background' },
+] as const satisfies readonly { kind: TemplateStudioConfigSlot['kind']; label: string }[]
+
+export function listTemplateLayerGroups(
+	slots: readonly TemplateStudioConfigSlot[],
+): TemplateLayerGroup[] {
+	const groups: TemplateLayerGroup[] = []
+	for (const { kind, label } of LAYER_GROUP_ORDER) {
+		const nodeIds = slots.filter((slot) => slot.kind === kind).map((slot) => slot.id)
+		if (nodeIds.length) groups.push({ kind, label, nodeIds })
+	}
+	return groups
+}
+
 export function partitionTemplateSlots(slots: readonly TemplateStudioConfigSlot[]) {
 	const text: TemplateTextSlot[] = []
 	const image: TemplateImageConfigSlot[] = []

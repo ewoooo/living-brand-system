@@ -36,6 +36,7 @@ import {
 	findTemplateControl,
 	findTemplateControlGroup,
 	partitionTemplateSlots,
+	type TemplateStudioConfigSlot,
 } from '@/features/template-customization/domain/template-studio-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 
@@ -59,14 +60,15 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 	// 🔑 배경도 여기다 — 레이어 패널의 한 줄이므로 컨트롤도 다른 레이어와 같은 자리에 온다.
 	const { text: textSlots, image: imageSlots } = partitionTemplateSlots(config.template.slots)
 	/**
-	 * 🔴 **평소에는 아무 컨트롤도 보여주지 않는다.** 레이어 패널에서 레이어를 고른 그 순간에만
-	 *    그 레이어의 컨트롤이 나온다(사용자 지시, 2026-09-10) — 우측이 「너무 많다」는 것은
+	 * 🔴 **평소에는 아무 컨트롤도 보여주지 않는다.** 레이어 패널에서 묶음을 고른 그 순간에만
+	 *    그 묶음의 컨트롤이 나온다(사용자 지시, 2026-09-10) — 우측이 「너무 많다」는 것은
 	 *    모든 슬롯의 컨트롤이 동시에 펼쳐져 있어서다.
+	 * 🔑 단위가 **묶음**이라 이미지 n개는 함께 나온다 — 「image: n개의 이미지를 묶음」.
 	 * 🔴 `focus`를 보지 않는다. `focus`는 「지금 만지는 자리」라 입력칸에 커서가 들어가면
-	 *    섹션(`section:text`)으로 바뀌고, 그것을 선택으로 읽으면 **글자를 치는 순간 컨트롤이
-	 *    통째로 사라진다.** 선택은 레이어 패널만 바꾸는 별개 상태다.
+	 *    대상이 바뀌고, 그것을 선택으로 읽으면 **글자를 치는 순간 컨트롤이 통째로 사라진다.**
+	 *    선택은 레이어 패널만 바꾸는 별개 상태다.
 	 */
-	const showsLayer = (slotId: string) => layers.selectedId === slotId
+	const showsGroup = (kind: TemplateStudioConfigSlot['kind']) => layers.selectedGroup === kind
 	const { canvas } = config.template.exportOption
 	const video = exporting.format === 'mp4' ? config.output.video?.mp4 : undefined
 	const textGroup = textSlots[0]
@@ -93,7 +95,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 						<StudioPanelScroll>
 							{/* 🔴 텍스트 색은 그룹 공용이라 필터를 타지 않는다 — 행이 전부 걸러지면 그룹이 껍데기로
 				    남아 `Color`만 뜬다. 보일 행이 하나도 없으면 그룹째 접는다. */}
-							{textSlots.some((slot) => showsLayer(slot.id)) && textGroup && (
+							{showsGroup('text') && textGroup && (
 								<ControllerGroupRenderer
 									definition={textGroup}
 									section={sectionProps(focus, {
@@ -112,8 +114,6 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 											slot.controlId,
 										)
 										if (definition?.kind !== 'text') return null
-										// 텍스트는 슬롯별 그룹이 아니라 한 그룹 안의 행이다 — 필터도 행 층위다.
-										if (!showsLayer(slot.id)) return null
 										return (
 											<div
 												key={slot.id}
@@ -175,7 +175,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 								const state = images.states[slot.id]
 								const contracts = images.contracts[slot.id] ?? []
 								if (!state) return null
-								if (!showsLayer(slot.id)) return null
+								if (!showsGroup('image')) return null
 								return (
 									<Controller.Group
 										key={slot.id}
@@ -253,7 +253,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 							})}
 							{vectors.slots.map((slot) => {
 								const color = vectors.colors[slot.id]
-								if (!showsLayer(slot.id)) return null
+								if (!showsGroup('vector')) return null
 								return (
 									<Controller.Group
 										key={slot.id}
@@ -279,7 +279,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 									</Controller.Group>
 								)
 							})}
-							{showsLayer('background') && <TemplateBackgroundPanel />}
+							{showsGroup('background') && <TemplateBackgroundPanel />}
 							{textSlots.length === 0 &&
 								imageSlots.length === 0 &&
 								vectors.slots.length === 0 && (
