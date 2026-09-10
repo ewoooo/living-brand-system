@@ -290,9 +290,9 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 						</StudioPanelScroll>
 					</>
 				}
-				// 🔑 아래 블록 = settings + 내보내기. 사용자 지시: 이 둘은 무조건 하나다.
+				// 🔑 아래 상자 = settings + 내보내기. 사용자 지시: 이 둘은 무조건 하나다.
 				bottom={
-					<>
+					<StudioPanelFixed className="gap-4">
 						<div className="flex flex-col gap-1">
 							<div className="flex h-9 items-center pt-1">
 								<span className="text-sm font-semibold text-muted-foreground">
@@ -359,7 +359,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 							warnings={exporting.vectorWarnings}
 							onExport={exporting.run}
 						/>
-					</>
+					</StudioPanelFixed>
 				}
 			/>
 		</Controller.Browser.Root>

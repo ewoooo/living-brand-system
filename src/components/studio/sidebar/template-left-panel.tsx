@@ -35,7 +35,7 @@ export function TemplateLeftPanel({
 		<StudioLeftPanel
 			// 🔑 페이지 선택은 위 상자 맨 위에 고정된다 — 공통된 것이 그 아래에 쌓인다.
 			page={
-				<PreviewRefreshSlot error={preview.error}>
+				<PreviewRefreshSlot error={preview.error} messageClassName="px-4 pb-4">
 					<Controller.AssetCard
 						title={config.name}
 						subtitle={navigation.categoryTitle ?? undefined}
@@ -50,7 +50,9 @@ export function TemplateLeftPanel({
 							templateCount > 1,
 							'교체할 다른 템플릿이 없습니다.',
 						)}
-						className="min-h-32 items-start"
+						// 🔴 상자를 꽉 채운다 — 자기 radius를 버리고 상자의 `overflow-hidden`이
+						//    잘라 주게 둔다(안 그러면 모서리에 상자 바닥색이 초승달로 남는다).
+						className="min-h-32 items-start rounded-none"
 					>
 						<TemplateProfilePicker />
 					</Controller.AssetCard>

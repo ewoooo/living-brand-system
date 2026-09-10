@@ -28,6 +28,7 @@ export function StudioPanel({
 	slot,
 	top,
 	bottom,
+	grow = 'top',
 	className,
 }: {
 	/**
@@ -41,6 +42,11 @@ export function StudioPanel({
 	 * 상자 두 개인 골격은 채울 것이 없을 때도 그대로 보여야 한다.
 	 */
 	bottom?: ReactNode
+	/**
+	 * 남은 높이를 먹는 상자. 🔴 상자가 스스로 정하지 않는다 — 우측은 위(컨트롤러)가 늘어나고
+	 * 좌측은 아래(공통)가 늘어난다. 위가 **내용만큼만** 차지해야 하는 패널이 있기 때문이다.
+	 */
+	grow?: 'top' | 'bottom'
 	className?: string
 }) {
 	return (
@@ -50,13 +56,18 @@ export function StudioPanel({
 			data-slot={slot}
 			className={cn('flex min-h-0 flex-col gap-4 lg:h-full lg:w-80', className)}
 		>
-			{/* 🔴 `Controller.Root`가 `lg:h-full`을 갖는다 — 상자가 둘이므로 높이는 flex가 나눈다. */}
-			<Controller.Root data-slot="studio-panel-top" className="min-h-0 flex-1 lg:h-auto">
+			{/* 🔴 `Controller.Root`가 `lg:h-full`을 갖는다 — 상자가 둘이므로 높이는 flex가 나눈다.
+			    🔑 상자는 **테두리만** 갖고 패딩을 갖지 않는다 — 안쪽 여백은 채우는 쪽이 가져오고,
+			       그래서 「요소가 상자를 꽉 채우는」 배치가 특례 없이 나온다. */}
+			<Controller.Root
+				data-slot="studio-panel-top"
+				className={cn('lg:h-auto', grow === 'top' ? 'min-h-0 flex-1' : 'shrink-0')}
+			>
 				{top}
 			</Controller.Root>
 			<Controller.Root
 				data-slot="studio-panel-bottom"
-				className="shrink-0 gap-4 p-4 lg:h-auto"
+				className={cn('lg:h-auto', grow === 'bottom' ? 'min-h-0 flex-1' : 'shrink-0')}
 			>
 				{bottom}
 			</Controller.Root>
@@ -93,12 +104,21 @@ export function StudioPanelScroll({ children }: { children: ReactNode }) {
  * ponytail: 그래도 레이어가 아주 많은 템플릿에서는 이 영역이 스크롤을 밀어낼 수 있다. 지금은
  *   목록이 접히므로(`collapsible`) 그것으로 족하고, 실제로 밀리면 여기에 최대 높이 한 줄이다.
  */
-export function StudioPanelFixed({ children }: { children: ReactNode }) {
+export function StudioPanelFixed({
+	children,
+	className,
+}: {
+	children: ReactNode
+	className?: string
+}) {
 	return (
 		<div
 			data-slot="studio-panel-fixed"
 			// 첫 그룹의 구분선은 지운다 — 상자의 위 테두리와 겹친다.
-			className="flex shrink-0 flex-col gap-1 px-4 pt-4 pb-4 [&>*:first-child]:border-t-0"
+			className={cn(
+				'flex shrink-0 flex-col gap-1 px-4 pt-4 pb-4 [&>*:first-child]:border-t-0',
+				className,
+			)}
 		>
 			{children}
 		</div>
