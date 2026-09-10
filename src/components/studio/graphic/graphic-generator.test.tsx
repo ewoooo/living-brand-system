@@ -156,6 +156,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+	vi.useRealTimers()
 	cleanup()
 	vi.unstubAllGlobals()
 })
@@ -535,6 +536,8 @@ describe('GraphicGenerator', () => {
 	})
 
 	it('현재 Controller 값과 화면 크기로 SVG를 다운로드한다', async () => {
+		vi.useFakeTimers({ toFake: ['Date'] })
+		vi.setSystemTime(new Date('2026-09-10T03:00:00Z'))
 		const createObjectURL = vi.fn((_blob: Blob) => 'blob:forward-straight')
 		const revokeObjectURL = vi.fn()
 		Object.defineProperties(URL, {
@@ -575,7 +578,7 @@ describe('GraphicGenerator', () => {
 		expect(svg.split('<line').length - 1).toBe(expected.dashes.length)
 		expect(svg).toContain(`x1="${expected.dashes[0].x1.toFixed(2)}"`)
 		expect(click.mock.instances[0]).toMatchObject({
-			download: 'forward-straight.svg',
+			download: 'Forward-Straight-20260910-120000.svg',
 			href: 'blob:forward-straight',
 		})
 		expect(revokeObjectURL).toHaveBeenCalledWith('blob:forward-straight')
