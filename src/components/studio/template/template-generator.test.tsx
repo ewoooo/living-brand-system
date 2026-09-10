@@ -812,6 +812,50 @@ describe('TemplateGenerator', () => {
 		expect(canvas?.textContent).not.toContain('다른 템플릿')
 	})
 
+	/**
+	 * 🔴 레이어 패널에서 레이어를 고르면 그 레이어의 컨트롤만 남는다 — 우측이 「너무 많다」는 것은
+	 * 모든 슬롯의 컨트롤이 동시에 펼쳐져 있어서다.
+	 * 🔴 `focus.target.sectionId`는 슬롯 id일 때도 있고 섹션 id(`section:text`)일 때도 있다.
+	 * 구분하지 않으면 **그룹 헤더를 누른 것이 레이어 선택으로 읽혀 그 그룹이 통째로 사라진다.**
+	 */
+	it('레이어를 고르면 그 레이어의 컨트롤만 남고, 그룹 헤더를 눌러도 사라지지 않는다', () => {
+		const { container } = render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html: '<p data-node-id="t1">TITLE</p><p data-node-id="t2">YEARS</p>',
+					nodeConfigs: {
+						t1: { input: { label: 'Title' } },
+						t2: { input: { label: 'Years' } },
+					},
+				}}
+			/>,
+		)
+		const titles = () =>
+			Array.from(container.querySelectorAll('[data-slot="controller-group"]')).map((group) =>
+				group.querySelector('span')?.textContent?.trim(),
+			)
+
+		// 아무것도 고르지 않았으면 전부 보인다.
+		expect(titles()).toContain('Text')
+		expect(titles()).toContain('Layers')
+
+		// 🔴 그룹 헤더를 누르는 것은 레이어 선택이 아니다 — Text가 남아 있어야 한다.
+		const textGroup = Array.from(
+			container.querySelectorAll('[data-slot="controller-group"]'),
+		).find((group) => group.querySelector('span')?.textContent?.trim() === 'Text')
+		fireEvent.click(textGroup?.querySelector('span') as Element)
+		expect(titles()).toContain('Text')
+
+		// 레이어 목록에서 Years를 고르면 Title 행이 걸러진다.
+		// 🔴 캔버스가 같은 컨테이너에 있어 판의 글자까지 잡힌다 — 사이드바로 좁혀서 본다.
+		fireEvent.click(screen.getByRole('button', { name: /Years/ }))
+		const sidebar = container.querySelector('[data-slot="studio-sidebar"]')?.textContent ?? ''
+		expect(sidebar).toContain('YEARS')
+		expect(sidebar).not.toContain('TITLE')
+	})
+
 	it('섹션은 노드 개수와 무관하게 눌러서 활성화된다 — Text는 슬롯 여럿, Background는 노드 없음', () => {
 		const { container } = render(
 			<TemplateGenerator

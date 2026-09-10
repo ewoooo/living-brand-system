@@ -16,6 +16,7 @@ import {
 import { PreviewRefreshSlot } from '@/components/studio/shared/preview-refresh-slot'
 import type { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
+import { TemplateLayerPanel } from '@/components/studio/sidebar/template-layer-panel'
 import { ImageSlotInput } from '@/components/studio/template/image-slot-input'
 import {
 	IMAGE_TRANSFORM_DEFAULT,
@@ -63,6 +64,22 @@ export function TemplateSidebar({
 	// 🔑 배경은 왼쪽 패널이 소유한다(`template-left-panel`) — 판 전체에 걸리는 것이라서다.
 	//    여기는 고른 레이어에 딸린 것만 갖는다.
 	const { text: textSlots, image: imageSlots } = partitionTemplateSlots(config.template.slots)
+	/**
+	 * 레이어 패널에서 고른 레이어. 있으면 그 레이어의 컨트롤만 남긴다 —
+	 * 우측이 「너무 많다」는 것은 **모든 슬롯의 컨트롤이 동시에 펼쳐져 있어서**다.
+	 * 🔴 아무것도 고르지 않았으면 전부 보여 준다. 빈 우측은 무엇을 골라야 하는지 알려 주지 않는다.
+	 * 🔴 `focus.target.sectionId`는 **슬롯 id일 때도 있고 섹션 id(`section:text`)일 때도 있다.**
+	 *    구분하지 않으면 그룹 헤더를 누른 것이 레이어 선택으로 읽혀 그 그룹이 통째로 사라진다.
+	 *    그래서 실제 슬롯 id일 때만 필터를 건다.
+	 */
+	const layerIds = new Set(
+		config.template.slots.filter((slot) => slot.kind !== 'background').map((slot) => slot.id),
+	)
+	const selectedLayerId =
+		focus.target?.sectionId && layerIds.has(focus.target.sectionId)
+			? focus.target.sectionId
+			: undefined
+	const showsLayer = (slotId: string) => !selectedLayerId || selectedLayerId === slotId
 	const { canvas } = config.template.exportOption
 	const video = exporting.format === 'mp4' ? config.output.video?.mp4 : undefined
 	const textGroup = textSlots[0]
@@ -173,7 +190,12 @@ export function TemplateSidebar({
 					</>
 				}
 			>
-				{textSlots.length > 0 && textGroup && (
+				{/* 🔴 위치를 정하는 것은 이 한 줄뿐이다 — 패널은 자기 자리를 모른다(컨텍스트에서 직접 읽는다).
+				    좌측이나 헤더로 옮기려면 이 줄을 그쪽으로 옮기면 된다. */}
+				<TemplateLayerPanel />
+				{/* 🔴 텍스트 색은 그룹 공용이라 필터를 타지 않는다 — 행이 전부 걸러지면 그룹이 껍데기로
+				    남아 `Color`만 뜬다. 보일 행이 하나도 없으면 그룹째 접는다. */}
+				{textSlots.some((slot) => showsLayer(slot.id)) && textGroup && (
 					<ControllerGroupRenderer
 						definition={textGroup}
 						section={sectionProps(focus, {
@@ -189,6 +211,8 @@ export function TemplateSidebar({
 						{textSlots.map((slot) => {
 							const definition = findTemplateControl(config, slot.controlId)
 							if (definition?.kind !== 'text') return null
+							// 텍스트는 슬롯별 그룹이 아니라 한 그룹 안의 행이다 — 필터도 행 층위다.
+							if (!showsLayer(slot.id)) return null
 							return (
 								<div
 									key={slot.id}
@@ -238,6 +262,7 @@ export function TemplateSidebar({
 					const state = images.states[slot.id]
 					const contracts = images.contracts[slot.id] ?? []
 					if (!state) return null
+					if (!showsLayer(slot.id)) return null
 					return (
 						<Controller.Group
 							key={slot.id}
@@ -305,6 +330,7 @@ export function TemplateSidebar({
 				})}
 				{vectors.slots.map((slot) => {
 					const color = vectors.colors[slot.id]
+					if (!showsLayer(slot.id)) return null
 					return (
 						<Controller.Group
 							key={slot.id}
