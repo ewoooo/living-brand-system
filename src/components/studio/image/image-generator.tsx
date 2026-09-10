@@ -5,6 +5,7 @@ import { ImageCanvas } from '@/components/studio/image/image-canvas'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { ImageSidebar } from '@/components/studio/sidebar/image-sidebar'
+import { StudioLeftPanel } from '@/components/studio/sidebar/studio-left-panel'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
@@ -77,7 +78,18 @@ function ImageWorkspace() {
 	})
 
 	return (
-		<StudioWorkspace sidebar={<ImageSidebar download={download} preview={preview} />}>
+		<StudioWorkspace
+			leftPanel={
+				<StudioLeftPanel
+					empty={{
+						title: '왼쪽 컨트롤이 아직 없습니다',
+						description:
+							'페이지 선택·스타일·판 전체에 걸리는 컨트롤이 이 자리로 옮겨 옵니다.',
+					}}
+				/>
+			}
+			sidebar={<ImageSidebar download={download} preview={preview} />}
+		>
 			<ImageCanvas />
 		</StudioWorkspace>
 	)

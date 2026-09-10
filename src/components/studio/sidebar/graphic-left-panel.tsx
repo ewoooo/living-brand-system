@@ -1,7 +1,7 @@
 'use client'
 
 import { ControllerRenderer } from '@/components/shared/controller-renderer'
-import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
+import { StudioLeftPanel } from '@/components/studio/sidebar/studio-left-panel'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 import { splitControllerGroups } from '@/modules/studio-controller/controller-definition'
 
@@ -20,17 +20,23 @@ export function GraphicLeftPanel() {
 		config.controller.right,
 	)
 
-	if (left.length === 0) return null
-
+	// 🔴 축이 없어도 `null`을 내지 않는다 — 레이아웃은 콘텐츠와 별개다. 빈 자리는 껍데기가 말한다.
 	return (
-		<StudioSidebar>
-			<ControllerRenderer
-				groups={left}
-				presentation={config.controllerPresentation}
-				values={controls.values}
-				bindings={controls.bindings}
-				onChange={controls.update}
-			/>
-		</StudioSidebar>
+		<StudioLeftPanel
+			empty={{
+				title: '이 프로파일에는 왼쪽 컨트롤이 없습니다',
+				description: '운영자가 controller.left로 어느 축을 여기 세울지 정합니다.',
+			}}
+		>
+			{left.length > 0 ? (
+				<ControllerRenderer
+					groups={left}
+					presentation={config.controllerPresentation}
+					values={controls.values}
+					bindings={controls.bindings}
+					onChange={controls.update}
+				/>
+			) : undefined}
+		</StudioLeftPanel>
 	)
 }

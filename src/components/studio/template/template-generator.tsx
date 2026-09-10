@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
+import { StudioLeftPanel } from '@/components/studio/sidebar/studio-left-panel'
 import { TemplateSidebar } from '@/components/studio/sidebar/template-sidebar'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import { applyTemplateSessionPatch } from '@/features/template-customization/domain/apply-template-session-patch'
@@ -86,7 +87,18 @@ function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
 	})
 
 	return (
-		<StudioWorkspace sidebar={<TemplateSidebar exporting={exporting} preview={preview} />}>
+		<StudioWorkspace
+			leftPanel={
+				<StudioLeftPanel
+					empty={{
+						title: '왼쪽 컨트롤이 아직 없습니다',
+						description:
+							'페이지 선택·스타일·판 전체에 걸리는 컨트롤이 이 자리로 옮겨 옵니다.',
+					}}
+				/>
+			}
+			sidebar={<TemplateSidebar exporting={exporting} preview={preview} />}
+		>
 			<TemplateCanvas />
 		</StudioWorkspace>
 	)
