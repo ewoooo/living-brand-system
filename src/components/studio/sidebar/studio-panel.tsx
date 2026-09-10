@@ -59,15 +59,24 @@ export function StudioPanel({
 			{/* 🔴 `Controller.Root`가 `lg:h-full`을 갖는다 — 상자가 둘이므로 높이는 flex가 나눈다.
 			    🔑 상자는 **테두리만** 갖고 패딩을 갖지 않는다 — 안쪽 여백은 채우는 쪽이 가져오고,
 			       그래서 「요소가 상자를 꽉 채우는」 배치가 특례 없이 나온다. */}
-			<Controller.Root
-				data-slot="studio-panel-top"
-				className={cn('lg:h-auto', grow === 'top' ? 'min-h-0 flex-1' : 'shrink-0')}
-			>
-				{top}
-			</Controller.Root>
+			{/* 🔴 위 상자는 **넣을 것이 있을 때만** 그린다 — 상자가 패딩을 갖지 않으므로 빈 상자는
+			    테두리 2px짜리 실선 조각으로 남는다(image·graphic 스튜디오가 아직 페이지 선택을
+			    옛 껍데기에 두고 있어 실제로 그랬다). 아래 상자는 비어도 자리를 지킨다. */}
+			{top && (
+				<Controller.Root
+					data-slot="studio-panel-top"
+					className={cn('lg:h-auto', grow === 'top' ? 'min-h-0 flex-1' : 'shrink-0')}
+				>
+					{top}
+				</Controller.Root>
+			)}
 			<Controller.Root
 				data-slot="studio-panel-bottom"
-				className={cn('lg:h-auto', grow === 'bottom' ? 'min-h-0 flex-1' : 'shrink-0')}
+				className={cn(
+					'lg:h-auto',
+					// 위 상자가 없으면 아래가 남은 높이를 다 먹는다 — 혼자 남은 상자가 쪼그라들면 안 된다.
+					grow === 'bottom' || !top ? 'min-h-0 flex-1' : 'shrink-0',
+				)}
 			>
 				{bottom}
 			</Controller.Root>

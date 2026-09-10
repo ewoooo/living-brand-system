@@ -25,6 +25,11 @@ type ControllerAssetCardProps = {
 	previewImage?: StudioPreviewImage
 	/** 본문이 비었을 때의 안내. */
 	empty?: React.ReactNode
+	/**
+	 * 자산 브라우저가 카드의 어느 쪽으로 떠오르나 — **캔버스 쪽**이어야 한다.
+	 * 오른쪽 사이드바의 카드는 기본값(`'left'`), 왼쪽 패널의 카드는 `'right'`다.
+	 */
+	panelSide?: 'left' | 'right'
 	/** 배선 전 컨트롤 — 잠기면 트리거 자체를 두지 않아 패널이 존재하지 않는다.
 	 *  Row 안에서는 행의 disabled를 자동으로 따른다. */
 	disabled?: boolean
@@ -54,6 +59,7 @@ export function ControllerAssetCard({
 	tabs,
 	previewImage,
 	empty,
+	panelSide,
 	disabled,
 	onRefreshPreview,
 	refreshingPreview,
@@ -151,7 +157,7 @@ export function ControllerAssetCard({
 				// 덮어써 패널이 열렸다 곧 닫힌다(browser.tsx의 Item 주석).
 				<ControllerBrowser.Item>
 					<ControllerBrowser.Trigger asChild>{button}</ControllerBrowser.Trigger>
-					<ControllerBrowser.Panel tabs={tabs ?? []} empty={empty}>
+					<ControllerBrowser.Panel tabs={tabs ?? []} empty={empty} side={panelSide}>
 						{children}
 					</ControllerBrowser.Panel>
 				</ControllerBrowser.Item>

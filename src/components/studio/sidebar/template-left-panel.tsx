@@ -41,6 +41,8 @@ export function TemplateLeftPanel({
 						title={config.name}
 						subtitle={navigation.categoryTitle ?? undefined}
 						buttonLabel="Change"
+						// 🔴 카드가 왼쪽 패널에 있으므로 브라우저는 **오른쪽**(캔버스 쪽)으로 뜬다.
+						panelSide="right"
 						aria-label="템플릿 변경"
 						tabs={['Templates']}
 						previewImage={preview.image ?? config.previewImage}

@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { Controller } from '@/components/shared/controller'
 import { StudioPanel, StudioPanelScroll } from '@/components/studio/sidebar/studio-panel'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 
@@ -30,26 +31,31 @@ export function StudioLeftPanel({
 	children?: ReactNode
 }) {
 	return (
-		<StudioPanel
-			slot="studio-left-panel"
-			grow="bottom"
-			top={page}
-			bottom={
-				<StudioPanelScroll>
-					{children ?? (
-						<Empty>
-							<EmptyHeader>
-								<EmptyTitle>
-									{empty?.title ?? '이 화면에는 공통 컨트롤이 없습니다'}
-								</EmptyTitle>
-								{empty?.description && (
-									<EmptyDescription>{empty.description}</EmptyDescription>
-								)}
-							</EmptyHeader>
-						</Empty>
-					)}
-				</StudioPanelScroll>
-			}
-		/>
+		// 🔴 자산 브라우저(Change)의 프레임이다. **상자 밖**에 있어야 한다 — 상자는
+		//    `overflow-hidden`이라 그 안에 두면 패널이 잘려 열려도 아무것도 안 보인다.
+		//    프레임이 없으면 패널이 portal되지 않아 엉뚱한 조상 기준으로 떠오른다.
+		<Controller.Browser.Root>
+			<StudioPanel
+				slot="studio-left-panel"
+				grow="bottom"
+				top={page}
+				bottom={
+					<StudioPanelScroll>
+						{children ?? (
+							<Empty>
+								<EmptyHeader>
+									<EmptyTitle>
+										{empty?.title ?? '이 화면에는 공통 컨트롤이 없습니다'}
+									</EmptyTitle>
+									{empty?.description && (
+										<EmptyDescription>{empty.description}</EmptyDescription>
+									)}
+								</EmptyHeader>
+							</Empty>
+						)}
+					</StudioPanelScroll>
+				}
+			/>
+		</Controller.Browser.Root>
 	)
 }
