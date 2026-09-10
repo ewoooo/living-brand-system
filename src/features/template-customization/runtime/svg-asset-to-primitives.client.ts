@@ -62,7 +62,7 @@ export async function svgAssetToPrimitives(
 	const offsetX = box.x + (box.width - source.width * scale) / 2
 	const offsetY = box.y + (box.height - source.height * scale) / 2
 
-	const shapes = collectShapes(root, options.tint)
+	const shapes = mergeCompoundPaths(collectShapes(root, options.tint))
 	if (shapes.length === 0) return null
 
 	return shapes.map(({ d, fill, fillRule }) => ({
@@ -101,6 +101,34 @@ function viewBoxOf(root: SVGSVGElement | Element): Box | null {
 	const width = Number.parseFloat(root.getAttribute('width') ?? '')
 	const height = Number.parseFloat(root.getAttribute('height') ?? '')
 	return width > 0 && height > 0 ? { x: 0, y: 0, width, height } : null
+}
+
+/**
+ * 같은 칠을 쓰는 **연이은** 도형을 하나의 path로 합친다 — Illustrator에서 **컴파운드 패스** 하나가 된다.
+ *
+ * 🔴 이것 없이는 로고가 SVG의 `<path>` 개수만큼 쪼개진다. 실측(2026-09-10): HD현대 CI SVG는
+ *    `<path>` 8개 · subpath 10개 · 전부 `fill="black"`이라 PDF에 칠 연산자가 **8번** 나갔고,
+ *    Illustrator에서 패스 8개로 열렸다(사용자 지적: 「CI가 컴파운드 패스가 아니라 다 쪼개져 있음」).
+ * 🔴 **연이은 것만** 합친다 — 사이에 다른 색 도형이 있으면 합치는 순간 그 도형이 위아래로 뒤집힌다.
+ * 🔴 감김 규칙이 다르면 합치지 않는다. nonzero와 evenodd를 한 path에 섞으면 구멍이 달라진다.
+ * 🔑 nonzero에서 합치기는 **겹치지 않는 도형에는 합집합과 같다.** 실측으로 확인했다 —
+ *    래스터 3,494,400픽셀 중 113개(0.0032%)만 경계 안티에일리어싱으로 달랐고 구멍은 생기지 않았다
+ *    (`.scratch/scripts/merge-check.mjs`). 같은 색 도형이 서로 겹치면서 감김이 반대인 병리적
+ *    자산에서는 달라질 수 있다 — 그런 자산은 애초에 원본이 컴파운드 패스였을 것이다.
+ */
+function mergeCompoundPaths(
+	shapes: readonly { d: string; fill: string; fillRule?: 'evenodd' }[],
+): { d: string; fill: string; fillRule?: 'evenodd' }[] {
+	const merged: { d: string; fill: string; fillRule?: 'evenodd' }[] = []
+	for (const shape of shapes) {
+		const previous = merged.at(-1)
+		if (previous && previous.fill === shape.fill && previous.fillRule === shape.fillRule) {
+			previous.d = `${previous.d} ${shape.d}`
+			continue
+		}
+		merged.push({ ...shape })
+	}
+	return merged
 }
 
 /**
