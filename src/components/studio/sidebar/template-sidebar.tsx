@@ -30,6 +30,7 @@ import {
 	type StudioOutputFormat,
 } from '@/features/studio-export/export-contract'
 import type { TemplateExportView } from '@/features/studio-export/hooks/use-template-export'
+import { formatMillimeters } from '@/features/studio-export/print-policy'
 import type { TemplateFocusTarget } from '@/features/template-customization/contexts/template-studio-context'
 import {
 	findTemplateControl,
@@ -134,7 +135,7 @@ export function TemplateSidebar({
 							<Controller.Row label="Size" readonly>
 								<span className="text-sm text-muted-foreground">
 									{exporting.sizeMm
-										? `${Math.round(exporting.sizeMm.width)} × ${Math.round(exporting.sizeMm.height)}mm`
+										? `${formatMillimeters(exporting.sizeMm.width)} × ${formatMillimeters(exporting.sizeMm.height)}mm`
 										: `${exporting.outputSize?.width ?? canvas.width} × ${exporting.outputSize?.height ?? canvas.height}px`}
 								</span>
 							</Controller.Row>
