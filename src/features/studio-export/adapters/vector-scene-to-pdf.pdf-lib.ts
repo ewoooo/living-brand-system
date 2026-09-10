@@ -3,9 +3,14 @@ import {
 	cmyk,
 	concatTransformationMatrix,
 	drawObject,
+	endMarkedContent,
 	LineCapStyle,
+	type PDFDict,
 	PDFDocument,
+	PDFHexString,
 	PDFName,
+	PDFOperator,
+	PDFOperatorNames,
 	type PDFPage,
 	type PDFRef,
 	PDFString,
@@ -63,6 +68,7 @@ export async function vectorSceneToPdf(
 		: null
 	const color = (value: string | undefined) => resolveColor(value, print?.cmyk?.colors)
 	const samples = print?.cmyk?.images
+	const layers = createLayers(pdf, page)
 
 	page.drawRectangle({
 		color: color(scene.background) ?? rgb(1, 1, 1),
@@ -72,7 +78,8 @@ export async function vectorSceneToPdf(
 		y: 0,
 	})
 	for (const primitive of scene.primitives)
-		await draw(pdf, page, primitive, scene.height, color, profileRef, samples)
+		await draw(pdf, page, primitive, scene.height, color, profileRef, samples, layers, 1)
+	layers.finish()
 
 	// 🔴 반드시 다 그린 뒤에 부른다 — `scale`은 이미 쌓인 content stream을 감싸는 방식이라
 	//    먼저 부르면 그 뒤에 그린 것이 배율 밖에 남는다.
@@ -131,6 +138,69 @@ function attachOutputIntent(pdf: PDFDocument, iccProfile: Buffer, iccProfileName
 	return profileRef
 }
 
+/**
+ * 씬 그룹을 Optional Content Group으로 싣는다 — Illustrator가 레이어 패널로 읽는 표현이다.
+ *
+ * 🔑 레이어 이름은 반드시 `PDFHexString.fromText`다. `PDFName`·`PDFString`은 한글에서 깨진다(실측).
+ * 🔴 `BDC`의 두 번째 이름은 페이지 Resources/Properties의 **키**여야 한다. pdf-lib에 그 자리를
+ *    만드는 메서드가 없어 직접 얹는다(`newXObject`처럼 충돌 회피를 해 주지 않으므로 키는 우리가 센다).
+ * 🔴 키를 `g`·`G`로 만들지 않는다 — 출구 검사기(`cmyk-only`)가 회색조 연산자로 오탐한다.
+ */
+function createLayers(pdf: PDFDocument, page: PDFPage) {
+	const refs: PDFRef[] = []
+	let properties: PDFDict | undefined
+
+	return {
+		/** 이 레이어에 속하는 그리기를 시작한다. `end()`와 짝이 맞아야 스트림이 성립한다. */
+		begin(label: string) {
+			const ref = pdf.context.register(
+				pdf.context.obj({
+					Type: 'OCG',
+					Name: PDFHexString.fromText(label),
+					// Illustrator가 만든 PDF 8종이 예외 없이 붙인다. 없을 때의 동작은 미확인이라 맞춰 둔다.
+					Intent: [PDFName.of('View'), PDFName.of('Design')],
+				}),
+			)
+			refs.push(ref)
+			if (!properties) {
+				properties = pdf.context.obj({})
+				// normalizedEntries()가 상속 Resources를 페이지에 복제해 준다 — 이 경로가 안전하다.
+				page.node.normalizedEntries().Resources.set(PDFName.of('Properties'), properties)
+			}
+			const key = PDFName.of(`MC${refs.length - 1}`)
+			properties.set(key, ref)
+			// 🔴 pdf-lib의 `beginMarkedContent`는 BMC를 낸다 — property list를 못 실어 OCG에 쓸 수 없다.
+			page.pushOperators(
+				PDFOperator.of(PDFOperatorNames.BeginMarkedContentSequence, [
+					PDFName.of('OC'),
+					key,
+				]),
+			)
+		},
+		end() {
+			page.pushOperators(endMarkedContent())
+		},
+		/** 다 그린 뒤 카탈로그에 레이어 목록을 얹는다. 레이어가 없으면 키를 만들지 않는다. */
+		finish() {
+			if (refs.length === 0) return
+			pdf.catalog.set(
+				PDFName.of('OCProperties'),
+				pdf.context.obj({
+					OCGs: pdf.context.obj(refs),
+					D: pdf.context.obj({
+						BaseState: 'ON',
+						ON: pdf.context.obj(refs),
+						// 🔑 패널은 위→아래가 그리기 순서의 **역순**이다(Adobe 산출물 실측).
+						Order: pdf.context.obj([...refs].reverse()),
+					}),
+				}),
+			)
+		},
+	}
+}
+
+type Layers = ReturnType<typeof createLayers>
+
 type ColorResolver = (value: string | undefined) => Color | undefined
 
 function resolveColor(
@@ -158,14 +228,22 @@ async function draw(
 	color: ColorResolver,
 	profileRef: PDFRef | null,
 	samples: ReadonlyMap<string, CmykSamples> | undefined,
+	layers: Layers,
+	/** 씬 최상위가 1. 레이어가 되는 것은 루트 프레임의 자식(=2)뿐이다. */
+	depth: number,
 ): Promise<void> {
 	/** 씬 좌표(위에서 아래)를 PDF 좌표(아래에서 위)로. `boxHeight`는 상자 아래 모서리를 잡을 때 쓴다. */
 	const flip = (y: number, boxHeight = 0) => sceneHeight - y - boxHeight
 
 	switch (primitive.kind) {
 		case 'group': {
-			// 레이어 구조는 SVG가 갖는다(PDF에는 OCG를 만들지 않는다). 다만 **불투명도는 옮겨야 한다** —
-			// 흘리면 40% 딤 레이어가 100%로 인쇄된다.
+			// 🔑 이 그룹이 Illustrator 레이어가 되는가. 판마다 최상위 그룹은 루트 프레임 하나뿐이라
+			//    그것을 레이어로 만들면 판당 레이어 1개가 되어 아무것도 해결하지 않는다 — 그 **자식**이
+			//    디자이너가 이름 붙인 레이어다(실측 12판: 최상위=10 · 자식=40). 더 깊은 그룹은
+			//    `Image Area > Image`처럼 객체 하나짜리 래퍼뿐이라 평탄화한다.
+			const layered = depth === 2 && Boolean(primitive.label)
+			if (layered) layers.begin(primitive.label as string)
+			// 불투명도는 옮겨야 한다 — 흘리면 40% 딤 레이어가 100%로 인쇄된다.
 			// 🔴 이것은 **진짜 그룹 투명도가 아니다.** ExtGState `ca`는 그룹이 아니라 그 안에서 그리는
 			//    **개별 요소**에 걸리므로, 자식이 자기 opacity를 가지면 둘이 곱해지고 겹친 자식끼리는
 			//    서로 비쳐 보인다. SVG의 `<g opacity>`와 결과가 갈리는 지점이다.
@@ -182,8 +260,21 @@ async function draw(
 				)
 			}
 			for (const child of primitive.children)
-				await draw(pdf, page, child, sceneHeight, color, profileRef, samples)
+				await draw(
+					pdf,
+					page,
+					child,
+					sceneHeight,
+					color,
+					profileRef,
+					samples,
+					layers,
+					depth + 1,
+				)
 			if (grouped) page.pushOperators(popGraphicsState())
+			// 🔴 BDC/EMC 짝은 우리가 맞춘다 — pdf-lib은 검사하지 않는다. 위 재귀가 던지면 PDF 자체가
+			//    나가지 않으므로(호출부가 예외를 그대로 올린다) 깨진 스트림이 파일로 남는 길은 없다.
+			if (layered) layers.end()
 			return
 		}
 		case 'path':
@@ -226,6 +317,8 @@ async function draw(
 					color,
 					profileRef,
 					samples,
+					layers,
+					depth,
 				)
 			}
 			page.drawRectangle({
