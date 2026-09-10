@@ -1,7 +1,12 @@
 'use client'
 
+import { Controller } from '@/components/shared/controller'
+import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
+import { PreviewRefreshSlot } from '@/components/studio/shared/preview-refresh-slot'
+import type { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { StudioLeftPanel } from '@/components/studio/sidebar/studio-left-panel'
 import { BackgroundSection } from '@/components/studio/template/background-section'
+import { TemplateProfilePicker } from '@/components/studio/template/template-profile-picker'
 import {
 	findTemplateControl,
 	findTemplateControlGroup,
@@ -20,8 +25,13 @@ import { useTemplateStudio } from '@/features/template-customization/hooks/use-t
  * 🔴 값은 prop으로 받지 않고 컨텍스트에서 직접 읽는다 — 사이드바가 넘겨 주던 22개 prop이
  *    전부 `useTemplateStudio()`에서 나오던 것이라, 옮기면서 그 경유를 없앤다.
  */
-export function TemplateLeftPanel() {
-	const { config, background, focus } = useTemplateStudio()
+export function TemplateLeftPanel({
+	preview,
+}: {
+	/** 프로파일 미리보기 갱신 — 페이지 선택 카드가 자기 그림을 다시 굽는다. */
+	preview: ReturnType<typeof useProfilePreview>
+}) {
+	const { navigation, config, background, focus } = useTemplateStudio()
 	const { background: backgroundSlot } = partitionTemplateSlots(config.template.slots)
 	const { canvas } = config.template.exportOption
 
@@ -44,8 +54,37 @@ export function TemplateLeftPanel() {
 	const ready =
 		backgroundSlot && group && typeControl?.kind === 'select' && colorControl?.kind === 'color'
 
+	const templateCount = (navigation.browse.data ?? []).reduce(
+		(total, category) => total + category.templates.length,
+		0,
+	)
+
 	return (
 		<StudioLeftPanel
+			// 🔑 페이지 선택은 **좌측 헤더**다(사용자 지시, 2026-09-10) — 우측 footer의 내보내기와
+			//    대칭이다. 양쪽 다 패널을 여닫는 자리이고 본문은 그 사이에 놓인다.
+			header={
+				<PreviewRefreshSlot error={preview.error}>
+					<Controller.AssetCard
+						title={config.name}
+						subtitle={navigation.categoryTitle ?? undefined}
+						buttonLabel="Change"
+						aria-label="템플릿 변경"
+						tabs={['Templates']}
+						previewImage={preview.image ?? config.previewImage}
+						onRefreshPreview={preview.canRefresh ? preview.refresh : undefined}
+						refreshingPreview={preview.refreshing}
+						empty={browseEmptyMessage(
+							navigation.browse.status,
+							templateCount > 1,
+							'교체할 다른 템플릿이 없습니다.',
+						)}
+						className="min-h-32 items-start"
+					>
+						<TemplateProfilePicker />
+					</Controller.AssetCard>
+				</PreviewRefreshSlot>
+			}
 			empty={{
 				title: '이 템플릿에는 배경 컨트롤이 없습니다',
 				description: '판 전체에 걸리는 설정이 이 자리에 옵니다.',

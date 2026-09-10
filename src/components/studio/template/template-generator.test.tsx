@@ -237,16 +237,8 @@ function TemplateOutputProbe() {
 
 function TemplateSidebarTestBridge() {
 	return (
-		<TemplateSidebar
-			exporting={useTestTemplateExport()}
-			preview={{
-				canRefresh: false,
-				refreshing: false,
-				error: null,
-				image: undefined,
-				refresh: () => {},
-			}}
-		/>
+		// 🔑 미리보기는 페이지 선택 카드가 쓰는 값이고, 그 카드는 왼쪽 헤더가 소유한다.
+		<TemplateSidebar exporting={useTestTemplateExport()} />
 	)
 }
 

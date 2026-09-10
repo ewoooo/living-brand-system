@@ -6,15 +6,12 @@ import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
 } from '@/components/shared/controller-renderer'
-import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import {
 	ExportAction,
 	PrintControls,
 	ScaleControls,
 	VideoControls,
 } from '@/components/studio/shared/output-controls'
-import { PreviewRefreshSlot } from '@/components/studio/shared/preview-refresh-slot'
-import type { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { TemplateLayerPanel } from '@/components/studio/sidebar/template-layer-panel'
 import { ImageSlotInput } from '@/components/studio/template/image-slot-input'
@@ -22,7 +19,6 @@ import {
 	IMAGE_TRANSFORM_DEFAULT,
 	ImageTransformControl,
 } from '@/components/studio/template/image-transform-control'
-import { TemplateProfilePicker } from '@/components/studio/template/template-profile-picker'
 import { TextSlotInput } from '@/components/studio/template/text-slot-input'
 import { Typography } from '@/components/ui/typography'
 import {
@@ -53,14 +49,8 @@ const TEXT_SECTION_ID = 'section:text'
  * 무엇을 그릴지는 편집 계약(config)만 보고 결정하고(원시 nodeConfigs 참조 금지),
  * 세션 값은 컨텍스트의 text/images 그룹으로만 읽고 쓴다.
  */
-export function TemplateSidebar({
-	exporting,
-	preview,
-}: {
-	exporting: TemplateExportView
-	preview: ReturnType<typeof useProfilePreview>
-}) {
-	const { navigation, config, text, images, vectors, layers, focus } = useTemplateStudio()
+export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }) {
+	const { config, text, images, vectors, layers, focus } = useTemplateStudio()
 	// 🔑 배경은 왼쪽 패널이 소유한다(`template-left-panel`) — 판 전체에 걸리는 것이라서다.
 	//    여기는 고른 레이어에 딸린 것만 갖는다.
 	const { text: textSlots, image: imageSlots } = partitionTemplateSlots(config.template.slots)
@@ -88,37 +78,11 @@ export function TemplateSidebar({
 	const textColorControl = config.template.textColorControlId
 		? findTemplateControl(config, config.template.textColorControlId)
 		: undefined
-	const templateCount = (navigation.browse.data ?? []).reduce(
-		(total, category) => total + category.templates.length,
-		0,
-	)
 
 	return (
 		// 자산 브라우저의 열림은 편집 세션이 아니라 이 화면의 표현 상태다 — 킷이 소유한다(Provider에 넣지 않는다).
 		<Controller.Browser.Root>
 			<StudioSidebar
-				header={
-					<PreviewRefreshSlot error={preview.error}>
-						<Controller.AssetCard
-							title={config.name}
-							subtitle={navigation.categoryTitle ?? undefined}
-							buttonLabel="Change"
-							aria-label="템플릿 변경"
-							tabs={['Templates']}
-							previewImage={preview.image ?? config.previewImage}
-							onRefreshPreview={preview.canRefresh ? preview.refresh : undefined}
-							refreshingPreview={preview.refreshing}
-							empty={browseEmptyMessage(
-								navigation.browse.status,
-								templateCount > 1,
-								'교체할 다른 템플릿이 없습니다.',
-							)}
-							className="min-h-32 items-start"
-						>
-							<TemplateProfilePicker />
-						</Controller.AssetCard>
-					</PreviewRefreshSlot>
-				}
 				footer={
 					<>
 						<div className="flex flex-col gap-1">

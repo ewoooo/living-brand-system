@@ -88,8 +88,8 @@ function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
 
 	return (
 		<StudioWorkspace
-			leftPanel={<TemplateLeftPanel />}
-			sidebar={<TemplateSidebar exporting={exporting} preview={preview} />}
+			leftPanel={<TemplateLeftPanel preview={preview} />}
+			sidebar={<TemplateSidebar exporting={exporting} />}
 		>
 			<TemplateCanvas />
 		</StudioWorkspace>
