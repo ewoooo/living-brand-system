@@ -72,6 +72,29 @@ describe('generateBrandImages', () => {
 		})
 	})
 
+	it.each([
+		'1K',
+		'2K',
+		'4K',
+	] as const)('Nano Banana 2에 %s와 참조 이미지를 전달한다', async (imageSize) => {
+		const seedImage = new Uint8Array([137, 80, 78, 71])
+		const result = await generateBrandImages({
+			prompt: 'excavator',
+			count: 1,
+			modelPreset: 'google-nano-banana-2',
+			aspectRatio: '16:9',
+			imageSize,
+			seedImage,
+		})
+		expect(result.model).toBe('gemini-3.1-flash-image')
+		expect(mocks.googleImage).toHaveBeenCalledWith('gemini-3.1-flash-image')
+		expect(mocks.generateImage).toHaveBeenCalledWith({
+			model: 'google-model',
+			prompt: { text: 'excavator', images: [seedImage] },
+			providerOptions: { google: { imageConfig: { aspectRatio: '16:9', imageSize } } },
+		})
+	})
+
 	it('gpt-image-2의 16:9 4K 계약을 유효한 픽셀 크기로 변환한다', async () => {
 		mocks.generateImage.mockResolvedValueOnce({
 			images: [{ base64: 'openai', mediaType: 'image/png' }],

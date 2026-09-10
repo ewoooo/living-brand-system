@@ -107,6 +107,7 @@ import * as migration_20260908_004225_replace_do_dont_with_cards from './2026090
 import * as migration_20260908_025709_add_card_caption_placement from './20260908_025709_add_card_caption_placement';
 import * as migration_20260908_051127_move_mark_to_cards from './20260908_051127_move_mark_to_cards';
 import * as migration_20260909_023814_add_guideline_grid_columns from './20260909_023814_add_guideline_grid_columns';
+import * as migration_20260910_021805_add_nano_banana_2 from './20260910_021805_add_nano_banana_2';
 
 export const migrations = [
   {
@@ -652,6 +653,11 @@ export const migrations = [
   {
     up: migration_20260909_023814_add_guideline_grid_columns.up,
     down: migration_20260909_023814_add_guideline_grid_columns.down,
-    name: '20260909_023814_add_guideline_grid_columns'
+    name: '20260909_023814_add_guideline_grid_columns',
+  },
+  {
+    up: migration_20260910_021805_add_nano_banana_2.up,
+    down: migration_20260910_021805_add_nano_banana_2.down,
+    name: '20260910_021805_add_nano_banana_2'
   },
 ];
