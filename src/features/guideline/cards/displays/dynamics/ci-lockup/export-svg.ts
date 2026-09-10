@@ -66,22 +66,28 @@ async function outlines(
 	}
 }
 
-/**
- * `root` 안의 잉크(심볼·글자·구분바)를 SVG 문자열로 옮긴다.
- * `withBackground`면 `root`의 배경색을 판으로 깔고 `root` 크기를 그대로 문서 크기로 쓴다.
- */
-export async function lockupSvg(root: HTMLElement, withBackground: boolean): Promise<string> {
-	const box = root.getBoundingClientRect()
+/** `root` 안의 잉크(심볼·글자·구분바)만 투명 배경의 SVG로 옮긴다. */
+export async function lockupSvg(root: HTMLElement): Promise<string> {
+	// 화면 맞춤 배율을 걷어내 SVG는 원래 H 기준의 좌표와 글자 크기를 유지한다.
+	const fit = root.closest<HTMLElement>('[data-display-fit-content]')
+	const scale = fit
+		? Number.parseFloat(getComputedStyle(fit).getPropertyValue('--display-scale')) || 1
+		: 1
+	const rect = (element: Element) => {
+		const r = element.getBoundingClientRect()
+		return {
+			left: r.left / scale,
+			top: r.top / scale,
+			width: r.width / scale,
+			height: r.height / scale,
+		}
+	}
+	const box = rect(root)
 	const body: string[] = []
-
-	if (withBackground)
-		body.push(
-			`<rect width="100%" height="100%" fill="${getComputedStyle(root).backgroundColor}"/>`,
-		)
 
 	// 구분바 — 글자가 아니라 면이다(계열사 락업).
 	for (const bar of root.querySelectorAll<HTMLElement>('[data-ink="bar"]')) {
-		const r = bar.getBoundingClientRect()
+		const r = rect(bar)
 		body.push(
 			`<rect x="${n(r.left - box.left)}" y="${n(r.top - box.top)}" width="${n(r.width)}" height="${n(r.height)}" fill="${getComputedStyle(bar).backgroundColor}"/>`,
 		)
@@ -89,7 +95,7 @@ export async function lockupSvg(root: HTMLElement, withBackground: boolean): Pro
 
 	// 심볼 — 화면의 것을 **그대로 복제**한다. 이미 좌표로 그린 SVG라 다시 만들 이유가 없다.
 	for (const symbol of root.querySelectorAll<SVGSVGElement>('[data-ink="symbol"]')) {
-		const r = symbol.getBoundingClientRect()
+		const r = rect(symbol)
 		const clone = symbol.cloneNode(true) as SVGSVGElement
 		clone.removeAttribute('class')
 		clone.removeAttribute('aria-hidden')
@@ -108,7 +114,7 @@ export async function lockupSvg(root: HTMLElement, withBackground: boolean): Pro
 	const shapes = await outlines(runs.map((run) => ({ text: run.textContent ?? '' })))
 
 	runs.forEach((run, index) => {
-		const r = run.getBoundingClientRect()
+		const r = rect(run)
 		const style = getComputedStyle(run)
 		const size = Number.parseFloat(style.fontSize)
 		// 🔑 베이스라인은 재는 것이 아니라 계산이다 — `line-height: 1`이라 줄상자 위에서 정확히
@@ -138,14 +144,4 @@ export async function lockupSvg(root: HTMLElement, withBackground: boolean): Pro
 	// 서체는 폴백에서만 필요하다 — 도형으로 나갔으면 파일에 심지 않는다(430KB가 사라진다).
 	const style = body.some((part) => part.startsWith('<text')) ? await fontStyle() : ''
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${style}${body.join('')}</svg>`
-}
-
-/** 브라우저에 파일로 내려 준다. */
-export function downloadSvg(filename: string, svg: string) {
-	const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
-	const link = document.createElement('a')
-	link.href = url
-	link.download = filename
-	link.click()
-	URL.revokeObjectURL(url)
 }

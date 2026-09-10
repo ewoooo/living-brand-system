@@ -106,6 +106,7 @@ import * as migration_20260908_001826_drop_leaf_span from './20260908_001826_dro
 import * as migration_20260908_004225_replace_do_dont_with_cards from './20260908_004225_replace_do_dont_with_cards';
 import * as migration_20260908_025709_add_card_caption_placement from './20260908_025709_add_card_caption_placement';
 import * as migration_20260908_051127_move_mark_to_cards from './20260908_051127_move_mark_to_cards';
+import * as migration_20260909_023814_add_guideline_grid_columns from './20260909_023814_add_guideline_grid_columns';
 
 export const migrations = [
   {
@@ -646,6 +647,11 @@ export const migrations = [
   {
     up: migration_20260908_051127_move_mark_to_cards.up,
     down: migration_20260908_051127_move_mark_to_cards.down,
-    name: '20260908_051127_move_mark_to_cards'
+    name: '20260908_051127_move_mark_to_cards',
+  },
+  {
+    up: migration_20260909_023814_add_guideline_grid_columns.up,
+    down: migration_20260909_023814_add_guideline_grid_columns.down,
+    name: '20260909_023814_add_guideline_grid_columns'
   },
 ];

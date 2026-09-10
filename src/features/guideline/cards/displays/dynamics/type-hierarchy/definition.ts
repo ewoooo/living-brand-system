@@ -12,6 +12,9 @@ import { LANGUAGES } from '../brand-typeface'
 export const typeHierarchy = defineDisplay({
 	id: 'typeHierarchyWidget',
 	type: 'dynamic',
+	category: 'typography',
+	sizing: 'responsive',
+	ratio: '5:7',
 	dbName: 'thr',
 	name: '문단 위계 구성',
 	description: '제목·본문·캡션의 위계 표본. 카드가 준 영역 안에 배치한다.',

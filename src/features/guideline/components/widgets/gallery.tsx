@@ -18,14 +18,16 @@ import { LogoOnBackgroundWidget } from '@/features/guideline/cards/displays/dyna
 import { PresetPanel } from '@/features/guideline/cards/displays/dynamics/preset-panel/component'
 import { StemClearSpaceWidget } from '@/features/guideline/cards/displays/dynamics/stem-clear-space/component'
 import { TypeScrambleWidget } from '@/features/guideline/cards/displays/dynamics/type-scramble/component'
-import { TypeSpecimenWidget } from '@/features/guideline/cards/displays/dynamics/type-specimen/component'
-import { TypeWeightWidget } from '@/features/guideline/cards/displays/dynamics/type-weight/component'
-import { helperLabel } from '@/features/guideline/components/globals/guideline-helper-label'
+import { helperLabel } from '@/features/guideline/controllers/helper-label'
 import { GuidelineControllerPill } from '@/features/guideline/controllers/pill'
 import { GuidelineControllerScope } from '@/features/guideline/controllers/provider'
 import type { BrandLogo } from '@/payload-types'
 import { CardBlock } from '../../blocks/card-block'
-import { GuidelineHelperProvider, GuidelineHelperSlot } from '../globals/guideline-helper'
+import { CardActions, CardActionsProvider } from '../../cards/actions'
+import type { DownloadFormat } from '../../cards/displays/definition'
+import { ciLockup } from '../../cards/displays/dynamics/ci-lockup/definition'
+import { ciLockupHero } from '../../cards/displays/dynamics/ci-lockup-hero/definition'
+import { GuidelineHelperProvider, GuidelineHelperSlot } from '../../controllers/helper'
 
 // dev 전용 위젯 갤러리. 위젯 스타일 통일 + 성능 확인용 (로컬에서만 노출, nav 미등록).
 // ponytail: registry = 배열 하나, 제너레이터는 반복이 지겨워질 때.
@@ -39,7 +41,9 @@ function pick(logos: BrandLogo[], filename: string): BrandLogo | null {
 	return logos.find((l) => l.filename === filename) ?? null
 }
 
-async function buildWidgets(): Promise<{ name: string; node: ReactNode; framed?: boolean }[]> {
+async function buildWidgets(): Promise<
+	{ name: string; node: ReactNode; framed?: boolean; downloads?: readonly DownloadFormat[] }[]
+> {
 	const payload = await getPayload({ config })
 	const { docs: logos } = await payload.find({
 		collection: 'brand-logos',
@@ -71,6 +75,7 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode; framed?:
 			// 🔑 컨트롤은 매니페스트가 만든다 — 갤러리도 스코프 안에서 그려야 실제 화면과 갈리지 않는다.
 			//    스코프 없이 두면 컨트롤 없는 정적 락업이 되어 「이 위젯은 조작이 안 된다」로 읽힌다.
 			name: 'ci-lockup',
+			downloads: ciLockup.downloads,
 			node: (
 				<GuidelineControllerScope manifest={CI_LOCKUP_MANIFEST}>
 					<ControllerBar placement="scroll" aria-label={helperLabel('CI 락업')}>
@@ -83,16 +88,57 @@ async function buildWidgets(): Promise<{ name: string; node: ReactNode; framed?:
 		// 히어로는 컨트롤을 열지 않는다 — 스코프 없이도 자기 값으로 그려진다(축을 전부 고정한다).
 		{
 			name: 'ci-lockup-hero (자회사)',
+			downloads: ciLockupHero.downloads,
 			node: <CiLockupHeroWidget source="subsidiary" h={120} />,
 		},
-		{ name: 'ci-lockup-hero (해외지사)', node: <CiLockupHeroWidget source="branch" h={100} /> },
+		{
+			name: 'ci-lockup-hero (해외지사)',
+			downloads: ciLockupHero.downloads,
+			node: <CiLockupHeroWidget source="branch" h={100} />,
+		},
 		{ name: 'icon-grid', node: <IconGridWidget /> },
 		{ name: 'stem-clear-space', node: <StemClearSpaceWidget /> },
 		{ name: 'hd-color-palette (균일)', node: <HdColorPaletteWidget layout="uniform" /> },
 		{ name: 'hd-color-palette (위계)', node: <HdColorPaletteWidget layout="ranked" /> },
-		{ name: 'type-specimen', node: <TypeSpecimenWidget /> },
+		{
+			name: 'type-specimen',
+			framed: false,
+			node: (
+				<CardBlock
+					block={{
+						layout: 'grid',
+						columns: '1',
+						cards: [
+							{
+								id: 'type-specimen',
+								ratio: '16:9',
+								display: [{ blockType: 'typeSpecimenWidget' }],
+							},
+						],
+					}}
+				/>
+			),
+		},
 		{ name: 'type-scramble', node: <TypeScrambleWidget /> },
-		{ name: 'type-weight', node: <TypeWeightWidget /> },
+		{
+			name: 'type-weight',
+			framed: false,
+			node: (
+				<CardBlock
+					block={{
+						layout: 'grid',
+						columns: '1',
+						cards: [
+							{
+								id: 'type-weight',
+								ratio: '16:9',
+								display: [{ blockType: 'typeWeightWidget' }],
+							},
+						],
+					}}
+				/>
+			),
+		},
 		{
 			name: 'type-hierarchy',
 			framed: false,
@@ -227,14 +273,17 @@ export async function GuidelineWidgetGallery() {
 	return (
 		<GuidelineHelperProvider>
 			<div className="relative flex flex-col gap-16 py-12">
-				{widgets.map(({ name, node, framed }) => (
+				{widgets.map(({ name, node, framed, downloads }) => (
 					<section key={name} className="flex flex-col gap-4">
 						<h2 className="font-mono text-sm text-muted-foreground">{name}</h2>
 						{framed === false ? (
 							node
 						) : (
 							<div className="relative aspect-video overflow-clip rounded-3xl bg-muted">
-								<div className="absolute inset-0">{node}</div>
+								<CardActionsProvider formats={downloads ?? []}>
+									<div className="absolute inset-0">{node}</div>
+									<CardActions />
+								</CardActionsProvider>
 							</div>
 						)}
 					</section>

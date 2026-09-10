@@ -16,6 +16,9 @@ import { LANGUAGES } from '../brand-typeface'
 export const typeLanguage = defineDisplay({
 	id: 'typeLanguageWidget',
 	type: 'dynamic',
+	category: 'typography',
+	sizing: 'responsive',
+	ratio: '5:7',
 	dbName: 'tlg',
 	name: '언어별 조판 비교',
 	description: '국문·영문 조판을 나란히 비교한다.',

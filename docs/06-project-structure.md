@@ -287,7 +287,7 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 
 🔴 슈거 블록(`overview`·`examples`)은 **새 필드를 만들지 않습니다.** `presetFields`로 기본 필드에 고정값을 덧씌우고 숨길 뿐입니다 — 저작 편의를 위한 사전 정의 블록이고, 데이터 모델과 렌더 규칙은 기본 블록과 같습니다. `fields.test.ts`가 필드 집합이 같은지 지킵니다.
 
-`blocks/`는 이 여섯 파일이 전부입니다(2026-09-08, `shared/`·`runtime/`·`types.ts` 해체). 블록 폴더가 없어진 뒤로 "공유"할 상대가 없어 층을 걷었습니다 — 새 파일을 만들기 전에 이 여섯 중 하나에 들어가는지 먼저 봅니다. 문서 단위 Check snapshot(`build-check-source-snapshot.ts`)은 유일한 소비자인 `checks/`가 갖습니다. React 렌더 진입점은 `components/guideline-blocks.tsx`입니다.
+`blocks/`는 이 여섯 파일이 전부입니다(2026-09-08, `shared/`·`runtime/`·`types.ts` 해체). 블록 폴더가 없어진 뒤로 "공유"할 상대가 없어 층을 걷었습니다 — 새 파일을 만들기 전에 이 여섯 중 하나에 들어가는지 먼저 봅니다. 문서 단위 Check snapshot(`build-check-source-snapshot.ts`)은 유일한 소비자인 `checks/`가 갖습니다. React 렌더 진입점은 `components/guideline-sections.tsx`입니다.
 
 ### Graphic runtime 등록
 

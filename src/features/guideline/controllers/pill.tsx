@@ -48,7 +48,7 @@ export function GuidelineControllerPill() {
 						//    고정폭이 아니라 **최소폭**인 이유는 라벨 길이가 컨트롤마다 달라서다.
 						<div
 							key={control.id}
-							className={control.kind === 'text' ? 'min-w-0' : 'min-w-[150px]'}
+							className={control.kind === 'text' ? 'min-w-0' : 'min-w-[200px]'}
 						>
 							<ControllerControlRenderer
 								definition={control}

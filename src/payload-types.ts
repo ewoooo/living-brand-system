@@ -328,16 +328,20 @@ export interface SectionBlock {
    */
   layout: 'grid' | 'carousel';
   /**
-   * 카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   * 최대 열 수입니다. 좁은 영역에서는 열 수가 줄고, 모바일은 1열입니다.
    */
-  rowHeight: 'low' | 'medium' | 'high';
+  columns?: ('1' | '2' | '3' | '4') | null;
+  /**
+   * 캐러셀 카드의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   */
+  rowHeight?: ('low' | 'medium' | 'high') | null;
   /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
     | {
         /**
-         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 높이는 블록의 줄 높이를 따릅니다.
+         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 격자는 열 수로 너비를, 캐러셀은 줄 높이로 높이를 정합니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
         /**
@@ -1099,16 +1103,20 @@ export interface BaseBlock {
    */
   layout: 'grid' | 'carousel';
   /**
-   * 카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   * 최대 열 수입니다. 좁은 영역에서는 열 수가 줄고, 모바일은 1열입니다.
    */
-  rowHeight: 'low' | 'medium' | 'high';
+  columns?: ('1' | '2' | '3' | '4') | null;
+  /**
+   * 캐러셀 카드의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   */
+  rowHeight?: ('low' | 'medium' | 'high') | null;
   /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
     | {
         /**
-         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 높이는 블록의 줄 높이를 따릅니다.
+         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 격자는 열 수로 너비를, 캐러셀은 줄 높이로 높이를 정합니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
         /**
@@ -1205,16 +1213,20 @@ export interface OverviewBlock {
    */
   layout: 'grid' | 'carousel';
   /**
-   * 카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   * 최대 열 수입니다. 좁은 영역에서는 열 수가 줄고, 모바일은 1열입니다.
    */
-  rowHeight: 'low' | 'medium' | 'high';
+  columns?: ('1' | '2' | '3' | '4') | null;
+  /**
+   * 캐러셀 카드의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   */
+  rowHeight?: ('low' | 'medium' | 'high') | null;
   /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
     | {
         /**
-         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 높이는 블록의 줄 높이를 따릅니다.
+         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 격자는 열 수로 너비를, 캐러셀은 줄 높이로 높이를 정합니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
         /**
@@ -1311,16 +1323,20 @@ export interface ExamplesBlock {
    */
   layout: 'grid' | 'carousel';
   /**
-   * 카드 줄의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   * 최대 열 수입니다. 좁은 영역에서는 열 수가 줄고, 모바일은 1열입니다.
    */
-  rowHeight: 'low' | 'medium' | 'high';
+  columns?: ('1' | '2' | '3' | '4') | null;
+  /**
+   * 캐러셀 카드의 높이입니다. 카드 폭은 각 카드의 비율에서 나옵니다.
+   */
+  rowHeight?: ('low' | 'medium' | 'high') | null;
   /**
    * 이 블록이 품는 카드입니다. 배치는 블록의 레이아웃이 정합니다.
    */
   cards?:
     | {
         /**
-         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 높이는 블록의 줄 높이를 따릅니다.
+         * 카드 비율입니다. Type Language·Type Hierarchy는 5:7, Layout Grid Overlay는 3:2 규격이 우선 적용됩니다. 격자는 열 수로 너비를, 캐러셀은 줄 높이로 높이를 정합니다.
          */
         ratio: '1:1' | '5:4' | '4:3' | '3:2' | '16:9' | '2:1' | '7:3' | '4:5' | '3:4' | '2:3' | '9:16';
         /**
@@ -2627,6 +2643,7 @@ export interface SectionBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   layout?: T;
+  columns?: T;
   rowHeight?: T;
   cards?:
     | T
@@ -2896,6 +2913,7 @@ export interface BaseBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   layout?: T;
+  columns?: T;
   rowHeight?: T;
   cards?:
     | T
@@ -2948,6 +2966,7 @@ export interface OverviewBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   layout?: T;
+  columns?: T;
   rowHeight?: T;
   cards?:
     | T
@@ -3000,6 +3019,7 @@ export interface ExamplesBlockSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   layout?: T;
+  columns?: T;
   rowHeight?: T;
   cards?:
     | T

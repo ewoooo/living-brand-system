@@ -120,9 +120,9 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|or
 
 14px 텍스트와 함께 쓰는 아이콘은 `size-4`, 16px 텍스트와 함께 쓰는 아이콘은 `size-5`를 기본으로 합니다. 일반 컴포넌트에는 `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기를 선언하지 않습니다.
 
-가이드라인의 역할별 크기·굵기·행간·자간은 `features/guideline/components/globals/guideline-typography.ts`가 소유합니다. 토픽 제목은 `text-6xl`, 동급 블록 제목은 `text-5xl`, 블록 설명·하단 캡션은 `text-xl`, 오버레이 캡션은 `text-base`, 스펙 라벨·값은 `text-sm`을 소비합니다. 이 역할 매핑은 가이드라인 본문에만 적용하고 일반 화면의 제목·컨트롤에는 적용하지 않습니다. `text-sm`처럼 제품에서 재정의한 유틸리티의 실제 크기는 Tailwind 기본값이 아닌 `theme.css`에서 확인합니다.
+가이드라인의 역할별 크기·굵기·행간·자간은 `features/guideline/components/typography/guideline-typography.ts`가 소유합니다. 토픽 제목은 `text-6xl`, 동급 블록 제목은 `text-5xl`, 블록 설명·하단 캡션은 `text-xl`, 오버레이 캡션은 `text-base`, 스펙 라벨·값은 `text-sm`을 소비합니다. 이 역할 매핑은 가이드라인 본문에만 적용하고 일반 화면의 제목·컨트롤에는 적용하지 않습니다. `text-sm`처럼 제품에서 재정의한 유틸리티의 실제 크기는 Tailwind 기본값이 아닌 `theme.css`에서 확인합니다.
 
-카드 캡션 제목·설명은 같은 크기와 Medium, 행간 155%를 사용합니다(사용자 지정 2026-09-08). 블록 설명과 스펙 값은 Regular로 구분합니다. 캡션 설명과 스펙 값은 `text-muted-foreground`, 서체는 `font-body`입니다. 하단 캡션의 배치·폭·여백은 계속 `cards/caption/component.tsx`가 소유합니다.
+카드 캡션 제목·설명은 같은 크기와 Medium, 행간 155%를 사용합니다(사용자 지정 2026-09-08). 블록 설명과 스펙 값은 Regular로 구분합니다. 캡션 설명과 스펙 값은 `text-muted-foreground`, 서체는 `font-body`입니다. 하단 캡션의 배치·폭·여백은 계속 `cards/caption/component.tsx`가 소유합니다. 섹션·블록 설명은 `SectionHeadings`에서 최대 폭 767px로 제한하며, 좁은 화면에서는 부모 영역에 맞춰 줄어듭니다. 기존 설명의 오른쪽 32px 패딩은 이 최대 폭 안에 포함됩니다.
 
 HTML 의미와 시각 역할은 분리합니다. `GuidelineHeader`가 h1/h2를 정하고 캡션은 문단, 스펙은 dt/dd를 유지합니다. `Typography`와 richText는 `components/ui/typography-variants.ts`의 같은 스타일 생성기를 사용합니다. 도판 속 브랜드 서체 표본·치수 라벨·컨트롤 값은 이 산문 스케일에 포함하지 않습니다.
 
@@ -143,20 +143,25 @@ HTML 의미와 시각 역할은 분리합니다. `GuidelineHeader`가 h1/h2를 �
 
 ## 7. 공통 셸과 프레임 골격
 
-guideline 블록은 머리(제목·설명)와 카드 배치를 각각 `ContentFrame` 하나로 감쌉니다.
+가이드라인은 페이지 → 섹션 → 콘텐츠 배치 → 카드 → 표본 순서로 읽습니다. 각 컴포넌트는 같은 수준의 책임만 조합하고, 아래 단계의 CSS나 위젯 계산을 직접 다루지 않습니다.
 
-| 겹 | 컴포넌트 | 소유 책임 |
-| --- | --- | --- |
-| 폭 프레임 | `ContentFrame` | 카드 배치의 최대 폭·가로 여백(`padded`)과 블록 제목의 왼쪽 패딩(`heading`) |
-| 카드 배치 | `blocks/rhythm.ts`의 `CARD_ROWS`·`CARD_ROW_HEIGHT` | 줄바꿈 행(격자) 또는 캐러셀. 카드는 **높이 기준**이라 블록의 줄 높이(낮게·보통·높게)를 갖고 폭은 카드 비율에서 나온다. 좁은 화면은 한 열·폭 기준 |
+| 컴포넌트 | 소유 책임 |
+| --- | --- |
+| `GuidelineTitleDisplay` | 토픽 대표 이미지와 h1 배치 |
+| `GuidelineSections` | 섹션 순서와 섹션 사이 `gap-72`, Better Editor ID |
+| `GuidelineSection` | 앵커, 제목/콘텐츠 사이 `gap-12`, 캐러셀의 섹션 끝 clipping |
+| `SectionHeadings` | `ContentFrame` heading 여백과 최대 폭 1540px·중앙 배치, 제목/설명 `gap-8`, 설명 최대 폭 767px |
+| `SectionContents` | 공용 `ContentFrame`의 padded 폭·여백과 배치 방식 선택 |
+| `GridContainer` | 동일 너비·첫 열부터 배치·카드 간격, 콘텐츠 폭에 따른 열 수 제한 |
+| `CarouselContainer` | 가로 넘김·스냅·카드 간격 |
+| `GuidelineCard` | 비율·프레임과 Display·Mark·Actions·Caption 조합, 카드별 조작 스코프 |
+| `GuidelineFooter` | 본문 다음의 빈 footer 위치. 높이·콘텐츠 미지정 |
 
-폭과 가로 여백은 `ContentFrame` 한 곳만 소유합니다(`content-frame.tsx`). 개별 블록·카드는 자기 `max-width`를 선언하지 않습니다 — 카드의 크기를 정하는 값은 비율 하나고, 줄 높이가 얼마인지는 `CARD_ROW_HEIGHT` 한 곳이 정합니다. 배경(면) 설정은 2026-09-04에 전 계층에서 걷었습니다 — 브랜드 면(흰 판·검은 판)은 위젯이 `cards/displays/dynamics/surface.ts`의 선언으로 그립니다(`docs/11` §8).
+모바일(md 미만)에서는 카드가 부모 폭을 채우며, 격자는 한 열로 쌓이고 캐러셀은 한 카드씩 넘깁니다. 그리드 영역은 `ContentFrame` 안에 중앙 배치하고, 카드는 `justify-content: flex-start`로 마지막 행까지 첫 열부터 채웁니다. 설명의 오른쪽 32px 패딩은 최대 폭 767px 안에 포함됩니다.
 
-캐러셀은 `ContentFrame`으로 첫 카드와 스냅 위치를 정렬하되, 이웃 카드는 프레임 밖에도 보입니다. 가이드라인의 `CardBlock`이 블록의 좌우 끝에서만 잘라내며 공통 캐러셀의 기본 clipping은 유지합니다. 카드 폭은 캡션 길이와 무관하게 판의 높이·비율로 결정합니다. **하단 캡션은 최대 폭 규칙의 예외**입니다 — Figma 131:272처럼 카드 폭 안에서 최대 폭을 제한하고 왼쪽에 붙이며, 값과 안쪽 여백은 `cards/caption/component.tsx`가 소유합니다.
+`blocks/rhythm.ts`는 제거했습니다. 각 배치 컴포넌트가 자기 간격을 소유하고, 캐러셀에서 사용하는 행 높이만 `components/sections/row-height.ts`의 `CARD_ROW_HEIGHT`로 공유합니다. 폭·가로 여백의 기본값은 공용 `ContentFrame`을 재사용합니다. 페이지에 중복 패딩을 추가하지 않습니다.
 
-세로 리듬은 두 층이 담당합니다. 프레임의 self-padding(`content-frame.tsx`의 `py-8`)은 요소 **안쪽**의 대칭 여백이고, 섹션 **사이**의 간격은 `blocks/rhythm.ts`의 `SECTION_STACK`(부모 `gap`)이 소유합니다. 루트 블록은 섹션(`section`)과 카드 블록(`base`·슈거 `overview`·`examples`) 여럿이지만 전부 같은 스택에 앉으므로 리듬은 하나입니다. 섹션 안에서 제목과 격자 사이는 섹션 컴포넌트의 `gap-12`이고, 실제 간격은 `패딩 + gap + 패딩`의 합입니다. 블록의 제목·설명은 오른쪽 반칸 대신 `ContentFrame`의 `heading` variant에 왼쪽 정렬합니다(Figma 117:883). 이 프레임은 최대 폭 없이 블록 전체를 채우며, 가로 패딩은 `content-frame.tsx`가 소유합니다. 카드 배치는 기존 `padded` variant를 유지합니다.
-
-값을 바꿀 때는 이 두 자리만 고칩니다. 개별 블록이 자기 패딩·마진·열 배치를 다시 잡는 것은 이 통일을 깨므로 지양합니다. 페이지의 상하 여백도 라우트 layout이 따로 주지 않습니다 — 첫·마지막 프레임의 self-padding이 그 자리이고, 둘을 겹치면 상단 여백이 두 곳의 합이 됩니다.
+CMS `section`·`base`·`overview`·`examples`는 `CardBlock` 어댑터가 같은 `GuidelineSection`으로 연결합니다. `prepareCards`는 저장 데이터를 바꾸지 않고 언어 비교를 독립 카드로 펼칩니다. 컨트롤러와 프리뷰 상태는 화면 구성과 별도이며 푸터에 넣지 않습니다. 하단 캡션은 카드 폭 안에서 제한하고 왼쪽에 붙입니다.
 
 헤딩 계층은 `GuidelineHeader`가 `variant`(`topic` h1 / `section` h2)로 분기해 소유합니다(`guideline-header.tsx`). 토픽 안의 `section`·`base`·`overview`·`examples`는 동급 블록이므로 같은 h2를 사용하며 h3 단계는 없습니다. 인덱스 화면의 h1은 히어로 락업이, 챕터 카드 제목은 `PanelCard`가 그립니다. 랜드마크는 셸이 `main`을(`section-layout.tsx`), 토픽 화면이 `article` 하나를(`pages/guideline-topic.tsx`) 갖고, 블록 프레임과 섹션 안쪽은 랜드마크를 만들지 않습니다.
 
@@ -298,3 +303,11 @@ Carbon에서 가져오는 범위를 좁게 고정합니다.
 1. **스타일이 더 낫다** → 컴포넌트가 아니라 **토큰(이 문서)을 고칩니다.** 값은 전역에서만 평가할 수 있습니다. 다만 값 **자체**를 바꾸는 것은 look 결정이므로 위 「look 변경은 AI의 판단 범위가 아닙니다」를 따릅니다 — 자리를 모으는 것과 값을 정하는 것은 다른 일입니다.
 2. **기존 구현이 낫다** → 그래도 가져옵니다. 소스를 우리가 소유하므로 더 낫게 만들 자리는 **가져온 파일 안**입니다. 안 가져오는 유일한 근거는 **"의미가 다르다"**이고, 그때는 왜 다른지 코드에 적습니다. "우리 게 낫다·자유롭다·빠르다"는 근거가 되지 않습니다.
 3. 🔴 **가져온 컴포넌트의 기본 스킨은 shadcn의 취향이지 우리 DS가 아닙니다.** 추가한 같은 변경에서 토큰만 쓰는지 확인하고, 안 맞는 부분은 컴포넌트에서 고치지 말고 이 문서와 `theme.css`로 승격합니다.
+
+### 그리드 열 수
+
+그리드는 `columns` 1~4열(기본 2열)을 최대값으로 사용합니다. 화면 너비 767px 이하에서는 항상 1열입니다. 그 외에는 그리드 콘텐츠 폭 640px 미만은 1열, 640px 이상은 최대 2열, 960px 이상은 최대 3열, 1280px 이상은 최대 4열입니다. 열 수는 저작값을 넘지 않습니다. 사이드바와 프레임 여백을 제외한 실제 콘텐츠 폭이 기준입니다.
+
+간격은 공통 `gap-4`에 해당하는 값을 사용하고, 카드 너비는 간격을 제외한 폭을 균등하게 나눕니다. 마지막 행도 같은 너비를 유지하며 첫 열부터 채웁니다. 디스플레이 높이는 카드 비율로 계산하고, 하단 캡션은 내용에 따라 늘어납니다. 그리드에서는 `rowHeight`를 노출하거나 적용하지 않으며 기존 값은 캐러셀 전환을 위해 보존합니다.
+
+CI Lockup의 contain 표시는 `DisplayFit`이 내부 콘텐츠에만 적용합니다. 공용 카드·배경·컨트롤·캡션을 통째로 축소하지 않습니다. 다운로드 버튼 위치와 상태는 `CardActions`가 소유합니다([위젯 공통 계약](11-widget-authoring.md#8-디스플레이-공통-인터페이스)).

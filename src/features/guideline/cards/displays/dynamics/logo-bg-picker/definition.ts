@@ -14,6 +14,8 @@ import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 export const logoBgPicker = defineDisplay({
 	id: 'logoBgPickerWidget',
 	type: 'dynamic',
+	category: 'identity',
+	sizing: 'responsive',
 	dbName: 'lbp',
 	name: '배경색 선택',
 	description: '배경색을 바꿔 가며 로고 표현을 확인한다.',

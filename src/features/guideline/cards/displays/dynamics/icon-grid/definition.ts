@@ -5,6 +5,8 @@ import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 export const iconGrid = defineDisplay({
 	id: 'iconGridWidget',
 	type: 'dynamic',
+	category: 'iconography',
+	sizing: 'responsive',
 	dbName: 'icw',
 	name: '아이콘 그리드',
 	description: '브랜드 아이콘 격자. 카드가 준 영역 안에 배치한다.',

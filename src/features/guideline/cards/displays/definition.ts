@@ -1,6 +1,16 @@
 import type { Block, Field } from 'payload'
+import type { CardRatio } from './ratio'
 
 export type DisplayType = 'static' | 'dynamic'
+export type DisplayCategory =
+	| 'identity'
+	| 'typography'
+	| 'layout'
+	| 'color'
+	| 'iconography'
+	| 'media'
+export type DisplaySizing = 'contain' | 'responsive'
+export type DownloadFormat = 'svg'
 
 /**
  * 디스플레이 하나의 정의 — 위젯 폴더의 `definition.ts`가 이것을 내보낸다(2026-09-08). 렌더 컴포넌트는 같은
@@ -12,6 +22,15 @@ export interface DisplayDefinition<K extends string = string> {
 	id: K
 	/** 정적(배경 이미지) 또는 다이나믹(위젯). */
 	type: DisplayType
+	category: DisplayCategory
+	/** contain은 내부 콘텐츠 전체를 비례 맞춤, responsive는 위젯이 주어진 영역에서 재배치한다. */
+	sizing: DisplaySizing
+	/** 지정하면 카드의 저작 비율보다 우선한다. */
+	ratio?: CardRatio
+	/** 콘텐츠 안전 여백. 배경·액션·캡션에는 적용하지 않는다. */
+	inset?: '10%'
+	/** 지원 형식만 선언한다. 실행 콜백은 클라이언트 위젯이 제공한다. */
+	downloads?: readonly DownloadFormat[]
 	/** 중첩 테이블명 63자 방어용 짧은 별칭. 테이블 이름이라 한 번 정하면 바꾸지 않는다. */
 	dbName: string
 	/** admin 라벨. */

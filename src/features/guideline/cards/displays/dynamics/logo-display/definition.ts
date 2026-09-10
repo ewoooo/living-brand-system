@@ -6,6 +6,8 @@ import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 export const logoDisplay = defineDisplay({
 	id: 'logoDisplayWidget',
 	type: 'dynamic',
+	category: 'identity',
+	sizing: 'responsive',
 	dbName: 'ldp',
 	name: '로고 크게 보기',
 	description: '로고 파일 하나를 판 가운데에 크게 놓는다.',
