@@ -190,6 +190,17 @@ describe('deriveImageStudioConfig', () => {
 		expect(config.output).toMatchObject({ formats: ['png'], original: false })
 	})
 
+	it('Nano Banana 2는 1K 기본값과 2K·4K 선택을 제공한다', () => {
+		const config = deriveImageStudioConfig({
+			...profile,
+			imageModelPreset: 'google-nano-banana-2',
+		})
+		expect(getImageStudioControls(config).resolution).toMatchObject({
+			defaultValue: '1K',
+			options: ['1K', '2K', '4K'].map((value) => ({ label: value, value })),
+		})
+	})
+
 	it('descriptor의 알 수 없는 필드를 거부한다', () => {
 		const config = deriveImageStudioConfig(profile)
 		expect(() =>
