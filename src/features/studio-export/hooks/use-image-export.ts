@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import type { ImageGenerationMetadata } from '@/features/image-generation/contexts/image-studio-context'
 import type { ImageArtifacts } from '@/features/image-generation/runtime/image-artifact.client'
-import { numberedExportFileName } from '@/features/studio-export/export-file-name'
+import { exportFileName, numberedExportFileName } from '@/features/studio-export/export-file-name'
 import { exportResultsToZip } from '../adapters/export-results-to-zip.client'
 import type {
 	ExportRequest,
@@ -25,12 +26,12 @@ type ImageExportRequest = (
 /** Image Artifact의 선택·패키징만 조정하고 형식 변환은 공통 Artifact executor에 맡긴다. */
 export function useImageExport({
 	artifacts,
-	fileName,
+	metadata,
 	capability,
 	selected,
 	size,
 }: {
-	fileName?: string
+	metadata?: ImageGenerationMetadata
 	artifacts: ImageArtifacts | null
 	capability: StudioOutputCapability
 	selected: number | null
@@ -79,9 +80,16 @@ export function useImageExport({
 		(request: ImageExportRequest) => {
 			if (!artifacts) throw new Error('Image export is unavailable.')
 			const items = request.artifact === 'original' ? artifacts.original : artifacts.raster
+			const fileName = metadata
+				? exportFileName(
+						metadata.profileName,
+						new Date(metadata.createdAt),
+						metadata.prompt,
+					)
+				: undefined
 			return exportScope(items, selected, request, fileName)
 		},
-		[artifacts, selected, fileName],
+		[artifacts, selected, metadata],
 	)
 	const imageExport = useExport<ImageExportRequest>({
 		capability,

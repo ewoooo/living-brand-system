@@ -26,7 +26,7 @@ const exportImageMocks = vi.hoisted(() => ({
 		raster: source.images.map(() => ({ kind: 'raster', source: { withSurface: vi.fn() } })),
 		original: source.images.map(() => ({
 			kind: 'original',
-			source: { load: vi.fn(), filename: vi.fn(), mimeType: vi.fn() },
+			source: { load: vi.fn(), extension: vi.fn(), mimeType: vi.fn() },
 		})),
 	})),
 	original: vi.fn().mockResolvedValue({

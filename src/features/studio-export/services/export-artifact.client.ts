@@ -39,7 +39,10 @@ export async function executeArtifactExport({
 	if (artifact.kind !== request.artifact) throw new Error('Export Artifact가 요청과 다릅니다.')
 	switch (request.artifact) {
 		case 'original':
-			return exportOriginalArtifact(artifact as OriginalArtifact<BlobOriginalSource>)
+			return exportOriginalArtifact(
+				artifact as OriginalArtifact<BlobOriginalSource>,
+				fileName,
+			)
 		case 'raster': {
 			const raster = artifact as RasterArtifact
 			switch (request.format) {
@@ -254,11 +257,12 @@ export async function exportRasterArtifactAsPrint(
 /** Original Artifact의 원본 Blob을 변환 없이 전달한다. */
 export async function exportOriginalArtifact(
 	artifact: OriginalArtifact<BlobOriginalSource>,
+	fileName: string,
 ): Promise<ExportResult> {
 	const data = await artifact.source.load()
 	return {
 		data,
-		filename: artifact.source.filename(data),
+		filename: `${fileName}.${artifact.source.extension(data)}`,
 		mimeType: artifact.source.mimeType(data),
 	}
 }
