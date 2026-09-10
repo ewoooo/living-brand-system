@@ -42,12 +42,16 @@ export async function templateDomToVectorScene(
 		...(await walkAll(Array.from(stage.children), context)),
 	]
 
+	// 🔴 stage에 배경이 없으면 **발명하지 않는다.** 템플릿의 판 바닥은 루트 프레임(=stage의 자식)이
+	//    갖고 걷기가 이미 집으므로, 여기서 흰색을 만들면 판 전체 사각형이 **두 장**이 된다
+	//    (2026-09-10 PDF 바이트 실측: 마크 밖에 동일 좌표 흰 사각형 2개).
+	const plate = solidColor(getComputedStyle(stage).backgroundColor)
+
 	return {
 		scene: {
 			width: size.width,
 			height: size.height,
-			// 판 자체의 바닥색은 stage의 배경이 갖는다 — 없으면 흰색이 인쇄 기본이다.
-			background: solidColor(getComputedStyle(stage).backgroundColor) ?? '#ffffff',
+			...(plate ? { background: plate } : {}),
 			primitives,
 		},
 		unsupported,

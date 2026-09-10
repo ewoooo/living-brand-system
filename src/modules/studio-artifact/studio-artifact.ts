@@ -213,7 +213,17 @@ export type VectorPrimitive =
 export type VectorScene = {
 	width: number
 	height: number
-	background: string
+	/**
+	 * 판 자신의 바닥색. 🔴 **없으면 아무것도 칠하지 않는다** — 인쇄에서 칠하지 않은 자리는 종이다.
+	 *
+	 * 🔴 예전에는 이 값이 없을 때 직렬화기가 흰색을 발명했다. 그러면 템플릿 판이 **판 전체 크기
+	 *    흰 사각형 두 장**으로 나갔다 — 하나는 이 발명이고 하나는 루트 프레임 자신의 rect다
+	 *    (2026-09-10 PDF 바이트 실측). Illustrator에서 페이지 크기 오브젝트가 둘로 열려
+	 *    「아트보드가 2개」로 읽힌다.
+	 * 🔑 템플릿은 이 값을 갖지 않는다 — 판의 바닥은 루트 프레임이 소유하고 걷기가 이미 집는다.
+	 *    그래픽 런타임은 자기 `backgroundColor`를 여기 싣는다(그쪽은 루트 프레임이 없다).
+	 */
+	background?: string
 	primitives: readonly VectorPrimitive[]
 }
 
