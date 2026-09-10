@@ -962,3 +962,55 @@ describe('composeTemplateHtml label', () => {
 		expect(nameOf(html)).toBe('Subtitle')
 	})
 })
+
+/**
+ * 🔴 레이어 이름의 유일한 관문. Figma가 준 이름에 **보이지 않는 문자**가 섞여 오고, 그것이 그대로
+ * 인쇄 PDF의 Illustrator 레이어 이름으로 나갔다(실측 2026-09-10: 발행 68개 중 하나가
+ * `"Title\u2028"`). Admin이 눈으로 잡을 수 없는 종류다.
+ */
+describe('composeTemplateHtml 레이어 이름 정리', () => {
+	const nameOf = (html: string) =>
+		new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-node-id="t1"]')
+			?.getAttribute('data-name')
+
+	it('보이지 않는 줄 구분자를 지운다 — 실물에서 나온 그 이름', () => {
+		const html = composeTemplateHtml('<p data-node-id="t1" data-name="Title\u2028">A</p>', {})
+
+		expect(nameOf(html)).toBe('Title')
+	})
+
+	it('제어문자·앞뒤 공백·연속 공백을 정리한다', () => {
+		const html = composeTemplateHtml(
+			'<p data-node-id="t1" data-name="  Slogan\u0009\u0009 2  ">A</p>',
+			{},
+		)
+
+		expect(nameOf(html)).toBe('Slogan 2')
+	})
+
+	it('설정이 없는 노드도 정리한다 — 군더더기는 Admin이 손대지 않은 이름에 있다', () => {
+		const html = composeTemplateHtml(
+			'<p data-node-id="t1" data-name="CI\u2028">A</p><p data-node-id="t2" data-name="Title">B</p>',
+			{},
+		)
+
+		expect(nameOf(html)).toBe('CI')
+	})
+
+	it('이미 깨끗한 이름은 건드리지 않는다 — 재합성 멱등', () => {
+		const base = '<p data-node-id="t1" data-name="Title">A</p>'
+
+		expect(composeTemplateHtml(base, {})).toBe(base)
+		expect(composeTemplateHtml(composeTemplateHtml(base, { t1: { label: 'CI' } }), {})).toBe(
+			composeTemplateHtml(base, { t1: { label: 'CI' } }),
+		)
+	})
+
+	it('🔴 정리해서 빈 이름이 되면 원래 값을 남긴다 — 이름을 잃는 것이 더 나쁘다', () => {
+		const html = composeTemplateHtml('<p data-node-id="t1" data-name="\u2028">A</p>', {})
+
+		expect(nameOf(html)).toBe('\u2028')
+	})
+})

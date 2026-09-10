@@ -22,6 +22,25 @@ function replaceImageWithDiv(doc: Document, image: HTMLImageElement): HTMLElemen
 	return replaced
 }
 
+/**
+ * 레이어 이름을 정리한다 — **이름 정본(`data-name`)의 유일한 관문**이다.
+ *
+ * 🔴 Figma가 준 이름에 **보이지 않는 문자**가 섞여 온다. 실측(2026-09-10): 발행된 68개 이름 중
+ *    하나가 `"Title\u2028"`(U+2028 LINE SEPARATOR)이었고, 그것이 그대로 인쇄 PDF의
+ *    Illustrator 레이어 이름으로 나갔다. Admin이 눈으로 잡을 수 없는 종류의 군더더기다.
+ * 🔑 여기서 한 번 지우면 스튜디오 레이어 패널 · Admin 레이어 목록 · PDF의 OCG `/Name`이 **함께**
+ *    깨끗해진다 — 셋이 모두 `data-name`을 읽기 때문이다.
+ * 🔑 이미 깨끗한 이름에는 아무 일도 하지 않는다(재합성 멱등).
+ */
+const LAYER_NAME_JUNK = /data-name="[^"]*(?:[\u0000-\u001f\u007f-\u009f\u2028\u2029]|^\s|\s")/
+
+export function normalizeLayerName(value: string): string {
+	return value
+		.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim()
+}
+
 /** compose가 컬러 치환용으로 만든 오버레이 노드 id — 편집 UI(레이어 패널)에서 숨기는 판별 계약. */
 export function isImageColorizeOverlayId(nodeId: string): boolean {
 	return nodeId.endsWith('-colorize')
@@ -231,7 +250,14 @@ export function composeTemplateHtml(
 			canvasBackground?.imageUrl ||
 			canvasBackground?.dimmer !== undefined,
 	)
-	if (!hasCanvasBackground && (!nodeConfigs || Object.keys(nodeConfigs).length === 0)) {
+	// 🔴 이름에 군더더기가 있으면 설정이 없어도 파싱한다 — 그 군더더기는 Admin이 손대지 않은
+	//    이름에 들어 있으므로, 설정 유무로 일찍 반환하면 영원히 정리되지 않는다.
+	const needsNameCleanup = LAYER_NAME_JUNK.test(baseHtml)
+	if (
+		!hasCanvasBackground &&
+		!needsNameCleanup &&
+		(!nodeConfigs || Object.keys(nodeConfigs).length === 0)
+	) {
 		return baseHtml
 	}
 
@@ -344,6 +370,14 @@ export function composeTemplateHtml(
 				el.style.objectFit = config.vectorFit
 			}
 		}
+	}
+
+	// 레이어 이름 정리 — Figma가 준 이름의 보이지 않는 문자를 지운다. 설정이 없는 노드까지 훑는다
+	// (군더더기는 Admin이 손대지 않은 이름에 들어 있다).
+	for (const element of Array.from(doc.querySelectorAll('[data-name]'))) {
+		const current = element.getAttribute('data-name') ?? ''
+		const cleaned = normalizeLayerName(current)
+		if (cleaned && cleaned !== current) element.setAttribute('data-name', cleaned)
 	}
 
 	// 레이어 겹침 순서 — Admin이 정한 `childOrder`대로 DOM을 재배치한다.
