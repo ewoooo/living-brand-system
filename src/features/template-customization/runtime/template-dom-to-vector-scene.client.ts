@@ -37,7 +37,10 @@ export async function templateDomToVectorScene(
 	const origin = stage.getBoundingClientRect()
 	const unsupported: { nodeId: string; reason: string }[] = []
 	const context = { origin, unsupported }
-	const primitives = await walkAll(Array.from(stage.children), context)
+	const primitives = [
+		...(await plateBackdrop(stage, context)),
+		...(await walkAll(Array.from(stage.children), context)),
+	]
 
 	return {
 		scene: {
@@ -49,6 +52,25 @@ export async function templateDomToVectorScene(
 		},
 		unsupported,
 	}
+}
+
+/**
+ * 판 자신의 배경을 다른 요소와 **같은 규칙으로** 옮긴다.
+ *
+ * 🔴 `walkAll`은 `stage.children`부터 시작하므로 stage는 걷기에 포함되지 않는다. 그래서 stage만
+ *    「배경색 하나만 읽히는 특별한 요소」였다 — 판의 배경 **이미지**는 `composeTemplateHtml`이 루트
+ *    프레임(=stage)의 `backgroundImage`에 얹으므로, image 배경과 graphic 스냅샷이 PDF·SVG에서
+ *    **경고 한 줄 없이 사라졌다**(2026-09-09 실측. 래스터는 stage째 구우므로 정상이었다).
+ * 🔑 그래서 여기서 새로 그리지 않고 자식들이 쓰는 `backgroundImagePrimitives`·`reportUnsupported`를
+ *    그대로 부른다. 특례를 더하는 것이 아니라 **특례를 없애는 것**이다.
+ */
+async function plateBackdrop(stage: HTMLElement, context: WalkContext): Promise<VectorPrimitive[]> {
+	const style = getComputedStyle(stage)
+	const box = toBox(stage.getBoundingClientRect(), context.origin)
+	if (box.width <= 0 || box.height <= 0) return []
+	// 판에 얹힌 그라디언트·그림자도 자식과 같은 기준으로 진단에 남긴다 — 지금은 바닥색으로 뭉개진다.
+	reportUnsupported(style, 'plate', context, { maskHandled: false })
+	return backgroundImagePrimitives(stage, box, style, context)
 }
 
 type WalkContext = { origin: DOMRect; unsupported: { nodeId: string; reason: string }[] }

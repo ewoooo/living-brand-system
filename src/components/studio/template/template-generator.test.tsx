@@ -41,6 +41,7 @@ const mocks = vi.hoisted(() => ({
 	resizeGraphicPreview: vi.fn(),
 	resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
 	templateArtifact: undefined as TemplateRasterArtifactProducer | undefined,
+	templateVectorArtifact: undefined as (() => Promise<unknown>) | undefined,
 	updateGraphicPreview: vi.fn(),
 }))
 
@@ -301,16 +302,23 @@ function GraphicCaptureProbe() {
 	const { background, canvas } = useTemplateStudio()
 	useEffect(() => {
 		mocks.templateArtifact = canvas.artifact
+		mocks.templateVectorArtifact = canvas.vectorArtifact
 		canvas.registerGraphicFrame(mocks.captureGraphicFrame)
 		return () => {
 			mocks.templateArtifact = undefined
+			mocks.templateVectorArtifact = undefined
 			canvas.registerGraphicFrame(null)
 		}
 	}, [canvas])
 	return (
-		<button type="button" onClick={() => background.selectType('graphic')}>
-			select graphic for export
-		</button>
+		<>
+			<button type="button" onClick={() => background.selectType('graphic')}>
+				select graphic for export
+			</button>
+			<button type="button" onClick={() => canvas.registerGraphicFrame(null)}>
+				unregister graphic frame
+			</button>
+		</>
 	)
 }
 
@@ -445,6 +453,76 @@ describe('TemplateGenerator', () => {
 			kind: 'raster',
 			source: { withSurface: expect.any(Function) },
 		})
+	})
+
+	/**
+	 * 🔴 벡터도 그래픽 배경을 굳혀 실어야 한다. 예전에는 벡터만 이걸 건너뛰어(「래스터 프레임이 판
+	 * 전체를 이미지로 덮어 인쇄용 벡터의 목적을 없앤다」) PDF·SVG에서 배경이 통째로 사라졌다.
+	 * 래스터와 벡터가 **같은 합성 HTML**을 쓰는 것이 그 재발을 막는 불변식이다.
+	 */
+	it('Vector Artifact producer도 export 실행 시점의 그래픽 프레임을 합성한다', () => {
+		mocks.captureGraphicFrame.mockReturnValue('/graphic-frame.png')
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				template={template}
+				categoryTitle="카드"
+			>
+				<GraphicCaptureProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic for export' }))
+		mocks.captureGraphicFrame.mockClear()
+		void mocks.templateVectorArtifact?.()
+
+		expect(mocks.captureGraphicFrame).toHaveBeenCalledTimes(1)
+	})
+
+	/**
+	 * 🔴 **내보내기는 미리보기와 같은 조건으로 판단한다.** 캔버스는 고른 그래픽 설정이 있을 때만
+	 * 셰이더를 그리므로, 목록이 비면 화면에도 그래픽이 없다. 그때 프레임을 요구하면 **모든 형식의
+	 * 내보내기가 영구 차단된다** — 창작자가 고칠 방법이 없는 「막힌 실패」다.
+	 */
+	it('그릴 그래픽이 없으면 차단하지 않는다', () => {
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateStudioConfig(template, imageConfigs, [])}
+				template={template}
+				categoryTitle="카드"
+			>
+				<GraphicCaptureProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic for export' }))
+		fireEvent.click(screen.getByRole('button', { name: 'unregister graphic frame' }))
+
+		expect(() => mocks.templateArtifact?.()).not.toThrow()
+	})
+
+	/**
+	 * 🔴 캡처가 등록되기 전에 내보내면 배경이 조용히 빠진 판이 나간다. 창작자가 「미리보기를 기다렸다
+	 * 다시」로 고칠 수 있는 사유이므로 거부하고 알린다 — 조용한 누락이 이 작업의 고치는 대상이다.
+	 */
+	it('그래픽 프레임이 없으면 내보내기를 거부한다', () => {
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				template={template}
+				categoryTitle="카드"
+			>
+				<GraphicCaptureProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic for export' }))
+		fireEvent.click(screen.getByRole('button', { name: 'unregister graphic frame' }))
+
+		// 🔑 두 producer 모두 `exportHtml()`을 본문 진입 전에 평가하므로 **동기로** 던진다.
+		//    `useExport`의 try가 그것을 잡아 message를 화면에 띄운다.
+		expect(() => mocks.templateArtifact?.()).toThrow('미리보기가 준비된 뒤')
+		expect(() => mocks.templateVectorArtifact?.()).toThrow('미리보기가 준비된 뒤')
 	})
 
 	it('출력 캔버스 비율을 작업 영역에 맞춰 프리뷰에 반영한다', () => {

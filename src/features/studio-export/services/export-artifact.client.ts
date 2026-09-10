@@ -114,8 +114,12 @@ export async function exportVectorArtifactAsPrintPdf(
 		throw new Error(
 			body?.code === 'text-not-outlined'
 				? '윤곽선으로 바꾸지 못한 글자가 있어 PDF를 만들지 않았습니다.'
-				: // 래스터 경로와 같은 표를 쓴다 — 같은 401·413이 형식에 따라 다른 문구로 보이면 안 된다.
-					printFailureMessage('pdf', response.status),
+				: body?.code === 'color-not-convertible'
+					? '인쇄 잉크로 바꿀 수 없는 색이 있어 PDF를 만들지 않았습니다.'
+					: body?.code === 'image-not-convertible'
+						? '인쇄 색으로 바꿀 수 없는 이미지가 있어 PDF를 만들지 않았습니다.'
+						: // 래스터 경로와 같은 표를 쓴다 — 같은 401·413이 형식에 따라 다른 문구로 보이면 안 된다.
+							printFailureMessage('pdf', response.status),
 		)
 	}
 	return {

@@ -559,26 +559,48 @@ export function TemplateStudioProvider({
 			templateControllerValues(config, textSlots, text.values, text.color, background.state),
 		[background.state, config, text.color, text.values, textSlots],
 	)
-	const artifact = useCallback((): TemplateRasterArtifact => {
-		const graphicFrame =
-			background.state.type === 'graphic' ? graphicFrameRef.current?.() : undefined
-		return createTemplateRasterArtifact({
-			height,
-			html: graphicFrame
-				? composeTemplateHtml(
-						composedHtml,
-						{},
-						{ canvasBackground: { imageUrl: graphicFrame } },
-					)
-				: composedHtml,
-			width,
-		})
-	}, [background.state.type, composedHtml, height, width])
-	// 벡터는 배경 graphic을 래스터 프레임으로 깔지 않는다 — 그 프레임이 판 전체를 이미지 한 장으로
-	// 덮어 인쇄용 벡터의 목적을 없앤다. 배경은 씬의 바닥색으로만 남는다.
+	/**
+	 * 내보내기용 합성 HTML. 배경이 graphic이면 셰이더 캔버스를 그 시점의 한 장으로 굳혀 판의 배경
+	 * 이미지로 얹는다 — `composedHtml`은 미리보기용이라 캔버스 자리를 transparent로 비워 둔다.
+	 *
+	 * 🔴 **래스터와 벡터가 같은 HTML을 쓴다.** 예전에는 벡터만 이걸 건너뛰었고(「래스터 프레임이 판
+	 *    전체를 이미지로 덮어 인쇄용 벡터의 목적을 없앤다」), 그 결과 PDF·SVG에서 배경이 통째로
+	 *    사라졌다. 거짓 이항대립이었다 — 셰이더 그라디언트는 원리적으로 벡터가 될 수 없고, 벡터의
+	 *    목적(글자·로고가 선명한 것)은 전경이 지킨다. 조용히 없어지는 쪽이 훨씬 나쁘다.
+	 * 🔑 정지 이미지 계열(png·jpeg·tiff·pdf·svg)이 이걸 공유한다. MP4만 프레임마다 셰이더를 다시
+	 *    그려야 하므로 `videoArtifact`가 따로 합성한다.
+	 */
+	const exportHtml = useCallback((): string => {
+		if (background.state.type !== 'graphic') return composedHtml
+		// 🔴 **내보내기는 미리보기와 같은 조건으로 판단한다.** 캔버스는 고른 그래픽 설정이 있을 때만
+		//    셰이더를 그리므로(`template-canvas`의 `graphicConfig &&`), 목록이 비었거나 id가 안 맞으면
+		//    화면에도 그래픽이 없다. 그때 아래 가드가 걸리면 **모든 형식의 내보내기가 영구 차단된다** —
+		//    창작자가 고칠 방법이 없는 「막힌 실패」다. 그릴 것이 없으면 화면처럼 그래픽 없이 낸다.
+		const selected = background.graphicConfigs.some(
+			(candidate) => candidate.id === background.state.graphicConfigId,
+		)
+		if (!selected) return composedHtml
+		// 🔴 캡처가 등록되기 전에 내보내면 배경이 **조용히 빠진 판**이 나간다 — `composedHtml`은
+		//    캔버스 자리를 transparent로 비워 두기 때문이다. 창작자가 스스로 고칠 수 있는 사유이므로
+		//    거부하고 알린다(`useExport`가 이 message를 화면에 그대로 띄운다).
+		const graphicFrame = graphicFrameRef.current?.()
+		if (!graphicFrame) {
+			throw new Error('그래픽 배경 미리보기가 준비된 뒤 다시 시도해 주세요.')
+		}
+		return composeTemplateHtml(
+			composedHtml,
+			{},
+			{ canvasBackground: { imageUrl: graphicFrame } },
+		)
+	}, [background.graphicConfigs, background.state, composedHtml])
+	const artifact = useCallback(
+		(): TemplateRasterArtifact =>
+			createTemplateRasterArtifact({ height, html: exportHtml(), width }),
+		[exportHtml, height, width],
+	)
 	const vectorArtifact = useCallback(
-		() => createTemplateVectorArtifact({ height, html: composedHtml, width }),
-		[composedHtml, height, width],
+		() => createTemplateVectorArtifact({ height, html: exportHtml(), width }),
+		[exportHtml, height, width],
 	)
 	// 배경이 graphic이어도 video artifact를 내지 않는 runtime이 있다(forward-straight는 vector·raster뿐).
 	// 타입만 보고 MP4를 Video 경로로 돌리면 producer가 던진다 — 선언을 보고 정적 MP4로 떨어뜨린다.

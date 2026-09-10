@@ -47,6 +47,35 @@ function stageWith(html: string): HTMLElement {
 describe('templateDomToVectorScene', () => {
 	beforeEach(() => document.body.replaceChildren())
 
+	/**
+	 * 🔑 판의 배경은 **stage가 아니라 그 자식인 루트 프레임**에 얹힌다 —
+	 * `composeTemplateHtml`이 `doc.body.firstElementChild`에 넣고, 템플릿 HTML에 `#__stage`가 없어
+	 * stage는 스타일 없는 wrapper다. 그래서 판 배경은 일반 자식 걷기가 집는다.
+	 * 🔴 2026-09-09에 이것을 「stage 자신에 얹힌다」로 오진해 stage 배경을 따로 걷는 코드를 넣었다.
+	 * 프로덕션에서 도달 불가였고, 전제가 바뀌면 판 사각형을 두 장 낸다. 여기서 실제 형태를 잠근다.
+	 */
+	it('루트 프레임의 배경 이미지를 image로 옮긴다', async () => {
+		const stage = stageWith(
+			'<div data-node-id="root" style="background-color:#eeeeee;background-image:url(\'https://example.test/plate.png\')"></div>',
+		)
+		measure(stage.firstElementChild as Element, { x: 0, y: 0, width: 400, height: 300 })
+
+		const { scene } = await templateDomToVectorScene(stage, { width: 400, height: 300 })
+		const flattened = scene.primitives.flatMap((primitive) =>
+			primitive.kind === 'group' ? primitive.children : [primitive],
+		)
+
+		expect(flattened).toContainEqual({
+			kind: 'image',
+			x: 0,
+			y: 0,
+			width: 400,
+			height: 300,
+			href: 'data:image/png;base64,BAKED',
+			preserveAspectRatio: 'none',
+		})
+	})
+
 	it('div 배경과 테두리를 판 좌표계의 rect로 옮긴다', async () => {
 		const stage = stageWith(
 			'<div data-node-id="frame-1" data-name="Card" style="background-color:#eeeeee;border:2px solid #112233;border-top-left-radius:8px;border-top-right-radius:8px;border-bottom-right-radius:8px;border-bottom-left-radius:8px"></div>',

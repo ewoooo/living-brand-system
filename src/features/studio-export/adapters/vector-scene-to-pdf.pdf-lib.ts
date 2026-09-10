@@ -1,11 +1,12 @@
 import {
 	type Color,
 	cmyk,
+	concatTransformationMatrix,
+	drawObject,
 	LineCapStyle,
 	PDFDocument,
 	PDFName,
 	type PDFPage,
-	PDFRawStream,
 	type PDFRef,
 	PDFString,
 	popGraphicsState,
@@ -15,6 +16,7 @@ import {
 } from 'pdf-lib'
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
 import { type PrintPpi, pixelsToPdfPoints } from '../print-policy'
+import type { CmykSamples } from './image-to-cmyk-samples.sharp'
 import type { CmykColor } from './rgb-to-cmyk.sharp'
 
 /**
@@ -38,11 +40,17 @@ export async function vectorSceneToPdf(
 		ppi: PrintPpi
 		/**
 		 * 주면 도형 색을 잉크로 찍고 OutputIntent를 붙인다. **안 주면 RGB로 나간다.**
-		 * 🔴 지금 호출부는 주지 않는다 — PDF 안의 CMYK 이미지가 Illustrator에서 반전돼 열리는
-		 *    알려진 결함 때문에 인쇄 PDF를 RGB로 내고 있다(`png-to-pdf.pdf-lib`에 근거).
+		 * 🔑 인쇄 경로(`exportVectorPrint`)는 프로파일이 있으면 항상 준다 — 「한 파일 한 색상 모드」라
+		 *    RGB가 한 칸도 남으면 Illustrator가 문서 모드를 골라 정본 CMYK 수치를 깨뜨린다.
+		 *    프로파일이 없는 화면용 호출만 안 준다.
 		 */
 		cmyk?: {
 			colors: ReadonlyMap<string, CmykColor>
+			/**
+			 * href → CMYK 잉크 샘플. 주면 그 이미지를 raw + FlateDecode로 싣는다.
+			 * 🔴 없는 이미지는 RGB로 나가 파일이 혼재가 된다 — 호출부가 전수로 채워야 한다.
+			 */
+			images: ReadonlyMap<string, CmykSamples>
 			iccProfile: Buffer
 			iccProfileName: string
 		}
@@ -54,6 +62,7 @@ export async function vectorSceneToPdf(
 		? attachOutputIntent(pdf, print.cmyk.iccProfile, print.cmyk.iccProfileName)
 		: null
 	const color = (value: string | undefined) => resolveColor(value, print?.cmyk?.colors)
+	const samples = print?.cmyk?.images
 
 	page.drawRectangle({
 		color: color(scene.background) ?? rgb(1, 1, 1),
@@ -63,7 +72,7 @@ export async function vectorSceneToPdf(
 		y: 0,
 	})
 	for (const primitive of scene.primitives)
-		await draw(pdf, page, primitive, scene.height, color, profileRef)
+		await draw(pdf, page, primitive, scene.height, color, profileRef, samples)
 
 	// 🔴 반드시 다 그린 뒤에 부른다 — `scale`은 이미 쌓인 content stream을 감싸는 방식이라
 	//    먼저 부르면 그 뒤에 그린 것이 배율 밖에 남는다.
@@ -86,7 +95,21 @@ export function collectSceneColors(scene: VectorScene): string[] {
 	return [scene.background, ...collect(scene.primitives)]
 }
 
-/** PDF/X가 요구하는 출력 의도. `cmyk-jpeg-to-pdf`와 같은 형태다. 이미지 색 공간도 이 프로파일을 쓴다. */
+/**
+ * 씬에 실린 이미지의 href를 모은다 — 호출부가 이 목록만 잉크 샘플로 바꾸면 된다.
+ * 🔴 하나라도 빠뜨리면 그 이미지가 RGB로 나가 파일이 혼재가 되고, Illustrator가 문서 모드를
+ *    하나 골라 나머지를 변환하면서 도형의 정본 CMYK 수치까지 깨뜨린다.
+ */
+export function collectSceneImages(scene: VectorScene): string[] {
+	const collect = (primitives: readonly VectorPrimitive[]): string[] =>
+		primitives.flatMap((primitive) => {
+			if (primitive.kind === 'group') return collect(primitive.children)
+			return primitive.kind === 'image' ? [primitive.href] : []
+		})
+	return collect(scene.primitives)
+}
+
+/** 출력 의도. 이미지 색 공간(`drawCmykSamples`의 `ICCBased`)도 같은 프로파일 스트림을 재사용한다. */
 function attachOutputIntent(pdf: PDFDocument, iccProfile: Buffer, iccProfileName: string): PDFRef {
 	const profile = pdf.context.flateStream(Uint8Array.from(iccProfile), {
 		Alternate: 'DeviceCMYK',
@@ -134,6 +157,7 @@ async function draw(
 	sceneHeight: number,
 	color: ColorResolver,
 	profileRef: PDFRef | null,
+	samples: ReadonlyMap<string, CmykSamples> | undefined,
 ): Promise<void> {
 	/** 씬 좌표(위에서 아래)를 PDF 좌표(아래에서 위)로. `boxHeight`는 상자 아래 모서리를 잡을 때 쓴다. */
 	const flip = (y: number, boxHeight = 0) => sceneHeight - y - boxHeight
@@ -158,7 +182,7 @@ async function draw(
 				)
 			}
 			for (const child of primitive.children)
-				await draw(pdf, page, child, sceneHeight, color, profileRef)
+				await draw(pdf, page, child, sceneHeight, color, profileRef, samples)
 			if (grouped) page.pushOperators(popGraphicsState())
 			return
 		}
@@ -201,6 +225,7 @@ async function draw(
 					sceneHeight,
 					color,
 					profileRef,
+					samples,
 				)
 			}
 			page.drawRectangle({
@@ -218,23 +243,21 @@ async function draw(
 			return
 		}
 		case 'image': {
+			const ink = samples?.get(primitive.href)
+			if (ink) {
+				drawCmykSamples(pdf, page, {
+					height: primitive.height,
+					ink,
+					opacity: primitive.opacity,
+					profileRef,
+					width: primitive.width,
+					x: primitive.x,
+					y: flip(primitive.y, primitive.height),
+				})
+				return
+			}
 			const embedded = await embedImage(pdf, primitive.href)
 			if (!embedded) return
-			// 🔴 pdf-lib은 3채널 이미지를 DeviceRGB로 넣는다. 서비스가 CMYK로 바꿔 둔 것은
-			//    색 공간을 출력 의도와 같은 ICC로 덮어야 RIP가 다시 변환하지 않는다.
-			if (primitive.colorSpace === 'cmyk' && profileRef) {
-				await embedded.embed()
-				const stream = pdf.context.lookup(embedded.ref)
-				if (stream instanceof PDFRawStream) {
-					stream.dict.set(
-						PDFName.of('ColorSpace'),
-						pdf.context.obj([PDFName.of('ICCBased'), profileRef]),
-					)
-					// 🔴 ColorSpace만 덮으면 pdf-lib이 심은 반전 보정이 남아 이중 반전이 된다 —
-					//    자세한 근거는 `cmyk-jpeg-to-pdf`의 같은 자리에 있다.
-					stream.dict.delete(PDFName.of('Decode'))
-				}
-			}
 			page.drawImage(embedded, {
 				height: primitive.height,
 				width: primitive.width,
@@ -272,11 +295,97 @@ async function draw(
 	}
 }
 
+/**
+ * CMYK 잉크 샘플을 raw + FlateDecode 이미지 XObject로 싣는다.
+ *
+ * 🔴 **`Decode`를 넣지 않는다.** 넣을 이유가 없기 때문이다 — 샘플이 잉크값 그대로이고(0 = 잉크
+ *    없음) APP14 Adobe 마커도 없으므로 기본값 `[0 1]×4`가 맞다. JPEG 경로에서 그 배열을
+ *    「넣었다 뺐다」 하던 다툼이 여기서는 성립하지 않는다.
+ * 🔑 알파는 같은 크기의 8bit DeviceGray 스트림을 `/SMask`로 문다 — pdf-lib의 PngEmbedder가
+ *    쓰는 것과 같은 형태다. CMYK JPEG이 구조적으로 못 담던 것이 이 경로에서는 그냥 된다.
+ * 🔴 `Filter`·`Length`는 손대지 않는다. `flateStream`이 Filter를 강제로 덮고 Length는 직렬화
+ *    시점에 압축 후 크기로 덮인다 — 우리가 넣은 값은 조용히 버려진다.
+ */
+function drawCmykSamples(
+	pdf: PDFDocument,
+	page: PDFPage,
+	{
+		height,
+		ink,
+		opacity,
+		profileRef,
+		width,
+		x,
+		y,
+	}: {
+		height: number
+		ink: CmykSamples
+		opacity: number | undefined
+		profileRef: PDFRef | null
+		width: number
+		x: number
+		y: number
+	},
+) {
+	const box = { Height: ink.height, Width: ink.width }
+	const alphaRef = ink.alpha
+		? pdf.context.register(
+				pdf.context.flateStream(Uint8Array.from(ink.alpha), {
+					...box,
+					BitsPerComponent: 8,
+					ColorSpace: 'DeviceGray',
+					Decode: [0, 1],
+					Subtype: 'Image',
+					Type: 'XObject',
+				}),
+			)
+		: undefined
+	const imageRef = pdf.context.register(
+		pdf.context.flateStream(Uint8Array.from(ink.cmyk), {
+			...box,
+			BitsPerComponent: 8,
+			// 출력 의도와 같은 프로파일을 문다 — 뷰어·RIP가 잉크 공간을 추측하지 않는다.
+			ColorSpace: profileRef ? [PDFName.of('ICCBased'), profileRef] : 'DeviceCMYK',
+			// 🔑 값이 undefined면 `obj()`가 키 자체를 넣지 않는다 — 알파 없는 이미지에 SMask가 안 붙는다.
+			SMask: alphaRef,
+			Subtype: 'Image',
+			Type: 'XObject',
+		}),
+	)
+
+	// 🔴 `newXObject`가 돌려주는 이름을 변수로 받아 그대로 넘긴다. `drawObject`는 등록되지 않은
+	//    이름을 예외 없이 통과시켜 **빈 자리**로 내보내므로, 문자열을 다시 타이핑하면 조용히 사라진다.
+	const key = page.node.newXObject('CmykImage', imageRef)
+	const dimmed = opacity !== undefined && opacity < 1
+	page.pushOperators(
+		pushGraphicsState(),
+		...(dimmed
+			? [
+					setGraphicsState(
+						page.node.newExtGState(
+							'GS',
+							pdf.context.obj({ Type: 'ExtGState', ca: opacity, CA: opacity }),
+						),
+					),
+				]
+			: []),
+		// 이미지 XObject는 단위 정사각형에 그려진다 — 이 행렬이 실제 크기와 위치를 만든다.
+		concatTransformationMatrix(width, 0, 0, height, x, y),
+		drawObject(key),
+		popGraphicsState(),
+	)
+}
+
 /** data: URI만 임베드한다 — 외부 URL을 서버에서 받아 오는 순간 SSRF 표면이 된다. */
 async function embedImage(pdf: PDFDocument, href: string) {
 	const match = href.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/)
 	if (!match) return null
-	const bytes = Buffer.from(match[2], 'base64')
+	// 🔴 오프셋 없는 사본으로 넘긴다. pdf-lib의 `JpegEmbedder`가 `imageData.buffer`를 읽으면서
+	//    `byteOffset`을 무시하기 때문이다 — Node의 Buffer 풀(4KB 이하)에서 잘라 온 버퍼는 오프셋이
+	//    0이 아니어서 `SOI not found in JPEG`으로 **내보내기가 통째로 죽는다**(실측: 317B JPEG →
+	//    byteOffset 6000). 작은 아이콘 사진 한 장으로 판 전체가 안 나가던 결함이다.
+	//    PNG는 영향이 없지만 같은 형태로 넘겨 둔다 — 어느 쪽이 안전한지 부르는 쪽이 기억할 필요가 없다.
+	const bytes = Uint8Array.from(Buffer.from(match[2], 'base64'))
 	return match[1] === 'png' ? pdf.embedPng(bytes) : pdf.embedJpg(bytes)
 }
 

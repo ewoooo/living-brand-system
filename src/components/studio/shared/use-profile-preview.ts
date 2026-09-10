@@ -48,7 +48,11 @@ export function useProfilePreview({
 		if (!artifact || !viewport || refreshing) return
 		setRefreshing(true)
 		setError(null)
-		void Promise.resolve(typeof artifact === 'function' ? artifact() : artifact)
+		// 🔴 producer 호출을 체인 **안**에서 한다. `Promise.resolve(artifact())`는 인자를 먼저
+		//    평가하므로 동기 throw가 체인을 우회해 밖으로 새고, 그러면 `catch`가 못 잡아
+		//    스피너가 영구히 돌고 문구도 안 뜬다(재현으로 확인).
+		void Promise.resolve()
+			.then(() => (typeof artifact === 'function' ? artifact() : artifact))
 			.then((resolved) =>
 				updateProfilePreview({ studio, profileId, artifact: resolved, viewport }),
 			)

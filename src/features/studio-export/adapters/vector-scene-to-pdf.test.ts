@@ -6,12 +6,13 @@ import { parseColor, roundedRectPath, vectorSceneToPdf } from './vector-scene-to
 
 /**
  * 인쇄 옵션의 색 관련 필드는 페이지 치수와 무관하다 — 치수 검증에서는 빈 값으로 채운다.
- * 🔴 `cmyk`를 빠뜨리면 색 분기가 테스트에서 **한 번도 실행되지 않는다.** 지금 제품 경로는
- *    `cmyk` 없이(=RGB로) 부르지만, 그 분기가 살아 있는 한 테스트는 지나가야 한다.
+ * 🔴 `cmyk`를 빠뜨리면 색 분기가 테스트에서 **한 번도 실행되지 않는다.** 제품 경로는 인쇄
+ *    프로파일이 있을 때 이 분기를 탄다.
  */
 const printOptions = (ppi: number) => ({
 	cmyk: {
 		colors: new Map(),
+		images: new Map(),
 		iccProfile: Buffer.alloc(0),
 		iccProfileName: 'cgats21-crpc6',
 	},
