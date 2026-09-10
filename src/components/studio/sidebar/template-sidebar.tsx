@@ -17,6 +17,7 @@ import {
 	StudioPanelFixed,
 	StudioPanelScroll,
 } from '@/components/studio/sidebar/studio-panel'
+import { TemplateBackgroundPanel } from '@/components/studio/sidebar/template-background-panel'
 import { TemplateLayerPanel } from '@/components/studio/sidebar/template-layer-panel'
 import { ImageSlotInput } from '@/components/studio/template/image-slot-input'
 import {
@@ -55,8 +56,7 @@ const TEXT_SECTION_ID = 'section:text'
  */
 export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }) {
 	const { config, text, images, vectors, layers, focus } = useTemplateStudio()
-	// 🔑 배경은 왼쪽 패널이 소유한다(`template-left-panel`) — 판 전체에 걸리는 것이라서다.
-	//    여기는 고른 레이어에 딸린 것만 갖는다.
+	// 🔑 배경도 여기다 — 레이어 패널의 한 줄이므로 컨트롤도 다른 레이어와 같은 자리에 온다.
 	const { text: textSlots, image: imageSlots } = partitionTemplateSlots(config.template.slots)
 	/**
 	 * 🔴 **평소에는 아무 컨트롤도 보여주지 않는다.** 레이어 패널에서 레이어를 고른 그 순간에만
@@ -279,6 +279,7 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 									</Controller.Group>
 								)
 							})}
+							{showsLayer('background') && <TemplateBackgroundPanel />}
 							{textSlots.length === 0 &&
 								imageSlots.length === 0 &&
 								vectors.slots.length === 0 && (

@@ -351,7 +351,10 @@ function ImageRaceProbe() {
  * 테스트는 먼저 레이어 패널에서 그 레이어를 고른다.
  */
 function selectLayer(label: string) {
-	fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${label}`) }))
+	// 🔴 이름 끝의 종류 라벨까지 맞춘다 — 접기 트리거(`… 섹션 접고 펴기`)가 같은 제목으로 시작해
+	//    접두만 보면 둘이 걸린다.
+	const name = new RegExp(`^${label}\\s*(배경|텍스트|이미지|벡터)$`)
+	fireEvent.click(screen.getByRole('button', { name }))
 }
 
 describe('TemplateGenerator', () => {
@@ -891,28 +894,29 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
-		selectLayer('Title')
 		const groups = () =>
 			Array.from(container.querySelectorAll('[data-slot="controller-group"]'))
 		const named = (title: string) =>
 			groups().find((group) => group.querySelector('span')?.textContent?.trim() === title)
 
+		// 🔴 Text와 Background는 이제 동시에 뜰 수 없다 — 한 번에 한 레이어만 고르므로 차례로 본다.
+		selectLayer('Title')
 		expect(named('Text')).not.toHaveAttribute('data-active')
-		expect(named('Background')).not.toHaveAttribute('data-active')
-
 		// 🔴 전에는 이 둘이 활성화되지 않았다 — 대상이 슬롯 하나로 고정돼 있었다.
-		const textTitle = named('Text')?.querySelector('span')
-		fireEvent.click(textTitle as Element)
+		fireEvent.click(named('Text')?.querySelector('span') as Element)
 		expect(named('Text')).toHaveAttribute('data-active', 'true')
-		expect(named('Background')).not.toHaveAttribute('data-active')
 
+		selectLayer('Background')
+		expect(named('Text')).toBeUndefined()
+		expect(named('Background')).not.toHaveAttribute('data-active')
 		fireEvent.click(named('Background')?.querySelector('span') as Element)
 		expect(named('Background')).toHaveAttribute('data-active', 'true')
-		expect(named('Text')).not.toHaveAttribute('data-active')
 	})
 
 	it('Background 섹션은 노드가 아니라 도화지를 집고, 면 없이 테두리만 그린다', () => {
 		const { container } = render(<TemplateGenerator categoryTitle="카드" template={template} />)
+
+		selectLayer('Background')
 		const groups = Array.from(container.querySelectorAll('[data-slot="controller-group"]'))
 		const background = groups.find(
 			(group) => group.querySelector('span')?.textContent?.trim() === 'Background',
@@ -1121,6 +1125,7 @@ describe('TemplateGenerator', () => {
 		const canvasOf = () =>
 			container.querySelector('[data-slot="studio-workspace-canvas"] [data-node-id="1:1"]')
 
+		selectLayer('Background')
 		// 만지기 전 — 저작 배경 유지.
 		expect((canvasOf() as HTMLElement).style.backgroundColor).toBe('rgb(0, 40, 10)')
 
@@ -1146,6 +1151,7 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
+		selectLayer('Background')
 		screen.getByRole('combobox', { name: 'Type' }).focus()
 		await user.keyboard('{ArrowDown}')
 		await user.click(screen.getByRole('option', { name: 'Image' }))
@@ -1182,6 +1188,7 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
+		selectLayer('Background')
 		screen.getByRole('combobox', { name: 'Type' }).focus()
 		await user.keyboard('{ArrowDown}')
 		await user.click(screen.getByRole('option', { name: 'Image' }))
@@ -1219,6 +1226,7 @@ describe('TemplateGenerator', () => {
 				'[data-slot="studio-workspace-canvas"] [data-node-id="1:1"]',
 			) as HTMLElement
 
+		selectLayer('Background')
 		screen.getByRole('combobox', { name: 'Type' }).focus()
 		await user.keyboard('{ArrowDown}')
 		await user.click(screen.getByRole('option', { name: 'Graphic' }))

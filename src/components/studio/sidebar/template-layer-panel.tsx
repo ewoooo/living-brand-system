@@ -2,7 +2,7 @@
 
 import { Controller } from '@/components/shared/controller'
 import { Typography } from '@/components/ui/typography'
-import type { TemplateEditableLayer } from '@/features/template-customization/domain/template-studio-config'
+import type { TemplateStudioConfigSlot } from '@/features/template-customization/domain/template-studio-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
 import { cn } from '@/lib/utils'
 
@@ -28,20 +28,19 @@ export function TemplateLayerPanel() {
 		layers.select(next)
 		focus.set(next ? { sectionId: slotId, kind: 'nodes', nodeIds: [slotId] } : null)
 	}
-	const editable = config.template.slots.filter(
-		(slot): slot is TemplateEditableLayer => slot.kind !== 'background',
-	)
+	// 🔴 배경도 한 줄이다 — 걸러내지 않는다(사용자 지시, 2026-09-10). 슬롯 배열의 마지막이라
+	//    목록에서도 맨 아래에 온다(겹침에서 맨 밑인 것과 같다).
+	const rows = config.template.slots
 
 	return (
 		<Controller.Group title="Layers" collapsible>
-			{editable.length === 0 ? (
+			{rows.length === 0 ? (
 				<Typography size="sm" tone="muted">
-					이 템플릿에는 편집 가능한 레이어가 없습니다.
+					이 템플릿에는 레이어가 없습니다.
 				</Typography>
 			) : (
 				<ul className="flex flex-col gap-0.5">
-					{/* 판 위에서 위에 있는 것이 목록에서도 위다 — 슬롯 순서를 뒤집지 않는다. */}
-					{editable.map((slot) => (
+					{rows.map((slot) => (
 						<LayerRow
 							key={slot.id}
 							slot={slot}
@@ -59,10 +58,11 @@ export function TemplateLayerPanel() {
 
 /** 레이어 종류를 한 글자로 — 목록이 좁아도 무엇인지 구별된다. */
 const KIND_LABEL = {
+	background: '배경',
 	image: '이미지',
 	text: '텍스트',
 	vector: '벡터',
-} as const satisfies Record<TemplateEditableLayer['kind'], string>
+} as const satisfies Record<TemplateStudioConfigSlot['kind'], string>
 
 function LayerRow({
 	slot,
@@ -71,7 +71,7 @@ function LayerRow({
 	onSelect,
 	onToggleVisible,
 }: {
-	slot: TemplateEditableLayer
+	slot: TemplateStudioConfigSlot
 	selected: boolean
 	visible: boolean
 	onSelect: () => void
@@ -96,8 +96,9 @@ function LayerRow({
 					{KIND_LABEL[slot.kind]}
 				</span>
 			</button>
-			{/* 🔴 표시/숨김은 정책이 허용할 때만 나온다 — 항상 보여야 하는 레이어가 있다. */}
-			{slot.visibility.allowToggle && (
+			{/* 🔴 표시/숨김은 정책이 허용할 때만 나온다 — 항상 보여야 하는 레이어가 있고,
+			    배경은 정책 자체가 없다(끌 수 있는 것이 아니라 타입을 고르는 것이다). */}
+			{slot.kind !== 'background' && slot.visibility.allowToggle && (
 				<Controller.Segmented
 					aria-label={`${slot.label} 표시`}
 					value={visible ? 'on' : 'off'}
