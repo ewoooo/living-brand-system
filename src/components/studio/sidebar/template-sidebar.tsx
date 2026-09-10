@@ -12,7 +12,11 @@ import {
 	ScaleControls,
 	VideoControls,
 } from '@/components/studio/shared/output-controls'
-import { StudioPanel, StudioPanelScroll } from '@/components/studio/sidebar/studio-panel'
+import {
+	StudioPanel,
+	StudioPanelFixed,
+	StudioPanelScroll,
+} from '@/components/studio/sidebar/studio-panel'
 import { TemplateLayerPanel } from '@/components/studio/sidebar/template-layer-panel'
 import { ImageSlotInput } from '@/components/studio/template/image-slot-input'
 import {
@@ -77,190 +81,213 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 		<Controller.Browser.Root>
 			<StudioPanel
 				slot="studio-sidebar"
-				// 🔑 위 블록 = 레이어 + 컨트롤러. 컨트롤러가 남은 높이를 먹는다(비어 있어도 자리를 지킨다).
+				// 🔑 위 상자 = 레이어 + 컨트롤러. 레이어는 고정이고 컨트롤러가 남은 높이를 먹는다
+				//    (비어 있어도 자리를 지킨다). 둘 사이는 상자 폭 전체를 지르는 경계선이다.
 				top={
-					<StudioPanelScroll>
+					<>
 						{/* 🔴 위치를 정하는 것은 이 한 줄뿐이다 — 패널은 자기 자리를 모른다(컨텍스트에서 직접 읽는다).
 				    좌측이나 헤더로 옮기려면 이 줄을 그쪽으로 옮기면 된다. */}
-						<TemplateLayerPanel />
-						{/* 🔴 텍스트 색은 그룹 공용이라 필터를 타지 않는다 — 행이 전부 걸러지면 그룹이 껍데기로
+						<StudioPanelFixed>
+							<TemplateLayerPanel />
+						</StudioPanelFixed>
+						<StudioPanelScroll>
+							{/* 🔴 텍스트 색은 그룹 공용이라 필터를 타지 않는다 — 행이 전부 걸러지면 그룹이 껍데기로
 				    남아 `Color`만 뜬다. 보일 행이 하나도 없으면 그룹째 접는다. */}
-						{textSlots.some((slot) => showsLayer(slot.id)) && textGroup && (
-							<ControllerGroupRenderer
-								definition={textGroup}
-								section={sectionProps(focus, {
-									sectionId: TEXT_SECTION_ID,
-									kind: 'nodes',
-									// 섹션 헤더를 누르면 이 섹션이 다루는 텍스트 상자를 **전부** 집는다.
-									nodeIds: textSlots.map((slot) => slot.id),
-								})}
-								presentation={config.controllerPresentation?.groups.find(
-									({ groupId }) => groupId === textGroup.id,
-								)}
-							>
-								{textSlots.map((slot) => {
-									const definition = findTemplateControl(config, slot.controlId)
-									if (definition?.kind !== 'text') return null
-									// 텍스트는 슬롯별 그룹이 아니라 한 그룹 안의 행이다 — 필터도 행 층위다.
-									if (!showsLayer(slot.id)) return null
-									return (
-										<div
-											key={slot.id}
-											className="flex flex-col gap-1"
-											{...rowFocusProps(focus, {
-												sectionId: TEXT_SECTION_ID,
-												kind: 'nodes',
-												nodeIds: [slot.id],
-											})}
-										>
-											<LayerVisibilityControl
-												label={slot.label}
-												visible={layers.visibility[slot.id] ?? true}
-												allowToggle={slot.visibility.allowToggle}
-												onChange={(visible) =>
-													layers.setVisible(slot.id, visible)
-												}
-											/>
-											<TextSlotInput
-												definition={definition}
-												input={slot.input}
-												value={
-													text.values[slot.id] ??
-													definition.defaultValue ??
-													''
-												}
-												onChange={(next) => text.setValue(slot.id, next)}
-											/>
-											{text.clippedSlotIds.has(slot.id) && (
-												<Typography role="status" size="xs" tone="muted">
-													입력한 텍스트가 박스를 넘어 일부가 잘려 보여요.
-												</Typography>
-											)}
-										</div>
-									)
-								})}
-								{textColorControl?.kind === 'color' && (
-									<ControllerControlRenderer
-										definition={textColorControl}
-										value={text.color}
-										onChange={(next) => {
-											if (typeof next === 'string' || next === null)
-												text.setColor(next)
-										}}
-									/>
-								)}
-							</ControllerGroupRenderer>
-						)}
-						{imageSlots.map((slot, index) => {
-							const topicTitle =
-								imageSlots.length > 1 ? `Image ${index + 1}` : 'Image'
-							const state = images.states[slot.id]
-							const contracts = images.contracts[slot.id] ?? []
-							if (!state) return null
-							if (!showsLayer(slot.id)) return null
-							return (
-								<Controller.Group
-									key={slot.id}
-									title={topicTitle}
-									collapsible
-									{...sectionProps(focus, slotTarget(slot.id))}
+							{textSlots.some((slot) => showsLayer(slot.id)) && textGroup && (
+								<ControllerGroupRenderer
+									definition={textGroup}
+									section={sectionProps(focus, {
+										sectionId: TEXT_SECTION_ID,
+										kind: 'nodes',
+										// 섹션 헤더를 누르면 이 섹션이 다루는 텍스트 상자를 **전부** 집는다.
+										nodeIds: textSlots.map((slot) => slot.id),
+									})}
+									presentation={config.controllerPresentation?.groups.find(
+										({ groupId }) => groupId === textGroup.id,
+									)}
 								>
-									<LayerVisibilityControl
-										label={slot.label}
-										visible={layers.visibility[slot.id] ?? true}
-										allowToggle={slot.visibility.allowToggle}
-										onChange={(visible) => layers.setVisible(slot.id, visible)}
-									/>
-									<ImageSlotInput
-										pinned={slot.imageConfig.mode === 'pinned'}
-										readonly={slot.access === 'readonly'}
-										contracts={contracts}
-										value={state}
-										onFeatureChange={(controlId, next) =>
-											images.updateFeature(slot.id, controlId, next)
-										}
-										onProfileChange={(profileId) =>
-											images.selectProfile(slot.id, profileId)
-										}
-										onPromptChange={(prompt) =>
-											images.update(slot.id, { prompt })
-										}
-										onImageModeChange={(imageMode) =>
-											images.update(slot.id, { imageMode })
-										}
-										onSelectSampleImage={(option) =>
-											images.selectSampleImage(slot.id, option)
-										}
-										onGenerate={() => images.generate(slot.id)}
-										section={subsectionProps(focus, slotTarget(slot.id))}
-									/>
-									{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 섹션이다. 대상 슬롯에 종속되므로
+									{textSlots.map((slot) => {
+										const definition = findTemplateControl(
+											config,
+											slot.controlId,
+										)
+										if (definition?.kind !== 'text') return null
+										// 텍스트는 슬롯별 그룹이 아니라 한 그룹 안의 행이다 — 필터도 행 층위다.
+										if (!showsLayer(slot.id)) return null
+										return (
+											<div
+												key={slot.id}
+												className="flex flex-col gap-1"
+												{...rowFocusProps(focus, {
+													sectionId: TEXT_SECTION_ID,
+													kind: 'nodes',
+													nodeIds: [slot.id],
+												})}
+											>
+												<LayerVisibilityControl
+													label={slot.label}
+													visible={layers.visibility[slot.id] ?? true}
+													allowToggle={slot.visibility.allowToggle}
+													onChange={(visible) =>
+														layers.setVisible(slot.id, visible)
+													}
+												/>
+												<TextSlotInput
+													definition={definition}
+													input={slot.input}
+													value={
+														text.values[slot.id] ??
+														definition.defaultValue ??
+														''
+													}
+													onChange={(next) =>
+														text.setValue(slot.id, next)
+													}
+												/>
+												{text.clippedSlotIds.has(slot.id) && (
+													<Typography
+														role="status"
+														size="xs"
+														tone="muted"
+													>
+														입력한 텍스트가 박스를 넘어 일부가 잘려
+														보여요.
+													</Typography>
+												)}
+											</div>
+										)
+									})}
+									{textColorControl?.kind === 'color' && (
+										<ControllerControlRenderer
+											definition={textColorControl}
+											value={text.color}
+											onChange={(next) => {
+												if (typeof next === 'string' || next === null)
+													text.setColor(next)
+											}}
+										/>
+									)}
+								</ControllerGroupRenderer>
+							)}
+							{imageSlots.map((slot, index) => {
+								const topicTitle =
+									imageSlots.length > 1 ? `Image ${index + 1}` : 'Image'
+								const state = images.states[slot.id]
+								const contracts = images.contracts[slot.id] ?? []
+								if (!state) return null
+								if (!showsLayer(slot.id)) return null
+								return (
+									<Controller.Group
+										key={slot.id}
+										title={topicTitle}
+										collapsible
+										{...sectionProps(focus, slotTarget(slot.id))}
+									>
+										<LayerVisibilityControl
+											label={slot.label}
+											visible={layers.visibility[slot.id] ?? true}
+											allowToggle={slot.visibility.allowToggle}
+											onChange={(visible) =>
+												layers.setVisible(slot.id, visible)
+											}
+										/>
+										<ImageSlotInput
+											pinned={slot.imageConfig.mode === 'pinned'}
+											readonly={slot.access === 'readonly'}
+											contracts={contracts}
+											value={state}
+											onFeatureChange={(controlId, next) =>
+												images.updateFeature(slot.id, controlId, next)
+											}
+											onProfileChange={(profileId) =>
+												images.selectProfile(slot.id, profileId)
+											}
+											onPromptChange={(prompt) =>
+												images.update(slot.id, { prompt })
+											}
+											onImageModeChange={(imageMode) =>
+												images.update(slot.id, { imageMode })
+											}
+											onSelectSampleImage={(option) =>
+												images.selectSampleImage(slot.id, option)
+											}
+											onGenerate={() => images.generate(slot.id)}
+											section={subsectionProps(focus, slotTarget(slot.id))}
+										/>
+										{/* 디자인 SSOT(1:1838): Image Transform은 구분선 없는 섹션이다. 대상 슬롯에 종속되므로
 						    슬롯 그룹 안에 두고 함께 접는다. 생성 전에는 닫힌 채 잠긴다 — compose가 배정된
 						    이미지에만 transform을 적용해서다. */}
-									{slot.transform.enabled && (
-										<Controller.Group
-											title={`${topicTitle} Transform`}
-											collapsible
-											attached
-											{...subsectionProps(focus, slotTarget(slot.id))}
-											disabled={slot.access === 'readonly' || !state?.image}
-										>
-											<ImageTransformControl
-												value={state?.transform ?? IMAGE_TRANSFORM_DEFAULT}
-												// compose는 배정된 이미지에만 transform을 적용한다 — 생성 전에는 비활성.
+										{slot.transform.enabled && (
+											<Controller.Group
+												title={`${topicTitle} Transform`}
+												collapsible
+												attached
+												{...subsectionProps(focus, slotTarget(slot.id))}
 												disabled={
 													slot.access === 'readonly' || !state?.image
 												}
-												limits={slot.transform.limits}
-												// 패드는 대상 슬롯 박스와 같은 비율로 그려진다(디자인 Wide/Portrait/Square).
-												aspectRatio={
-													slot.box.width && slot.box.height
-														? slot.box.width / slot.box.height
-														: undefined
-												}
-												onChange={(transform) =>
-													images.update(slot.id, { transform })
-												}
-											/>
-										</Controller.Group>
-									)}
-								</Controller.Group>
-							)
-						})}
-						{vectors.slots.map((slot) => {
-							const color = vectors.colors[slot.id]
-							if (!showsLayer(slot.id)) return null
-							return (
-								<Controller.Group
-									key={slot.id}
-									title={slot.label}
-									collapsible
-									{...sectionProps(focus, slotTarget(slot.id))}
-								>
-									<LayerVisibilityControl
-										label={slot.label}
-										visible={layers.visibility[slot.id] ?? true}
-										allowToggle={slot.visibility.allowToggle}
-										onChange={(visible) => layers.setVisible(slot.id, visible)}
-									/>
-									<Controller.ColorRow
-										label="Color"
-										value={color ?? '#000000'}
-										isEmpty={!color}
-										disabled={slot.access === 'readonly'}
-										onChange={(next) => vectors.setColor(slot.id, next)}
-									/>
-								</Controller.Group>
-							)
-						})}
-						{textSlots.length === 0 &&
-							imageSlots.length === 0 &&
-							vectors.slots.length === 0 && (
-								<Typography size="sm" tone="muted">
-									이 템플릿에는 편집 가능한 슬롯이 없습니다.
-								</Typography>
-							)}
-					</StudioPanelScroll>
+											>
+												<ImageTransformControl
+													value={
+														state?.transform ?? IMAGE_TRANSFORM_DEFAULT
+													}
+													// compose는 배정된 이미지에만 transform을 적용한다 — 생성 전에는 비활성.
+													disabled={
+														slot.access === 'readonly' || !state?.image
+													}
+													limits={slot.transform.limits}
+													// 패드는 대상 슬롯 박스와 같은 비율로 그려진다(디자인 Wide/Portrait/Square).
+													aspectRatio={
+														slot.box.width && slot.box.height
+															? slot.box.width / slot.box.height
+															: undefined
+													}
+													onChange={(transform) =>
+														images.update(slot.id, { transform })
+													}
+												/>
+											</Controller.Group>
+										)}
+									</Controller.Group>
+								)
+							})}
+							{vectors.slots.map((slot) => {
+								const color = vectors.colors[slot.id]
+								if (!showsLayer(slot.id)) return null
+								return (
+									<Controller.Group
+										key={slot.id}
+										title={slot.label}
+										collapsible
+										{...sectionProps(focus, slotTarget(slot.id))}
+									>
+										<LayerVisibilityControl
+											label={slot.label}
+											visible={layers.visibility[slot.id] ?? true}
+											allowToggle={slot.visibility.allowToggle}
+											onChange={(visible) =>
+												layers.setVisible(slot.id, visible)
+											}
+										/>
+										<Controller.ColorRow
+											label="Color"
+											value={color ?? '#000000'}
+											isEmpty={!color}
+											disabled={slot.access === 'readonly'}
+											onChange={(next) => vectors.setColor(slot.id, next)}
+										/>
+									</Controller.Group>
+								)
+							})}
+							{textSlots.length === 0 &&
+								imageSlots.length === 0 &&
+								vectors.slots.length === 0 && (
+									<Typography size="sm" tone="muted">
+										이 템플릿에는 편집 가능한 슬롯이 없습니다.
+									</Typography>
+								)}
+						</StudioPanelScroll>
+					</>
 				}
 				// 🔑 아래 블록 = settings + 내보내기. 사용자 지시: 이 둘은 무조건 하나다.
 				bottom={

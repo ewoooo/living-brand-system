@@ -65,26 +65,41 @@ export function StudioPanel({
 }
 
 /**
- * 패널 블록 안에서 **남은 높이를 먹고 스크롤되는** 영역. 우측의 컨트롤러가 이것이다
+ * 상자 안에서 **남은 높이를 먹고 스크롤되는** 영역. 여기에 컨트롤러 n개가 쌓인다
  * (「컨트롤러(비어 있을 수도 있음, h=100%)」).
- * 🔴 비어 있어도 자리를 지킨다 — 레이어를 고르지 않았을 때 패널이 줄어들면 안 된다.
+ *
+ * 🔴 위 경계선은 **상자 폭 전체**를 지른다(사용자 지시, 2026-09-10) — 좌우 패딩은 이 컨테이너가
+ *    갖고 테두리는 그 바깥이라, 위의 고정 영역과 이 스크롤 영역이 상자 안에서 완전히 갈린다.
+ *    그 아래 컨트롤러끼리는 폭 전체가 아닌 지금 쓰는 구분선(`Controller.Group`의 `border-t`)
+ *    n−1개로 나뉜다 — 그래서 첫 그룹의 구분선만 지운다(경계선이 두 줄로 겹친다).
+ * 🔴 비어 있어도 자리를 지킨다 — 레이어를 고르지 않았을 때 상자가 줄어들면 안 된다.
  */
 export function StudioPanelScroll({ children }: { children: ReactNode }) {
 	return (
 		<div
 			data-slot="studio-panel-scroll"
-			// 첫 그룹의 위 경계선은 지운다 — 무엇이 맨 위인지는 그룹이 아니라 이 컨테이너만 안다.
-			className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-4 [&>*:first-child]:border-t-0"
+			className="flex min-h-0 flex-1 flex-col overflow-y-auto border-t border-border px-4 pb-4 first:border-t-0 [&>*:first-child]:border-t-0"
 		>
 			{children}
 		</div>
 	)
 }
 
-/** 패널 블록 안에서 **높이를 차지한 만큼만** 쓰는 고정 영역. 좌측의 페이지 선택이 이것이다. */
+/**
+ * 상자 안에서 **높이를 차지한 만큼만** 쓰는 고정 영역 — 스크롤 위에 앉는다.
+ * 좌측은 페이지 선택이, 우측은 레이어 목록이 여기 온다.
+ *
+ * 🔑 여기 오는 것은 **항상 1~2개**다(사용자 지시) — 그래서 스크롤을 주지 않는다.
+ * ponytail: 그래도 레이어가 아주 많은 템플릿에서는 이 영역이 스크롤을 밀어낼 수 있다. 지금은
+ *   목록이 접히므로(`collapsible`) 그것으로 족하고, 실제로 밀리면 여기에 최대 높이 한 줄이다.
+ */
 export function StudioPanelFixed({ children }: { children: ReactNode }) {
 	return (
-		<div data-slot="studio-panel-fixed" className="flex shrink-0 flex-col gap-1 px-4 pt-4 pb-4">
+		<div
+			data-slot="studio-panel-fixed"
+			// 첫 그룹의 구분선은 지운다 — 상자의 위 테두리와 겹친다.
+			className="flex shrink-0 flex-col gap-1 px-4 pt-4 pb-4 [&>*:first-child]:border-t-0"
+		>
 			{children}
 		</div>
 	)
