@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { createImageArtifacts } from '@/features/image-generation/runtime/image-artifact.client'
 import { exportFileName, numberedExportFileName } from './export-file-name'
 
 describe('image download names', () => {
@@ -18,18 +17,5 @@ describe('image download names', () => {
 			'행사-포스터-20260911-010000',
 		)
 		expect(numberedExportFileName('제품컷', 0)).toBe('제품컷-01')
-	})
-	it('원본도 같은 기본 이름과 두 자리 순번을 쓰고 실제 확장자를 보존한다', () => {
-		const artifacts = createImageArtifacts({
-			images: ['/a.png', '/b.jpg'],
-			color: null,
-			fileName: '제품컷-굴착기-20260910-120000',
-		})
-		expect(artifacts.original[0].source.filename(new Blob([], { type: 'image/png' }))).toBe(
-			'제품컷-굴착기-20260910-120000-01.png',
-		)
-		expect(artifacts.original[1].source.filename(new Blob([], { type: 'image/jpeg' }))).toBe(
-			'제품컷-굴착기-20260910-120000-02.jpg',
-		)
 	})
 })

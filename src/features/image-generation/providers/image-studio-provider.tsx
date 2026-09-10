@@ -244,7 +244,7 @@ export function ImageStudioProvider({
 				},
 			},
 			results: {
-				fileName: session?.fileName,
+				metadata: session?.metadata,
 				items,
 				referenceIndex,
 				color: resultColor,
