@@ -16,7 +16,6 @@ import {
 import { PreviewRefreshSlot } from '@/components/studio/shared/preview-refresh-slot'
 import type { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
-import { BackgroundSection } from '@/components/studio/template/background-section'
 import { ImageSlotInput } from '@/components/studio/template/image-slot-input'
 import {
 	IMAGE_TRANSFORM_DEFAULT,
@@ -47,7 +46,6 @@ const FORMAT_LABELS = new Map(
  * 배경은 노드가 아니라 도화지를 집으므로 `kind: 'canvas'`다.
  */
 const TEXT_SECTION_ID = 'section:text'
-const BACKGROUND_SECTION_ID = 'section:background'
 
 /**
  * 템플릿 스튜디오의 사이드바(컨트롤러 패널) — 캔버스를 모른다.
@@ -61,30 +59,12 @@ export function TemplateSidebar({
 	exporting: TemplateExportView
 	preview: ReturnType<typeof useProfilePreview>
 }) {
-	const { navigation, config, text, images, vectors, layers, background, focus } =
-		useTemplateStudio()
-	const {
-		text: textSlots,
-		image: imageSlots,
-		background: backgroundSlot,
-	} = partitionTemplateSlots(config.template.slots)
+	const { navigation, config, text, images, vectors, layers, focus } = useTemplateStudio()
+	// 🔑 배경은 왼쪽 패널이 소유한다(`template-left-panel`) — 판 전체에 걸리는 것이라서다.
+	//    여기는 고른 레이어에 딸린 것만 갖는다.
+	const { text: textSlots, image: imageSlots } = partitionTemplateSlots(config.template.slots)
 	const { canvas } = config.template.exportOption
 	const video = exporting.format === 'mp4' ? config.output.video?.mp4 : undefined
-	const backgroundTypeControl = backgroundSlot
-		? findTemplateControl(config, backgroundSlot.typeControlId)
-		: undefined
-	const backgroundColorControl = backgroundSlot
-		? findTemplateControl(config, backgroundSlot.colorControlId)
-		: undefined
-	const backgroundDimmerControl = backgroundSlot
-		? findTemplateControl(config, backgroundSlot.dimmerControlId)
-		: undefined
-	const backgroundDimmerOpacityControl = backgroundSlot
-		? findTemplateControl(config, backgroundSlot.dimmerOpacityControlId)
-		: undefined
-	const backgroundGroup = backgroundSlot
-		? findTemplateControlGroup(config, backgroundSlot.typeControlId)
-		: undefined
 	const textGroup = textSlots[0]
 		? findTemplateControlGroup(config, textSlots[0].controlId)
 		: undefined
@@ -348,55 +328,6 @@ export function TemplateSidebar({
 						</Controller.Group>
 					)
 				})}
-				{backgroundSlot &&
-					backgroundGroup &&
-					backgroundTypeControl?.kind === 'select' &&
-					backgroundColorControl?.kind === 'color' && (
-						<BackgroundSection
-							section={sectionProps(focus, {
-								sectionId: BACKGROUND_SECTION_ID,
-								kind: 'canvas',
-							})}
-							groupDefinition={backgroundGroup}
-							groupPresentation={config.controllerPresentation?.groups.find(
-								({ groupId }) => groupId === backgroundGroup.id,
-							)}
-							typeDefinition={backgroundTypeControl}
-							colorDefinition={backgroundColorControl}
-							dimmerDefinition={
-								backgroundDimmerControl?.kind === 'toggle'
-									? backgroundDimmerControl
-									: undefined
-							}
-							dimmerOpacityDefinition={
-								backgroundDimmerOpacityControl?.kind === 'range'
-									? backgroundDimmerOpacityControl
-									: undefined
-							}
-							canvasAspectRatio={
-								canvas.width && canvas.height
-									? canvas.width / canvas.height
-									: undefined
-							}
-							imageContracts={background.contracts}
-							featureBindings={background.featureBindings}
-							graphicConfigs={background.graphicConfigs}
-							graphicBindings={background.graphicBindings}
-							value={background.state}
-							onChange={background.update}
-							onColorChange={(next) => {
-								if (typeof next === 'string' || next === null)
-									background.setColor(next)
-							}}
-							onTypeChange={background.selectType}
-							onFeatureChange={background.updateFeature}
-							onImageProfileChange={background.selectImageProfile}
-							onSelectSampleImage={background.selectSampleImage}
-							onGraphicConfigChange={background.selectGraphicConfig}
-							onGraphicChange={background.updateGraphic}
-							onGenerate={background.generate}
-						/>
-					)}
 				{textSlots.length === 0 &&
 					imageSlots.length === 0 &&
 					vectors.slots.length === 0 && (
