@@ -244,6 +244,7 @@ export function ImageStudioProvider({
 				},
 			},
 			results: {
+				fileName: session?.fileName,
 				items,
 				referenceIndex,
 				color: resultColor,

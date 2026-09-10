@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import type { ImageArtifacts } from '@/features/image-generation/runtime/image-artifact.client'
+import { numberedExportFileName } from '@/features/studio-export/export-file-name'
 import { exportResultsToZip } from '../adapters/export-results-to-zip.client'
 import type {
 	ExportRequest,
@@ -24,10 +25,12 @@ type ImageExportRequest = (
 /** Image Artifact의 선택·패키징만 조정하고 형식 변환은 공통 Artifact executor에 맡긴다. */
 export function useImageExport({
 	artifacts,
+	fileName,
 	capability,
 	selected,
 	size,
 }: {
+	fileName?: string
 	artifacts: ImageArtifacts | null
 	capability: StudioOutputCapability
 	selected: number | null
@@ -76,9 +79,9 @@ export function useImageExport({
 		(request: ImageExportRequest) => {
 			if (!artifacts) throw new Error('Image export is unavailable.')
 			const items = request.artifact === 'original' ? artifacts.original : artifacts.raster
-			return exportScope(items, selected, request)
+			return exportScope(items, selected, request, fileName)
 		},
-		[artifacts, selected],
+		[artifacts, selected, fileName],
 	)
 	const imageExport = useExport<ImageExportRequest>({
 		capability,
@@ -134,9 +137,14 @@ async function exportScope(
 	artifacts: ImageArtifacts['original'] | ImageArtifacts['raster'],
 	selected: number | null,
 	request: ImageExportRequest,
+	fileName?: string,
 ): Promise<ExportResult | readonly ExportResult[]> {
 	const exportOne = (artifact: (typeof artifacts)[number], index: number) =>
-		executeArtifactExport({ artifact, fileName: `hd-image-${index + 1}`, request })
+		executeArtifactExport({
+			artifact,
+			fileName: fileName ? numberedExportFileName(fileName, index) : `hd-image-${index + 1}`,
+			request,
+		})
 	if (request.scope === 'selected') {
 		if (selected === null || !artifacts[selected])
 			throw new Error('저장할 이미지를 선택해 주세요.')
@@ -144,7 +152,11 @@ async function exportScope(
 	}
 	const items = await Promise.all(artifacts.map(exportOne))
 	return request.package
-		? exportResultsToZip({ format: request.package, filename: 'hd-images.zip', items })
+		? exportResultsToZip({
+				format: request.package,
+				filename: `${fileName ?? 'hd-images'}.zip`,
+				items,
+			})
 		: items
 }
 

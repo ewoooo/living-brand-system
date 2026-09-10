@@ -52,10 +52,12 @@ function ImageWorkspace() {
 		items.length > 0
 			? createImageArtifacts({
 					images: items.map((item) => item.src),
+					fileName: results.fileName,
 					color: results.color,
 				})
 			: null
 	const download = useImageExport({
+		fileName: results.fileName,
 		artifacts,
 		capability: resultConfig?.output ?? { formats: [], original: false },
 		selected: results.selected,

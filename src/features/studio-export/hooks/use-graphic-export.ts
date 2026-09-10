@@ -6,6 +6,7 @@ import type { GraphicBrowserArtifacts } from '@/features/graphic-generation/runt
 import { getGraphicStudioVectorArtifact } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
 import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
 import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../export-contract'
+import { exportFileName } from '../export-file-name'
 import {
 	fitsPrintOutput,
 	PRINT_PPI_VALUES,
@@ -188,6 +189,7 @@ export function useGraphicExport({
 	)
 	const execute = useCallback(
 		(request: GraphicExportRequest) => {
+			const fileName = exportFileName(config.name, new Date())
 			const artifact =
 				request.artifact === 'raster'
 					? artifacts?.raster
@@ -197,12 +199,12 @@ export function useGraphicExport({
 			if (!artifact) throw new Error(`${request.artifact} export is unavailable.`)
 			return executeArtifactExport({
 				artifact,
-				fileName: config.id,
+				fileName,
 				renderSize: request.artifact === 'raster' ? request.size : undefined,
 				request,
 			})
 		},
-		[artifacts, config.id, createVectorArtifact],
+		[artifacts, config.name, createVectorArtifact],
 	)
 	const graphicExport = useExport<GraphicExportRequest>({
 		capability: config.output,
