@@ -301,7 +301,14 @@ function useTemplateLayerSession(
 			}),
 		[slots],
 	)
-	return useMemo(() => ({ visibility, setVisible }), [setVisible, visibility])
+	const [selected, setSelected] = useState<string | null>(null)
+	// 🔴 읽을 때 걸러 낸다 — 템플릿을 바꾸면 슬롯 id가 통째로 달라지고, 그때 남은 선택은
+	//    아무 컨트롤도 못 내면서 「고른 상태」로 보인다. 초기화 effect를 두는 대신 유도한다.
+	const selectedId = selected && slots.some((slot) => slot.id === selected) ? selected : null
+	return useMemo(
+		() => ({ visibility, setVisible, selectedId, select: setSelected }),
+		[selectedId, setVisible, visibility],
+	)
 }
 
 function useTemplateBackgroundSession(

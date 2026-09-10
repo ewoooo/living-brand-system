@@ -15,11 +15,19 @@ import { cn } from '@/lib/utils'
  *
  * 🔴 **자기 위치를 모른다.** 값을 prop으로 받지 않고 컨텍스트에서 직접 읽으므로 좌·우·헤더·본문
  *    어디에 꽂아도 그대로 돈다 — 위치를 정하는 코드는 꽂는 자리 한 줄뿐이다.
- * 🔑 선택은 기존 `focus`를 그대로 쓴다. 캔버스 하이라이트와 사이드바 강조가 이미 그것을 읽으므로,
- *    레이어를 고르면 캔버스에서도 그 자리가 밝아진다 — 새 상태를 만들지 않는다.
+ * 🔴 **선택(`layers.selectedId`)과 `focus`는 다른 것이다.** 선택은 여기서만 바뀌고, `focus`는
+ *    「지금 만지는 자리」라 입력칸에 커서만 들어가도 바뀐다 — 하나로 합치면 컨트롤을 만지는 순간
+ *    방금 고른 레이어가 풀려 컨트롤이 통째로 사라진다.
+ * 🔑 그래도 고를 때 `focus`도 같이 준다 — 캔버스 하이라이트가 그것을 읽으므로 레이어를 고르면
+ *    판에서도 그 자리가 밝아진다.
  */
 export function TemplateLayerPanel() {
 	const { config, layers, focus } = useTemplateStudio()
+	const select = (slotId: string) => {
+		const next = layers.selectedId === slotId ? null : slotId
+		layers.select(next)
+		focus.set(next ? { sectionId: slotId, kind: 'nodes', nodeIds: [slotId] } : null)
+	}
 	const editable = config.template.slots.filter(
 		(slot): slot is TemplateEditableLayer => slot.kind !== 'background',
 	)
@@ -37,15 +45,9 @@ export function TemplateLayerPanel() {
 						<LayerRow
 							key={slot.id}
 							slot={slot}
-							selected={focus.target?.sectionId === slot.id}
+							selected={layers.selectedId === slot.id}
 							visible={layers.visibility[slot.id] ?? true}
-							onSelect={() =>
-								focus.set(
-									focus.target?.sectionId === slot.id
-										? null
-										: { sectionId: slot.id, kind: 'nodes', nodeIds: [slot.id] },
-								)
-							}
+							onSelect={() => select(slot.id)}
 							onToggleVisible={(next) => layers.setVisible(slot.id, next)}
 						/>
 					))}

@@ -55,21 +55,14 @@ export function TemplateSidebar({ exporting }: { exporting: TemplateExportView }
 	//    여기는 고른 레이어에 딸린 것만 갖는다.
 	const { text: textSlots, image: imageSlots } = partitionTemplateSlots(config.template.slots)
 	/**
-	 * 레이어 패널에서 고른 레이어. 있으면 그 레이어의 컨트롤만 남긴다 —
-	 * 우측이 「너무 많다」는 것은 **모든 슬롯의 컨트롤이 동시에 펼쳐져 있어서**다.
-	 * 🔴 아무것도 고르지 않았으면 전부 보여 준다. 빈 우측은 무엇을 골라야 하는지 알려 주지 않는다.
-	 * 🔴 `focus.target.sectionId`는 **슬롯 id일 때도 있고 섹션 id(`section:text`)일 때도 있다.**
-	 *    구분하지 않으면 그룹 헤더를 누른 것이 레이어 선택으로 읽혀 그 그룹이 통째로 사라진다.
-	 *    그래서 실제 슬롯 id일 때만 필터를 건다.
+	 * 🔴 **평소에는 아무 컨트롤도 보여주지 않는다.** 레이어 패널에서 레이어를 고른 그 순간에만
+	 *    그 레이어의 컨트롤이 나온다(사용자 지시, 2026-09-10) — 우측이 「너무 많다」는 것은
+	 *    모든 슬롯의 컨트롤이 동시에 펼쳐져 있어서다.
+	 * 🔴 `focus`를 보지 않는다. `focus`는 「지금 만지는 자리」라 입력칸에 커서가 들어가면
+	 *    섹션(`section:text`)으로 바뀌고, 그것을 선택으로 읽으면 **글자를 치는 순간 컨트롤이
+	 *    통째로 사라진다.** 선택은 레이어 패널만 바꾸는 별개 상태다.
 	 */
-	const layerIds = new Set(
-		config.template.slots.filter((slot) => slot.kind !== 'background').map((slot) => slot.id),
-	)
-	const selectedLayerId =
-		focus.target?.sectionId && layerIds.has(focus.target.sectionId)
-			? focus.target.sectionId
-			: undefined
-	const showsLayer = (slotId: string) => !selectedLayerId || selectedLayerId === slotId
+	const showsLayer = (slotId: string) => layers.selectedId === slotId
 	const { canvas } = config.template.exportOption
 	const video = exporting.format === 'mp4' ? config.output.video?.mp4 : undefined
 	const textGroup = textSlots[0]

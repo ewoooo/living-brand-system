@@ -30,7 +30,12 @@ function writers() {
 			generate: vi.fn(),
 		},
 		vectors: { slots: [], colors: {}, setColor: log('vectors.setColor') },
-		layers: { visibility: {}, setVisible: log('layers.setVisible') },
+		layers: {
+			visibility: {},
+			setVisible: log('layers.setVisible'),
+			selectedId: null,
+			select: log('layers.select'),
+		},
 		background: {
 			state: {} as TemplateSessionWriters['background']['state'],
 			contracts: [],
