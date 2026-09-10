@@ -829,6 +829,38 @@ describe('TemplateGenerator', () => {
 	})
 
 	/**
+	 * 🔴 레이어 목록의 순서는 **겹침 순서**다 — 판에서 맨 위인 것이 목록에서도 맨 위다
+	 * (Figma·Illustrator와 같은 방향). 겹침 순서의 정본은 문서 순서이고 그 정본은 Admin의
+	 * `childOrder`가 compose에서 만든다(z-index를 쓰지 않는다).
+	 * 🔴 전에는 슬롯 배열이 `[...text, ...image, ...vector]`라 **수집기 순서**였다 — 목록이
+	 * 겹침처럼 읽히는데 사실이 아니었다.
+	 */
+	it('레이어 목록이 겹침 순서의 역순으로 나온다 — 맨 위 레이어가 목록 맨 위', () => {
+		const { container } = render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					// 문서 순서: 이미지(아래) → Title → Years(위).
+					html:
+						'<div data-node-id="i1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>' +
+						'<p data-node-id="t1">TITLE</p><p data-node-id="t2">YEARS</p>',
+					nodeConfigs: {
+						i1: { imageInput: { profileId: 7 } },
+						t1: { input: { label: 'Title' } },
+						t2: { input: { label: 'Years' } },
+					},
+				}}
+			/>,
+		)
+		const rows = Array.from(
+			container.querySelectorAll('[data-slot="studio-sidebar"] li button[aria-pressed]'),
+		).map((row) => row.textContent?.replace(/(텍스트|이미지|벡터|배경)$/, ''))
+
+		expect(rows).toEqual(['Years', 'Title', '배경', 'Background'])
+	})
+
+	/**
 	 * 🔴 **평소에는 컨트롤이 하나도 없고, 레이어를 고른 그때만 그 레이어의 컨트롤이 나온다**
 	 * (사용자 지시, 2026-09-10).
 	 * 🔴 선택은 `focus`와 별개다. `focus`는 「지금 만지는 자리」라 입력칸에 커서가 들어가면

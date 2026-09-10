@@ -28,9 +28,9 @@ export function TemplateLayerPanel() {
 		layers.select(next)
 		focus.set(next ? { sectionId: slotId, kind: 'nodes', nodeIds: [slotId] } : null)
 	}
-	// 🔴 배경도 한 줄이다 — 걸러내지 않는다(사용자 지시, 2026-09-10). 슬롯 배열의 마지막이라
-	//    목록에서도 맨 아래에 온다(겹침에서 맨 밑인 것과 같다).
-	const rows = config.template.slots
+	// 🔴 슬롯 배열은 **그리는 순서(아래 → 위)** 다 — 목록은 그 역순으로, 판에서 맨 위인 것이
+	//    목록에서도 맨 위다(Figma·Illustrator와 같은 방향). 배경은 맨 아래이므로 목록의 끝이다.
+	const rows = [...config.template.slots].reverse()
 
 	return (
 		<Controller.Group title="Layers" collapsible>

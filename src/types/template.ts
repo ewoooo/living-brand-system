@@ -27,6 +27,19 @@ export interface TemplateLayerCreatorPolicy {
 export interface TemplateNodeConfig {
 	/** Admin이 정하는 Creator 노출·편집·visibility 정책. */
 	creator?: TemplateLayerCreatorPolicy
+	/**
+	 * 이 노드의 **자식 겹침 순서** — Admin이 정하는 정본이다(2026-09-10).
+	 * 값은 자식 nodeId를 **문서 순서(= 아래 → 위)**로 나열한 것이고 compose가 DOM을 그 순서로
+	 * 재배치한다.
+	 *
+	 * 🔴 **z-index를 쓰지 않는 이유**: 벡터 내보내기가 DOM 순서로만 걷고 z-index를 읽지 않는다
+	 *    (`template-dom-to-vector-scene.client.ts`). 정본을 DOM 순서 하나로 두면 화면·PDF·SVG가
+	 *    갈릴 수 없다.
+	 * 🔴 **형제 안에서만** 순서가 성립한다. 다른 부모로 옮기면 `position: absolute`의 좌표 기준이
+	 *    바뀌어 위치가 깨지므로 재배치는 같은 부모 안에서만 한다.
+	 * 목록에 없는 자식은 맨 뒤(= 맨 위)에 온다 — 재import로 새로 생긴 노드가 조용히 가라앉지 않는다.
+	 */
+	childOrder?: string[]
 	/** Creator 세션이 compose에만 싣는 실제 표시 상태. Admin 저장 정책과 분리한다. */
 	visible?: boolean
 	text?: string

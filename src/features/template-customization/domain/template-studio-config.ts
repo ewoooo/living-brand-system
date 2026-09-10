@@ -758,6 +758,19 @@ export function deriveTemplateStudioConfig(
 		},
 	]
 
+	// 🔴 슬롯을 **그리는 순서(아래 → 위)** 로 정렬한다. 위에서 세 수집기(text·image·vector)를
+	//    이어 붙였을 뿐이라 그 순서는 판에서 무엇이 위인지와 무관했다 — 레이어 패널이 그것을
+	//    그대로 보여 주면 「겹침 순서」로 읽히는데 사실이 아니었다.
+	// 🔑 문서 순서가 곧 겹침 순서다(템플릿 12개 전부 z-index 0건 · 전부 `position: absolute`).
+	//    그래서 Admin의 `childOrder`가 compose에서 DOM을 재배치하면 이 정렬이 그것을 따라간다.
+	//    배경은 노드가 아니라 도화지라 언제나 맨 아래다.
+	const documentOrder = new Map(
+		Array.from(html.matchAll(/data-node-id="([^"]*)"/g), (match, index) => [match[1], index]),
+	)
+	const orderOf = (slot: TemplateStudioConfigSlot) =>
+		slot.kind === 'background' ? Number.NEGATIVE_INFINITY : (documentOrder.get(slot.id) ?? 0)
+	slots.sort((left, right) => orderOf(left) - orderOf(right))
+
 	const runtimeManifest = getTemplateRuntimeManifest(template)
 	const controllerGroups = runtimeManifest.controller.groups
 

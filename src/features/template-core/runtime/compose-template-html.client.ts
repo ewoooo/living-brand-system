@@ -343,6 +343,26 @@ export function composeTemplateHtml(
 		}
 	}
 
+	// 레이어 겹침 순서 — Admin이 정한 `childOrder`대로 DOM을 재배치한다.
+	// 🔴 값을 다 적용한 **뒤에** 돈다. 컬러 치환(`applyImageColorize`)·마스크 치환이 요소를 다른
+	//    요소로 바꿔치기하므로, 그 전에 옮기면 옮긴 것이 버려진 노드일 수 있다.
+	for (const [nodeId, config] of Object.entries(nodeConfigs ?? {})) {
+		if (!config.childOrder?.length) continue
+		// 🔴 selector를 조립하지 않는다 — nodeId에 콜론이 섞인다(`147:16`). 위 배정 루프와 같은 방식.
+		const parent = Array.from(doc.querySelectorAll('[data-node-id]')).find(
+			(candidate) => candidate.getAttribute('data-node-id') === nodeId,
+		)
+		if (!parent) continue
+		// 나열된 순서대로 뒤에 붙인다 — 목록에 없는 자식은 그 앞(= 아래)에 남는다.
+		// 🔑 형제 안의 이동만이고, 이미 그 순서면 appendChild가 아무 변화를 만들지 않는다.
+		for (const childId of config.childOrder) {
+			const child = Array.from(parent.children).find(
+				(candidate) => candidate.getAttribute('data-node-id') === childId,
+			)
+			if (child) parent.appendChild(child)
+		}
+	}
+
 	// 캔버스 배경 — 루트 프레임(body 직계 자식)의 inline 배경을 덮는다. 값을 준 갈래만 쓰므로
 	// 색만/이미지만/둘 다가 모두 성립하고, 같은 입력이면 같은 선언이 나와 재합성이 멱등이다.
 	const root = doc.body.firstElementChild

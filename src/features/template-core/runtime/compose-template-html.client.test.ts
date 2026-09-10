@@ -834,3 +834,89 @@ describe('composeTemplateHtml canvas background', () => {
 		expect(composeTemplateHtml(once, {}, { canvasBackground: background })).toBe(once)
 	})
 })
+
+/**
+ * 레이어 겹침 순서의 정본은 **Admin의 `childOrder`** 이고, compose가 그것으로 DOM을 재배치한다
+ * (사용자 결정, 2026-09-10).
+ *
+ * 🔴 z-index를 쓰지 않는 이유를 이 테스트가 지킨다: 벡터 내보내기가 DOM 순서로만 걷고
+ *    z-index를 읽지 않으므로(`template-dom-to-vector-scene.client.ts`), 정본이 DOM 순서 하나여야
+ *    화면과 PDF·SVG가 갈리지 않는다.
+ */
+describe('composeTemplateHtml childOrder', () => {
+	const frame = (...ids: string[]) =>
+		`<div data-node-id="root" data-figma-type="FRAME">${ids
+			.map((id) => `<p data-node-id="${id}" data-figma-type="TEXT">${id}</p>`)
+			.join('')}</div>`
+
+	const idsOf = (html: string) =>
+		Array.from(
+			new DOMParser()
+				.parseFromString(html, 'text/html')
+				.querySelectorAll('[data-node-id="root"] > *'),
+			(child) => child.getAttribute('data-node-id'),
+		)
+
+	it('나열한 순서대로 형제를 재배치한다 — 문서 순서가 곧 그리는 순서다', () => {
+		const html = composeTemplateHtml(frame('a', 'b', 'c'), {
+			root: { childOrder: ['c', 'b', 'a'] },
+		})
+
+		expect(idsOf(html)).toEqual(['c', 'b', 'a'])
+	})
+
+	it('목록에 없는 자식은 맨 위(뒤)에 온다 — 재import로 생긴 노드가 조용히 가라앉지 않는다', () => {
+		const html = composeTemplateHtml(frame('a', 'b', 'new'), {
+			root: { childOrder: ['b', 'a'] },
+		})
+
+		expect(idsOf(html)).toEqual(['new', 'b', 'a'])
+	})
+
+	it('없는 id는 건너뛰고, 이미 그 순서면 출력이 base와 같다', () => {
+		expect(
+			idsOf(composeTemplateHtml(frame('a', 'b'), { root: { childOrder: ['사라진', 'a'] } })),
+		).toEqual(['b', 'a'])
+		expect(composeTemplateHtml(frame('a', 'b'), { root: { childOrder: ['a', 'b'] } })).toBe(
+			frame('a', 'b'),
+		)
+	})
+
+	it('🔴 다른 부모의 자식은 옮기지 않는다 — 좌표 기준이 바뀌어 위치가 깨진다', () => {
+		const nested =
+			'<div data-node-id="root" data-figma-type="FRAME">' +
+			'<p data-node-id="a" data-figma-type="TEXT">a</p>' +
+			'<div data-node-id="group" data-figma-type="GROUP">' +
+			'<p data-node-id="deep" data-figma-type="TEXT">deep</p>' +
+			'</div>' +
+			'</div>'
+		const html = composeTemplateHtml(nested, { root: { childOrder: ['deep', 'a'] } })
+
+		// `deep`은 root의 자식이 아니므로 무시되고, `a`만 뒤로 간다.
+		expect(idsOf(html)).toEqual(['group', 'a'])
+		expect(
+			new DOMParser()
+				.parseFromString(html, 'text/html')
+				.querySelector('[data-node-id="group"] > [data-node-id="deep"]'),
+		).not.toBeNull()
+	})
+
+	it('디머는 재배치 뒤에 깔려 항상 맨 아래에 남는다', () => {
+		const html = composeTemplateHtml(
+			frame('a', 'b'),
+			{ root: { childOrder: ['b', 'a'] } },
+			{ canvasBackground: { dimmer: 0.4 } },
+		)
+		const children = Array.from(
+			new DOMParser()
+				.parseFromString(html, 'text/html')
+				.querySelectorAll('[data-node-id="root"] > *'),
+		)
+
+		expect(children[0]?.hasAttribute('data-canvas-dimmer')).toBe(true)
+		expect(children.slice(1).map((child) => child.getAttribute('data-node-id'))).toEqual([
+			'b',
+			'a',
+		])
+	})
+})
