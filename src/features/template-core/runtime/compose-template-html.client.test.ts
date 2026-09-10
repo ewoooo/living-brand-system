@@ -927,3 +927,38 @@ describe('composeTemplateHtml childOrder', () => {
 		])
 	})
 })
+
+/**
+ * 레이어 이름의 정본은 **Admin의 `label`** 이고, compose가 그것을 노드의 `data-name`에 쓴다
+ * (사용자 지시, 2026-09-10).
+ *
+ * 🔑 `data-name` 한 자리로 모으는 이유: 스튜디오 레이어 패널 · Admin 레이어 목록 · **인쇄 PDF의
+ *    Illustrator 레이어명**(`template-dom-to-vector-scene.client.ts`의 group label → PDF OCG)이
+ *    전부 그것을 읽는다. 새 필드를 따로 내려보내면 셋 중 하나가 조용히 Figma 이름에 머문다.
+ */
+describe('composeTemplateHtml label', () => {
+	const nameOf = (html: string) =>
+		new DOMParser()
+			.parseFromString(html, 'text/html')
+			.querySelector('[data-node-id="t1"]')
+			?.getAttribute('data-name')
+
+	const base = '<p data-node-id="t1" data-name="Frame 12">TITLE</p>'
+
+	it('Admin이 정한 이름이 data-name을 덮는다 — PDF 레이어명까지 그것을 읽는다', () => {
+		expect(nameOf(composeTemplateHtml(base, { t1: { label: 'Title' } }))).toBe('Title')
+	})
+
+	it('🔴 비우면 Figma 이름이 남는다 — 초안은 Figma, 수정은 Admin이다', () => {
+		expect(nameOf(composeTemplateHtml(base, { t1: {} }))).toBe('Frame 12')
+		expect(nameOf(composeTemplateHtml(base, { t1: { label: '' } }))).toBe('Frame 12')
+	})
+
+	it('이름이 없던 노드에도 붙는다', () => {
+		const html = composeTemplateHtml('<p data-node-id="t1">TITLE</p>', {
+			t1: { label: 'Subtitle' },
+		})
+
+		expect(nameOf(html)).toBe('Subtitle')
+	})
+})

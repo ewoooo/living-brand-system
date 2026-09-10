@@ -292,7 +292,9 @@ export function TemplateLayersField() {
 				/>
 				<LayerList
 					canvasHeight={layout.canvasHeight}
-					canMove={(id, direction) => moveLayer(nodeConfigs, layers, id, direction) !== null}
+					canMove={(id, direction) =>
+						moveLayer(nodeConfigs, layers, id, direction) !== null
+					}
 					layerWidth={layout.layerWidth}
 					layers={layers}
 					onMove={commitMove}

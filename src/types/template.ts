@@ -42,6 +42,17 @@ export interface TemplateNodeConfig {
 	 *    (끝으로 쓸어 보내면 그 노드가 다른 레이어에 가려지거나 위를 덮는다.)
 	 */
 	childOrder?: string[]
+	/**
+	 * 레이어 이름 — **Admin이 정하는 정본**이다(사용자 지시, 2026-09-10). compose가 이 값을 노드의
+	 * `data-name`에 쓴다.
+	 *
+	 * 🔑 `data-name` **한 자리**로 모으는 이유: 스튜디오 레이어 패널·Admin 레이어 목록·**인쇄
+	 *    PDF의 Illustrator 레이어명**이 전부 그것을 읽는다
+	 *    (`template-dom-to-vector-scene.client.ts`의 group label → PDF OCG). 새 필드를 따로
+	 *    내려보내면 셋 중 하나가 조용히 Figma 이름에 머문다.
+	 * 🔴 비어 있으면 Figma가 준 `data-name`이 그대로 남는다 — 초안은 Figma, 수정은 Admin이다.
+	 */
+	label?: string
 	/** Creator 세션이 compose에만 싣는 실제 표시 상태. Admin 저장 정책과 분리한다. */
 	visible?: boolean
 	text?: string

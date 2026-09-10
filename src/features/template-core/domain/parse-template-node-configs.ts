@@ -59,6 +59,7 @@ const templateNodeConfigMapSchema = z.record(
 	z.strictObject({
 		creator: templateLayerCreatorPolicySchema.optional(),
 		childOrder: z.array(z.string().min(1)).optional(),
+		label: z.string().optional(),
 		visible: z.boolean().optional(),
 		text: z.string().optional(),
 		backgroundImage: z.string().optional(),

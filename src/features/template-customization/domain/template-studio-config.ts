@@ -389,8 +389,13 @@ export const isBackgroundSlot = (slot: TemplateStudioConfigSlot): slot is Templa
 export type TemplateLayerGroup = {
 	kind: TemplateStudioConfigSlot['kind']
 	label: string
-	/** 이 묶음에 든 슬롯 — 캔버스 하이라이트가 한 번에 집는 대상이다. */
-	nodeIds: readonly string[]
+	/**
+	 * 이 묶음에 든 슬롯 — 캔버스 하이라이트가 한 번에 집는 대상이고, 레이어 패널이 묶음 아래에
+	 * 이름을 늘어놓는 대상이다(Title·Subtitle·Image 1 …).
+	 * 🔴 이름의 정본은 CMS다 — 텍스트는 Admin의 `input.label`, 그 밖은 노드의 `data-name`이다.
+	 * 🔴 배경은 노드가 아니라 도화지라 **비어 있다.** 하위가 없는 것이 사실이다.
+	 */
+	members: readonly { id: string; label: string }[]
 }
 
 const LAYER_GROUP_ORDER = [
@@ -406,8 +411,14 @@ export function listTemplateLayerGroups(
 ): TemplateLayerGroup[] {
 	const groups: TemplateLayerGroup[] = []
 	for (const { kind, label } of LAYER_GROUP_ORDER) {
-		const nodeIds = slots.filter((slot) => slot.kind === kind).map((slot) => slot.id)
-		if (nodeIds.length) groups.push({ kind, label, nodeIds })
+		const matched = slots.filter((slot) => slot.kind === kind)
+		if (!matched.length) continue
+		groups.push({
+			kind,
+			label,
+			// 배경은 도화지 하나라 하위를 갖지 않는다 — 자기 이름을 한 번 더 적지 않는다.
+			members: kind === 'background' ? [] : matched.map(({ id, label }) => ({ id, label })),
+		})
 	}
 	return groups
 }

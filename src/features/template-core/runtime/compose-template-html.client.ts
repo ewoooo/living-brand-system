@@ -243,6 +243,9 @@ export function composeTemplateHtml(
 		)
 		if (!el) continue // base에 더 이상 없는 노드 설정은 무시한다.
 		if (config.visible === false && el instanceof HTMLElement) el.style.display = 'none'
+		// 🔴 레이어 이름은 `data-name` **한 자리**에만 쓴다 — 스튜디오 패널·Admin 목록·인쇄 PDF의
+		//    Illustrator 레이어명이 모두 그것을 읽으므로, 여기서 쓰면 셋이 함께 따라온다.
+		if (config.label) el.setAttribute('data-name', config.label)
 
 		// 텍스트는 텍스트 노드(<p>)에만. background는 요소(HTMLElement)에.
 		if (typeof config.text === 'string' && el.tagName.toLowerCase() === 'p') {

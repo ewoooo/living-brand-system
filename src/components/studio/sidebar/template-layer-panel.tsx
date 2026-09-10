@@ -60,12 +60,31 @@ export function TemplateLayerPanel() {
 							>
 								<span className="min-w-0 flex-1 truncate">{group.label}</span>
 								{/* 🔑 개수는 **여럿일 때만** — 「이미지 1」은 알려 주는 것이 없다. */}
-								{group.nodeIds.length > 1 && (
+								{group.members.length > 1 && (
 									<span className="shrink-0 text-muted-foreground text-xs">
-										{group.nodeIds.length}
+										{group.members.length}
 									</span>
 								)}
 							</button>
+							{/* 🔴 하위 이름은 **읽는 것**이다(사용자 지시, 2026-09-10) — 고르는 단위는
+							    묶음 하나다. 계층을 알려 주는 것이 이 줄들의 일이고, 이름의 정본은
+							    CMS다. 숨긴 레이어는 목록에 남는다 — 지우면 되살릴 방법이 없다. */}
+							{group.members.length > 0 && (
+								<ul className="flex flex-col">
+									{group.members.map((member) => (
+										<li
+											key={member.id}
+											className={cn(
+												'truncate py-1 pr-2 pl-6 text-muted-foreground text-xs',
+												layers.visibility[member.id] === false &&
+													'line-through',
+											)}
+										>
+											{member.label}
+										</li>
+									))}
+								</ul>
+							)}
 						</li>
 					))}
 				</ul>
@@ -81,5 +100,9 @@ export function TemplateLayerPanel() {
 function focusTargetOf(group: TemplateLayerGroup) {
 	return group.kind === 'background'
 		? ({ sectionId: 'section:background', kind: 'canvas' } as const)
-		: ({ sectionId: `group:${group.kind}`, kind: 'nodes', nodeIds: group.nodeIds } as const)
+		: ({
+				sectionId: `group:${group.kind}`,
+				kind: 'nodes',
+				nodeIds: group.members.map((member) => member.id),
+			} as const)
 }
