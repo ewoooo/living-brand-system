@@ -12,6 +12,7 @@ import {
 	type ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 import type { ExportRequest, StudioOutputFormat, VideoExportSpec } from '../export-contract'
+import { exportFileName } from '../export-file-name'
 import {
 	isPrintPpi,
 	maxPrintSize,
@@ -207,6 +208,7 @@ export function useTemplateExport({
 	const execute = useCallback(
 		async (request: TemplateExportRequest) => {
 			if (!metadata) throw new Error('Template export is unavailable.')
+			const fileName = exportFileName(metadata.fileName, new Date())
 			// Video Artifact는 전경을 목표 프레임 크기로 구워야 하므로 요청 해상도를 넘긴다.
 			if (request.artifact === 'vector') {
 				if (!vectorArtifact) throw new Error('Template export is unavailable.')
@@ -214,7 +216,7 @@ export function useTemplateExport({
 				setVectorDiagnostics(diagnostics)
 				return executeArtifactExport({
 					artifact: vector,
-					fileName: metadata.fileName,
+					fileName,
 					request,
 				})
 			}
@@ -223,13 +225,13 @@ export function useTemplateExport({
 				const { width, height } = request.options
 				return executeArtifactExport({
 					artifact: await videoArtifact({ width, height }),
-					fileName: metadata.fileName,
+					fileName,
 					request,
 				})
 			}
 			return executeArtifactExport({
 				artifact: await artifact(),
-				fileName: metadata.fileName,
+				fileName,
 				request,
 			})
 		},

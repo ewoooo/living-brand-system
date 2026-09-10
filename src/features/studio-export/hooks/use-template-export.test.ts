@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
 	createTemplateRasterArtifact,
 	type TemplateVideoArtifact,
@@ -20,7 +20,12 @@ vi.mock('../services/export-artifact.client', () => ({
 }))
 
 describe('useTemplateExport', () => {
-	beforeEach(() => vi.mocked(executeArtifactExport).mockClear())
+	beforeEach(() => {
+		vi.mocked(executeArtifactExport).mockClear()
+		vi.useFakeTimers({ toFake: ['Date'] })
+		vi.setSystemTime(new Date('2026-09-10T03:00:00Z'))
+	})
+	afterEach(() => vi.useRealTimers())
 
 	it('Template은 Raster Artifact와 공통 Print request만 executor에 전달한다', async () => {
 		const artifact = createTemplateRasterArtifact({
@@ -51,7 +56,7 @@ describe('useTemplateExport', () => {
 		expect(executeArtifactExport).toHaveBeenCalledWith(
 			expect.objectContaining({
 				artifact,
-				fileName: 'card',
+				fileName: 'card-20260910-120000',
 				request: expect.objectContaining({ artifact: 'raster', format: 'pdf' }),
 			}),
 		)

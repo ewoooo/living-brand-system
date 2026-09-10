@@ -1,6 +1,7 @@
 'use client'
 
 import type { CSSProperties } from 'react'
+import { numberedExportFileName } from '@/features/studio-export/export-file-name'
 import type {
 	BlobOriginalSource,
 	OriginalArtifact,
@@ -17,7 +18,9 @@ export type ImageArtifacts = {
 export function createImageArtifacts({
 	images,
 	color,
+	fileName,
 }: {
+	fileName?: string
 	images: readonly string[]
 	color: ImageColorAdjustment | null | undefined
 }): ImageArtifacts {
@@ -27,7 +30,8 @@ export function createImageArtifacts({
 			kind: 'original',
 			source: {
 				load: () => loadOriginal(src),
-				filename: (blob) => `hd-image-${index + 1}.${imageExtension(blob.type, src)}`,
+				filename: (blob) =>
+					`${fileName ? numberedExportFileName(fileName, index) : `hd-image-${index + 1}`}.${imageExtension(blob.type, src)}`,
 				mimeType: (blob) => blob.type || `image/${imageExtension(blob.type, src)}`,
 			},
 		})),
