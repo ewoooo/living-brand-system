@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
 	findPrintOutputBlocker,
 	fitsPrintOutput,
+	formatMillimeters,
 	isPrintPpi,
 	MAX_PRINT_PIXELS,
 	MAX_PRINT_PPI,
@@ -93,13 +94,37 @@ describe('인쇄 해상도', () => {
 		expect(isPrintPpi(MAX_PRINT_PPI)).toBe(true)
 	})
 
-	it('범위 밖·정수 아님·숫자 아님을 거른다', () => {
+	it('범위 밖·숫자 아님을 거른다', () => {
 		expect(isPrintPpi(0)).toBe(false)
 		expect(isPrintPpi(-300)).toBe(false)
-		expect(isPrintPpi(300.5)).toBe(false)
 		expect(isPrintPpi(MAX_PRINT_PPI + 1)).toBe(false)
 		expect(isPrintPpi('300')).toBe(false)
 		expect(isPrintPpi(Number.NaN)).toBe(false)
+		expect(isPrintPpi(Number.POSITIVE_INFINITY)).toBe(false)
+	})
+
+	/**
+	 * 🔴 정수만 받으면 **표준 판형을 정확히 선언할 수 없다.** 630×891px 판은 A4(210×297mm)인데
+	 * 그 ppi가 `630 × 25.4 ÷ 210 = 76.2`다. 76으로 내리면 판이 0.26% 커져 210.55 × 297.78mm가
+	 * 되고 그 소수가 아트보드 치수로 그대로 나갔다(사용자 지적, 2026-09-10).
+	 */
+	it('소수 해상도를 받는다 — 76.2가 630×891px를 정확히 A4로 만든다', () => {
+		expect(isPrintPpi(76.2)).toBe(true)
+		expect(pixelsToMillimeters(630, 76.2)).toBeCloseTo(210, 10)
+		expect(pixelsToMillimeters(891, 76.2)).toBeCloseTo(297, 10)
+		// 정수로 내린 값은 A4가 아니다 — 이것이 사용자가 본 소수의 출처다.
+		expect(pixelsToMillimeters(630, 76)).toBeCloseTo(210.55, 2)
+	})
+
+	/**
+	 * 화면과 파일이 같은 수를 말하게 하는 표기. 🔴 반올림하지 않는다 — 사이드바의 `Math.round`가
+	 * 210.55를 211로 올려 「A4가 아니다」를 가리고 있었다.
+	 */
+	it('정확히 떨어지는 판은 정수로, 어긋난 판은 소수 한 자리로 보인다', () => {
+		expect(formatMillimeters(210)).toBe('210')
+		expect(formatMillimeters(210.0000001)).toBe('210')
+		expect(formatMillimeters(210.55263157894734)).toBe('210.6')
+		expect(formatMillimeters(297.78)).toBe('297.8')
 	})
 
 	it('폼으로 들어온 문자열을 숫자로 읽고 잘못된 값은 undefined로 돌린다', () => {

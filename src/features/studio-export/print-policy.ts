@@ -33,13 +33,33 @@ export const MAX_PRINT_PPI = 1200
 export type PrintPpi = number
 export type PrintExportFormat = 'pdf' | 'tiff'
 
+/**
+ * 🔴 **정수가 아니어도 된다**(2026-09-10). 정수만 받으면 **표준 판형을 정확히 선언할 수 없다** —
+ *    630×891px 판은 A4(210×297mm)인데 그 ppi가 `630 × 25.4 ÷ 210 = 76.2`다. 76으로 내리면 판이
+ *    0.26% 커져 **210.55 × 297.78mm**가 되고, 그 소수가 아트보드 치수로 그대로 나갔다
+ *    (사용자 지적: 「artboard가 mm 기준인데 값이 소수점 단위임」).
+ * 🔑 DB 컬럼은 이미 `numeric`이라 마이그레이션이 필요 없다.
+ */
 export function isPrintPpi(value: unknown): value is PrintPpi {
 	return (
 		typeof value === 'number' &&
-		Number.isInteger(value) &&
+		Number.isFinite(value) &&
 		value >= MIN_PRINT_PPI &&
 		value <= MAX_PRINT_PPI
 	)
+}
+
+/**
+ * 물리 크기 표기 — **화면과 파일이 같은 수를 말하게** 하는 단일 소유자다.
+ *
+ * 🔴 반올림하지 않는다. 사이드바만 `Math.round`를 걸어 210.55를 **211**로 올리고 있었는데,
+ *    그것이 「이 판은 A4가 아니다」를 가려 주면서 실제 파일 치수와도 어긋났다
+ *    (사용자 지적: 「실제 수치랑 Settings에 보이는 수치랑 완전 동일한 게 나은 듯」).
+ * 🔑 정확히 떨어지는 판은 `210`으로, 어긋난 판은 `210.6`으로 보인다 — 어긋남이 **보인다.**
+ */
+export function formatMillimeters(millimeters: number): string {
+	const rounded = Math.round(millimeters * 10) / 10
+	return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
 }
 
 export function parsePrintPpi(value: unknown): PrintPpi | undefined {
