@@ -353,14 +353,25 @@ export function composeTemplateHtml(
 			(candidate) => candidate.getAttribute('data-node-id') === nodeId,
 		)
 		if (!parent) continue
-		// 나열된 순서대로 뒤에 붙인다 — 목록에 없는 자식은 그 앞(= 아래)에 남는다.
-		// 🔑 형제 안의 이동만이고, 이미 그 순서면 appendChild가 아무 변화를 만들지 않는다.
-		for (const childId of config.childOrder) {
-			const child = Array.from(parent.children).find(
-				(candidate) => candidate.getAttribute('data-node-id') === childId,
+		const children = Array.from(parent.children)
+		const listed = config.childOrder
+			.map((childId) =>
+				children.find((candidate) => candidate.getAttribute('data-node-id') === childId),
 			)
-			if (child) parent.appendChild(child)
-		}
+			.filter((child): child is Element => child !== undefined)
+		if (listed.length < 2) continue
+
+		// 🔴 **목록이 이름 댄 자식들이 지금 차지한 자리에만** 그 순서를 채운다. 목록에 없는 자식은
+		//    제 자리를 지킨다 — 그래야 재import로 새로 생긴 노드가 Figma가 놓은 자리에 그대로 남고,
+		//    끝으로 쓸려 가 다른 레이어에 가려지거나 위를 덮지 않는다.
+		//    「초안은 Figma, 수정은 Admin」이 이 규칙이다: Admin은 자기가 이름 댄 것만 뒤바꾼다.
+		const positions = children.flatMap((child, index) =>
+			listed.includes(child) ? [index] : [],
+		)
+		const next = [...children]
+		for (const [index, position] of positions.entries()) next[position] = listed[index]
+		// 🔑 순서대로 다시 붙인다 — 이미 그 순서면 DOM이 바뀌지 않는다(재합성 멱등).
+		for (const child of next) parent.appendChild(child)
 	}
 
 	// 캔버스 배경 — 루트 프레임(body 직계 자식)의 inline 배경을 덮는다. 값을 준 갈래만 쓰므로

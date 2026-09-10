@@ -865,18 +865,25 @@ describe('composeTemplateHtml childOrder', () => {
 		expect(idsOf(html)).toEqual(['c', 'b', 'a'])
 	})
 
-	it('목록에 없는 자식은 맨 위(뒤)에 온다 — 재import로 생긴 노드가 조용히 가라앉지 않는다', () => {
-		const html = composeTemplateHtml(frame('a', 'b', 'new'), {
-			root: { childOrder: ['b', 'a'] },
-		})
-
-		expect(idsOf(html)).toEqual(['new', 'b', 'a'])
+	/**
+	 * 🔴 재import로 생긴 노드가 **Figma가 놓은 자리에 그대로 남는다.** 목록 끝으로 쓸어 보내면
+	 * 그 노드가 다른 레이어에 가려지거나 위를 덮는다 — 어느 쪽이든 디자이너 의도가 아니다.
+	 * 「초안은 Figma, 수정은 Admin」(사용자, 2026-09-10)이 이 규칙이다.
+	 */
+	it('목록에 없는 자식은 제 자리를 지킨다 — 이름 댄 것들의 자리에만 순서를 채운다', () => {
+		// a·c가 쓰던 자리는 0·2. 그 두 자리에만 [c, a]가 채워지고 new는 1에 남는다.
+		expect(
+			idsOf(
+				composeTemplateHtml(frame('a', 'new', 'c'), { root: { childOrder: ['c', 'a'] } }),
+			),
+		).toEqual(['c', 'new', 'a'])
 	})
 
 	it('없는 id는 건너뛰고, 이미 그 순서면 출력이 base와 같다', () => {
+		// 한 개만 남으면 뒤바꿀 것이 없다 — 자리도 그대로다.
 		expect(
 			idsOf(composeTemplateHtml(frame('a', 'b'), { root: { childOrder: ['사라진', 'a'] } })),
-		).toEqual(['b', 'a'])
+		).toEqual(['a', 'b'])
 		expect(composeTemplateHtml(frame('a', 'b'), { root: { childOrder: ['a', 'b'] } })).toBe(
 			frame('a', 'b'),
 		)
@@ -892,8 +899,8 @@ describe('composeTemplateHtml childOrder', () => {
 			'</div>'
 		const html = composeTemplateHtml(nested, { root: { childOrder: ['deep', 'a'] } })
 
-		// `deep`은 root의 자식이 아니므로 무시되고, `a`만 뒤로 간다.
-		expect(idsOf(html)).toEqual(['group', 'a'])
+		// `deep`은 root의 자식이 아니므로 무시되고, 이름 댄 것이 하나뿐이라 아무것도 움직이지 않는다.
+		expect(idsOf(html)).toEqual(['a', 'group'])
 		expect(
 			new DOMParser()
 				.parseFromString(html, 'text/html')
