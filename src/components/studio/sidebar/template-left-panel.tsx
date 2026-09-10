@@ -61,9 +61,8 @@ export function TemplateLeftPanel({
 
 	return (
 		<StudioLeftPanel
-			// 🔑 페이지 선택은 **좌측 헤더**다(사용자 지시, 2026-09-10) — 우측 footer의 내보내기와
-			//    대칭이다. 양쪽 다 패널을 여닫는 자리이고 본문은 그 사이에 놓인다.
-			header={
+			// 🔑 페이지 선택은 위 블록 맨 위에 고정된다 — 공통된 것이 그 아래에 쌓인다.
+			page={
 				<PreviewRefreshSlot error={preview.error}>
 					<Controller.AssetCard
 						title={config.name}

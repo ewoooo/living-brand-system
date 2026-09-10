@@ -389,10 +389,11 @@ describe('TemplateGenerator', () => {
 			'lg:overflow-hidden',
 		)
 		expect(container.querySelector('[data-slot="studio-sidebar"]')).not.toBeNull()
-		const header = container.querySelector('[data-slot="controller-header"]')
-		expect(header).not.toBeNull()
+		// 🔑 페이지 선택은 **왼쪽 패널의 위 블록**이 소유한다 — 오른쪽 헤더가 아니다.
+		const left = container.querySelector('[data-slot="studio-left-panel"]')
+		expect(left).not.toBeNull()
 		expect(
-			within(header as HTMLElement).getByRole('button', { name: '템플릿 변경' }),
+			within(left as HTMLElement).getByRole('button', { name: '템플릿 변경' }),
 		).toBeInTheDocument()
 
 		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
