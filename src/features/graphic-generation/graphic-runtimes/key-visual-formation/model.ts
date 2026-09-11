@@ -88,19 +88,24 @@ export function createKeyVisualFormationScene(
 
 	// 🔴 얇아지는 데에 바닥이 있다 — 감쇠를 세게 걸면 끝쪽 선이 머리카락처럼 남아 보기 불편하고
 	//    인쇄에서는 사라진다. 부호를 뒤집어 굵어지는 방향으로 가도 반대쪽 끝에서 같은 일이 생긴다.
+	/**
+	 * 🔴 최소 두께는 **양쪽 모두**에 걸린다. 칸에서 칠하는 쪽이 선이고 남는 쪽이 면인데, 그 면도
+	 *    눈에는 선으로 보인다 — 한쪽만 받치면 반대쪽이 머리카락처럼 남는다.
+	 *    칸이 하한 두 몫보다 좁으면 반씩 나눈다.
+	 */
 	const minWeight = Math.min(
-		slotLength,
+		slotLength / 2,
 		KEY_VISUAL_FORMATION_MIN_LINE_WEIGHT * (Math.min(viewport.width, viewport.height) / 1080),
 	)
 	const spans = [{ start: 0, size: planeLength }]
 	for (let index = 0; index < input.steps; index++) {
 		// index/steps라 마지막 칸도 두께가 0이 아니다 — 「단계」가 곧 보이는 선의 개수다.
 		const progress = index / input.steps
-		// 감쇠가 음수면 방향이 뒤집힌다 — 면에서 멀어질수록 굵어진다.
-		const falloff = input.decay >= 0 ? (1 - progress) ** input.decay : progress ** -input.decay
+		// 면에 가까울수록 얇고 멀어질수록 굵다. 감쇠가 음수면 그 방향이 뒤집힌다.
+		const falloff = input.decay >= 0 ? progress ** input.decay : (1 - progress) ** -input.decay
 		spans.push({
 			start: planeLength + index * slotLength,
-			size: Math.max(minWeight, slotLength * falloff),
+			size: clamp(slotLength * falloff, minWeight, slotLength - minWeight),
 		})
 	}
 
@@ -117,6 +122,10 @@ export function createKeyVisualFormationScene(
 				: { x: offset, y: 0, width: size, height: crossLength, fill }
 		}),
 	}
+}
+
+function clamp(value: number, min: number, max: number) {
+	return Math.min(max, Math.max(min, value))
 }
 
 export function createKeyVisualFormationVectorArtifact(

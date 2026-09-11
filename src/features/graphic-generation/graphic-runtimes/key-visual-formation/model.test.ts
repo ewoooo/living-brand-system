@@ -17,10 +17,22 @@ describe('createKeyVisualFormationScene', () => {
 		expect(scene({ steps: 20 }).bands).toHaveLength(21)
 	})
 
-	it('면에서 멀어질수록 선이 얇아진다', () => {
+	it('면에서 멀어질수록 선이 굵어진다', () => {
 		const [, ...lines] = scene().bands
 		const heights = lines.map((band) => band.height)
-		expect(heights).toEqual([...heights].sort((left, right) => right - left))
+		expect(heights).toEqual([...heights].sort((left, right) => left - right))
+	})
+
+	it('선도 그 사이에 남는 면도 최소 두께 아래로 내려가지 않는다', () => {
+		for (const decay of [-4, 0, 4]) {
+			const [plane, ...lines] = scene({ decay, steps: 20 }).bands
+			if (!plane) throw new Error('면이 없다')
+			const slot = (viewport.height - plane.height) / 20
+			for (const line of lines) {
+				expect(line.height).toBeGreaterThanOrEqual(Math.min(slot / 2, 2) - 1e-9)
+				expect(slot - line.height).toBeGreaterThanOrEqual(Math.min(slot / 2, 2) - 1e-9)
+			}
+		}
 	})
 
 	it('면의 영역이 선의 영역보다 좁지 않다 — 가이드라인의 1:1 하한', () => {
