@@ -13,7 +13,7 @@ import {
 import { isManager } from '@/lib/auth'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
-export const maxDuration = 60
+export const maxDuration = 120
 
 const baseFields = {
 	prompt: z.string().trim().min(1).max(2_500),

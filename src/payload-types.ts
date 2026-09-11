@@ -1526,7 +1526,7 @@ export interface ImageProfile {
   /**
    * 이 프로파일을 생성할 때 사용할 이미지 모델입니다.
    */
-  imageModelPreset: 'openai-gpt-image-2' | 'google-nano-banana-2-lite';
+  imageModelPreset: 'openai-gpt-image-2' | 'google-nano-banana-2-lite' | 'google-nano-banana-2';
   /**
    * 이미지 유형의 기본값입니다. 각 행은 최종 JSON의 주제와 프롬프트가 됩니다.
    */

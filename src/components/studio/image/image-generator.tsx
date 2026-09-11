@@ -57,6 +57,7 @@ function ImageWorkspace() {
 				})
 			: null
 	const download = useImageExport({
+		metadata: results.metadata,
 		artifacts,
 		capability: resultConfig?.output ?? { formats: [], original: false },
 		selected: results.selected,

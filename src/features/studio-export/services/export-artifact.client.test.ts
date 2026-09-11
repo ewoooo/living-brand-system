@@ -9,7 +9,6 @@ import { elementToJpeg } from '../adapters/element-to-jpeg.client'
 import { elementToPng } from '../adapters/element-to-png.client'
 import {
 	executeArtifactExport,
-	exportOriginalArtifact,
 	exportRasterArtifactAsJpeg,
 	exportRasterArtifactAsPng,
 	exportVectorArtifactAsSvg,
@@ -280,8 +279,14 @@ describe('Artifact export', () => {
 		const [artifact] = createImageArtifacts({ images: ['/image.png'], color: null }).original
 		if (!artifact) throw new Error('fixture artifact is missing')
 
-		await expect(exportOriginalArtifact(artifact)).resolves.toMatchObject({
-			filename: 'hd-image-1.png',
+		await expect(
+			executeArtifactExport({
+				artifact,
+				fileName: '제품컷-굴착기-20260910-120000-01',
+				request: { artifact: 'original', options: {} },
+			}),
+		).resolves.toMatchObject({
+			filename: '제품컷-굴착기-20260910-120000-01.png',
 			mimeType: 'image/png',
 		})
 		expect(elementToPng).not.toHaveBeenCalled()

@@ -4,6 +4,7 @@ import { generateImage } from 'ai'
 import { env } from '@/env'
 import {
 	GOOGLE_NANO_BANANA_2_LITE_MODEL,
+	GOOGLE_NANO_BANANA_2_MODEL,
 	type ImageModelPreset,
 	OPENAI_GPT_IMAGE_2_MODEL,
 } from '@/features/image-generation/image-model'
@@ -34,23 +35,13 @@ const imageModelProviders = {
 		apiKey: () => env.GEMINI_API_KEY,
 		model: GOOGLE_NANO_BANANA_2_LITE_MODEL,
 		provider: 'google',
-		generate: ({ prompt, count, aspectRatio, imageSize }) => {
-			const google = createGoogle({ apiKey: env.GEMINI_API_KEY })
-			return Promise.all(
-				Array.from({ length: count }, async () => {
-					const { image } = await generateImage({
-						model: google.image(GOOGLE_NANO_BANANA_2_LITE_MODEL),
-						prompt,
-						providerOptions: {
-							google: {
-								imageConfig: { aspectRatio, imageSize },
-							},
-						},
-					})
-					return `data:${image.mediaType};base64,${image.base64}`
-				}),
-			)
-		},
+		generate: (input) => generateGoogleImages(GOOGLE_NANO_BANANA_2_LITE_MODEL, input),
+	},
+	'google-nano-banana-2': {
+		apiKey: () => env.GEMINI_API_KEY,
+		model: GOOGLE_NANO_BANANA_2_MODEL,
+		provider: 'google',
+		generate: (input) => generateGoogleImages(GOOGLE_NANO_BANANA_2_MODEL, input),
 	},
 	'openai-gpt-image-2': {
 		apiKey: () => env.OPENAI_API_KEY,
@@ -104,4 +95,25 @@ export async function generateBrandImages({
 		model: entry.model,
 		provider: entry.provider,
 	}
+}
+
+async function generateGoogleImages(
+	model: string,
+	{ prompt, count, aspectRatio, imageSize }: ImageProviderCallInput,
+): Promise<string[]> {
+	const google = createGoogle({ apiKey: env.GEMINI_API_KEY })
+	return Promise.all(
+		Array.from({ length: count }, async () => {
+			const { image } = await generateImage({
+				model: google.image(model),
+				prompt,
+				providerOptions: {
+					google: {
+						imageConfig: { aspectRatio, imageSize },
+					},
+				},
+			})
+			return `data:${image.mediaType};base64,${image.base64}`
+		}),
+	)
 }

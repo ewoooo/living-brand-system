@@ -253,3 +253,19 @@ src/features/graphic-generation/graphic-runtimes/<id>/
 - 도메인별 Provider는 유지하되 Controller와 Export 계약은 공유합니다.
 
 구현 위치와 의존 방향은 [06. 프로젝트 구조](../06-project-structure.md)를 따릅니다. Controller 컴포넌트 작성 규칙은 [10. 컴포넌트 작성](../10-component-authoring.md)의 `컨트롤러 컨트롤 계약`을 따릅니다. Template 제작과 인쇄의 도메인 규칙은 [Create](create.md), Image 생성 서비스의 실행 규칙은 [Image](image.md)를 참고하세요.
+
+### 저장 파일명
+
+파일명은 `studio-export/export-file-name.ts`의 공통 규칙을 따릅니다. 형식은 `이름-[내용]-YYYYMMDD-HHmmss[-순번].확장자`이며 시각은 KST입니다.
+
+| Studio | 이름 | 내용 | 시각 | 순번 |
+| --- | --- | --- | --- | --- |
+| Template | 템플릿명 | 생략 | 저장 클릭 시각 | 생략 |
+| Graphic | 그래픽 프로파일명 | 생략 | 저장 클릭 시각 | 생략 |
+| Image | 생성 당시 프로파일명 | 입력 프롬프트 | 생성 시각 | 01부터 |
+
+이름은 32자, 내용은 48자로 제한합니다. 한글·영문·숫자를 보존하고 공백·특수 문자는 하이픈으로 정리합니다. 빈 이름은 `output`, 빈 내용은 생략합니다. 이미지의 빈 프롬프트는 참조 결과의 입력을 이어받습니다.
+
+이미지는 생성 결과의 이름을 유지하고 Template·Graphic은 저장 실행 시 이름과 시각을 고정합니다. ZIP은 순번 없는 기본 이름을 사용하고 내부 파일에 순번을 붙입니다. 원본은 실제 확장자, 변환 파일은 선택한 형식의 확장자를 사용합니다.
+
+생성 세션은 프로파일명·입력·생성 시각 메타데이터만 보관합니다. 완성된 파일명은 저장 계층이 결정합니다. Original Artifact는 원본 Blob·MIME·확장자만 제공하며, 공통 executor가 변환 파일과 동일하게 전달받은 기본 이름을 적용합니다.

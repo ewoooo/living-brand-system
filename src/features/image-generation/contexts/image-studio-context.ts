@@ -12,7 +12,14 @@ import type {
 } from '@/modules/studio-controller/controller-definition'
 
 /** 그리드 카드 한 장. 참조와 결과가 같은 형태라 그리드가 둘을 구분해 다루지 않아도 된다. */
+export type ImageGenerationMetadata = {
+	profileName: string
+	prompt: string
+	createdAt: string
+}
+
 export type ImageResultImage = {
+	downloadPrompt?: string
 	src: string
 	generatedImageId: number | null
 	profileId: number | null
@@ -72,6 +79,7 @@ export type ImageStudioValue = {
 		regenerate: () => void
 	}
 	results: {
+		metadata?: ImageGenerationMetadata
 		/** 그리드가 그리는 순서 그대로 — 참조가 있으면 0번이 참조다. */
 		items: readonly ImageResultImage[]
 		/** items에서 참조가 차지하는 자리. 참조가 없으면 null. */

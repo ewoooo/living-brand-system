@@ -11,7 +11,7 @@ import { respondImageGeneration } from '@/features/image-generation/respond-imag
 import { generateImages } from '@/features/image-generation/services/generate-image.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
-export const maxDuration = 60
+export const maxDuration = 120
 
 // 첨부 상한을 base64로 부풀린 길이에 헤더 여유를 더한 값 — sharp를 태우기 전에 본문 크기로 먼저 거른다.
 const MAX_REFERENCE_UPLOAD_CHARS = Math.ceil(IMAGE_REFERENCE_UPLOAD_MAX_BYTES / 3) * 4 + 64

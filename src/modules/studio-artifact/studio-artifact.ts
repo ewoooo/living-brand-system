@@ -236,7 +236,7 @@ export type VectorSceneArtifact = VectorArtifact<VectorScene>
 
 export type BlobOriginalSource = {
 	load(): Promise<Blob>
-	filename(blob: Blob): string
+	extension(blob: Blob): string
 	mimeType(blob: Blob): string
 }
 
