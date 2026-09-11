@@ -1,6 +1,33 @@
 import { defineGraphicRuntime } from '@/features/graphic-generation/graphic-runtimes/define-graphic-runtime'
-import { KEY_VISUAL_LINE_COLORWAYS } from '@/features/graphic-generation/graphic-runtimes/key-visual-line/definition'
 import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
+
+/**
+ * p.67 사용 예시에서 실측한 색 계단을 정본 hex로 옮긴 세 조합.
+ *
+ * 🔴 면은 선보다 언제나 짙다 — 면이 선보다 옅으면 「선이 모여 면이 된다」가 뒤집혀 보인다.
+ *    배경 → 면 → 선 순으로 밝아지는 한 계단씩이고, 그 순서가 이 표의 유일한 규칙이다.
+ */
+export const KEY_VISUAL_FORMATION_COLORWAYS = {
+	deepGreen: {
+		label: '딥그린',
+		background: '#00280A',
+		plane: '#007332',
+		line: '#00AF41',
+	},
+	green: {
+		label: '그린',
+		background: '#007332',
+		plane: '#00AF41',
+		line: '#73D75A',
+	},
+	white: {
+		label: '화이트',
+		background: '#FFFFFF',
+		plane: '#00AF41',
+		line: '#73D75A',
+	},
+} as const
+export type KeyVisualFormationColorwayId = keyof typeof KEY_VISUAL_FORMATION_COLORWAYS
 
 /** 면이 놓이는 변. 선은 그 반대쪽으로 뻗어 나간다. */
 export const KEY_VISUAL_FORMATION_ANCHORS = {
@@ -18,7 +45,7 @@ export type KeyVisualFormationAnchorId = keyof typeof KEY_VISUAL_FORMATION_ANCHO
  * 🔴 두 수치는 가이드라인 규정이라 컨트롤 범위가 곧 규정이다 — 면 비율 1:1 이상 · 단계 6 이상.
  */
 export const KEY_VISUAL_FORMATION_DEFAULT_INPUT = {
-	colorway: 'darkGreenGreen',
+	colorway: 'deepGreen',
 	anchor: 'top',
 	planeRatio: 0.5,
 	steps: 8,
@@ -72,11 +99,11 @@ export default defineGraphicRuntime({
 						variant: 'list' as const,
 						defaultValue: KEY_VISUAL_FORMATION_DEFAULT_INPUT.colorway,
 						// 고르는 것이 색 하나가 아니라 배경·선 쌍이라 선택지가 색 자체를 내놓는다.
-						options: Object.entries(KEY_VISUAL_LINE_COLORWAYS).map(
+						options: Object.entries(KEY_VISUAL_FORMATION_COLORWAYS).map(
 							([value, colorway]) => ({
 								value,
 								label: colorway.label,
-								colors: [colorway.background, colorway.line],
+								colors: [colorway.background, colorway.plane, colorway.line],
 							}),
 						),
 					},

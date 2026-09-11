@@ -48,8 +48,8 @@ export function createKeyVisualFormationRuntime({
 			})
 
 			preview.background(scene.backgroundColor)
-			preview.fill(scene.fillColor)
 			for (const band of scene.bands) {
+				preview.fill(band.fill)
 				preview.rect(band.x, band.y, band.width, band.height)
 			}
 		}

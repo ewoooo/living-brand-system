@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { KEY_VISUAL_LINE_COLORWAYS } from '@/features/graphic-generation/graphic-runtimes/key-visual-line/definition'
 import type { GraphicModelAdapter } from '@/features/graphic-generation/runtime/graphic-plugin'
 import type { VectorSceneArtifact } from '@/modules/studio-artifact/studio-artifact'
 import type {
@@ -8,15 +7,15 @@ import type {
 } from '@/modules/studio-controller/controller-definition'
 import {
 	KEY_VISUAL_FORMATION_ANCHORS,
+	KEY_VISUAL_FORMATION_COLORWAYS,
 	KEY_VISUAL_FORMATION_DEFAULT_INPUT,
 	type KeyVisualFormationAnchorId,
+	type KeyVisualFormationColorwayId,
 } from './definition'
 
 export { KEY_VISUAL_FORMATION_DEFAULT_INPUT } from './definition'
 
-const colorwayIds = Object.keys(
-	KEY_VISUAL_LINE_COLORWAYS,
-) as (keyof typeof KEY_VISUAL_LINE_COLORWAYS)[]
+const colorwayIds = Object.keys(KEY_VISUAL_FORMATION_COLORWAYS) as KeyVisualFormationColorwayId[]
 const anchorIds = Object.keys(KEY_VISUAL_FORMATION_ANCHORS) as KeyVisualFormationAnchorId[]
 
 export const keyVisualFormationInputSchema = z.strictObject({
@@ -55,14 +54,14 @@ export type KeyVisualFormationBand = {
 	y: number
 	width: number
 	height: number
+	fill: string
 }
 
 export type KeyVisualFormationScene = {
 	width: number
 	height: number
 	backgroundColor: string
-	fillColor: string
-	/** 면 하나 + 선 여러 개. 둘 다 같은 색으로 칠하는 사각형이라 한 목록에 둔다. */
+	/** 면 하나 + 선 여러 개. 면이 더 짙으므로 색이 다르다 — 칠할 색을 밴드가 직접 갖는다. */
 	bands: KeyVisualFormationBand[]
 }
 
@@ -76,7 +75,7 @@ export function createKeyVisualFormationScene(
 	input: KeyVisualFormationInput,
 	viewport: { width: number; height: number },
 ): KeyVisualFormationScene {
-	const colorway = KEY_VISUAL_LINE_COLORWAYS[input.colorway]
+	const colorway = KEY_VISUAL_FORMATION_COLORWAYS[input.colorway]
 	const anchor = KEY_VISUAL_FORMATION_ANCHORS[input.anchor]
 	const vertical = anchor.axis === 'vertical'
 	const axisLength = vertical ? viewport.height : viewport.width
@@ -99,12 +98,13 @@ export function createKeyVisualFormationScene(
 		width: viewport.width,
 		height: viewport.height,
 		backgroundColor: colorway.background,
-		fillColor: colorway.line,
-		bands: spans.map(({ start, size }) => {
+		bands: spans.map(({ start, size }, index) => {
 			const offset = forward ? start : axisLength - start - size
+			// 첫 밴드가 면이다 — 나머지 선보다 짙게 칠한다.
+			const fill = index === 0 ? colorway.plane : colorway.line
 			return vertical
-				? { x: 0, y: offset, width: crossLength, height: size }
-				: { x: offset, y: 0, width: size, height: crossLength }
+				? { x: 0, y: offset, width: crossLength, height: size, fill }
+				: { x: offset, y: 0, width: size, height: crossLength, fill }
 		}),
 	}
 }
@@ -124,7 +124,7 @@ export function createKeyVisualFormationVectorArtifact(
 				y: band.y,
 				width: band.width,
 				height: band.height,
-				fill: scene.fillColor,
+				fill: band.fill,
 			})),
 		},
 	}
