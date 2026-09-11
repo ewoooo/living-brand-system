@@ -139,3 +139,43 @@ describe('벡터 PDF의 페이지 물리 크기', () => {
 		expect(content).toContain('0.24 0 0 0.24 0 0 cm')
 	})
 })
+
+/**
+ * 🔴 판 전체 사각형은 **씬이 바닥색을 선언했을 때만** 나간다.
+ *
+ * 2026-09-10 PDF 바이트 실측: 템플릿 판이 **판 크기 흰 사각형 두 장**으로 나가고 있었다 —
+ * 하나는 직렬화기가 `?? '#ffffff'`로 발명한 것이고 하나는 루트 프레임 자신의 rect다. 둘 다 어떤
+ * OCG에도 안 들어가므로 Illustrator 레이어 패널에서 판이 두 장 겹쳐 열린다.
+ * 칠하지 않은 자리는 인쇄에서 종이이므로 발명할 이유가 없다.
+ * 🔴 이것이 사용자가 본 「아트보드 2개」의 원인이라는 근거는 **없다** — 아트보드는 페이지에서만
+ *    온다. 그 확인은 사람이 Illustrator에서 `Window > Artboards`를 읽어야 한다.
+ */
+describe('vectorSceneToPdf 판 바닥색', () => {
+	const scene = (background?: string): VectorScene => ({
+		width: 100,
+		height: 100,
+		...(background ? { background } : {}),
+		primitives: [{ kind: 'path', d: 'M0 0H10V10H0Z', x: 0, y: 0, fill: '#000000' }],
+	})
+
+	/**
+	 * 판 왼쪽 위 꼭짓점으로 가는 선 = 판 전체 사각형 한 장.
+	 * 🔴 앞에 숫자가 붙지 않는 것만 센다 — `100 100 l` 안에도 `0 100 l`이 들어 있어서
+	 *    순진하게 세면 사각형 한 장이 두 장으로 잡힌다(실제로 그렇게 틀렸다).
+	 */
+	const plateRects = (content: string) => (content.match(/(?<![\d.])0 100 l/g) ?? []).length
+
+	it('바닥색이 없으면 판 사각형을 그리지 않는다', async () => {
+		const content = allContentStreams(await vectorSceneToPdf(scene(), printOptions(72)))
+
+		expect(plateRects(content)).toBe(0)
+	})
+
+	it('바닥색을 선언하면 판 사각형을 한 장만 그린다', async () => {
+		const content = allContentStreams(
+			await vectorSceneToPdf(scene('#ffffff'), printOptions(72)),
+		)
+
+		expect(plateRects(content)).toBe(1)
+	})
+})

@@ -64,13 +64,12 @@ export async function vectorSceneToPdf(
 	const color = (value: string | undefined) => resolveColor(value, print?.cmyk?.colors)
 	const samples = print?.cmyk?.images
 
-	page.drawRectangle({
-		color: color(scene.background) ?? rgb(1, 1, 1),
-		height: scene.height,
-		width: scene.width,
-		x: 0,
-		y: 0,
-	})
+	// 🔴 씬이 바닥색을 선언했을 때만 칠한다 — 없을 때 흰색을 발명하면 루트 프레임의 rect와 겹쳐
+	//    판 전체 사각형이 두 장이 된다. 칠하지 않은 자리는 인쇄에서 종이다.
+	const plate = scene.background ? color(scene.background) : null
+	if (plate) {
+		page.drawRectangle({ color: plate, height: scene.height, width: scene.width, x: 0, y: 0 })
+	}
 	for (const primitive of scene.primitives)
 		await draw(pdf, page, primitive, scene.height, color, profileRef, samples)
 
@@ -92,7 +91,7 @@ export function collectSceneColors(scene: VectorScene): string[] {
 				'stroke' in primitive ? primitive.stroke : undefined,
 			].filter((value): value is string => typeof value === 'string')
 		})
-	return [scene.background, ...collect(scene.primitives)]
+	return [...(scene.background ? [scene.background] : []), ...collect(scene.primitives)]
 }
 
 /**

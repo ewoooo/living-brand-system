@@ -213,7 +213,22 @@ export type VectorPrimitive =
 export type VectorScene = {
 	width: number
 	height: number
-	background: string
+	/**
+	 * 판 자신의 바닥색. 🔴 **없으면 아무것도 칠하지 않는다** — 인쇄에서 칠하지 않은 자리는 종이다.
+	 *
+	 * 🔴 예전에는 이 값이 없을 때 직렬화기가 흰색을 발명했다. 그러면 템플릿 판이 **판 전체 크기
+	 *    흰 사각형 두 장**으로 나갔다 — 하나는 이 발명이고 하나는 루트 프레임 자신의 rect다.
+	 *    실측(2026-09-10, PDF 바이트): 어떤 OCG에도 안 들어간 동일 좌표 흰 path가 2개.
+	 *    Illustrator 레이어 패널에서 판이 두 장 겹쳐 열린다.
+	 * 🔴 **그것이 「아트보드 2개」의 원인이라는 근거는 없다.** 아트보드는 **페이지에서만** 온다
+	 *    (아트보드 ↔ 페이지 1:1). 우리 파일은 페이지 1장이고 페이지 상자도 `/MediaBox` 하나뿐이며,
+	 *    나머지 네 상자는 명세상 그것으로 기본값이 잡힌다 — 그래서 `setCropBox`·`setTrimBox`를
+	 *    더해도 Illustrator에서 달라지는 것이 **0**이다. 상자를 만지지 말 것.
+	 * 🔑 템플릿은 이 값을 갖지 않는다 — 판의 바닥은 루트 프레임이 소유하고 걷기가 이미 집는다.
+	 *    실측(2026-09-10): 발행된 12개 전부 판 사각형이 정확히 **1장**이다.
+	 *    그래픽 런타임은 자기 `backgroundColor`를 여기 싣는다(그쪽은 루트 프레임이 없다).
+	 */
+	background?: string
 	primitives: readonly VectorPrimitive[]
 }
 

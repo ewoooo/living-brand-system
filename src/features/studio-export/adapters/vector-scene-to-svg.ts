@@ -23,9 +23,14 @@ export function vectorSceneToSvg(artifact: VectorSceneArtifact, ppi: PrintPpi): 
 	const widthMm = fixed(pixelsToMillimeters(width, ppi))
 	const heightMm = fixed(pixelsToMillimeters(height, ppi))
 
+	// 🔴 바닥색을 선언한 씬만 판 사각형을 갖는다 — 없을 때 흰색을 발명하면 루트 프레임의 사각형과
+	//    겹쳐 판 전체 사각형이 두 장이 된다(PDF와 같은 규칙).
+	const plate = background
+		? `\n  <rect width="${width}" height="${height}" fill="${attribute(background)}" />`
+		: ''
+
 	// 🔴 `xmlns:xlink`를 선언하지 않으면 `xlink:href`가 든 문서를 Illustrator가 거부한다.
-	return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${width} ${height}">
-  <rect width="${width}" height="${height}" fill="${attribute(background)}" />
+	return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${width} ${height}">${plate}
 ${body}
 </svg>`
 }
