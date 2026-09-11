@@ -4,9 +4,17 @@ import {
 } from '@/modules/studio-artifact/studio-artifact'
 
 /** Controller Definition에 저장할 수 있는 직렬화 가능한 값. */
-export type ControllerControlValue = string | number | boolean | null | ControllerPadValue
+export type ControllerControlValue =
+	| string
+	| number
+	| boolean
+	| null
+	| ControllerPadValue
+	| ControllerPadPairValue
 
 export type ControllerPadValue = { x: number; y: number }
+/** 한 판 위의 두 점. 두 점은 서로 구별되지 않는다 — 잡으면 가까운 쪽이 따라온다. */
+export type ControllerPadPairValue = { a: ControllerPadValue; b: ControllerPadValue }
 
 export type ControllerAvailability = 'enabled' | 'readonly' | 'disabled'
 export type ControllerInteraction = 'idle' | 'hover' | 'focused' | 'error'
@@ -161,6 +169,11 @@ export type ControllerControlDefinition =
 	| (ControllerControlBase & {
 			kind: 'pad'
 			defaultValue: ControllerPadValue
+			aspectRatio?: number
+	  })
+	| (ControllerControlBase & {
+			kind: 'pad-pair'
+			defaultValue: ControllerPadPairValue
 			aspectRatio?: number
 	  })
 
@@ -556,29 +569,43 @@ function isControllerValueShape(
 			)
 		case 'pad':
 			return isControllerPadValue(value)
+		case 'pad-pair':
+			return isControllerPadPairValue(value)
 	}
 }
 
 function controllerValuesEqual(left: ControllerControlValue, right: ControllerControlValue) {
 	if (isControllerPadValue(left) && isControllerPadValue(right)) {
-		return left.x === right.x && left.y === right.y
+		return padValuesEqual(left, right)
+	}
+	if (isControllerPadPairValue(left) && isControllerPadPairValue(right)) {
+		return padValuesEqual(left.a, right.a) && padValuesEqual(left.b, right.b)
 	}
 	return left === right
 }
 
+function padValuesEqual(left: ControllerPadValue, right: ControllerPadValue) {
+	return left.x === right.x && left.y === right.y
+}
+
+export function isControllerPadPairValue(
+	value: ControllerControlValue,
+): value is ControllerPadPairValue {
+	if (typeof value !== 'object' || value === null || !('a' in value) || !('b' in value)) {
+		return false
+	}
+	return isControllerPadValue(value.a) && isControllerPadValue(value.b)
+}
+
 export function isControllerPadValue(value: ControllerControlValue): value is ControllerPadValue {
-	return (
-		typeof value === 'object' &&
-		value !== null &&
-		typeof value.x === 'number' &&
-		Number.isFinite(value.x) &&
-		value.x >= -1 &&
-		value.x <= 1 &&
-		typeof value.y === 'number' &&
-		Number.isFinite(value.y) &&
-		value.y >= -1 &&
-		value.y <= 1
-	)
+	if (typeof value !== 'object' || value === null || !('x' in value) || !('y' in value)) {
+		return false
+	}
+	return isUnitAxis(value.x) && isUnitAxis(value.y)
+}
+
+function isUnitAxis(value: unknown) {
+	return typeof value === 'number' && Number.isFinite(value) && value >= -1 && value <= 1
 }
 
 function validateControl(value: unknown, path: string) {
@@ -728,22 +755,38 @@ function validateControl(value: unknown, path: string) {
 			return
 		case 'pad': {
 			assertOnlyKeys(control, [...CONTROL_BASE_KEYS, 'aspectRatio'], path)
-			const point = asRecord(control.defaultValue, `${path}.defaultValue`)
-			assertOnlyKeys(point, ['x', 'y'], `${path}.defaultValue`)
-			assertNumber(point.x, `${path}.defaultValue.x`)
-			assertNumber(point.y, `${path}.defaultValue.y`)
-			if (point.x < -1 || point.x > 1 || point.y < -1 || point.y > 1) {
-				invalid(`${path}.defaultValue`, 'x와 y는 -1에서 1 사이여야 합니다.')
-			}
-			if (control.aspectRatio !== undefined) {
-				assertNumber(control.aspectRatio, `${path}.aspectRatio`)
-				if (control.aspectRatio <= 0) invalid(`${path}.aspectRatio`, '0보다 커야 합니다.')
-			}
+			assertPadPoint(control.defaultValue, `${path}.defaultValue`)
+			assertPadAspectRatio(control.aspectRatio, path)
+			return
+		}
+		case 'pad-pair': {
+			assertOnlyKeys(control, [...CONTROL_BASE_KEYS, 'aspectRatio'], path)
+			const pair = asRecord(control.defaultValue, `${path}.defaultValue`)
+			assertOnlyKeys(pair, ['a', 'b'], `${path}.defaultValue`)
+			assertPadPoint(pair.a, `${path}.defaultValue.a`)
+			assertPadPoint(pair.b, `${path}.defaultValue.b`)
+			assertPadAspectRatio(control.aspectRatio, path)
 			return
 		}
 		default:
 			invalid(`${path}.kind`, '지원하지 않는 값입니다.')
 	}
+}
+
+function assertPadPoint(value: unknown, path: string) {
+	const point = asRecord(value, path)
+	assertOnlyKeys(point, ['x', 'y'], path)
+	assertNumber(point.x, `${path}.x`)
+	assertNumber(point.y, `${path}.y`)
+	if (point.x < -1 || point.x > 1 || point.y < -1 || point.y > 1) {
+		invalid(path, 'x와 y는 -1에서 1 사이여야 합니다.')
+	}
+}
+
+function assertPadAspectRatio(value: unknown, path: string) {
+	if (value === undefined) return
+	assertNumber(value, `${path}.aspectRatio`)
+	if (value <= 0) invalid(`${path}.aspectRatio`, '0보다 커야 합니다.')
 }
 
 function validatePreviewImage(value: unknown) {
@@ -1007,6 +1050,7 @@ function applyControlRestriction(
 			break
 		}
 		case 'pad':
+		case 'pad-pair':
 			if (
 				restriction.maxLength ||
 				restriction.optionValues ||
@@ -1023,7 +1067,7 @@ function applyControlRestriction(
 				...definedProperty('availability', availability),
 				...definedProperty(
 					'defaultValue',
-					restriction.defaultValue as ControllerPadValue | undefined,
+					restriction.defaultValue as ControllerPadValue & ControllerPadPairValue,
 				),
 			}
 			break
