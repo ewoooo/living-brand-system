@@ -1,8 +1,8 @@
+import { GuidelineChapters } from '@/components/guideline/guideline-chapters'
+import { GuidelineFooter } from '@/components/guideline/guideline-footer'
+import { GuidelineOnboardDisplay } from '@/components/guideline/guideline-onboard-display'
 import { ContentFrame } from '@/components/shared/content-frame'
-import { GuidelineChapters } from '../components/guideline-chapters'
-import { GuidelineFooter } from '../components/guideline-footer'
-import { GuidelineOnboardDisplay } from '../components/guideline-onboard-display'
-import type { GetGuidelineNavigationOutput } from '../services/get-guideline-navigation.service'
+import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 
 export function GuidelineOnboard({ navigation }: { navigation: GetGuidelineNavigationOutput }) {
 	return (

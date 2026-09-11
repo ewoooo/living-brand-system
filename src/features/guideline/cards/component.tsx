@@ -1,16 +1,14 @@
 import type { CSSProperties } from 'react'
+import { GuidelineControllerScope } from '@/features/guideline/providers/guideline-controller-provider'
 import { cn } from '@/lib/utils'
-import type { BaseBlock } from '@/payload-types'
-import { GuidelineControllerScope } from '../controllers/provider'
 import { cardControllerFor } from '../controllers/registry'
+import type { CardData } from '../domain/contract/display'
 import { CardActions, CardActionsProvider } from './actions'
 import { DisplayCaption } from './caption/display-caption'
 import { CardDisplay } from './displays/card-display'
 import { CARD_RATIO_CLASS } from './displays/ratio'
 import { displayDefinition } from './displays/registry'
 import { CardMark } from './mark'
-
-export type CardData = NonNullable<BaseBlock['cards']>[number]
 
 /** 카드 프레임·표본·표식·캡션을 조합한다. 조작 상태는 카드별로 격리한다. */
 export function GuidelineCard({

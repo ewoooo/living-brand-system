@@ -1,4 +1,4 @@
-import type { DisplayData } from '../displays/registry.render'
+import type { DisplayData } from '@/features/guideline/domain/contract/display'
 import { CardCaption, type CardCaptionData } from './component'
 import { DisplaySpecs, TypeLanguageCaptionTitle } from './display-specs'
 

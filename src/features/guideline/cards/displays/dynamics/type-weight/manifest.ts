@@ -1,7 +1,7 @@
 import type {
 	CardController,
 	GuidelineControllerManifest,
-} from '@/features/guideline/controllers/contract'
+} from '@/features/guideline/domain/contract/controller'
 import type { TypeWeightWidget } from '@/payload-types'
 import { WEIGHTS } from '../brand-typeface'
 

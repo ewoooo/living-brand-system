@@ -1,5 +1,5 @@
+import type { CardData } from '@/features/guideline/domain/contract/display'
 import { cn } from '@/lib/utils'
-import type { CardData } from './component'
 
 const MARK_STYLE: Record<
 	Exclude<NonNullable<CardData['mark']>, 'none'>,

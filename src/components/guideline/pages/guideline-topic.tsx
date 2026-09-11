@@ -1,9 +1,10 @@
-import { GuidelineFooter } from '../components/guideline-footer'
-import { GuidelineSections } from '../components/guideline-sections'
-import { GuidelineTitleDisplay } from '../components/guideline-title-display'
-import { RefreshRouteOnSave } from '../components/refresh-route-on-save'
-import { GuidelineHelperProvider, GuidelineHelperSlot } from '../controllers/helper'
-import type { GetGuidelineTopicOutput } from '../services/get-guideline-topic.service'
+import { GuidelineHelperSlot } from '@/components/guideline/controllers/helper'
+import { GuidelineFooter } from '@/components/guideline/guideline-footer'
+import { GuidelineSections } from '@/components/guideline/guideline-sections'
+import { GuidelineTitleDisplay } from '@/components/guideline/guideline-title-display'
+import { RefreshRouteOnSave } from '@/components/guideline/refresh-route-on-save'
+import { GuidelineHelperProvider } from '@/features/guideline/providers/guideline-helper-provider'
+import type { GetGuidelineTopicOutput } from '@/features/guideline/services/get-guideline-topic.service'
 
 /** 페이지는 대표 영역·섹션·푸터를 조합하고, 프리뷰와 조작 환경을 연결한다. */
 export function GuidelineTopic({

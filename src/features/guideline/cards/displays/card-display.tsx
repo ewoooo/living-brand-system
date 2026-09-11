@@ -1,8 +1,9 @@
+import { GuidelineHelperRegion } from '@/components/guideline/controllers/helper'
+import { GuidelineControllerPill } from '@/components/guideline/controllers/pill'
+import type { DisplayData } from '@/features/guideline/domain/contract/display'
 import { cn } from '@/lib/utils'
-import { GuidelineHelperRegion } from '../../controllers/helper'
-import { GuidelineControllerPill } from '../../controllers/pill'
 import { displayDefinition } from './registry'
-import { type DisplayData, renderDisplay } from './registry.render'
+import { renderDisplay } from './registry.render'
 
 /** 정적 이미지 또는 동적 표본을 카드 안에 놓고, 조작 가능한 표본만 활성 영역으로 등록한다. */
 export function CardDisplay({

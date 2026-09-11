@@ -1,10 +1,12 @@
 import { cache } from 'react'
+import type {
+	GuidelineChapterData,
+	GuidelineNavigationTopicData,
+} from '@/features/guideline/domain/contract/guideline'
 import {
-	type GuidelineChapterData,
-	type GuidelineNavigationTopicData,
 	listGuidelineChapters,
 	listPublishedGuidelineNavigationTopics,
-} from '../repositories/guideline-view.payload.repository'
+} from '@/features/guideline/repositories/guideline-view.payload.repository'
 import {
 	type GetGuidelineMetadataOutput,
 	getGuidelineMetadata,

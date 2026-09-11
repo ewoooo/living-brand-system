@@ -1,110 +1,22 @@
 'use client'
 
-import {
-	createContext,
-	type ReactNode,
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from 'react'
+import { type ReactNode, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { ControllerBar } from '@/components/shared/controller/index'
+import { useGuidelineHelper } from '@/features/guideline/hooks/use-guideline-helper'
 import { cn } from '@/lib/utils'
-import { pickActiveRegion } from './active-region'
 import { helperLabel } from './helper-label'
 
 /**
  * 하단 Floating Controller("Helper") — 지금 보고 있는 블록의 컨트롤만 화면 아래 알약에 띄운다.
  *
- * 🔴 **이 바는 값을 갖지 않는다.** 값은 그대로 블록이 소유하고(`controllers/provider.tsx`),
+ * 🔴 **이 바는 값을 갖지 않는다.** 값은 그대로 블록이 소유하고(`providers/guideline-controller-provider.tsx`),
  *    여기는 빈 자리(slot)와 "누가 활성인가"만 안다. 바가 값을 중계하면 화면에 하나뿐인 바가
  *    블록마다 다른 값을 하나로 합쳐 버려, 슬라이더 하나가 여러 블록의 판형을 함께 움직인다
- *    (2026-08-04에 실제로 12개가 함께 움직였다 — `provider.tsx`의 주석이 같은 사고를 가리킨다).
+ *    (2026-08-04에 실제로 12개가 함께 움직였다 — `guideline-controller-provider.tsx`의 주석이 같은 사고를 가리킨다).
  *    그래서 컨트롤은 자기 블록의 React 트리 안에서 렌더되고 **DOM만** portal로 내려온다.
  *    context는 트리를 따라가므로 portal 너머에서도 자기 블록의 스코프를 그대로 읽는다.
  */
-
-type HelperRegistry = {
-	slot: HTMLElement | null
-	setSlot: (element: HTMLElement | null) => void
-	activeRegion: Element | null
-	setActiveRegion: (element: Element) => void
-	/** 관측을 시작하고 해제 함수를 돌려준다. */
-	observe: (element: Element) => () => void
-}
-
-const HelperContext = createContext<HelperRegistry | null>(null)
-
-/** 부분 노출도 잡아야 하므로 촘촘히 — 큰 판형은 화면에 다 들어오지 않는다. */
-const THRESHOLDS = [0, 0.1, 0.25, 0.5, 0.75, 1]
-
-export function GuidelineHelperProvider({ children }: { children: ReactNode }) {
-	const [slot, setSlot] = useState<HTMLElement | null>(null)
-	const [activeRegion, setActiveRegion] = useState<Element | null>(null)
-	const selectedRegion = useRef<Element | null>(null)
-	const areas = useRef(new Map<Element, number>())
-	const observerRef = useRef<IntersectionObserver | null>(null)
-
-	const sync = useCallback(() => {
-		const next = pickActiveRegion(
-			[...areas.current].map(([element, visibleArea]) => ({ element, visibleArea })),
-			selectedRegion.current,
-		)
-		if (next !== selectedRegion.current) selectedRegion.current = null
-		setActiveRegion(next)
-	}, [])
-	const selectRegion = useCallback((element: Element) => {
-		selectedRegion.current = element
-		setActiveRegion(element)
-	}, [])
-
-	// 🔴 root는 뷰포트가 아니라 토픽 스크롤 컨테이너다. 본문이 중첩 스크롤 안에 있어서
-	//    root를 비우면 관측 기준이 화면 전체가 되고 교차 판정이 어긋난다.
-	const observe = useCallback(
-		(element: Element) => {
-			observerRef.current ??= new IntersectionObserver(
-				(entries) => {
-					for (const entry of entries) {
-						const { width, height } = entry.intersectionRect
-						areas.current.set(entry.target, entry.isIntersecting ? width * height : 0)
-					}
-					sync()
-				},
-				{
-					root: document.querySelector<HTMLElement>(
-						'[data-slot="section-scroll-container"]',
-					),
-					threshold: THRESHOLDS,
-				},
-			)
-			const observer = observerRef.current
-			observer.observe(element)
-			return () => {
-				observer.unobserve(element)
-				areas.current.delete(element)
-				sync()
-			}
-		},
-		[sync],
-	)
-
-	useEffect(() => {
-		return () => {
-			observerRef.current?.disconnect()
-			observerRef.current = null
-		}
-	}, [])
-
-	const registry = useMemo<HelperRegistry>(
-		() => ({ slot, setSlot, activeRegion, setActiveRegion: selectRegion, observe }),
-		[slot, activeRegion, selectRegion, observe],
-	)
-
-	return <HelperContext.Provider value={registry}>{children}</HelperContext.Provider>
-}
 
 /**
  * 바가 앉는 자리. `absolute inset-0`으로 본문 높이만큼 자리를 잡고 그 안에서 바가 sticky로 뜬다.
@@ -116,7 +28,7 @@ export function GuidelineHelperProvider({ children }: { children: ReactNode }) {
  *    정렬 없이 자리 상자 맨 위에 두면 본문 꼭대기에 그대로 남아 화면에서 보이지 않는다(실측).
  */
 export function GuidelineHelperSlot() {
-	const registry = useContext(HelperContext)
+	const registry = useGuidelineHelper()
 
 	return (
 		// 바가 자기 sticky를 갖는다(`ControllerBar`의 placement="scroll"). 이 상자는 **세로로 꽉 찬
@@ -144,7 +56,7 @@ export function GuidelineHelperRegion({
 	controls: ReactNode
 	children: ReactNode
 }) {
-	const registry = useContext(HelperContext)
+	const registry = useGuidelineHelper()
 	const regionRef = useRef<HTMLDivElement>(null)
 	const observe = registry?.observe
 

@@ -1,10 +1,7 @@
 'use client'
 
-import {
-	controllerBoolean,
-	controllerNumber,
-	useGuidelineController,
-} from '@/features/guideline/controllers/provider'
+import { controllerBoolean, controllerNumber } from '@/features/guideline/domain/controller-values'
+import { useGuidelineController } from '@/features/guideline/hooks/use-guideline-controller'
 import { type ImageSpec, type LayoutParams, overlayGeometry } from './geometry'
 import { OVERLAY_CONTROLS } from './manifest'
 
