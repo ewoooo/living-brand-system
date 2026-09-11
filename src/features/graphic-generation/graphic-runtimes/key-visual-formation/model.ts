@@ -9,6 +9,7 @@ import {
 	KEY_VISUAL_FORMATION_ANCHORS,
 	KEY_VISUAL_FORMATION_COLORWAYS,
 	KEY_VISUAL_FORMATION_DEFAULT_INPUT,
+	KEY_VISUAL_FORMATION_MIN_LINE_WEIGHT,
 	type KeyVisualFormationAnchorId,
 	type KeyVisualFormationColorwayId,
 } from './definition'
@@ -23,7 +24,7 @@ export const keyVisualFormationInputSchema = z.strictObject({
 	anchor: z.enum(anchorIds),
 	planeRatio: z.number().min(0.5).max(0.9),
 	steps: z.number().int().min(6).max(20),
-	decay: z.number().min(1).max(4),
+	decay: z.number().min(-4).max(4),
 })
 
 export type KeyVisualFormationInput = z.infer<typeof keyVisualFormationInputSchema>
@@ -85,19 +86,28 @@ export function createKeyVisualFormationScene(
 	// 면이 끝나는 자리에서 선이 시작한다. top·left는 정방향, bottom·right는 반대편에서 되돌아온다.
 	const forward = input.anchor === 'top' || input.anchor === 'left'
 
+	// 🔴 얇아지는 데에 바닥이 있다 — 감쇠를 세게 걸면 끝쪽 선이 머리카락처럼 남아 보기 불편하고
+	//    인쇄에서는 사라진다. 부호를 뒤집어 굵어지는 방향으로 가도 반대쪽 끝에서 같은 일이 생긴다.
+	const minWeight = Math.min(
+		slotLength,
+		KEY_VISUAL_FORMATION_MIN_LINE_WEIGHT * (Math.min(viewport.width, viewport.height) / 1080),
+	)
 	const spans = [{ start: 0, size: planeLength }]
 	for (let index = 0; index < input.steps; index++) {
 		// index/steps라 마지막 칸도 두께가 0이 아니다 — 「단계」가 곧 보이는 선의 개수다.
 		const progress = index / input.steps
-		const thickness = slotLength * (1 - progress) ** input.decay
-		if (thickness <= 0) continue
-		spans.push({ start: planeLength + index * slotLength, size: thickness })
+		// 감쇠가 음수면 방향이 뒤집힌다 — 면에서 멀어질수록 굵어진다.
+		const falloff = input.decay >= 0 ? (1 - progress) ** input.decay : progress ** -input.decay
+		spans.push({
+			start: planeLength + index * slotLength,
+			size: Math.max(minWeight, slotLength * falloff),
+		})
 	}
 
 	return {
 		width: viewport.width,
 		height: viewport.height,
-		backgroundColor: colorway.background,
+		backgroundColor: colorway.plane,
 		bands: spans.map(({ start, size }, index) => {
 			const offset = forward ? start : axisLength - start - size
 			// 첫 밴드가 면이다 — 나머지 선보다 짙게 칠한다.
