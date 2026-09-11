@@ -5,11 +5,14 @@ import flutedGlassManifest from '../fluted-glass/definition'
 import flutedGlassModel from '../fluted-glass/model'
 import forwardStraightManifest from '../forward-straight/definition'
 import forwardStraightModel from '../forward-straight/model'
+import keyVisualLineManifest from '../key-visual-line/definition'
+import keyVisualLineModel from '../key-visual-line/model'
 import keyVisualPatternManifest from '../key-visual-pattern/definition'
 import keyVisualPatternModel from '../key-visual-pattern/model'
 
 export const graphicStudioPlugins = [
 	{ manifest: flutedGlassManifest, ...flutedGlassModel },
 	{ manifest: forwardStraightManifest, ...forwardStraightModel },
+	{ manifest: keyVisualLineManifest, ...keyVisualLineModel },
 	{ manifest: keyVisualPatternManifest, ...keyVisualPatternModel },
 ] as const satisfies readonly GraphicStudioPlugin[]

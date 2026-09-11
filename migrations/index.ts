@@ -108,6 +108,7 @@ import * as migration_20260908_025709_add_card_caption_placement from './2026090
 import * as migration_20260908_051127_move_mark_to_cards from './20260908_051127_move_mark_to_cards';
 import * as migration_20260909_023814_add_guideline_grid_columns from './20260909_023814_add_guideline_grid_columns';
 import * as migration_20260910_021805_add_nano_banana_2 from './20260910_021805_add_nano_banana_2';
+import * as migration_20260911_075556_add_key_visual_line_runtime from './20260911_075556_add_key_visual_line_runtime';
 
 export const migrations = [
   {
@@ -658,6 +659,11 @@ export const migrations = [
   {
     up: migration_20260910_021805_add_nano_banana_2.up,
     down: migration_20260910_021805_add_nano_banana_2.down,
-    name: '20260910_021805_add_nano_banana_2'
+    name: '20260910_021805_add_nano_banana_2',
+  },
+  {
+    up: migration_20260911_075556_add_key_visual_line_runtime.up,
+    down: migration_20260911_075556_add_key_visual_line_runtime.down,
+    name: '20260911_075556_add_key_visual_line_runtime'
   },
 ];
