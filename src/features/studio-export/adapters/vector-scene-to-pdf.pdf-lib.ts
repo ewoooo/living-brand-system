@@ -12,7 +12,8 @@ import {
 	PDFOperator,
 	PDFOperatorNames,
 	type PDFPage,
-	type PDFRef,
+	PDFRef,
+	PDFStream,
 	PDFString,
 	popGraphicsState,
 	pushGraphicsState,
@@ -35,6 +36,8 @@ import type { CmykColor } from './rgb-to-cmyk.sharp'
  *    `image`로 들어와야 한다(워커의 `unsupported`가 그 목록이다).
  * 🔑 `cmyk`를 주면 도형 색을 잉크로 찍고 PDF/X OutputIntent를 붙인다 — 래스터 인쇄 경로와 같은
  *    ICC를 타야 같은 판의 이미지와 도형이 같은 색으로 나온다.
+ * 🔑 묶음(`group.layer`)은 **Form XObject 하나**로 실린다 — Illustrator가 form 하나를 그룹 하나로
+ *    연다(2026-09-11 실측). 디자이너가 그 그룹에 `Release to Layers`를 한 번 누르면 레이어가 된다.
  * 🔴 씬 좌표는 CSS px이고 PDF 단위는 pt(1/72인치)다. 둘을 그대로 맞대면 **판이 72ppi라고 선언하는
  *    것**이 되어 A4 판이 381mm 페이지로 나간다. 그래서 다 그린 뒤 판 전체를 `ppi`로 되읽는다.
  */
@@ -76,8 +79,22 @@ export async function vectorSceneToPdf(
 	if (plate) {
 		page.drawRectangle({ color: plate, height: scene.height, width: scene.width, x: 0, y: 0 })
 	}
-	for (const primitive of scene.primitives)
-		await draw(pdf, page, primitive, scene.height, color, profileRef, samples, layers, 1)
+	for (const run of layerRuns(scene.primitives)) {
+		const render = (surface: PDFPage) =>
+			runPrimitives(run, (primitive) =>
+				draw(pdf, surface, primitive, scene.height, color, profileRef, samples),
+			)
+		if (!run.layer) {
+			await render(page)
+			continue
+		}
+		const form = await drawForm(pdf, scene, render)
+		// 그릴 것이 하나도 없는 묶음은 빈 form을 남기지 않는다 — Illustrator에서 빈 그룹이 된다.
+		if (!form) continue
+		layers.begin(run.layer)
+		page.pushOperators(drawObject(page.node.newXObject('Layer', form)))
+		layers.end()
+	}
 	layers.finish()
 
 	// 🔴 반드시 다 그린 뒤에 부른다 — `scale`은 이미 쌓인 content stream을 감싸는 방식이라
@@ -115,6 +132,84 @@ export function collectSceneImages(scene: VectorScene): string[] {
 	return collect(scene.primitives)
 }
 
+type LayerRun = { layer: string | undefined; primitives: VectorPrimitive[] }
+
+/**
+ * 프리미티브를 **묶음이 이어지는 구간**으로 자른다. 구간 하나가 Form XObject 하나가 되고,
+ * Illustrator는 그것을 그룹 하나로 연다.
+ *
+ * 🔴 **떨어져 있는 같은 묶음을 하나로 모으지 않는다.** 겹침 순서 정본은 DOM 순서이므로, 모으면 그
+ *    사이에 낀 요소와 위아래가 뒤집힌다 — 실측 12판 중 `Poster 2`만 텍스트를 CI 앞뒤로 갖는다.
+ *    그 판은 form이 하나 더 생기고(=그룹 5개), 나머지 11판은 묶음 수와 같다.
+ * 🔑 묶음이 바뀌지 않는 그룹은 **펴서** 자식을 부모의 줄에 넣는다 — 그래야 루트 프레임의 배경
+ *    사각형이 판 배경과 한 구간이 된다. 그룹은 PDF에서 아무것도 그리지 않으므로 무손실이다.
+ * 🔴 불투명도를 얹는 그룹만 통째로 남긴다. q/Q 래퍼가 자식과 떨어지면 알파가 새거나 사라진다.
+ */
+function layerRuns(primitives: readonly VectorPrimitive[], inherited?: string): LayerRun[] {
+	const runs: LayerRun[] = []
+	const push = (layer: string | undefined, primitive: VectorPrimitive) => {
+		const last = runs.at(-1)
+		if (last && last.layer === layer) last.primitives.push(primitive)
+		else runs.push({ layer, primitives: [primitive] })
+	}
+	for (const primitive of primitives) {
+		if (primitive.kind !== 'group') {
+			push(inherited, primitive)
+			continue
+		}
+		const layer = primitive.layer ?? inherited
+		if (primitive.opacity !== undefined && primitive.opacity < 1) {
+			push(layer, primitive)
+			continue
+		}
+		for (const nested of layerRuns(primitive.children, layer)) {
+			for (const child of nested.primitives) push(nested.layer, child)
+		}
+	}
+	return runs
+}
+
+/** 구간의 프리미티브를 **순서대로** 그린다. 병렬로 돌리면 겹침 순서가 뒤집힌다. */
+async function runPrimitives(run: LayerRun, render: (primitive: VectorPrimitive) => Promise<void>) {
+	for (const primitive of run.primitives) await render(primitive)
+}
+
+/**
+ * 주어진 그리기를 Form XObject 하나로 싣는다. 그릴 것이 없으면 null이다.
+ *
+ * 🔑 기록면은 **임시 페이지**다 — pdf-lib의 그리기 API가 전부 페이지에 쌓이므로, 다 그린 뒤 그
+ *    content stream의 dict에 form 키를 얹어 그대로 form으로 만들고 페이지는 걷어낸다. 바이트를
+ *    복사하지 않으므로 파일에 같은 내용이 두 번 들어가지 않는다.
+ * 🔴 `/BBox`는 **판 전체**다. 묶음의 실제 bbox로 좁히면 Illustrator가 그것을 클리핑 마스크로 만들어
+ *    콘텐츠를 자른다(프로브의 `<클립 그룹>`이 그 마스크다 — 판 크기여서 아무것도 안 잘렸다).
+ * 🔴 `Resources`는 임시 페이지의 것을 그대로 문다. form은 페이지 자원을 상속하지 않으므로, 여기서
+ *    끊으면 이미지·ExtGState 참조가 조용히 빈 자리가 된다.
+ */
+async function drawForm(
+	pdf: PDFDocument,
+	size: { width: number; height: number },
+	render: (surface: PDFPage) => Promise<void>,
+): Promise<PDFRef | null> {
+	const surface = pdf.addPage([size.width, size.height])
+	await render(surface)
+	const { Contents, Resources } = surface.node.normalizedEntries()
+	const [contentRef, ...rest] = Contents?.asArray() ?? []
+	pdf.removePage(pdf.getPageCount() - 1)
+	pdf.context.delete(surface.ref)
+	if (!contentRef) return null
+	// 임시 페이지는 배율을 먹지 않으므로 스트림이 둘이 될 길이 없다. 둘이면 전제가 깨진 것이다.
+	if (rest.length > 0 || !(contentRef instanceof PDFRef)) {
+		throw new Error('묶음을 Form XObject로 옮기지 못했습니다.')
+	}
+	const stream = pdf.context.lookup(contentRef, PDFStream)
+	stream.dict.set(PDFName.of('Type'), PDFName.of('XObject'))
+	stream.dict.set(PDFName.of('Subtype'), PDFName.of('Form'))
+	stream.dict.set(PDFName.of('FormType'), pdf.context.obj(1))
+	stream.dict.set(PDFName.of('BBox'), pdf.context.obj([0, 0, size.width, size.height]))
+	stream.dict.set(PDFName.of('Resources'), Resources)
+	return contentRef
+}
+
 /** 출력 의도. 이미지 색 공간(`drawCmykSamples`의 `ICCBased`)도 같은 프로파일 스트림을 재사용한다. */
 function attachOutputIntent(pdf: PDFDocument, iccProfile: Buffer, iccProfileName: string): PDFRef {
 	const profile = pdf.context.flateStream(Uint8Array.from(iccProfile), {
@@ -147,27 +242,36 @@ function attachOutputIntent(pdf: PDFDocument, iccProfile: Buffer, iccProfileName
  */
 function createLayers(pdf: PDFDocument, page: PDFPage) {
 	const refs: PDFRef[] = []
+	const keys = new Map<string, PDFName>()
 	let properties: PDFDict | undefined
 
 	return {
 		/** 이 레이어에 속하는 그리기를 시작한다. `end()`와 짝이 맞아야 스트림이 성립한다. */
 		begin(label: string) {
-			const ref = pdf.context.register(
-				pdf.context.obj({
-					Type: 'OCG',
-					Name: PDFHexString.fromText(label),
-					// Illustrator가 만든 PDF 8종이 예외 없이 붙인다. 없을 때의 동작은 미확인이라 맞춰 둔다.
-					Intent: [PDFName.of('View'), PDFName.of('Design')],
-				}),
-			)
-			refs.push(ref)
-			if (!properties) {
-				properties = pdf.context.obj({})
-				// normalizedEntries()가 상속 Resources를 페이지에 복제해 준다 — 이 경로가 안전하다.
-				page.node.normalizedEntries().Resources.set(PDFName.of('Properties'), properties)
+			// 🔴 같은 이름에 OCG를 두 번 만들지 않는다 — 「이름 정본이 하나」라는 계약이 깨진다.
+			//    묶음이 DOM에서 끊겨 있으면 같은 이름의 구간이 두 번 나온다(`Poster 2`가 그렇다).
+			let key = keys.get(label)
+			if (!key) {
+				const ref = pdf.context.register(
+					pdf.context.obj({
+						Type: 'OCG',
+						Name: PDFHexString.fromText(label),
+						// Illustrator가 만든 PDF 8종이 예외 없이 붙인다. 없을 때의 동작은 미확인이라 맞춰 둔다.
+						Intent: [PDFName.of('View'), PDFName.of('Design')],
+					}),
+				)
+				refs.push(ref)
+				if (!properties) {
+					properties = pdf.context.obj({})
+					// normalizedEntries()가 상속 Resources를 페이지에 복제해 준다 — 이 경로가 안전하다.
+					page.node
+						.normalizedEntries()
+						.Resources.set(PDFName.of('Properties'), properties)
+				}
+				key = PDFName.of(`MC${refs.length - 1}`)
+				keys.set(label, key)
+				properties.set(key, ref)
 			}
-			const key = PDFName.of(`MC${refs.length - 1}`)
-			properties.set(key, ref)
 			// 🔴 pdf-lib의 `beginMarkedContent`는 BMC를 낸다 — property list를 못 실어 OCG에 쓸 수 없다.
 			page.pushOperators(
 				PDFOperator.of(PDFOperatorNames.BeginMarkedContentSequence, [
@@ -198,8 +302,6 @@ function createLayers(pdf: PDFDocument, page: PDFPage) {
 	}
 }
 
-type Layers = ReturnType<typeof createLayers>
-
 type ColorResolver = (value: string | undefined) => Color | undefined
 
 function resolveColor(
@@ -227,21 +329,14 @@ async function draw(
 	color: ColorResolver,
 	profileRef: PDFRef | null,
 	samples: ReadonlyMap<string, CmykSamples> | undefined,
-	layers: Layers,
-	/** 씬 최상위가 1. 레이어가 되는 것은 루트 프레임의 자식(=2)뿐이다. */
-	depth: number,
 ): Promise<void> {
 	/** 씬 좌표(위에서 아래)를 PDF 좌표(아래에서 위)로. `boxHeight`는 상자 아래 모서리를 잡을 때 쓴다. */
 	const flip = (y: number, boxHeight = 0) => sceneHeight - y - boxHeight
 
 	switch (primitive.kind) {
 		case 'group': {
-			// 🔑 이 그룹이 Illustrator 레이어가 되는가. 판마다 최상위 그룹은 루트 프레임 하나뿐이라
-			//    그것을 레이어로 만들면 판당 레이어 1개가 되어 아무것도 해결하지 않는다 — 그 **자식**이
-			//    디자이너가 이름 붙인 레이어다(실측 12판: 최상위=10 · 자식=40). 더 깊은 그룹은
-			//    `Image Area > Image`처럼 객체 하나짜리 래퍼뿐이라 평탄화한다.
-			const layered = depth === 2 && Boolean(primitive.label)
-			if (layered) layers.begin(primitive.label as string)
+			// 🔑 묶음은 여기 오기 전에 이미 갈렸다(`layerRuns`) — 그룹 자체는 PDF에서 아무것도 그리지
+			//    않으므로 여기 남는 일은 불투명도뿐이다.
 			// 불투명도는 옮겨야 한다 — 흘리면 40% 딤 레이어가 100%로 인쇄된다.
 			// 🔴 이것은 **진짜 그룹 투명도가 아니다.** ExtGState `ca`는 그룹이 아니라 그 안에서 그리는
 			//    **개별 요소**에 걸리므로, 자식이 자기 opacity를 가지면 둘이 곱해지고 겹친 자식끼리는
@@ -259,21 +354,8 @@ async function draw(
 				)
 			}
 			for (const child of primitive.children)
-				await draw(
-					pdf,
-					page,
-					child,
-					sceneHeight,
-					color,
-					profileRef,
-					samples,
-					layers,
-					depth + 1,
-				)
+				await draw(pdf, page, child, sceneHeight, color, profileRef, samples)
 			if (grouped) page.pushOperators(popGraphicsState())
-			// 🔴 BDC/EMC 짝은 우리가 맞춘다 — pdf-lib은 검사하지 않는다. 위 재귀가 던지면 PDF 자체가
-			//    나가지 않으므로(호출부가 예외를 그대로 올린다) 깨진 스트림이 파일로 남는 길은 없다.
-			if (layered) layers.end()
 			return
 		}
 		case 'path':
@@ -316,8 +398,6 @@ async function draw(
 					color,
 					profileRef,
 					samples,
-					layers,
-					depth,
 				)
 			}
 			page.drawRectangle({

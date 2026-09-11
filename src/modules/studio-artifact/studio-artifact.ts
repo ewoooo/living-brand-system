@@ -203,6 +203,12 @@ export type VectorPrimitive =
 			kind: 'group'
 			/** Figma·Illustrator가 레이어 이름으로 읽는다. */
 			label?: string
+			/**
+			 * 이 subtree가 속한 **묶음**. 인쇄 PDF가 묶음 하나를 Form XObject 하나로 싣고
+			 * Illustrator가 그것을 그룹 하나로 연다(2026-09-11 실측).
+			 * 🔴 `label`과 다르다 — label은 노드 하나의 이름이고 이것은 여러 노드가 함께 드는 이름이다.
+			 */
+			layer?: string
 			transform?: string
 			opacity?: number
 			/** 상자 밖을 잘라낸다. 그래픽 배경을 판 안에 가두는 데 쓴다. */

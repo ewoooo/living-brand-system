@@ -56,6 +56,26 @@ describe('findNonCmykColors', () => {
 		expect((await findNonCmykColors(pdf)).join()).toContain('RGB 도형')
 	})
 
+	/**
+	 * 🔴 판의 도형은 대부분 페이지가 아니라 **묶음 form** 안에서 그려진다. 페이지만 보면 그 색이
+	 * 전부 검사 밖에 남는다 — 검사기가 안 보는 것은 승인된 것과 같다.
+	 */
+	it('🔴 form XObject 안의 RGB 도형을 잡는다', async () => {
+		const pdf = await pdfWith((doc) => {
+			const form = doc.context.register(
+				doc.context.flateStream(new TextEncoder().encode('0 1 0 rg 0 0 10 10 re f'), {
+					BBox: [0, 0, 100, 100],
+					FormType: 1,
+					Subtype: 'Form',
+					Type: 'XObject',
+				}),
+			)
+			doc.getPage(0).node.newXObject('Layer', form)
+		})
+
+		expect((await findNonCmykColors(pdf)).join()).toContain('RGB 도형')
+	})
+
 	it('🔴 회색조 도형을 잡는다', async () => {
 		const pdf = await pdfWith((doc) => {
 			doc.getPage(0).drawRectangle({ color: grayscale(0.5) })
