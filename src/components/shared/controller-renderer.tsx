@@ -14,6 +14,7 @@ import type {
 	ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 import {
+	isControllerPadPairValue,
 	isControllerPadValue,
 	resolveControllerAvailability,
 } from '@/modules/studio-controller/controller-definition'
@@ -482,7 +483,31 @@ function ControllerControl({
 				/>
 			)
 		}
+		case 'pad-pair': {
+			const pair = isControllerPadPairValue(value) ? value : definition.defaultValue
+			if (readonly) {
+				return (
+					<ReadonlyRow
+						label={definition.label}
+						value={`${formatPoint(pair.a)} / ${formatPoint(pair.b)}`}
+					/>
+				)
+			}
+			return (
+				<Controller.PadPair
+					aria-label={definition.label}
+					value={pair}
+					aspectRatio={padAspectRatio ?? definition.aspectRatio}
+					disabled={disabled}
+					onChange={onChange}
+				/>
+			)
+		}
 	}
+}
+
+function formatPoint(point: { x: number; y: number }) {
+	return `${Math.round(point.x * 100)}, ${Math.round(point.y * 100)}`
 }
 
 function ReadonlyRow({ label, value }: { label: string; value: string }) {
