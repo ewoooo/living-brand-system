@@ -95,10 +95,11 @@ export type KeyVisualLineScene = {
 }
 
 /**
- * Start Line과 End Line 두 선분을 먼저 세우고, 사이의 선들은 **양 끝점끼리 블렌딩**해서 얻는다.
+ * 라인은 Start Line → End Line 경로 위에 균등 간격으로 놓인다.
+ * 경로를 따라가며 세 값이 함께 변한다 — 두께는 두꺼움→얇음, 길이는 짧음→긺, 각도는 시작각→시작각+변화량.
  *
- * 🔴 중심점을 옮기며 각도를 함께 돌리지 않는다 — 그렇게 하면 끝점이 원호를 그려 실루엣이
- *    볼록해진다(2026-09-11에 실제로 그랬다). 끝점을 직접 잇는 지금은 실루엣이 직선이다.
+ * 🔑 중심이 이동하고 각도가 균일하게 돈다. 끝점은 그 결과라 원호를 그린다(실루엣이 볼록해진다) —
+ *    의도된 모양이다.
  */
 export function createKeyVisualLineScene(
 	input: KeyVisualLineInput,
@@ -111,21 +112,22 @@ export function createKeyVisualLineScene(
 		y: input.path.a.y * viewport.height,
 	}
 	const endPoint = { x: input.path.b.x * viewport.width, y: input.path.b.y * viewport.height }
-	const first = endpointsOf(startPoint, input.angleStart, input.lengthStart * scale)
-	const last = endpointsOf(
-		endPoint,
-		input.angleStart + input.angleSpread,
-		input.lengthEnd * scale,
-	)
 	const segments: KeyVisualLineSegment[] = []
 
 	for (let index = 0; index < input.lineCount; index++) {
 		const progress = input.lineCount > 1 ? index / (input.lineCount - 1) : 0
+		const centerX = lerp(startPoint.x, endPoint.x, progress)
+		const centerY = lerp(startPoint.y, endPoint.y, progress)
+		const angle = toRadians(input.angleStart + input.angleSpread * progress)
+		const length = lerp(input.lengthStart, input.lengthEnd, progress) * scale
+		const halfX = (Math.cos(angle) * length) / 2
+		const halfY = (Math.sin(angle) * length) / 2
+
 		segments.push({
-			x1: lerp(first.x1, last.x1, progress),
-			y1: lerp(first.y1, last.y1, progress),
-			x2: lerp(first.x2, last.x2, progress),
-			y2: lerp(first.y2, last.y2, progress),
+			x1: centerX - halfX,
+			y1: centerY - halfY,
+			x2: centerX + halfX,
+			y2: centerY + halfY,
 			// ponytail: 두께는 선마다 균일하다. 한 선 안에서 테이퍼가 필요해지면 line이 아니라 polygon으로.
 			weight: lerp(input.weightThin * input.weightRatio, input.weightThin, progress) * scale,
 		})
@@ -139,19 +141,6 @@ export function createKeyVisualLineScene(
 		startPoint,
 		endPoint,
 		segments,
-	}
-}
-
-/** 중심·각도·길이로 선분 하나의 양 끝점을 낸다 — 블렌딩의 재료다. */
-function endpointsOf(center: { x: number; y: number }, angleDegrees: number, length: number) {
-	const angle = toRadians(angleDegrees)
-	const halfX = (Math.cos(angle) * length) / 2
-	const halfY = (Math.sin(angle) * length) / 2
-	return {
-		x1: center.x - halfX,
-		y1: center.y - halfY,
-		x2: center.x + halfX,
-		y2: center.y + halfY,
 	}
 }
 
