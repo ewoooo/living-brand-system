@@ -7,12 +7,12 @@ import {
 	GOOGLE_NANO_BANANA_2_MODEL,
 	type ImageModelPreset,
 	OPENAI_GPT_IMAGE_2_MODEL,
-} from '@/features/image-generation/image-model'
+} from '@/features/image-generation/domain/image-model'
 import {
 	type ImageAspectRatio,
 	type ImageOutputSize,
 	toOpenAIImageSize,
-} from '@/features/image-generation/image-size'
+} from '@/features/image-generation/domain/image-size'
 
 /** 프리셋별 실제 모델 호출 입력 — 시드 이미지는 편집 프롬프트 형태로 이미 합성돼 있다. */
 interface ImageProviderCallInput {

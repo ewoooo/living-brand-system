@@ -1,12 +1,15 @@
 import { z } from 'zod'
-import { cameraControlSchema } from '@/features/image-generation/camera-control'
+import { cameraControlSchema } from '@/features/image-generation/domain/camera-control'
 import {
 	IMAGE_BATCH_DEFAULT,
 	IMAGE_BATCH_MAX,
 	IMAGE_PROMPT_MAX_LENGTH,
-	IMAGE_REFERENCE_UPLOAD_MAX_BYTES,
-} from '@/features/image-generation/image-generation-limits'
-import { IMAGE_ASPECT_RATIOS, IMAGE_OUTPUT_SIZES } from '@/features/image-generation/image-size'
+} from '@/features/image-generation/domain/image-generation-limits'
+import {
+	IMAGE_ASPECT_RATIOS,
+	IMAGE_OUTPUT_SIZES,
+} from '@/features/image-generation/domain/image-size'
+import { IMAGE_REFERENCE_MAX_BYTES } from '@/features/image-generation/domain/reference-image/contract'
 import { respondImageGeneration } from '@/features/image-generation/respond-image-generation'
 import { generateImages } from '@/features/image-generation/services/generate-image.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
@@ -14,7 +17,7 @@ import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 export const maxDuration = 120
 
 // 첨부 상한을 base64로 부풀린 길이에 헤더 여유를 더한 값 — sharp를 태우기 전에 본문 크기로 먼저 거른다.
-const MAX_REFERENCE_UPLOAD_CHARS = Math.ceil(IMAGE_REFERENCE_UPLOAD_MAX_BYTES / 3) * 4 + 64
+const MAX_REFERENCE_UPLOAD_CHARS = Math.ceil(IMAGE_REFERENCE_MAX_BYTES / 3) * 4 + 64
 
 const requestSchema = z
 	.object({

@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import type { ImageGenerationMetadata, ImageResultImage } from '../contexts/image-studio-context'
-import type { ImageAspectRatio, ImageOutputSize } from '../image-size'
+import type { ImageAspectRatio, ImageOutputSize } from '../domain/image-size'
 import {
 	type ImageGenerationRequest,
 	requestImageGeneration,

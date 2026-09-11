@@ -1,13 +1,22 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ImageModelPreset } from '@/features/image-generation/domain/image-model'
 import {
 	deriveImageStudioConfig,
 	IMAGE_STUDIO_GROUP_IDS,
 	type ImageStudioConfig,
 } from '@/features/image-generation/domain/image-studio-config'
-import type { ImageModelPreset } from '@/features/image-generation/image-model'
 import { ImageGenerator } from './image-generator'
+
+vi.mock(
+	'@/features/image-generation/runtime/reference-image/prepare-reference-image.client',
+	() => ({
+		prepareReferenceImage: vi.fn(
+			async () => new Blob([new Uint8Array([4, 5, 6])], { type: 'image/webp' }),
+		),
+	}),
+)
 
 const browseMocks = vi.hoisted(() => ({
 	fetchImageStudioConfigs: vi.fn(async () => [] as unknown[]),
@@ -189,7 +198,7 @@ describe('ImageGenerator', () => {
 				files: [new File([new Uint8Array([1, 2, 3])], 'ref.png', { type: 'image/png' })],
 			},
 		})
-		// FileReader가 data URI를 만들 때까지 기다린다 — 미리보기가 뜨면 읽기가 끝난 것이다.
+		// 변환한 WebP가 미리보기에 반영될 때까지 기다린다.
 		await waitFor(() => expect(screen.getByAltText(/ref\.png/)).toBeInTheDocument())
 
 		fireEvent.change(screen.getByRole('textbox', { name: 'Prompt' }), {
@@ -198,9 +207,9 @@ describe('ImageGenerator', () => {
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
 		expect(mocks.generate).toHaveBeenCalledWith(
-			expect.objectContaining({ reference: { upload: 'data:image/png;base64,AQID' } }),
+			expect.objectContaining({ reference: { upload: 'data:image/webp;base64,BAUG' } }),
 			// 첨부도 참조라서 결과 그리드 0번을 차지한다. 저장하지 않으므로 id는 없다.
-			{ src: 'data:image/png;base64,AQID', generatedImageId: null, profileId: 5 },
+			{ src: 'data:image/webp;base64,BAUG', generatedImageId: null, profileId: 5 },
 		)
 	})
 

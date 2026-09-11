@@ -4,14 +4,17 @@
  * 화면 상태(로딩·에러 표시)는 호출자(useImageGeneration, Admin AiImageForm)가 담당한다.
  */
 
-import type { CameraControlInput } from '@/features/image-generation/camera-control'
-import type { ImageModelPreset } from '@/features/image-generation/image-model'
+import type { CameraControlInput } from '@/features/image-generation/domain/camera-control'
+import type { ImageModelPreset } from '@/features/image-generation/domain/image-model'
 import type {
 	FlatImagePrompt,
 	ImageProfilePromptRow,
 	ImagePromptNormalizationRow,
-} from '@/features/image-generation/image-profile-prompt'
-import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
+} from '@/features/image-generation/domain/image-profile-prompt'
+import type {
+	ImageAspectRatio,
+	ImageOutputSize,
+} from '@/features/image-generation/domain/image-size'
 
 export interface ImageGenerationRequest {
 	count: number

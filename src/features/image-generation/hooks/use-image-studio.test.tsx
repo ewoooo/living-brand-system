@@ -1,12 +1,23 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+	act,
+	cleanup,
+	fireEvent,
+	render,
+	renderHook,
+	screen,
+	waitFor,
+} from '@testing-library/react'
 import { useEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type {
+	ImageAspectRatio,
+	ImageOutputSize,
+} from '@/features/image-generation/domain/image-size'
 import {
 	deriveImageStudioConfig,
 	IMAGE_STUDIO_CONTROL_IDS,
 	type ImageStudioConfig,
 } from '@/features/image-generation/domain/image-studio-config'
-import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import { ImageStudioProvider } from '@/features/image-generation/providers/image-studio-provider'
 import { createImageArtifacts } from '@/features/image-generation/runtime/image-artifact.client'
 import { useImageExport } from '@/features/studio-export/hooks/use-image-export'
@@ -15,6 +26,11 @@ import type {
 	ControllerControlDefinition,
 } from '@/modules/studio-controller/controller-definition'
 import { useImageStudio } from './use-image-studio'
+
+const conversionMock = vi.hoisted(() => vi.fn())
+vi.mock('../runtime/reference-image/prepare-reference-image.client', () => ({
+	prepareReferenceImage: conversionMock,
+}))
 
 const browseMocks = vi.hoisted(() => ({
 	fetchImageStudioConfigs: vi.fn(async () => [] as unknown[]),
@@ -472,4 +488,39 @@ describe('ImageStudioProvider 프로파일 교체 정책', () => {
 			'프롬프트가 최대 1자를 초과했습니다. / 생성 불가',
 		)
 	})
+})
+
+it('첨부 변환 중 생성을 막고 재선택·삭제 후 이전 결과를 버린다', async () => {
+	const profile = deriveImageStudioConfig({
+		id: 5,
+		name: '참조',
+		slug: null,
+		imageModelPreset: 'openai-gpt-image-2',
+		features: [{ blockType: 'referenceImage' }],
+	})
+	const pending: Array<(blob: Blob) => void> = []
+	conversionMock.mockImplementation(() => new Promise<Blob>((resolve) => pending.push(resolve)))
+	const { result, unmount } = renderHook(() => useImageStudio(), {
+		wrapper: ({ children }) => (
+			<ImageStudioProvider config={profile}>{children}</ImageStudioProvider>
+		),
+	})
+	act(() => {
+		result.current.prompt.setValue('제품')
+		result.current.reference.attach(new File(['a'], 'a.png', { type: 'image/png' }))
+	})
+	expect(result.current.reference.preparing).toBe(true)
+	expect(result.current.generation.canRun).toBe(false)
+	act(() => {
+		void result.current.reference.attach(new File(['b'], 'b.png', { type: 'image/png' }))
+	})
+	expect(conversionMock.mock.calls[0]?.[1].aborted).toBe(true)
+	await act(async () => pending[1]?.(new Blob(['converted'], { type: 'image/webp' })))
+	await waitFor(() => expect(result.current.reference.name).toBe('b.png'))
+	expect(result.current.reference.value).toBe('data:image/webp;base64,Y29udmVydGVk')
+	expect(result.current.generation.canRun).toBe(true)
+	act(() => result.current.reference.clear())
+	await act(async () => pending[0]?.(new Blob(['old'], { type: 'image/webp' })))
+	expect(result.current.reference.value).toBeNull()
+	unmount()
 })

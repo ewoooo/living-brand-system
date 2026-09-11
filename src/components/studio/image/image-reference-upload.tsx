@@ -3,7 +3,7 @@
 import { Close } from '@carbon/icons-react'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
-import { IMAGE_REFERENCE_UPLOAD_MIME_TYPES } from '@/features/image-generation/image-generation-limits'
+import { IMAGE_REFERENCE_UPLOAD_MIME_TYPES } from '@/features/image-generation/domain/reference-image/contract'
 import { useFileInput } from '@/hooks/use-file-input'
 
 type ImageReferenceUploadProps = {
@@ -54,7 +54,7 @@ export function ImageReferenceUpload({
 				>
 					{value ? '이미지 변경' : 'Upload Image'}
 				</Button>
-				{value && (
+				{(value || error) && (
 					<Button
 						type="button"
 						aria-label="첨부 이미지 제거"

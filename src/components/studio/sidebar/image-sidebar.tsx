@@ -17,13 +17,16 @@ import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 import { Typography } from '@/components/ui/typography'
+import type {
+	ImageAspectRatio,
+	ImageOutputSize,
+} from '@/features/image-generation/domain/image-size'
 import {
 	getImageStudioControls,
 	getImageStudioFeatureControlIds,
 	IMAGE_STUDIO_CONTROL_IDS,
 } from '@/features/image-generation/domain/image-studio-config'
 import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
-import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import type { ImageExportView } from '@/features/studio-export/hooks/use-image-export'
 import {
 	type ControllerControlDefinition,
@@ -228,6 +231,14 @@ export function ImageSidebar({
 						)}
 					</ControllerGroupRenderer>
 				))}
+				{reference.preparing && (
+					<div role="status">
+						참조 이미지를 준비하고 있어요…
+						<Button type="button" variant="ghost" size="sm" onClick={reference.clear}>
+							취소
+						</Button>
+					</div>
+				)}
 				<ImageProfileFeatureRenderer
 					config={config}
 					values={controls.values}

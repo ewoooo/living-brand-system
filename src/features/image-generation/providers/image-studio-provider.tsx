@@ -1,10 +1,14 @@
 'use client'
 
-import { type ReactNode, useCallback, useMemo, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	ImageStudioContext,
 	type ImageStudioValue,
 } from '@/features/image-generation/contexts/image-studio-context'
+import type {
+	ImageAspectRatio,
+	ImageOutputSize,
+} from '@/features/image-generation/domain/image-size'
 import {
 	acceptsImagePromptExecution,
 	getImageColorAdjustmentControls,
@@ -13,12 +17,11 @@ import {
 	IMAGE_STUDIO_CONTROL_IDS,
 	type ImageStudioConfig,
 } from '@/features/image-generation/domain/image-studio-config'
-import { useImageGeneration } from '@/features/image-generation/hooks/use-image-generation'
 import {
 	IMAGE_REFERENCE_UPLOAD_MAX_BYTES,
 	IMAGE_REFERENCE_UPLOAD_MIME_TYPES,
-} from '@/features/image-generation/image-generation-limits'
-import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
+} from '@/features/image-generation/domain/reference-image/contract'
+import { useImageGeneration } from '@/features/image-generation/hooks/use-image-generation'
 import type { ImageColorAdjustment } from '@/features/image-generation/runtime/image-colorize'
 import { fetchImageStudioConfigs } from '@/features/image-generation/services/list-image-studio-configs.client'
 import { useLazyResource } from '@/hooks/use-lazy-resource'
@@ -28,6 +31,7 @@ import {
 	type ControllerValues,
 	createControllerValues,
 } from '@/modules/studio-controller/controller-definition'
+import { prepareReferenceImage } from '../runtime/reference-image/prepare-reference-image.client'
 
 /**
  * 이미지 스튜디오 편집 세션의 단일 소유자 — Controller와 Canvas는 이 컨텍스트만 알고 서로를
@@ -49,6 +53,9 @@ export function ImageStudioProvider({
 	const [angles, setAngles] = useState({ azimuthDeg: 0, elevationDeg: 0 })
 	// 첨부는 저장하지 않는다 — 이 상태가 사본의 전부이고, 새로고침하면 사라진다.
 	const [attachment, setAttachment] = useState<{ dataUri: string; name: string } | null>(null)
+	const [preparing, setPreparing] = useState(false)
+	const conversion = useRef<AbortController | null>(null)
+	useEffect(() => () => conversion.current?.abort(), [])
 	const [attachmentError, setAttachmentError] = useState<string | null>(null)
 	const { error, generate, loading, requested, selected, session, setSelected } =
 		useImageGeneration()
@@ -75,7 +82,11 @@ export function ImageStudioProvider({
 		() => (promptError ? { [definitions.prompt.id]: { error: promptError } } : {}),
 		[definitions.prompt.id, promptError],
 	)
-	const canRun = acceptsImagePromptExecution(definitions.prompt, prompt) && !promptError
+	const canRun =
+		acceptsImagePromptExecution(definitions.prompt, prompt) &&
+		!promptError &&
+		!preparing &&
+		!attachmentError
 
 	const lineColor = colorDefinitions ? values[colorDefinitions.line.id] : undefined
 	const backgroundColor = colorDefinitions?.background
@@ -111,8 +122,11 @@ export function ImageStudioProvider({
 		[config],
 	)
 
-	// 서버가 어차피 다시 판정하지만, 여기서 걸러야 10MB를 실어 보내고 400을 받는 일이 없다.
-	const attachReference = useCallback((file: File) => {
+	// 원본을 서버로 보내지 않고 변환된 사본만 세션에 보관한다.
+	const attachReference = useCallback(async (file: File) => {
+		conversion.current?.abort()
+		setPreparing(false)
+		setAttachment(null)
 		if (!(IMAGE_REFERENCE_UPLOAD_MIME_TYPES as readonly string[]).includes(file.type)) {
 			setAttachmentError('JPG, PNG, WebP 이미지만 첨부할 수 있어요.')
 			return
@@ -123,16 +137,35 @@ export function ImageStudioProvider({
 			)
 			return
 		}
-		const reader = new FileReader()
-		reader.onload = () => {
-			setAttachmentError(null)
-			setAttachment({ dataUri: String(reader.result), name: file.name })
+		const controller = new AbortController()
+		conversion.current = controller
+		setPreparing(true)
+		setAttachmentError(null)
+		try {
+			const blob = await prepareReferenceImage(file, controller.signal)
+			const dataUri = await new Promise<string>((resolve, reject) => {
+				const reader = new FileReader()
+				reader.onload = () => resolve(String(reader.result))
+				reader.onerror = () => reject(new Error('이미지를 읽지 못했어요.'))
+				reader.readAsDataURL(blob)
+			})
+			if (!controller.signal.aborted) {
+				setAttachment({ dataUri, name: file.name })
+			}
+		} catch (error) {
+			if (!controller.signal.aborted) {
+				setAttachmentError(
+					error instanceof Error ? error.message : '이미지를 변환하지 못했어요.',
+				)
+			}
+		} finally {
+			if (!controller.signal.aborted) setPreparing(false)
 		}
-		reader.onerror = () => setAttachmentError('이미지를 읽지 못했어요.')
-		reader.readAsDataURL(file)
 	}, [])
 
 	const clearReference = useCallback(() => {
+		conversion.current?.abort()
+		setPreparing(false)
 		setAttachment(null)
 		setAttachmentError(null)
 	}, [])
@@ -141,13 +174,14 @@ export function ImageStudioProvider({
 		(nextProfileId: number) => {
 			const next = (browse.data ?? configs).find((item) => item.id === nextProfileId)
 			if (!next) return
+			clearReference()
 			setConfigs((current) =>
 				current.some((item) => item.id === next.id) ? current : [...current, next],
 			)
 			setValues((current) => reconcileProfileValues(next, current))
 			setProfileId(nextProfileId)
 		},
-		[browse.data, configs],
+		[browse.data, configs, clearReference],
 	)
 
 	// 참조는 한 번 정해지면 고정된다 — 조정본을 다시 참조로 삼지 않아 세대 누적 열화가 없다.
@@ -217,6 +251,7 @@ export function ImageStudioProvider({
 				value: supportsReference ? (attachment?.dataUri ?? null) : null,
 				name: supportsReference ? (attachment?.name ?? null) : null,
 				error: attachmentError,
+				preparing,
 				attach: attachReference,
 				clear: clearReference,
 			},
@@ -275,6 +310,7 @@ export function ImageStudioProvider({
 			loading,
 			options,
 			prompt,
+			preparing,
 			ratioValue,
 			referenceIndex,
 			requested,

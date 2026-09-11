@@ -5,7 +5,7 @@ import { fitPreviewSize, type PreviewSize } from '@/components/studio/shared/fit
 import { Skeleton } from '@/components/ui/skeleton'
 import { Typography } from '@/components/ui/typography'
 import type { ImageResultImage } from '@/features/image-generation/contexts/image-studio-context'
-import type { ImageAspectRatio } from '@/features/image-generation/image-size'
+import type { ImageAspectRatio } from '@/features/image-generation/domain/image-size'
 import {
 	type ImageColorAdjustment,
 	imageColorizeStyle,

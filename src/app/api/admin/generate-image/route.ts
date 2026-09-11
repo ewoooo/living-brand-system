@@ -1,10 +1,10 @@
 import { z } from 'zod'
-import { IMAGE_MODEL_PRESETS } from '@/features/image-generation/image-model'
+import { IMAGE_MODEL_PRESETS } from '@/features/image-generation/domain/image-model'
 import {
 	IMAGE_ASPECT_RATIOS,
 	IMAGE_OUTPUT_SIZES,
 	supportsImageOutputSize,
-} from '@/features/image-generation/image-size'
+} from '@/features/image-generation/domain/image-size'
 import { respondImageGeneration } from '@/features/image-generation/respond-image-generation'
 import {
 	generateImages,

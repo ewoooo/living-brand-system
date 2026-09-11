@@ -1,8 +1,11 @@
 'use client'
 
 import { createContext } from 'react'
+import type {
+	ImageAspectRatio,
+	ImageOutputSize,
+} from '@/features/image-generation/domain/image-size'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
-import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
 import type { ImageColorAdjustment } from '@/features/image-generation/runtime/image-colorize'
 import type { LazyResource } from '@/hooks/use-lazy-resource'
 import type {
@@ -67,6 +70,7 @@ export type ImageStudioValue = {
 		name: string | null
 		/** 형식·용량으로 거절한 사유. 서버까지 가지 않고 화면에서 잡은 것만 여기 있다. */
 		error: string | null
+		preparing: boolean
 		attach: (file: File) => void
 		clear: () => void
 	}

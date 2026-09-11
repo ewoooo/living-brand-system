@@ -3,7 +3,7 @@ import { z } from 'zod'
 import type {
 	FlatImagePrompt,
 	ImagePromptNormalizationRow,
-} from '@/features/image-generation/image-profile-prompt'
+} from '@/features/image-generation/domain/image-profile-prompt'
 import { anthropicTextModel } from '@/lib/anthropic-model'
 
 /** AI SDK 호출을 소유하며, 각 키의 결과를 관리자가 정한 후보 중 하나로 강제한다. */

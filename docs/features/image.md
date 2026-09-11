@@ -44,7 +44,7 @@ Manager는 Payload Admin의 `이미지 프로파일` 컬렉션에서 이미지 �
 
 프로파일 기반 응답의 `images`는 저장 URL이며 `generatedImages`에는 각 문서의 `id`, `url`, `createdAt`이 포함됩니다. 저장된 생성 결과를 참조하는 요청은 원본 data URI와 최종 프롬프트를 재전송하지 않고 `reference: { generatedImageId }`를 전달합니다. 프롬프트를 비워 보내면 참조의 저장된 `effectivePrompt`를 물려받습니다. 서버는 같은 사용자·published 프로파일에 귀속된 `generated-images` 원본과 저장된 `effectivePrompt`를 조회·검증해 사용합니다.
 
-첨부 참조는 `reference: { upload }`에 data URI로 실어 보냅니다. 저장하지 않으므로 서버가 되찾을 원본이 없고, 그래서 매 요청 본문에 다시 실립니다. 상한은 10MB(`IMAGE_REFERENCE_UPLOAD_MAX_BYTES`)이고 형식은 JPEG·PNG·WebP이며, 실제 형식은 서버가 sharp로 다시 확인합니다. **첨부는 프롬프트를 물려주지 않으므로 프롬프트가 필수입니다.** 프로파일이 `참조 이미지 첨부` feature를 열지 않았으면 화면이 무엇을 보내든 서비스가 컨트롤러 입력 오류로 거부합니다.
+첨부 참조는 `reference: { upload }`에 data URI로 실어 보냅니다. 저장하지 않으므로 서버가 되찾을 원본이 없고, 그래서 매 요청 본문에 다시 실립니다. `domain/reference-image/contract/`가 원본·전송 제한과 Worker 응답 계약을 소유하고, `runtime/reference-image/`가 브라우저 변환을 실행합니다. 원본 선택 상한은 10MB(`IMAGE_REFERENCE_UPLOAD_MAX_BYTES`)이며 JPEG·PNG·WebP를 받습니다. 브라우저 Worker에서 긴 변 최대 1024px(작은 이미지는 확대하지 않음), 비율·회전·투명도를 유지한 WebP로 변환합니다. 품질 85→75→65→55 순서로 시도하고, 1MB를 넘으면 긴 변 896→768px로 축소해 재시도합니다. WASM 인코더는 첨부할 때만 로드합니다. 변환 결과가 1MB(`IMAGE_REFERENCE_MAX_BYTES`)를 넘거나 변환에 실패하면 원본을 대신 보내지 않고 안내합니다. 미리보기와 전송은 같은 변환 결과를 사용하며, 변환 중 생성은 차단하고 재선택·삭제·프로파일 전환 시 이전 작업을 취소합니다. 서버는 첨부 바이트 상한과 실제 이미지 형식을 다시 검증합니다. 저장된 생성 결과를 ID로 참조하는 경로와 생성 출력 해상도는 이 변환의 대상이 아닙니다. **첨부는 프롬프트를 물려주지 않으므로 프롬프트가 필수입니다.** 프로파일이 `참조 이미지 첨부` feature를 열지 않았으면 화면이 무엇을 보내든 서비스가 컨트롤러 입력 오류로 거부합니다.
 
 Creator는 published 프로파일을 선택해 생성하고, AI Chat은 `listImageProfiles`로 사용 가능한 프로파일을 확인한 뒤 `generateImage`에 `profileId`를 전달합니다.
 

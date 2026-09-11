@@ -1,5 +1,8 @@
 import type { Block, Field } from 'payload'
-import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
+import {
+	CAMERA_AZIMUTHS,
+	CAMERA_ELEVATIONS,
+} from '@/features/image-generation/domain/camera-control'
 
 const AZIMUTH_LABELS: Record<(typeof CAMERA_AZIMUTHS)[number], string> = {
 	front: '정면',

@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import config from '@payload-config'
 import { getPayload } from 'payload'
-import type { ImageAspectRatio, ImageOutputSize } from '@/features/image-generation/image-size'
+import type {
+	ImageAspectRatio,
+	ImageOutputSize,
+} from '@/features/image-generation/domain/image-size'
 import type { ImageProfile } from '@/payload-types'
 import { decodeImageDataUri, MAX_IMAGE_BYTES, validateRasterImage } from '../image-data-uri'
 

@@ -4,7 +4,13 @@ import {
 	imageEffectivePromptSchema,
 	type ResolvedCameraControl,
 	resolveCameraControl,
-} from '@/features/image-generation/camera-control'
+} from '@/features/image-generation/domain/camera-control'
+import type { ImageModelPreset } from '@/features/image-generation/domain/image-model'
+import {
+	type ImageAspectRatio,
+	type ImageOutputSize,
+	supportsImageOutputSize,
+} from '@/features/image-generation/domain/image-size'
 import {
 	acceptsImagePromptExecution,
 	deriveImageStudioConfig,
@@ -17,12 +23,6 @@ import {
 	acquireImageGenerationSlot,
 	ImageGenerationLimitError,
 } from '@/features/image-generation/image-generation-gate'
-import type { ImageModelPreset } from '@/features/image-generation/image-model'
-import {
-	type ImageAspectRatio,
-	type ImageOutputSize,
-	supportsImageOutputSize,
-} from '@/features/image-generation/image-size'
 import {
 	type ResolvedReference,
 	resolveGeneratedImageReference,
@@ -40,6 +40,7 @@ import {
 	normalizeImageProfilePrompt,
 } from '@/features/image-generation/services/normalize-image-profile-prompt.service'
 import { acceptsControllerExecutionValue } from '@/modules/studio-controller/controller-definition'
+import { IMAGE_REFERENCE_MAX_BYTES } from '../domain/reference-image/contract'
 
 export { ImageGenerationLimitError, ImageGenerationUnavailableError }
 
@@ -274,7 +275,9 @@ async function resolveImageReference(
 		throw new InvalidImageControllerInputError('reference')
 	}
 	try {
-		return { data: (await decodeImageDataUri(reference.upload)).data, generatedImageId: null }
+		const { data } = await decodeImageDataUri(reference.upload)
+		if (data.byteLength > IMAGE_REFERENCE_MAX_BYTES) throw new InvalidSeedImageError()
+		return { data, generatedImageId: null }
 	} catch {
 		throw new InvalidSeedImageError()
 	}
