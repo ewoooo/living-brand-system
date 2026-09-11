@@ -32,13 +32,17 @@ function replaceImageWithDiv(doc: Document, image: HTMLImageElement): HTMLElemen
  *    깨끗해진다 — 셋이 모두 `data-name`을 읽기 때문이다.
  * 🔑 이미 깨끗한 이름에는 아무 일도 하지 않는다(재합성 멱등).
  */
+// biome-ignore lint/suspicious/noControlCharactersInRegex: 제어문자를 **찾는 것**이 목적이다 — 규칙의 전제(「보통 실수다」)가 여기서는 성립하지 않는다
 const LAYER_NAME_JUNK = /data-name="[^"]*(?:[\u0000-\u001f\u007f-\u009f\u2028\u2029]|^\s|\s")/
 
 export function normalizeLayerName(value: string): string {
-	return value
-		.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ')
-		.replace(/\s+/g, ' ')
-		.trim()
+	return (
+		value
+			// biome-ignore lint/suspicious/noControlCharactersInRegex: 제어문자를 **지우는 것**이 이 함수의 목적이다
+			.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ')
+			.replace(/\s+/g, ' ')
+			.trim()
+	)
 }
 
 /** compose가 컬러 치환용으로 만든 오버레이 노드 id — 편집 UI(레이어 패널)에서 숨기는 판별 계약. */
