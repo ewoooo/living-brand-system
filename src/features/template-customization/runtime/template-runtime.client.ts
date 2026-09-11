@@ -76,10 +76,14 @@ export type TemplateVectorArtifactResult = {
 export async function createTemplateVectorArtifact({
 	height,
 	html,
+	nodeLayers,
 	width,
-}: TemplateRasterArtifactSource): Promise<TemplateVectorArtifactResult> {
+}: TemplateRasterArtifactSource & {
+	/** nodeId → 묶음 이름(`mapTemplateNodeLayers`). 인쇄 PDF가 묶음을 그룹으로 싣는 데 쓴다. */
+	nodeLayers: ReadonlyMap<string, string>
+}): Promise<TemplateVectorArtifactResult> {
 	const { scene, unsupported } = await withTemplateRasterStage(html, (element) =>
-		templateDomToVectorScene(element, { width, height }),
+		templateDomToVectorScene(element, { width, height }, nodeLayers),
 	)
 	const outlined = await outlineVectorScene(scene)
 

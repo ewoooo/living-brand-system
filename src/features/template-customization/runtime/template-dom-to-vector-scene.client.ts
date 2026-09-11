@@ -1,6 +1,7 @@
 'use client'
 
 import { toPng } from 'html-to-image'
+import { TEMPLATE_BACKGROUND_LAYER } from '@/features/template-customization/domain/template-studio-config'
 import type { VectorPrimitive, VectorScene } from '@/modules/studio-artifact/studio-artifact'
 import { cropBakedImage, type ImageFit, toBakedImageDataUrl } from './image-to-data-url.client'
 import { svgAssetToPrimitives, svgAssetUsesStyleSheetFill } from './svg-asset-to-primitives.client'
@@ -33,13 +34,18 @@ type Box = { x: number; y: number; width: number; height: number }
 export async function templateDomToVectorScene(
 	stage: HTMLElement,
 	size: { width: number; height: number },
+	/**
+	 * nodeId → 묶음 이름(`mapTemplateNodeLayers`). 여기 없는 노드는 배경 묶음에 든다.
+	 * 🔑 인쇄 PDF가 묶음 하나를 Form XObject 하나로 싣고 Illustrator가 그것을 그룹으로 연다.
+	 */
+	nodeLayers: ReadonlyMap<string, string> = new Map(),
 ): Promise<TemplateVectorSceneResult> {
 	const origin = stage.getBoundingClientRect()
 	const unsupported: { nodeId: string; reason: string }[] = []
-	const context = { origin, unsupported }
+	const context = { nodeLayers, origin, unsupported }
 	const primitives = [
 		...(await plateBackdrop(stage, context)),
-		...(await walkAll(Array.from(stage.children), context)),
+		...(await walkAll(Array.from(stage.children), context, TEMPLATE_BACKGROUND_LAYER)),
 	]
 
 	// 🔴 stage에 배경이 없으면 **발명하지 않는다.** 템플릿의 판 바닥은 루트 프레임(=stage의 자식)이
@@ -74,23 +80,44 @@ async function plateBackdrop(stage: HTMLElement, context: WalkContext): Promise<
 	if (box.width <= 0 || box.height <= 0) return []
 	// 판에 얹힌 그라디언트·그림자도 자식과 같은 기준으로 진단에 남긴다 — 지금은 바닥색으로 뭉개진다.
 	reportUnsupported(style, 'plate', context, { maskHandled: false })
-	return backgroundImagePrimitives(stage, box, style, context)
+	const backdrop = await backgroundImagePrimitives(stage, box, style, context)
+	// 판의 배경 이미지·graphic 스냅샷은 배경 묶음이다 — 묶음을 실으려면 그룹이어야 한다.
+	return backdrop.length
+		? [
+				{
+					kind: 'group',
+					label: TEMPLATE_BACKGROUND_LAYER,
+					layer: TEMPLATE_BACKGROUND_LAYER,
+					children: backdrop,
+				},
+			]
+		: []
 }
 
-type WalkContext = { origin: DOMRect; unsupported: { nodeId: string; reason: string }[] }
+type WalkContext = {
+	nodeLayers: ReadonlyMap<string, string>
+	origin: DOMRect
+	unsupported: { nodeId: string; reason: string }[]
+}
 
 async function walkAll(
 	nodes: readonly Element[],
 	context: WalkContext,
+	layer: string,
 ): Promise<VectorPrimitive[]> {
 	const collected: VectorPrimitive[] = []
 	for (const node of nodes) {
-		if (node instanceof HTMLElement) collected.push(...(await walk(node, context)))
+		if (node instanceof HTMLElement) collected.push(...(await walk(node, context, layer)))
 	}
 	return collected
 }
 
-async function walk(element: HTMLElement, context: WalkContext): Promise<VectorPrimitive[]> {
+/** `layer`는 조상에게서 물려받은 묶음이다 — 이 노드가 슬롯이면 거기서부터 자기 묶음으로 바뀐다. */
+async function walk(
+	element: HTMLElement,
+	context: WalkContext,
+	inheritedLayer: string,
+): Promise<VectorPrimitive[]> {
 	const style = getComputedStyle(element)
 	if (style.display === 'none' || style.visibility === 'hidden') return []
 	// 🔴 값이 없을 때를 0으로 읽으면 판 전체가 사라진다 — `Number('')`은 0이다.
@@ -102,6 +129,7 @@ async function walk(element: HTMLElement, context: WalkContext): Promise<VectorP
 	if (box.width <= 0 || box.height <= 0) return []
 
 	const nodeId = element.dataset.nodeId ?? element.dataset.name ?? element.tagName.toLowerCase()
+	const layer = context.nodeLayers.get(nodeId) ?? inheritedLayer
 
 	// SVG 자산은 마스크째 도형으로 펴진다 — 그때는 마스크를 「못 옮긴 효과」로 세지 않는다.
 	const svgAsset = await svgAssetPrimitives(element, box, style)
@@ -118,7 +146,7 @@ async function walk(element: HTMLElement, context: WalkContext): Promise<VectorP
 	if (!svgAsset && maskUrl(style)) {
 		const flattened = await flattenToImage(element, box, context)
 		return flattened
-			? [{ kind: 'group', label: element.dataset.name ?? nodeId, children: flattened }]
+			? [{ kind: 'group', label: element.dataset.name ?? nodeId, layer, children: flattened }]
 			: []
 	}
 
@@ -133,7 +161,7 @@ async function walk(element: HTMLElement, context: WalkContext): Promise<VectorP
 						...(await backgroundImagePrimitives(element, box, style, context)),
 					])
 
-	const children = await walkAll(Array.from(element.children), context)
+	const children = await walkAll(Array.from(element.children), context, layer)
 	const contents = [...own, ...children]
 	if (contents.length === 0) return []
 
@@ -142,6 +170,7 @@ async function walk(element: HTMLElement, context: WalkContext): Promise<VectorP
 		{
 			kind: 'group',
 			label: element.dataset.name ?? nodeId,
+			layer,
 			...(opacity < 1 ? { opacity } : {}),
 			children: contents,
 		},

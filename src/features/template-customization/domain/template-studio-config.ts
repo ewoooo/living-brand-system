@@ -398,12 +398,18 @@ export type TemplateLayerGroup = {
 	members: readonly { id: string; label: string }[]
 }
 
+/**
+ * 배경 묶음의 이름. 🔴 **묶음에 들지 않은 노드가 모이는 자리**이기도 하다 — 배경은 노드가 아니라
+ * 도화지라 정의상 나머지를 받는다(`mapTemplateNodeLayers`가 목록을 내지 않는 이유).
+ */
+export const TEMPLATE_BACKGROUND_LAYER = 'Background'
+
 const LAYER_GROUP_ORDER = [
 	{ kind: 'text', label: 'Text' },
 	{ kind: 'image', label: 'Image' },
 	// 벡터 슬롯의 실제 이름은 12개 템플릿에서 CI 10 · Logo 1 · Vector 1이다 — 묶음 이름은 CI다.
 	{ kind: 'vector', label: 'CI' },
-	{ kind: 'background', label: 'Background' },
+	{ kind: 'background', label: TEMPLATE_BACKGROUND_LAYER },
 ] as const satisfies readonly { kind: TemplateStudioConfigSlot['kind']; label: string }[]
 
 export function listTemplateLayerGroups(
@@ -421,6 +427,21 @@ export function listTemplateLayerGroups(
 		})
 	}
 	return groups
+}
+
+/**
+ * nodeId → 묶음 이름. 인쇄 PDF가 묶음을 Form XObject로 싣는 데 쓴다 — 레이어 패널과 **같은 정본**을
+ * 읽으므로 화면의 묶음과 파일의 그룹이 갈라지지 않는다.
+ * 🔴 여기 없는 노드는 배경이다. 배경 슬롯은 도화지라 member가 없고, 그래서 항목도 내지 않는다.
+ */
+export function mapTemplateNodeLayers(
+	slots: readonly TemplateStudioConfigSlot[],
+): ReadonlyMap<string, string> {
+	return new Map(
+		listTemplateLayerGroups(slots).flatMap((group) =>
+			group.members.map((member) => [member.id, group.label] as const),
+		),
+	)
 }
 
 export function partitionTemplateSlots(slots: readonly TemplateStudioConfigSlot[]) {

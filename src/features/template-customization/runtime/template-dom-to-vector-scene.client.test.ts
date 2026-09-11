@@ -12,6 +12,7 @@ vi.mock('./image-to-data-url.client', async (importOriginal) => ({
 	cropBakedImage: vi.fn(async () => 'data:image/png;base64,CROPPED'),
 }))
 
+import type { VectorPrimitive } from '@/modules/studio-artifact/studio-artifact'
 import {
 	colorAlpha,
 	hasRealGradient,
@@ -88,6 +89,7 @@ describe('templateDomToVectorScene', () => {
 			{
 				kind: 'group',
 				label: 'Card',
+				layer: 'Background',
 				children: [
 					{
 						kind: 'rect',
@@ -266,6 +268,33 @@ describe('templateDomToVectorScene', () => {
 
 		expect(unsupported).toContainEqual({ nodeId: 'hero', reason: 'gradient' })
 		expect(unsupported).toContainEqual({ nodeId: 'hero', reason: 'box-shadow' })
+	})
+
+	/**
+	 * 🔴 묶음은 **슬롯 nodeId에서만** 바뀐다. 목록에 없는 노드는 배경이고, 슬롯 아래 자식은
+	 *    슬롯의 묶음을 물려받는다 — 그래야 인쇄 PDF가 묶음 하나를 form 하나로 묶을 수 있다.
+	 */
+	it('슬롯 nodeId에서 묶음이 바뀌고 자식이 물려받는다', async () => {
+		const stage = stageWith(
+			'<div data-node-id="root" style="background-color:#ffffff"><div data-node-id="ci-1" style="background-color:#00ff00"><div data-node-id="inner" style="background-color:#0000ff"></div></div></div>',
+		)
+		for (const node of Array.from(stage.querySelectorAll('div'))) {
+			measure(node, { x: 0, y: 0, width: 100, height: 100 })
+		}
+
+		const { scene } = await templateDomToVectorScene(
+			stage,
+			{ width: 400, height: 300 },
+			new Map([['ci-1', 'CI']]),
+		)
+
+		const layersOf = (primitives: readonly VectorPrimitive[]): string[] =>
+			primitives.flatMap((primitive) =>
+				primitive.kind === 'group'
+					? [String(primitive.layer), ...layersOf(primitive.children)]
+					: [],
+			)
+		expect(layersOf(scene.primitives)).toEqual(['Background', 'CI', 'CI'])
 	})
 
 	it('숨긴 노드는 훑지 않는다', async () => {

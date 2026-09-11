@@ -33,6 +33,7 @@ import {
 import {
 	findTemplateControl,
 	listCompatibleTemplateImageConfigs,
+	mapTemplateNodeLayers,
 	type PublishedTemplateView,
 	partitionTemplateSlots,
 	type ResolvedTemplateImageConfig,
@@ -612,8 +613,15 @@ export function TemplateStudioProvider({
 		[exportHtml, height, width],
 	)
 	const vectorArtifact = useCallback(
-		() => createTemplateVectorArtifact({ height, html: exportHtml(), width }),
-		[exportHtml, height, width],
+		() =>
+			createTemplateVectorArtifact({
+				height,
+				html: exportHtml(),
+				// 레이어 패널과 같은 정본을 읽는다 — 화면의 묶음과 PDF의 그룹이 갈라지지 않는다.
+				nodeLayers: mapTemplateNodeLayers(config.template.slots),
+				width,
+			}),
+		[config.template.slots, exportHtml, height, width],
 	)
 	// 배경이 graphic이어도 video artifact를 내지 않는 runtime이 있다(forward-straight는 vector·raster뿐).
 	// 타입만 보고 MP4를 Video 경로로 돌리면 producer가 던진다 — 선언을 보고 정적 MP4로 떨어뜨린다.
