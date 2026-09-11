@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
+import { TemplateLeftPanel } from '@/components/studio/sidebar/template-left-panel'
 import { TemplateSidebar } from '@/components/studio/sidebar/template-sidebar'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import { applyTemplateSessionPatch } from '@/features/template-customization/domain/apply-template-session-patch'
@@ -86,7 +87,10 @@ function TemplateWorkspace({ template }: { template: PublishedTemplateView }) {
 	})
 
 	return (
-		<StudioWorkspace sidebar={<TemplateSidebar exporting={exporting} preview={preview} />}>
+		<StudioWorkspace
+			leftPanel={<TemplateLeftPanel preview={preview} />}
+			sidebar={<TemplateSidebar exporting={exporting} />}
+		>
 			<TemplateCanvas />
 		</StudioWorkspace>
 	)

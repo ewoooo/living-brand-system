@@ -375,6 +375,54 @@ export const isBackgroundSlot = (slot: TemplateStudioConfigSlot): slot is Templa
 	slot.kind === 'background'
 
 /** slot kind 추가 시 모든 소비 경로가 한 exhaustive switch에서 컴파일 실패하도록 분류한다. */
+/**
+ * 레이어 패널이 보여 주는 **묶음(그룹)** — 슬롯 하나하나가 아니다(사용자 지시, 2026-09-10).
+ *
+ * 🔑 「좀 더 포괄적으로 묶음」: text는 title·subtitle·body 등 **모든 텍스트**를, image는 n개의
+ *    이미지를, CI는 CI를, background는 판의 배경(solid color·image·graphic)을 하나로 묶는다.
+ *    그래서 슬롯이 7개인 템플릿(`poster`)도 목록은 4줄이다 — 「컨트롤러가 너무 많다」의 답이다.
+ * 🔴 순서는 **고정**이다. 그룹은 겹침에서 한 자리를 갖지 않으므로(텍스트와 이미지가 z에서
+ *    엇갈린다) 겹침 순서로 정렬할 수 없다 — 대신 모든 템플릿에서 목록이 같은 모양이 된다.
+ *    배경만은 언제나 맨 아래라서 마지막이다.
+ * 🔴 비어 있는 그룹은 줄을 내지 않는다. 배경은 노드가 아니라 도화지라 항상 있다.
+ */
+export type TemplateLayerGroup = {
+	kind: TemplateStudioConfigSlot['kind']
+	label: string
+	/**
+	 * 이 묶음에 든 슬롯 — 캔버스 하이라이트가 한 번에 집는 대상이고, 레이어 패널이 묶음 아래에
+	 * 이름을 늘어놓는 대상이다(Title·Subtitle·Image 1 …).
+	 * 🔴 이름의 정본은 CMS다 — 텍스트는 Admin의 `input.label`, 그 밖은 노드의 `data-name`이다.
+	 * 🔴 배경은 노드가 아니라 도화지라 **비어 있다.** 하위가 없는 것이 사실이다.
+	 */
+	members: readonly { id: string; label: string }[]
+}
+
+const LAYER_GROUP_ORDER = [
+	{ kind: 'text', label: 'Text' },
+	{ kind: 'image', label: 'Image' },
+	// 벡터 슬롯의 실제 이름은 12개 템플릿에서 CI 10 · Logo 1 · Vector 1이다 — 묶음 이름은 CI다.
+	{ kind: 'vector', label: 'CI' },
+	{ kind: 'background', label: 'Background' },
+] as const satisfies readonly { kind: TemplateStudioConfigSlot['kind']; label: string }[]
+
+export function listTemplateLayerGroups(
+	slots: readonly TemplateStudioConfigSlot[],
+): TemplateLayerGroup[] {
+	const groups: TemplateLayerGroup[] = []
+	for (const { kind, label } of LAYER_GROUP_ORDER) {
+		const matched = slots.filter((slot) => slot.kind === kind)
+		if (!matched.length) continue
+		groups.push({
+			kind,
+			label,
+			// 배경은 도화지 하나라 하위를 갖지 않는다 — 자기 이름을 한 번 더 적지 않는다.
+			members: kind === 'background' ? [] : matched.map(({ id, label }) => ({ id, label })),
+		})
+	}
+	return groups
+}
+
 export function partitionTemplateSlots(slots: readonly TemplateStudioConfigSlot[]) {
 	const text: TemplateTextSlot[] = []
 	const image: TemplateImageConfigSlot[] = []
@@ -757,6 +805,19 @@ export function deriveTemplateStudioConfig(
 			},
 		},
 	]
+
+	// 🔴 슬롯을 **그리는 순서(아래 → 위)** 로 정렬한다. 위에서 세 수집기(text·image·vector)를
+	//    이어 붙였을 뿐이라 그 순서는 판에서 무엇이 위인지와 무관했다 — 레이어 패널이 그것을
+	//    그대로 보여 주면 「겹침 순서」로 읽히는데 사실이 아니었다.
+	// 🔑 문서 순서가 곧 겹침 순서다(템플릿 12개 전부 z-index 0건 · 전부 `position: absolute`).
+	//    그래서 Admin의 `childOrder`가 compose에서 DOM을 재배치하면 이 정렬이 그것을 따라간다.
+	//    배경은 노드가 아니라 도화지라 언제나 맨 아래다.
+	const documentOrder = new Map(
+		Array.from(html.matchAll(/data-node-id="([^"]*)"/g), (match, index) => [match[1], index]),
+	)
+	const orderOf = (slot: TemplateStudioConfigSlot) =>
+		slot.kind === 'background' ? Number.NEGATIVE_INFINITY : (documentOrder.get(slot.id) ?? 0)
+	slots.sort((left, right) => orderOf(left) - orderOf(right))
 
 	const runtimeManifest = getTemplateRuntimeManifest(template)
 	const controllerGroups = runtimeManifest.controller.groups

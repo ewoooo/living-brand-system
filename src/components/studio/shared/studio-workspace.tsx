@@ -39,8 +39,14 @@ export function StudioWorkspacePage({
 
 type StudioWorkspaceProps = {
 	sidebar: React.ReactNode
-	/** 캔버스 왼쪽 패널 — 창작자가 실제로 다루는 큰 축(색 조합·형태)이 앉는 자리. */
-	leftPanel?: React.ReactNode
+	/**
+	 * 캔버스 왼쪽 패널 — 페이지 선택·스타일·판 전체에 걸리는 컨트롤이 앉는 자리.
+	 *
+	 * 🔴 **필수다.** 레이아웃은 콘텐츠와 별개이므로(사용자 지시, 2026-09-10) 안에 그릴 것이
+	 *    없어도 패널은 자리를 지킨다 — 프로파일을 못 불러와도 화면 골격이 바뀌지 않는다.
+	 *    「없으면 접는다」로 두면 로딩·실패·빈 프로파일마다 열 개수가 달라져 화면이 출렁인다.
+	 */
+	leftPanel: React.ReactNode
 	children: React.ReactNode
 }
 
@@ -49,13 +55,10 @@ export function StudioWorkspace({ sidebar, leftPanel, children }: StudioWorkspac
 		// lg 행을 1fr로 못 박아야 컨트롤러가 길어져도 페이지 대신 패널 내부가 스크롤된다.
 		// 사이드바 열은 auto다 — 기본 폭(lg:w-80)은 StudioSidebar가 갖고, Review처럼 패널이
 		// 둘로 늘어나는 화면은 사이드바 쪽이 넓어지고 캔버스가 줄어든다(디자인 78:2706).
+		// 🔴 열 구성은 **항상 같다**. 콘텐츠 유무로 트랙을 바꾸면 레이아웃이 콘텐츠에 딸려간다.
 		<section
 			data-slot="studio-workspace"
-			className={`grid min-h-0 lg:h-full lg:max-h-full lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden ${
-				leftPanel
-					? 'lg:grid-cols-[auto_minmax(0,1fr)_auto]'
-					: 'lg:grid-cols-[minmax(0,1fr)_auto]'
-			}`}
+			className="grid min-h-0 lg:h-full lg:max-h-full lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden"
 		>
 			{/*
 			 * 🔴 overflow를 잠그지 않는다 — 자산 브라우저 패널이 컨트롤러 왼쪽(캔버스 위)으로
@@ -75,17 +78,15 @@ export function StudioWorkspace({ sidebar, leftPanel, children }: StudioWorkspac
 				{children}
 			</div>
 			{/* DOM에서는 캔버스 뒤에 온다 — 좁은 화면에서 이 패널이 캔버스를 밀어내고 맨 위에 서지 않게. */}
-			{/* 🔴 `empty:hidden`: 넘어오는 것은 엘리먼트라 항상 truthy인데 그 컴포넌트가 좌측 축이
-			    없으면 `null`을 반환한다. 그때 이 aside는 내용 없이 `p-4`만 남아 32px 유령 열이
-			    되고 캔버스가 그만큼 줄어든다. `display:none`이면 auto 트랙째 접힌다. */}
-			{leftPanel && (
-				<aside
-					data-slot="studio-workspace-left-panel"
-					className="min-h-0 p-4 empty:hidden lg:order-1 lg:h-full lg:max-h-full"
-				>
-					{leftPanel}
-				</aside>
-			)}
+			{/* 🔴 `empty:hidden`을 쓰지 않는다. 그것은 「그릴 것이 없으면 열을 접는다」였고, 그러면
+			    빈 상태를 만들지 않으려고 패널을 지우게 된다 — 원인을 거꾸로 잡은 처방이었다.
+			    빈 자리는 패널 **안에서** 말한다(`Empty`). */}
+			<aside
+				data-slot="studio-workspace-left-panel"
+				className="min-h-0 p-4 lg:order-1 lg:h-full lg:max-h-full"
+			>
+				{leftPanel}
+			</aside>
 		</section>
 	)
 }
