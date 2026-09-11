@@ -3,7 +3,7 @@ import {
 	type ImageProfilePromptRow,
 	type ImagePromptNormalizationRow,
 	mergeImageProfilePrompt,
-} from '@/features/image-generation/image-profile-prompt'
+} from '@/features/image-generation/domain/image-profile-prompt'
 import { normalizeImagePromptWithAi } from '@/features/image-generation/repositories/image-prompt-normalization.ai.repository'
 
 /** Provider·정규화 모델 미설정을 route/agent 표면이 일반 생성 실패와 구분하기 위한 서비스 오류. */

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/image-generation/image-generation-limits'
+import { IMAGE_PROMPT_MAX_LENGTH } from '@/features/image-generation/domain/image-generation-limits'
 import {
 	collectTemplateImageSlots,
 	collectTemplateSlots,

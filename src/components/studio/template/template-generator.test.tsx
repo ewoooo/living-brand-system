@@ -13,7 +13,10 @@ import {
 	resolveGraphicStudioOutput,
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
-import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
+import {
+	CAMERA_AZIMUTHS,
+	CAMERA_ELEVATIONS,
+} from '@/features/image-generation/domain/camera-control'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
 import type { TemplateSessionPatch } from '@/features/template-customization/domain/template-session-patch'

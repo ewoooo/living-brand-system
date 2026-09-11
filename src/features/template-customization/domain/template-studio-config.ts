@@ -3,16 +3,16 @@ import {
 	parseGraphicStudioConfig,
 } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
-	getImageStudioControls,
-	type ImageStudioConfig,
-	parseImageStudioConfig,
-} from '@/features/image-generation/domain/image-studio-config'
-import {
 	IMAGE_ASPECT_RATIOS,
 	IMAGE_OUTPUT_SIZES,
 	type ImageAspectRatio,
 	type ImageOutputSize,
-} from '@/features/image-generation/image-size'
+} from '@/features/image-generation/domain/image-size'
+import {
+	getImageStudioControls,
+	type ImageStudioConfig,
+	parseImageStudioConfig,
+} from '@/features/image-generation/domain/image-studio-config'
 import { isPrintPpi, type PrintPpi } from '@/features/studio-export/print-policy'
 import {
 	DEFAULT_RASTER_VIDEO_CAPABILITY,

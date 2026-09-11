@@ -3,8 +3,8 @@ import {
 	type CameraElevation,
 	isCameraAzimuth,
 	isCameraElevation,
-} from '@/features/image-generation/camera-control'
-import type { ImageModelPreset } from '@/features/image-generation/image-model'
+} from '@/features/image-generation/domain/camera-control'
+import type { ImageModelPreset } from '@/features/image-generation/domain/image-model'
 import {
 	parseStudioOutputCapability,
 	projectStudioOutputPolicy,

@@ -1,6 +1,6 @@
 import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
-import { CAMERA_AZIMUTHS } from '@/features/image-generation/camera-control'
+import { CAMERA_AZIMUTHS } from '@/features/image-generation/domain/camera-control'
 import { STUDIO_OUTPUT_FORMAT_OPTIONS } from '@/features/studio-export/export-contract'
 import { GraphicProfiles } from '../GraphicProfiles'
 import { ImageProfiles } from '../ImageProfiles'

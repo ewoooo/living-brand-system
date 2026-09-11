@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '../camera-control'
+import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from './camera-control'
 import { getImageRuntimeManifest } from './image-runtime-manifest'
 import {
 	deriveImageStudioConfig,

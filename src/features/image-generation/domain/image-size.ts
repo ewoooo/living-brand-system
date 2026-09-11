@@ -1,4 +1,4 @@
-import type { ImageModelPreset } from '@/features/image-generation/image-model'
+import type { ImageModelPreset } from '@/features/image-generation/domain/image-model'
 
 export const IMAGE_ASPECT_RATIOS = [
 	'1:1',

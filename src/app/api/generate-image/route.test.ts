@@ -246,6 +246,18 @@ describe('POST /api/generate-image', () => {
 		)
 	})
 
+	it('변환 후 첨부 상한을 넘는 본문은 모델 호출 전에 거부한다', async () => {
+		const response = await POST(
+			imageRequest({
+				profileId: 5,
+				prompt: '제품',
+				reference: { upload: `data:image/webp;base64,${'A'.repeat(1_334_000)}` },
+			}),
+		)
+		expect(response.status).toBe(400)
+		expect(mocks.generateImages).not.toHaveBeenCalled()
+	})
+
 	it('첨부만 보내고 프롬프트를 비우면 400으로 거부한다 — 첨부는 프롬프트를 물려주지 않는다', async () => {
 		const response = await POST(
 			imageRequest({ profileId: 5, reference: { upload: 'data:image/png;base64,AAAA' } }),

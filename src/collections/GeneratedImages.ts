@@ -2,7 +2,7 @@ import type { CollectionConfig, FieldAccess } from 'payload'
 import {
 	IMAGE_ASPECT_RATIO_OPTIONS,
 	IMAGE_OUTPUT_SIZE_OPTIONS,
-} from '@/features/image-generation/image-size'
+} from '@/features/image-generation/domain/image-size'
 import { templateAssetReferenceGuardHooks } from '@/features/template-core/services/guard-template-references.service'
 import { isManager } from '@/lib/auth'
 import { draftVersions } from './shared'
