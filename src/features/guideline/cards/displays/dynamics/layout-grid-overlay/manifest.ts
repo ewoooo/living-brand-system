@@ -1,4 +1,4 @@
-import type { GuidelineControllerManifest } from '@/features/guideline/controllers/contract'
+import type { GuidelineControllerManifest } from '@/features/guideline/domain/contract/controller'
 
 // 원본 좌표에서 조절한다. 표시 영역의 너비·높이는 카드가 소유한다.
 export const OVERLAY_CONTROLS = [

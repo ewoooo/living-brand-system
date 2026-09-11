@@ -3,8 +3,11 @@
 import { usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/global/sidebar/sidebar'
 import { CopyPageLink } from '@/components/shared/copy-page-link'
+import {
+	scrollToGuidelineSection,
+	useActiveSectionAnchor,
+} from '@/features/guideline/hooks/use-guideline-section-navigation'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
-import { scrollToGuidelineSection, useActiveSectionAnchor } from './guideline-section-navigation'
 
 /**
  * 좌측 가이드라인 탐색 — chapter → topic → 현재 topic의 섹션 앵커를 표시한다.

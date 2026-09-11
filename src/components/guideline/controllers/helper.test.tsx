@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
-import { GuidelineHelperProvider, GuidelineHelperRegion, GuidelineHelperSlot } from './helper'
+import { GuidelineHelperProvider } from '@/features/guideline/providers/guideline-helper-provider'
+import { GuidelineHelperRegion, GuidelineHelperSlot } from './helper'
 
 afterEach(() => {
 	cleanup()

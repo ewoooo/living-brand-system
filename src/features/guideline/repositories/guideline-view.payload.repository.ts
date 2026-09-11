@@ -3,39 +3,12 @@ import { getPayload } from 'payload'
 import { FALLBACK_LOCALE, DEFAULT_LOCALE as LOCALE } from '@/lib/locale'
 import type { GuidelineDocument } from '@/payload-types'
 
-export type GuidelineBlocks = GuidelineDocument['blocks']
-export type GuidelineHeaderImage = GuidelineDocument['headerImage']
-
-export interface GuidelineMetadataData {
-	companyName: string
-	documentTitle: string
-	faviconHref: string | null
-	issuedLabel: string | null
-	primaryDarkHex: string | null
-	primaryHex: string | null
-}
-
-export interface GuidelineChapterData {
-	displayOrder: number
-	id: number
-	slug: string
-	title: string
-}
-
-export interface GuidelineNavigationTopicData {
-	chapterId: number | null
-	id: number
-	sections: { anchor: string; title: string }[]
-	slug: string
-	title: string
-}
-
-export interface GuidelineTopicData {
-	blocks: GuidelineBlocks
-	headerImage: GuidelineHeaderImage
-	id: number
-	title: string
-}
+import type {
+	GuidelineChapterData,
+	GuidelineMetadataData,
+	GuidelineNavigationTopicData,
+	GuidelineTopicData,
+} from '../domain/contract/guideline'
 
 /**
  * Creator UI 렌더링용 published guideline 조회 repository.

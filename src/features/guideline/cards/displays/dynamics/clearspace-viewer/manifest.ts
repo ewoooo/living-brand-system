@@ -1,4 +1,4 @@
-import type { GuidelineControllerManifest } from '@/features/guideline/controllers/contract'
+import type { GuidelineControllerManifest } from '@/features/guideline/domain/contract/controller'
 import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
 
 // 이 위젯이 여는 컨트롤. 🔴 react·에셋을 import하지 않는다 — `schema.ts`가 읽을 수 있어야 한다.

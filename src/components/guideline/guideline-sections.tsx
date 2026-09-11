@@ -1,5 +1,5 @@
+import { renderBlock } from '@/features/guideline/blocks/registry.render'
 import type { GuidelineDocument } from '@/payload-types'
-import { renderBlock } from '../blocks/registry.render'
 
 export function GuidelineSections({
 	blocks,

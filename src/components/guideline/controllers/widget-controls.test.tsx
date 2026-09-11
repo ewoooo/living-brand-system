@@ -1,12 +1,12 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, expect, it } from 'vitest'
-import { TypeSpecimenWidget } from '../cards/displays/dynamics/type-specimen/component'
-import { TIER_PRESETS } from '../cards/displays/dynamics/type-specimen/manifest'
-import { TypeWeightWidget } from '../cards/displays/dynamics/type-weight/component'
-import type { DisplayData } from '../cards/displays/registry.render'
+import { TypeSpecimenWidget } from '@/features/guideline/cards/displays/dynamics/type-specimen/component'
+import { TIER_PRESETS } from '@/features/guideline/cards/displays/dynamics/type-specimen/manifest'
+import { TypeWeightWidget } from '@/features/guideline/cards/displays/dynamics/type-weight/component'
+import { cardControllerFor } from '@/features/guideline/controllers/registry'
+import type { DisplayData } from '@/features/guideline/domain/contract/display'
+import { GuidelineControllerScope } from '@/features/guideline/providers/guideline-controller-provider'
 import { GuidelineControllerPill } from './pill'
-import { GuidelineControllerScope } from './provider'
-import { cardControllerFor } from './registry'
 
 afterEach(cleanup)
 

@@ -40,7 +40,7 @@ grep -rl "Badge\|Card\|Typography" src/components src/features
 | className 병합 | `@/lib/utils`의 `cn` |
 | 색 파생(전경색·RGB) | `@/lib/color` (`hexToRgb`, `getContrastingForeground`) |
 | 콘텐츠 최대 폭 | `ContentFrame` (`src/components/shared/content-frame.tsx`) |
-| 카드 줄 높이·섹션 간격 | `GuidelineSections`·`GridContainer`·`CarouselContainer`, 공유 높이는 `components/sections/row-height.ts` |
+| 카드 줄 높이·섹션 간격 | `GuidelineSections`·`GridContainer`·`CarouselContainer`, 공유 높이는 `src/components/guideline/sections/row-height.ts` |
 
 shadcn 4.12의 공식 아이콘 목록에는 Carbon이 없어 `components.json`은 `radix-mira`가 지원하는 `hugeicons` 값을 유지합니다. 이 값은 생성기 호환용일 뿐 저장소의 아이콘 정책이 아닙니다. shadcn 컴포넌트를 추가한 같은 변경에서 생성된 아이콘을 `@carbon/icons-react`로 바꾸고, `@hugeicons/*` import가 0건인지 확인한 뒤 커밋합니다. `iconLibrary`를 임의의 `carbon` 문자열로 바꾸면 레지스트리의 `IconPlaceholder`가 변환되지 않으므로 금지합니다.
 

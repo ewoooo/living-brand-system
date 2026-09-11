@@ -1,3 +1,8 @@
+import type {
+	CardController,
+	GuidelineControllerManifest,
+} from '@/features/guideline/domain/contract/controller'
+import type { DisplayData } from '@/features/guideline/domain/contract/display'
 import type { StudioControllerRestrictions } from '@/modules/studio-controller/controller-definition'
 import {
 	CI_LOCKUP_MANIFEST,
@@ -13,8 +18,6 @@ import { typeHierarchyController } from '../cards/displays/dynamics/type-hierarc
 import { typeLanguageController } from '../cards/displays/dynamics/type-language/manifest'
 import { TYPE_SPECIMEN_MANIFEST } from '../cards/displays/dynamics/type-specimen/manifest'
 import { typeWeightController } from '../cards/displays/dynamics/type-weight/manifest'
-import type { DisplayData } from '../cards/displays/registry.render'
-import type { CardController, GuidelineControllerManifest } from './contract'
 
 type ControllerEntry = {
 	manifest: GuidelineControllerManifest
