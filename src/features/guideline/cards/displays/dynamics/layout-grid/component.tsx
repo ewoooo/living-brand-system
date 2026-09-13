@@ -2,11 +2,8 @@
 
 import type { StaticImageData } from 'next/image'
 import { type CSSProperties, type ReactNode, useEffect, useState } from 'react'
-import {
-	controllerBoolean,
-	controllerNumber,
-	useGuidelineController,
-} from '@/features/guideline/controllers/provider'
+import { controllerBoolean, controllerNumber } from '@/features/guideline/domain/controller-values'
+import { useGuidelineController } from '@/features/guideline/hooks/use-guideline-controller'
 import type { LayoutGridWidget as LayoutGridWidgetRow } from '@/payload-types'
 import { WIDGET_CAPTION } from '../readout'
 import {

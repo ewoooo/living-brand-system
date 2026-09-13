@@ -1,3 +1,5 @@
+'use client'
+
 import { type MouseEvent, useEffect, useState } from 'react'
 
 /** 중첩 스크롤 컨테이너를 직접 움직인다(브라우저 기본 #앵커는 부모 프레임을 스크롤함). */

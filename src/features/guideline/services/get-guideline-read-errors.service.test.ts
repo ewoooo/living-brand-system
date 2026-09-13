@@ -5,7 +5,7 @@ import {
 	findPublishedTopicBySlug,
 	listGuidelineChapters,
 	listPublishedGuidelineNavigationTopics,
-} from '../repositories/guideline-view.payload.repository'
+} from '@/features/guideline/repositories/guideline-view.payload.repository'
 import { getGuidelineMetadata } from './get-guideline-metadata.service'
 import { getGuidelineNavigation } from './get-guideline-navigation.service'
 import { getGuidelineTopic } from './get-guideline-topic.service'

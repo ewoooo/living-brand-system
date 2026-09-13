@@ -1,6 +1,7 @@
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel'
-import type { RowHeight } from '../../blocks/fields'
-import { type CardData, GuidelineCard } from '../../cards/component'
+import type { RowHeight } from '@/features/guideline/blocks/fields'
+import { GuidelineCard } from '@/features/guideline/cards/component'
+import type { CardData } from '@/features/guideline/domain/contract/display'
 import { CARD_ROW_HEIGHT } from './row-height'
 
 export function CarouselContainer({

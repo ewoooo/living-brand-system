@@ -71,15 +71,15 @@ Mark는 **저작자가 붙이는 사례 표식**입니다. 검수 Rule·검수 �
 | 기본 본문·rem | `src/app/(frontend)/styles.css` | 앱 기본값 |
 | 셸·스크롤·main | `src/components/global/section-layout.tsx` | 가이드라인 외 화면도 공유 |
 | 본문 최대 폭·가로 패딩 | `src/components/shared/content-frame.tsx` | `padded`는 도판, `heading`은 블록 제목 |
-| 섹션 간격 | `components/guideline-sections.tsx` | 섹션 목록 |
-| 카드 줄 높이·격자 간격 | `components/sections/row-height.ts`·`grid-container.tsx`·`carousel-container.tsx` | 콘텐츠 배치 |
-| 산문의 역할별 크기·굵기·행간·자간 | `components/typography/guideline-typography.ts` | 제목·블록 설명·캡션·스펙. 도판 내부 표본은 제외 |
-| 토픽·블록 헤딩 | `components/typography/guideline-header.tsx` | h1·h2 의미와 텍스트 단계 |
-| 블록 설명 | `components/typography/guideline-description.tsx` | 설명의 기본 서식 |
+| 섹션 간격 | `src/components/guideline/guideline-sections.tsx` | 섹션 목록 |
+| 카드 줄 높이·격자 간격 | `src/components/guideline/sections/row-height.ts`·`grid-container.tsx`·`carousel-container.tsx` | 콘텐츠 배치 |
+| 산문의 역할별 크기·굵기·행간·자간 | `src/components/guideline/typography/guideline-typography.ts` | 제목·블록 설명·캡션·스펙. 도판 내부 표본은 제외 |
+| 토픽·블록 헤딩 | `src/components/guideline/typography/guideline-header.tsx` | h1·h2 의미와 텍스트 단계 |
+| 블록 설명 | `src/components/guideline/typography/guideline-description.tsx` | 설명의 기본 서식 |
 | 카드 프레임·Mark | `cards/component.tsx`·`cards/mark.tsx` | 비율·클리핑·표식의 위치 |
 | 동적 디스플레이의 크기 | `cards/component.tsx`와 각 위젯 루트 | 카드 영역을 채움. 자체 고정 크기·내부 스크롤·전체 자동 축소 없음 |
 | 하단·오버레이 캡션 | `cards/caption/component.tsx` | 크기·굵기·행간·패딩·텍스트 폭 |
-| 2열 스펙 표 | `components/typography/spec-table-converters.tsx` | 라벨·값 목록. 다른 열 수는 기본 표 |
+| 2열 스펙 표 | `src/components/guideline/typography/spec-table-converters.tsx` | 라벨·값 목록. 다른 열 수는 기본 표 |
 | 브랜드 표본 면 | `cards/displays/dynamics/surface.ts` | 테마 면과 규정에 고정된 브랜드 면 구분 |
 | 위젯 판독·컨트롤 값 | `cards/displays/dynamics/readout.ts` | 캡션과 별개의 도판 내부 텍스트 |
 
@@ -198,7 +198,7 @@ GuidelineTopic
 
 페이지는 구성을, 섹션은 제목과 콘텐츠의 관계를, 카드는 표본·표식·캡션의 관계를 보여줍니다. CMS 데이터는 기존 블록 타입과 필드를 유지하며 `CardBlock`·`prepareCards`가 화면 모델로 연결합니다. Provider·Helper와 편집 프리뷰는 이 표현 계층을 지원하는 별도 동작입니다.
 
-`components/globals`는 역할별로 분리했습니다. 탐색은 `components/navigation`, 서체·설명·명세 표는 `components/typography`, 이미지는 `components/media`, 섹션 배치는 `components/sections`, 조작 상태·활성 영역·하단 컨트롤러는 `controllers`가 소유합니다. 개별 위젯의 렌더 진입점과 브랜드 규정·계산은 `cards/displays`에 유지합니다. 인덱스도 `GuidelineOnboardDisplay`·`GuidelineChapters`·빈 `GuidelineFooter` 조합으로 읽힙니다.
+`components/globals`는 역할별로 분리했습니다. 탐색은 `src/components/guideline/navigation`, 서체·설명·명세 표는 `src/components/guideline/typography`, 이미지는 `src/components/guideline/media`, 섹션 배치는 `src/components/guideline/sections`, 조작 상태·활성 영역 관측은 `features/guideline/providers`, Context 계약은 `contexts`, 소비 훅은 `hooks`, 하단 컨트롤 표현은 `src/components/guideline/controllers`가 소유합니다. 개별 위젯의 렌더 진입점과 브랜드 규정·계산은 `cards/displays`에 유지합니다. 인덱스도 `GuidelineOnboardDisplay`·`GuidelineChapters`·빈 `GuidelineFooter` 조합으로 읽힙니다.
 
 푸터는 본문 다음의 빈 요소로 위치만 선언합니다. 임의 높이·메뉴·저작권 문구를 추가하지 않습니다. 설명 최대 폭 767px, 그리드 영역의 중앙 배치, 기존 카드 비율·캡션 모바일 전환·서버 데이터 조회·앵커·카드별 조작 상태를 유지합니다.
 

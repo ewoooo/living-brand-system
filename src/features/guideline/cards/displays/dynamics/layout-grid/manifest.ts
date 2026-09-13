@@ -1,4 +1,4 @@
-import type { GuidelineControllerManifest } from '@/features/guideline/controllers/contract'
+import type { GuidelineControllerManifest } from '@/features/guideline/domain/contract/controller'
 import type {
 	ControllerControlDefinition,
 	ControllerControlRestriction,

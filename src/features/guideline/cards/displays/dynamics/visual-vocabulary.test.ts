@@ -3,7 +3,7 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 // 가이드라인 표면(블록·카드·컴포넌트·위젯)이 색을 **공유 어휘로만** 말하는지 지킨다(계약은 `docs/11` §8, 토큰 규칙은 `docs/09` §4).
-// 2026-09-08부터 스캔 루트는 위젯 폴더가 아니라 `features/guideline` 전체다 — 카드 모델에서 판·배지·캡션이 위젯 밖으로 나왔다.
+// 등록형 렌더와 일반 화면을 함께 검사한다 — 폴더 이동으로 검사 범위가 줄어들면 안 된다.
 //
 // 🔴 왜 필요한가: 위젯 19개가 반복되는 시각 요소를 각자 만들어, 한 페이지 안에서 같은 것이 다르게
 //    표기됐다. 그걸 정리한 뒤에도 새 위젯이 같은 길로 다시 갈 수 있고, 생 팔레트는 리뷰에서
@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest'
 // 테마를 따르면 안 되고, 그 예외를 한 파일에 모아 두는 것이 이 규칙의 설계다.
 
 const GUIDELINE = path.join(process.cwd(), 'src/features/guideline')
+const COMPONENTS = path.join(process.cwd(), 'src/components/guideline')
 const WIDGETS = path.join(GUIDELINE, 'cards/displays/dynamics')
 
 /** 브랜드 면의 고정 팔레트를 갖는 유일한 자리. */
@@ -107,7 +108,7 @@ function offendingLines(file: string, pattern: RegExp): string[] {
 }
 
 describe('가이드라인 시각 어휘', () => {
-	const files = sourceFiles(GUIDELINE).filter(
+	const files = [...sourceFiles(GUIDELINE), ...sourceFiles(COMPONENTS)].filter(
 		(file) => file !== path.join(WIDGETS, DECLARED_EXCEPTION),
 	)
 

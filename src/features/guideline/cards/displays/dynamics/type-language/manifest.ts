@@ -1,7 +1,7 @@
 import type {
 	CardController,
 	GuidelineControllerManifest,
-} from '@/features/guideline/controllers/contract'
+} from '@/features/guideline/domain/contract/controller'
 import type { TypeLanguageWidget } from '@/payload-types'
 import { LANGUAGES } from '../brand-typeface'
 

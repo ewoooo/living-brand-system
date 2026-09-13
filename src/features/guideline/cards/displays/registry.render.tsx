@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { CardData } from '../component'
+import type { DisplayData } from '@/features/guideline/domain/contract/display'
 import CiLockupDisplay from './dynamics/ci-lockup/component'
 import CiLockupHeroDisplay from './dynamics/ci-lockup-hero/component'
 import ClearspaceOverlayDisplay from './dynamics/clearspace-overlay/component'
@@ -22,7 +22,6 @@ import TypeWeightDisplay from './dynamics/type-weight/component'
 import type { DisplayId } from './registry'
 import StaticDisplayDisplay from './static/component'
 
-export type DisplayData = NonNullable<CardData['display']>[number]
 type Row<K extends DisplayId> = Extract<DisplayData, { blockType: K }>
 type DisplayComponent<K extends DisplayId> = (props: {
 	display: Row<K>

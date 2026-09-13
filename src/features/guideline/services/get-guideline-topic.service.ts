@@ -1,9 +1,11 @@
+import type {
+	GuidelineBlocks,
+	GuidelineHeaderImage,
+} from '@/features/guideline/domain/contract/guideline'
 import {
 	findChapterBySlug,
 	findPublishedTopicBySlug,
-	type GuidelineBlocks,
-	type GuidelineHeaderImage,
-} from '../repositories/guideline-view.payload.repository'
+} from '@/features/guideline/repositories/guideline-view.payload.repository'
 
 export interface GetGuidelineTopicOutput {
 	title: string

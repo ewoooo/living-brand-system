@@ -1,7 +1,7 @@
+import { GuidelineSection } from '@/components/guideline/sections/guideline-section'
+import { SectionContents } from '@/components/guideline/sections/section-contents'
+import { SectionHeadings } from '@/components/guideline/sections/section-headings'
 import type { BaseBlock } from '@/payload-types'
-import { GuidelineSection } from '../components/sections/guideline-section'
-import { SectionContents } from '../components/sections/section-contents'
-import { SectionHeadings } from '../components/sections/section-headings'
 import { prepareCards } from './prepare-cards'
 
 export type CardBlockData = Pick<

@@ -1,17 +1,14 @@
 'use client'
 
+import { GUIDELINE_TYPOGRAPHY } from '@/components/guideline/typography/guideline-typography'
+import { GuidelineSpecTable } from '@/components/guideline/typography/spec-table'
 import { Typography } from '@/components/ui/typography'
-import { GUIDELINE_TYPOGRAPHY } from '@/features/guideline/components/typography/guideline-typography'
-import { GuidelineSpecTable } from '@/features/guideline/components/typography/spec-table'
-import {
-	controllerNumber,
-	controllerString,
-	useGuidelineController,
-} from '@/features/guideline/controllers/provider'
+import type { DisplayData } from '@/features/guideline/domain/contract/display'
+import { controllerNumber, controllerString } from '@/features/guideline/domain/controller-values'
+import { useGuidelineController } from '@/features/guideline/hooks/use-guideline-controller'
 import { LANGUAGES, LEADING, TIER_SIZE, TIERS } from '../displays/dynamics/brand-typeface'
 import { OVERLAY_CONTROLS } from '../displays/dynamics/layout-grid-overlay/manifest'
 import { LANGUAGE } from '../displays/dynamics/type-language/manifest'
-import type { DisplayData } from '../displays/registry.render'
 
 /** 언어 카드는 블록 제목 대신 현재 언어를 캡션 제목으로 표시한다. */
 export function TypeLanguageCaptionTitle({

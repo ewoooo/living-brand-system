@@ -120,7 +120,7 @@ rg -n '#[0-9a-fA-F]{3,8}\b|(?:bg|text|border|ring|fill|from|to|via)-(?:(?:red|or
 
 14px 텍스트와 함께 쓰는 아이콘은 `size-4`, 16px 텍스트와 함께 쓰는 아이콘은 `size-5`를 기본으로 합니다. 일반 컴포넌트에는 `clamp()`·`vw`·반응형 `text-*`·임의 글자 크기를 선언하지 않습니다.
 
-가이드라인의 역할별 크기·굵기·행간·자간은 `features/guideline/components/typography/guideline-typography.ts`가 소유합니다. 토픽 제목은 `text-6xl`, 동급 블록 제목은 `text-5xl`, 블록 설명·하단 캡션은 `text-xl`, 오버레이 캡션은 `text-base`, 스펙 라벨·값은 `text-sm`을 소비합니다. 이 역할 매핑은 가이드라인 본문에만 적용하고 일반 화면의 제목·컨트롤에는 적용하지 않습니다. `text-sm`처럼 제품에서 재정의한 유틸리티의 실제 크기는 Tailwind 기본값이 아닌 `theme.css`에서 확인합니다.
+가이드라인의 역할별 크기·굵기·행간·자간은 `components/guideline/typography/guideline-typography.ts`가 소유합니다. 토픽 제목은 `text-6xl`, 동급 블록 제목은 `text-5xl`, 블록 설명·하단 캡션은 `text-xl`, 오버레이 캡션은 `text-base`, 스펙 라벨·값은 `text-sm`을 소비합니다. 이 역할 매핑은 가이드라인 본문에만 적용하고 일반 화면의 제목·컨트롤에는 적용하지 않습니다. `text-sm`처럼 제품에서 재정의한 유틸리티의 실제 크기는 Tailwind 기본값이 아닌 `theme.css`에서 확인합니다.
 
 카드 캡션 제목·설명은 같은 크기와 Medium, 행간 155%를 사용합니다(사용자 지정 2026-09-08). 블록 설명과 스펙 값은 Regular로 구분합니다. 캡션 설명과 스펙 값은 `text-muted-foreground`, 서체는 `font-body`입니다. 하단 캡션의 배치·폭·여백은 계속 `cards/caption/component.tsx`가 소유합니다. 섹션·블록 설명은 `SectionHeadings`에서 최대 폭 767px로 제한하며, 좁은 화면에서는 부모 영역에 맞춰 줄어듭니다. 기존 설명의 오른쪽 32px 패딩은 이 최대 폭 안에 포함됩니다.
 
@@ -159,7 +159,7 @@ HTML 의미와 시각 역할은 분리합니다. `GuidelineHeader`가 h1/h2를 �
 
 모바일(md 미만)에서는 카드가 부모 폭을 채우며, 격자는 한 열로 쌓이고 캐러셀은 한 카드씩 넘깁니다. 그리드 영역은 `ContentFrame` 안에 중앙 배치하고, 카드는 `justify-content: flex-start`로 마지막 행까지 첫 열부터 채웁니다. 설명의 오른쪽 32px 패딩은 최대 폭 767px 안에 포함됩니다.
 
-`blocks/rhythm.ts`는 제거했습니다. 각 배치 컴포넌트가 자기 간격을 소유하고, 캐러셀에서 사용하는 행 높이만 `components/sections/row-height.ts`의 `CARD_ROW_HEIGHT`로 공유합니다. 폭·가로 여백의 기본값은 공용 `ContentFrame`을 재사용합니다. 페이지에 중복 패딩을 추가하지 않습니다.
+`blocks/rhythm.ts`는 제거했습니다. 각 배치 컴포넌트가 자기 간격을 소유하고, 캐러셀에서 사용하는 행 높이만 `src/components/guideline/sections/row-height.ts`의 `CARD_ROW_HEIGHT`로 공유합니다. 폭·가로 여백의 기본값은 공용 `ContentFrame`을 재사용합니다. 페이지에 중복 패딩을 추가하지 않습니다.
 
 CMS `section`·`base`·`overview`·`examples`는 `CardBlock` 어댑터가 같은 `GuidelineSection`으로 연결합니다. `prepareCards`는 저장 데이터를 바꾸지 않고 언어 비교를 독립 카드로 펼칩니다. 컨트롤러와 프리뷰 상태는 화면 구성과 별도이며 푸터에 넣지 않습니다. 하단 캡션은 카드 폭 안에서 제한하고 왼쪽에 붙입니다.
 
