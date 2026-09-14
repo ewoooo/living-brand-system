@@ -83,7 +83,8 @@ export function createKeyVisualFormationRuntime({
 				preview.rect(0, 0, preview.width, preview.height)
 			}
 			preview.fill(scene.lineColor)
-			for (const band of scene.bands) {
+			// 자리 쪽 면도 선과 같은 색이다 — 선이 모여 그 면이 된 것이다.
+			for (const band of [...(scene.planeBand ? [scene.planeBand] : []), ...scene.bands]) {
 				preview.rect(band.x, band.y, band.width, band.height)
 			}
 		}

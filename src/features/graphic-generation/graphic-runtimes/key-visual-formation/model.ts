@@ -105,9 +105,14 @@ export type KeyVisualFormationScene = {
 	planeImage: string | null
 	dimmerOpacity: number
 	lineColor: string
-	/** 면 **위에** 얹히는 선들. 면을 그리는 밴드는 없다 — 면이 곧 판이다. */
+	/** 선의 영역 안의 선들. 판 배경(면 색) 위에 얹힌다. */
 	bands: KeyVisualFormationBand[]
-	/** 선의 영역 양쪽에 남는 순수한 면 — [자리 쪽, 반대쪽]. 각각 0일 수 있다. */
+	/**
+	 * 「선의 자리」 쪽 면 — **선 색으로 꽉 찬 사각형**이다. 선이 모여 만들어진 면이라 판 배경이
+	 * 아니라 선과 같은 색을 쓴다. 비율이 0이면 없다.
+	 */
+	planeBand: KeyVisualFormationBand | null
+	/** 선의 영역 양쪽에 남는 면의 길이 — [자리 쪽, 반대쪽]. 각각 0일 수 있다. */
 	planeAreas: readonly [number, number]
 }
 
@@ -157,17 +162,16 @@ export function createKeyVisualFormationScene(
 		const progress = (input.steps - index) / input.steps
 		const size = clamp(unit * progress ** input.decay, minWeight, unit - minWeight)
 		const distance = nearPlane + index * unit
-		const offset = nearEdge ? distance : axisLength - distance - size
-		bands.push(
-			vertical
-				? { x: 0, y: offset, width: crossLength, height: size }
-				: { x: offset, y: 0, width: size, height: crossLength },
-		)
+		bands.push(toBand(vertical, nearEdge, axisLength, crossLength, distance, size))
 	}
 
 	return {
 		width: viewport.width,
 		height: viewport.height,
+		planeBand:
+			nearPlane > 0
+				? toBand(vertical, nearEdge, axisLength, crossLength, 0, nearPlane)
+				: null,
 		planeColor: keyVisualFormationColorHex(input.planeColor),
 		planeImage: input.planeImage,
 		dimmerOpacity: input.dimmer ? input.dimmerOpacity : 0,
@@ -175,6 +179,21 @@ export function createKeyVisualFormationScene(
 		bands,
 		planeAreas: [nearPlane, axisLength - nearPlane - lineArea],
 	}
+}
+
+/** 「선의 자리」 변에서 잰 거리·두께를 판 좌표의 사각형으로 옮긴다 — 방향 뒤집기는 여기 한 곳뿐이다. */
+function toBand(
+	vertical: boolean,
+	nearEdge: boolean,
+	axisLength: number,
+	crossLength: number,
+	distance: number,
+	size: number,
+): KeyVisualFormationBand {
+	const offset = nearEdge ? distance : axisLength - distance - size
+	return vertical
+		? { x: 0, y: offset, width: crossLength, height: size }
+		: { x: offset, y: 0, width: size, height: crossLength }
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -208,7 +227,8 @@ export function createKeyVisualFormationVectorArtifact(
 			opacity: scene.dimmerOpacity,
 		})
 	}
-	for (const band of scene.bands) {
+	// 자리 쪽 면과 선은 같은 색이다 — 선이 모여 그 면이 된 것이라 색이 갈리면 안 된다.
+	for (const band of [...(scene.planeBand ? [scene.planeBand] : []), ...scene.bands]) {
 		primitives.push({
 			kind: 'rect',
 			x: band.x,

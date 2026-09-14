@@ -72,8 +72,31 @@ describe('createKeyVisualFormationScene', () => {
 })
 
 describe('판은 [면] [선의 영역] [면] 세 토막이다', () => {
-	it('면 영역 비율이 0이면 선이 자리 변에 붙는다', () => {
-		expect(scene({ planeRatio: 0 }).planeAreas[0]).toBe(0)
+	it('면 영역 비율이 0이면 선이 자리 변에 붙고 채워진 면이 없다', () => {
+		const result = scene({ planeRatio: 0 })
+		expect(result.planeAreas[0]).toBe(0)
+		expect(result.planeBand).toBeNull()
+	})
+
+	it('자리 쪽 면은 선 색으로 꽉 찬 사각형이다 — 선이 모여 만들어진 면이라서', () => {
+		const result = scene({ planeRatio: 0.2, lineRatio: 0.3 })
+		expect(result.planeBand).toMatchObject({
+			x: 0,
+			width: viewport.width,
+			height: viewport.height * 0.2,
+		})
+		// 자리(아래)에 닿아 있고 선의 영역이 그 위에 이어진다.
+		expect((result.planeBand?.y ?? 0) + (result.planeBand?.height ?? 0)).toBeCloseTo(
+			viewport.height,
+			6,
+		)
+		const artifact = createKeyVisualFormationVectorArtifact(result)
+		const fills = new Set(
+			artifact.source.primitives.map((primitive) =>
+				primitive.kind === 'rect' ? primitive.fill : null,
+			),
+		)
+		expect(fills).toEqual(new Set([result.lineColor]))
 	})
 
 	it('두 비율이 앞의 두 토막을 정하고 나머지가 반대쪽 면이다', () => {
