@@ -5,6 +5,8 @@ import flutedGlassManifest from '../fluted-glass/definition'
 import flutedGlassModel from '../fluted-glass/model'
 import forwardStraightManifest from '../forward-straight/definition'
 import forwardStraightModel from '../forward-straight/model'
+import infographicManifest from '../infographic/definition'
+import infographicModel from '../infographic/model'
 import keyVisualFormationManifest from '../key-visual-formation/definition'
 import keyVisualFormationModel from '../key-visual-formation/model'
 import keyVisualLineManifest from '../key-visual-line/definition'
@@ -15,6 +17,7 @@ import keyVisualPatternModel from '../key-visual-pattern/model'
 export const graphicStudioPlugins = [
 	{ manifest: flutedGlassManifest, ...flutedGlassModel },
 	{ manifest: forwardStraightManifest, ...forwardStraightModel },
+	{ manifest: infographicManifest, ...infographicModel },
 	{ manifest: keyVisualFormationManifest, ...keyVisualFormationModel },
 	{ manifest: keyVisualLineManifest, ...keyVisualLineModel },
 	{ manifest: keyVisualPatternManifest, ...keyVisualPatternModel },

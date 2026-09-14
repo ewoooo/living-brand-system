@@ -1,3 +1,4 @@
+import { isGraphicKind } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { listGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.service'
 import { authenticateRequest, isCrossOriginRequest } from '@/lib/request-auth'
 
@@ -20,7 +21,11 @@ export async function GET(request: Request) {
 	}
 
 	try {
-		return Response.json({ profiles: await listGraphicStudioConfigs(user) })
+		// 어느 메뉴가 물었는지에 따라 교체 후보가 갈린다 — 모르는 값은 Graphic으로 읽는다.
+		const kind = new URL(request.url).searchParams.get('kind')
+		return Response.json({
+			profiles: await listGraphicStudioConfigs(user, isGraphicKind(kind) ? kind : 'graphic'),
+		})
 	} catch (error) {
 		payload.logger.error({ err: error }, 'studio-graphic-list.failed')
 		return Response.json({ message: 'Failed to load graphic profiles.' }, { status: 500 })

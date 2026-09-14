@@ -1,3 +1,7 @@
+import {
+	filterConfigsByStudioKind,
+	type StudioGraphicKind,
+} from '@/features/graphic-generation/domain/graphic-studio-config'
 import { deriveGraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import { listPublishedGraphicProfileDefinitions } from '@/features/graphic-generation/repositories/graphic-profile.payload.repository'
 
@@ -5,7 +9,7 @@ import { listPublishedGraphicProfileDefinitions } from '@/features/graphic-gener
  * 유스케이스 경계: published Graphic Profile을 runtime 기본값보다 좁은 Studio Config 목록으로 만든다.
  * Payload 조회 I/O는 repository가 소유한다.
  */
-export async function listGraphicStudioConfigs(user: unknown) {
+export async function listGraphicStudioConfigs(user: unknown, kind: StudioGraphicKind = 'graphic') {
 	const profiles = await listPublishedGraphicProfileDefinitions(user)
-	return profiles.map(deriveGraphicStudioConfig)
+	return filterConfigsByStudioKind(profiles.map(deriveGraphicStudioConfig), kind)
 }

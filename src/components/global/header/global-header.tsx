@@ -19,6 +19,7 @@ type GuidelineSearchChapter = GetGuidelineNavigationOutput['chapters'][number]
 
 type NavigationHeaderUpdateKey =
 	| 'assets'
+	| 'graph'
 	| 'graphic'
 	| 'guideline'
 	| 'image'
@@ -123,6 +124,12 @@ export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderPr
 			hasUpdate: updates.graphic,
 			href: routes.studio.graphic,
 			label: 'Graphic',
+		},
+		{
+			current: isCurrentPath(pathname, routes.studio.graph),
+			hasUpdate: updates.graph,
+			href: routes.studio.graph,
+			label: 'Graph',
 		},
 	] as const
 	const studioSettingItems = [

@@ -112,3 +112,26 @@ function assertOnlyKeys(value: Record<string, unknown>, allowed: readonly string
 		}
 	}
 }
+
+/**
+ * 같은 Graphic 파이프라인을 쓰지만 창작자에게는 **다른 메뉴**로 서는 갈래.
+ *
+ * 🔑 컬렉션을 쪼개지 않은 이유: 계약(Manifest→Restriction→Config→Export)이 완전히 같고 다른 것은
+ *    "어느 메뉴에 서는가"뿐이다. 컬렉션·repository·서비스를 복제하면 같은 규칙을 두 번 구현하게 된다.
+ * 🔴 여기 없는 runtime은 전부 Graphic에 선다 — 새 runtime을 Graph에 세우려면 이 목록에 넣는다.
+ */
+export const GRAPH_RUNTIME_IDS: readonly string[] = ['infographic']
+
+export type StudioGraphicKind = 'graphic' | 'graph'
+
+export function isGraphicKind(kind: unknown): kind is StudioGraphicKind {
+	return kind === 'graphic' || kind === 'graph'
+}
+
+/** runtime id로 두 메뉴의 목록을 가른다. 한 runtime은 한 메뉴에만 선다. */
+export function filterConfigsByStudioKind<Config extends { id: string }>(
+	configs: readonly Config[],
+	kind: StudioGraphicKind,
+): Config[] {
+	return configs.filter((config) => GRAPH_RUNTIME_IDS.includes(config.id) === (kind === 'graph'))
+}

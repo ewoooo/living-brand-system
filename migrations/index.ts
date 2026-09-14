@@ -110,6 +110,7 @@ import * as migration_20260909_023814_add_guideline_grid_columns from './2026090
 import * as migration_20260910_021805_add_nano_banana_2 from './20260910_021805_add_nano_banana_2';
 import * as migration_20260911_075556_add_key_visual_line_runtime from './20260911_075556_add_key_visual_line_runtime';
 import * as migration_20260911_084010_add_key_visual_formation_runtime from './20260911_084010_add_key_visual_formation_runtime';
+import * as migration_20260914_062423_add_infographic_runtime from './20260914_062423_add_infographic_runtime';
 
 export const migrations = [
   {
@@ -670,6 +671,11 @@ export const migrations = [
   {
     up: migration_20260911_084010_add_key_visual_formation_runtime.up,
     down: migration_20260911_084010_add_key_visual_formation_runtime.down,
-    name: '20260911_084010_add_key_visual_formation_runtime'
+    name: '20260911_084010_add_key_visual_formation_runtime',
+  },
+  {
+    up: migration_20260914_062423_add_infographic_runtime.up,
+    down: migration_20260914_062423_add_infographic_runtime.down,
+    name: '20260914_062423_add_infographic_runtime'
   },
 ];
