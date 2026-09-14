@@ -366,10 +366,11 @@ function NavigationHeaderSymbolLink({
 		>
 			<Image
 				alt=""
-				className="h-3.5 w-auto dark:brightness-0"
-				height={14}
+				// 🔴 높이 16px이 규정 최소 크기다(docs/12 「색과 최소 크기」). 더 줄이지 말 것.
+				className="h-4 w-auto dark:brightness-0"
+				height={16}
 				src="/logos/logo_wht.svg"
-				width={33}
+				width={37}
 			/>
 		</Link>
 	)
