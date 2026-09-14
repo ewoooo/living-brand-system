@@ -13,6 +13,8 @@ import {
 } from './model'
 
 export type KeyVisualFormationRuntime = {
+	/** 처음 지정된 면 이미지를 다 읽고 한 번 그린 뒤 풀린다 — 첫 프레임이 곧 export일 수 있다. */
+	ready: Promise<void>
 	update(input: KeyVisualFormationInput): void
 	resize(width: number, height: number): void
 	getViewport(): { width: number; height: number }
@@ -47,15 +49,12 @@ async function loadPlaneImage(url: string): Promise<string | null> {
 export function createKeyVisualFormationRuntime({
 	container,
 	input,
-	initialImage,
 }: {
 	container: HTMLElement
 	input: KeyVisualFormationInput
-	/** mount가 미리 읽어 둔 면 이미지. 첫 프레임이 이미지 없이 잡히지 않게 한다. */
-	initialImage?: { url: string; element: p5.Image } | null
 }): KeyVisualFormationRuntime {
 	let currentInput = input
-	let loaded = initialImage ?? null
+	let loaded: { url: string; element: p5.Image } | null = null
 	let canvas: HTMLCanvasElement | null = null
 	const initialSize = getCanvasSize(container.clientWidth, container.clientHeight)
 	let viewport = initialSize
@@ -90,16 +89,28 @@ export function createKeyVisualFormationRuntime({
 		}
 	}, container)
 
-	/** 값이 바뀌어 새 이미지가 지정되면 뒤늦게 읽고, 도착하면 다시 그린다. */
-	function ensureImage(url: string | null) {
+	/**
+	 * 값이 바뀌어 새 이미지가 지정되면 읽고, 도착하면 다시 그린다.
+	 *
+	 * 🔴 이미지를 읽는 데 **이 스케치의 p5 인스턴스**를 쓴다. 임시 인스턴스를 만들면 p5가 기본
+	 *    캔버스를 document.body에 붙여 유령 캔버스가 남는다.
+	 */
+	async function ensureImage(url: string | null) {
 		if (!url || loaded?.url === url) return
-		void loadPlaneImage(url).then((dataUri) => {
-			if (!dataUri || currentInput.planeImage !== url) return
-			instance.loadImage(dataUri, (image) => {
-				if (currentInput.planeImage !== url) return
-				loaded = { url, element: image }
-				instance.redraw()
-			})
+		const dataUri = await loadPlaneImage(url)
+		if (!dataUri || currentInput.planeImage !== url) return
+		await new Promise<void>((resolve) => {
+			instance.loadImage(
+				dataUri,
+				(image) => {
+					if (currentInput.planeImage === url) {
+						loaded = { url, element: image }
+						instance.redraw()
+					}
+					resolve()
+				},
+				() => resolve(),
+			)
 		})
 	}
 
@@ -118,9 +129,10 @@ export function createKeyVisualFormationRuntime({
 	})
 
 	return {
+		ready: ensureImage(input.planeImage),
 		update(nextInput) {
 			currentInput = nextInput
-			ensureImage(nextInput.planeImage)
+			void ensureImage(nextInput.planeImage)
 			instance.redraw()
 		},
 		resize(width, height) {
@@ -157,9 +169,9 @@ const runtime = {
 	type: 'p5',
 	async mount({ container, values }) {
 		const input = toKeyVisualFormationInput(values)
+		const mounted = createKeyVisualFormationRuntime({ container, input })
 		// 🔴 mount가 유일한 async 지점이다 — 첫 프레임이 곧 export가 될 수 있으므로 여기서 기다린다.
-		const initialImage = input.planeImage ? await loadInitialImage(input.planeImage) : null
-		const mounted = createKeyVisualFormationRuntime({ container, input, initialImage })
+		await mounted.ready
 		return {
 			update: (next) => mounted.update(toKeyVisualFormationInput(next)),
 			resize: (width, height) => mounted.resize(width, height),
@@ -169,25 +181,5 @@ const runtime = {
 		}
 	},
 } satisfies GraphicRuntimeAdapter
-
-async function loadInitialImage(url: string) {
-	const dataUri = await loadPlaneImage(url)
-	if (!dataUri) return null
-	return await new Promise<{ url: string; element: p5.Image } | null>((resolve) => {
-		// p5.loadImage는 인스턴스 메서드지만 스케치 없이도 정적 헬퍼로 쓸 수 있다.
-		const sketch = new p5(() => {})
-		sketch.loadImage(
-			dataUri,
-			(image) => {
-				sketch.remove()
-				resolve({ url, element: image })
-			},
-			() => {
-				sketch.remove()
-				resolve(null)
-			},
-		)
-	})
-}
 
 export default runtime

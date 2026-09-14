@@ -32,18 +32,24 @@ export function GraphicStudioProvider({
 	const browse = useLazyResource(fetchGraphicStudioConfigs)
 	const [config, setConfig] = useState(initial)
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
-	// 값이 좁히는 만큼 줄인 그룹 — 좁힐 것이 없으면 런타임이 같은 배열을 그대로 돌려준다.
+	/**
+	 * 🔴 값 검증과 binding 등록은 **좁히기 전** 그룹을 본다. 좁힌 그룹은 값이 바뀔 때마다 새 배열이라,
+	 *    여기에 매달면 `update`의 신원이 매번 바뀌고 그것을 의존성으로 삼는 캔버스가 컨트롤을
+	 *    만질 때마다 destroy→mount 된다(2026-09-14에 실제로 캔버스가 깜빡였다).
+	 *    좁힌 그룹은 **그리는 데만** 쓴다.
+	 */
+	const baseGroups = config.controller.groups
 	const groups = useMemo(() => getGraphicStudioRuntimeGroups(config, values), [config, values])
 	const [bindings, setBindings] = useState<ControllerRuntimeBindings>({})
 	const bindingsRef = useRef<ControllerRuntimeBindings>({})
 	const definitions = useMemo(
 		() =>
 			new Map(
-				groups.flatMap((group) =>
+				baseGroups.flatMap((group) =>
 					group.controls.map((control) => [control.id, control] as const),
 				),
 			),
-		[groups],
+		[baseGroups],
 	)
 
 	/**
