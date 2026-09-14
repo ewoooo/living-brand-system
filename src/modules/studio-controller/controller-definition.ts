@@ -176,6 +176,16 @@ export type ControllerControlDefinition =
 			defaultValue: ControllerPadPairValue
 			aspectRatio?: number
 	  })
+	| (ControllerControlBase & {
+			kind: 'asset'
+			/** 고른 자산의 URL. 고르지 않은 상태가 `null`이다. */
+			defaultValue: string | null
+			/**
+			 * 고를 자산의 출처. 🔴 킷은 목록을 모른다 — 이 값으로 **화면이** 피커를 고른다.
+			 * 목록을 계약에 넣으면 정의가 환경(업로드된 자산)에 묶여 admin 저장마다 달라진다.
+			 */
+			source: 'sample-images'
+	  })
 
 export type ControllerGroupDefinition = {
 	id: string
@@ -296,6 +306,8 @@ type SelectVariant = NonNullable<
 	Extract<ControllerControlDefinition, { kind: 'select' }>['variant']
 >
 const SELECT_VARIANTS: readonly SelectVariant[] = ['list', 'segmented']
+type AssetSource = Extract<ControllerControlDefinition, { kind: 'asset' }>['source']
+const ASSET_SOURCES: readonly AssetSource[] = ['sample-images']
 
 /** unknown Admin/Payload 입력에서 공통 envelope와 Controller Definition v1을 검증한다. */
 export function parseStudioControllerConfig(input: unknown): StudioControllerConfig {
@@ -571,6 +583,8 @@ function isControllerValueShape(
 			return isControllerPadValue(value)
 		case 'pad-pair':
 			return isControllerPadPairValue(value)
+		case 'asset':
+			return value === null || typeof value === 'string'
 	}
 }
 
@@ -757,6 +771,14 @@ function validateControl(value: unknown, path: string) {
 			assertOnlyKeys(control, [...CONTROL_BASE_KEYS, 'aspectRatio'], path)
 			assertPadPoint(control.defaultValue, `${path}.defaultValue`)
 			assertPadAspectRatio(control.aspectRatio, path)
+			return
+		}
+		case 'asset': {
+			assertOnlyKeys(control, [...CONTROL_BASE_KEYS, 'source'], path)
+			assertNullableString(control.defaultValue, `${path}.defaultValue`)
+			if (!ASSET_SOURCES.includes(control.source as AssetSource)) {
+				invalid(`${path}.source`, '지원하지 않는 값입니다.')
+			}
 			return
 		}
 		case 'pad-pair': {
@@ -1049,6 +1071,25 @@ function applyControlRestriction(
 			}
 			break
 		}
+		case 'asset':
+			if (
+				restriction.maxLength ||
+				restriction.optionValues ||
+				restriction.colorValues ||
+				restriction.min !== undefined ||
+				restriction.max !== undefined
+			) {
+				throw new Error(`asset control에 지원하지 않는 restriction입니다: ${base.id}`)
+			}
+			next = {
+				...base,
+				...definedProperty('availability', availability),
+				...definedProperty(
+					'defaultValue',
+					restriction.defaultValue as string | null | undefined,
+				),
+			}
+			break
 		case 'pad':
 		case 'pad-pair':
 			if (

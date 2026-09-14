@@ -28,12 +28,29 @@ export const CONTROLLER_TOGGLE_OPTIONS = [
 	{ value: 'off', label: 'Off' },
 ] as const
 
+/**
+ * `asset` control의 출처별 화면. 🔴 킷은 목록을 모른다 — 도메인을 아는 쪽이 이 맵으로 주입한다.
+ * 주지 않으면 그 control은 읽기 전용 행으로 떨어진다(화면이 비어 죽지 않게).
+ */
+export type ControllerAssetSources = Partial<
+	Record<
+		Extract<ControllerControlDefinition, { kind: 'asset' }>['source'],
+		(props: {
+			label: string
+			value: string | null
+			disabled?: boolean
+			onChange: (value: string | null) => void
+		}) => ReactNode
+	>
+>
+
 type ControllerRendererProps = {
 	groups: readonly ControllerGroupDefinition[]
 	presentation?: { groups: readonly ControllerGroupPresentation[] }
 	values: ControllerValues
 	bindings?: ControllerRuntimeBindings
 	onChange: (controlId: string, value: ControllerControlValue) => void
+	assetSources?: ControllerAssetSources
 	/** 첫 그룹의 위 구분선을 걷는다. 이 목록 앞에 다른 그룹이 서면 `false`를 준다. */
 	first?: boolean
 }
@@ -45,6 +62,7 @@ export function ControllerRenderer({
 	values,
 	bindings,
 	onChange,
+	assetSources,
 	first = true,
 }: ControllerRendererProps) {
 	return (
@@ -67,6 +85,7 @@ export function ControllerRenderer({
 							definition={control}
 							value={control.id in values ? values[control.id] : control.defaultValue}
 							binding={bindings?.[control.id]}
+							assetSources={assetSources}
 							onChange={(value) => onChange(control.id, value)}
 						/>
 					))
@@ -271,6 +290,7 @@ type ControllerControlRendererProps = {
 	definition: ControllerControlDefinition
 	value: ControllerControlValue
 	binding?: ControllerRuntimeBinding
+	assetSources?: ControllerAssetSources
 	onChange: (value: ControllerControlValue) => void
 }
 
@@ -279,6 +299,7 @@ export function ControllerControlRenderer({
 	definition,
 	value,
 	binding,
+	assetSources,
 	onChange,
 }: ControllerControlRendererProps) {
 	return (
@@ -291,6 +312,7 @@ export function ControllerControlRenderer({
 					binding?.availability,
 				)}
 				padAspectRatio={binding?.padAspectRatio}
+				assetSources={assetSources}
 				onChange={onChange}
 			/>
 			{binding?.error && <FieldError>{binding.error}</FieldError>}
@@ -303,6 +325,7 @@ type ControllerControlProps = {
 	value: ControllerControlValue
 	availability: ReturnType<typeof resolveControllerAvailability>
 	padAspectRatio?: number
+	assetSources?: ControllerAssetSources
 	onChange: (value: ControllerControlValue) => void
 }
 
@@ -311,6 +334,7 @@ function ControllerControl({
 	value,
 	availability,
 	padAspectRatio,
+	assetSources,
 	onChange,
 }: ControllerControlProps) {
 	const disabled = availability === 'disabled'
@@ -478,6 +502,22 @@ function ControllerControl({
 					aria-label={definition.label}
 					value={point}
 					aspectRatio={padAspectRatio ?? definition.aspectRatio}
+					disabled={disabled}
+					onChange={onChange}
+				/>
+			)
+		}
+		case 'asset': {
+			const asset = typeof value === 'string' ? value : null
+			const Source = assetSources?.[definition.source]
+			// 출처 화면이 없으면 읽기 전용이다 — 킷이 목록을 모르므로 대신 그릴 수 있는 것이 없다.
+			if (readonly || !Source) {
+				return <ReadonlyRow label={definition.label} value={asset ? '선택됨' : '없음'} />
+			}
+			return (
+				<Source
+					label={definition.label}
+					value={asset}
 					disabled={disabled}
 					onChange={onChange}
 				/>
