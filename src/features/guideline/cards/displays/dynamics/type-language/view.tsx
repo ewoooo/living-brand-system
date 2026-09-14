@@ -1,6 +1,7 @@
 'use client'
 
-import { controllerString, useGuidelineController } from '@/features/guideline/controllers/provider'
+import { controllerString } from '@/features/guideline/domain/controller-values'
+import { useGuidelineController } from '@/features/guideline/hooks/use-guideline-controller'
 import {
 	BRAND_FONT_STACK,
 	LANGUAGES,

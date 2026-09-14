@@ -74,7 +74,7 @@ Creator UI -> Route Handler -> PublishGuidelineService -> GuidelineRepository ->
 | 전역 공유 컴포넌트 | `src/components/shared`, `src/components/global` | 둘 이상의 화면 표면이 공유하는 UI와 공용 탐색 UI는 `shared`, app shell은 `global`에 둡니다. |
 | 화면 상태와 비즈니스 로직 | `src/features/*` | domain, hook, service, repository, util, type을 기능 안에 둡니다. 일반 React 컴포넌트는 두지 않습니다. |
 
-의존 방향은 `app → components → features`입니다. `features`는 `components`를 import하지 않습니다. Payload block은 schema, projection, renderer를 한 단위로 등록해야 하므로 `src/features/guideline/blocks/*/component.tsx`는 예외로 둡니다. 기존 `src/features/guideline/components`도 Guideline 분류를 별도로 정리하기 전까지의 한시적 예외입니다.
+의존 방향은 `app → components → features`입니다. 일반 가이드라인 화면은 `src/components/guideline`에 둡니다. 등록 단위인 `src/features/guideline/blocks`·`cards`의 렌더 파일만 표현 컴포넌트를 import할 수 있습니다. 스키마·정의·투영·계약과 상태·서비스·저장소 계층은 표현 컴포넌트나 렌더 레지스트리를 import하지 않습니다. `definition.ts`와 `registry.ts`는 Payload config가 Node에서 읽으며, React 렌더는 `registry.render.tsx`로 분리합니다.
 
 ## 3. 전체 소스코드 폴더 구조
 
@@ -107,6 +107,14 @@ src/
     admin/
     global/
     home/
+    guideline/
+      pages/
+      controllers/
+      navigation/
+      sections/
+      typography/
+      media/
+      widgets/
     shared/
       navigation/
     studio/
@@ -154,7 +162,6 @@ src/
         fields.ts
         card-block.tsx
         projection.ts
-        rhythm.ts
       cards/
         schema.ts
         component.tsx
@@ -165,7 +172,10 @@ src/
           static/
           dynamics/
             <widget>/
-      pages/
+      domain/
+        contract/
+      contexts/
+      providers/
       hooks/
       repositories/
       services/
@@ -287,7 +297,21 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 
 🔴 슈거 블록(`overview`·`examples`)은 **새 필드를 만들지 않습니다.** `presetFields`로 기본 필드에 고정값을 덧씌우고 숨길 뿐입니다 — 저작 편의를 위한 사전 정의 블록이고, 데이터 모델과 렌더 규칙은 기본 블록과 같습니다. `fields.test.ts`가 필드 집합이 같은지 지킵니다.
 
-`blocks/`는 이 여섯 파일이 전부입니다(2026-09-08, `shared/`·`runtime/`·`types.ts` 해체). 블록 폴더가 없어진 뒤로 "공유"할 상대가 없어 층을 걷었습니다 — 새 파일을 만들기 전에 이 여섯 중 하나에 들어가는지 먼저 봅니다. 문서 단위 Check snapshot(`build-check-source-snapshot.ts`)은 유일한 소비자인 `checks/`가 갖습니다. React 렌더 진입점은 `components/guideline-sections.tsx`입니다.
+`blocks/`는 이 여섯 파일이 전부입니다(2026-09-08, `shared/`·`runtime/`·`types.ts` 해체). 블록 폴더가 없어진 뒤로 "공유"할 상대가 없어 층을 걷었습니다 — 새 파일을 만들기 전에 이 여섯 중 하나에 들어가는지 먼저 봅니다. 문서 단위 Check snapshot(`build-check-source-snapshot.ts`)은 유일한 소비자인 `checks/`가 갖습니다. React 렌더 진입점은 `src/components/guideline/guideline-sections.tsx`입니다.
+
+### 가이드라인 화면과 상태 경계
+
+| 위치 | 소유 책임 |
+| --- | --- |
+| `src/components/guideline` | 페이지 조합·탐색·섹션·산문·미디어·위젯 갤러리와 컨트롤 표현 |
+| `src/features/guideline/domain/contract` | 공유 조회 데이터·카드/디스플레이·컨트롤 매니페스트 타입. 생성된 Payload 타입은 `import type`으로만 참조 |
+| `src/features/guideline/domain/controller-values.ts` | 컨트롤 값의 타입 확인과 기본값 해석 |
+| `src/features/guideline/contexts` | Context와 Context 값 계약 |
+| `src/features/guideline/providers` | 카드별 조작 상태와 활성 영역 관측. 표현 컴포넌트를 import하지 않음 |
+| `src/features/guideline/hooks` | Context 소비와 섹션 탐색. Provider를 import하지 않음 |
+| `src/features/guideline/controllers/registry.ts` | 위젯 매니페스트와 카드 연결 |
+
+위젯의 `definition.ts`·`component.tsx`·선택적 `view.tsx`·`manifest.ts`는 기존 폴더에 함께 둡니다. `services`·`repositories`·`checks`의 책임은 유지합니다. 스키마 ID·DB 필드·콘텐츠는 파일 배치 변경과 함께 바꾸지 않습니다.
 
 ### Graphic runtime 등록
 

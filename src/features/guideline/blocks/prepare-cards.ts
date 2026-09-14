@@ -1,4 +1,4 @@
-import type { CardData } from '../cards/component'
+import type { CardData } from '@/features/guideline/domain/contract/display'
 import { LANGUAGES } from '../cards/displays/dynamics/brand-typeface'
 
 /** CMS 데이터를 변경하지 않고 언어 비교를 독립적으로 조작할 카드로 펼친다. */

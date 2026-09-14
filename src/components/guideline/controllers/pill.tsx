@@ -4,7 +4,7 @@ import { Fragment } from 'react'
 import { ControllerControlRenderer } from '@/components/shared/controller-renderer'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { useGuidelineController } from './provider'
+import { useGuidelineController } from '@/features/guideline/hooks/use-guideline-controller'
 
 /**
  * 실효 그룹을 하단 알약 한 줄로 그린다. **도메인을 모른다** — `kind`만 보고 프리미티브를 고르는

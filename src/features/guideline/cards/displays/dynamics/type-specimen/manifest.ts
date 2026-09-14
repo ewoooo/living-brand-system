@@ -1,4 +1,4 @@
-import type { GuidelineControllerManifest } from '@/features/guideline/controllers/contract'
+import type { GuidelineControllerManifest } from '@/features/guideline/domain/contract/controller'
 
 export const TIER_PRESETS = {
 	word: { label: 'Word', size: 96, fallback: 'Aa' },

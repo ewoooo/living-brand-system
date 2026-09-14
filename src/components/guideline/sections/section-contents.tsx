@@ -1,7 +1,7 @@
 import { ContentFrame } from '@/components/shared/content-frame'
+import type { RowHeight } from '@/features/guideline/blocks/fields'
+import type { CardData } from '@/features/guideline/domain/contract/display'
 import type { BaseBlock } from '@/payload-types'
-import type { RowHeight } from '../../blocks/fields'
-import type { CardData } from '../../cards/component'
 import { CarouselContainer } from './carousel-container'
 import { GridContainer } from './grid-container'
 

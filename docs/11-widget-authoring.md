@@ -61,10 +61,10 @@
 |---|---|
 `cards/displays/registry.ts` | `DISPLAYS` 배열에 폴더의 `definition` 추가(순서 = admin 선택기 순서). 여기 없으면 admin 카드에서 고를 수 없다 |
 `cards/displays/registry.render.tsx` | `DISPLAY_COMPONENTS`에 같은 id로 폴더의 기본 export 컴포넌트 추가. 빠지면 typecheck가 잡는다 |
-`components/widgets/gallery.tsx` | `/guideline/widgets` 미리보기 목록 |
+`src/components/guideline/widgets/gallery.tsx` | `/guideline/widgets` 미리보기 목록 |
 `controllers/registry.ts` | (컨트롤러를 여는 위젯만) `blockType` → 매니페스트 (§4.1) |
 
-레지스트리 항목만 넣고 렌더를 빠뜨리면 typecheck가 잡습니다. 갤러리(`components/widgets/gallery.tsx`)는 dev 미리보기용이라 별도이고, 여기만 등록하면 미리보기에서만 보입니다.
+레지스트리 항목만 넣고 렌더를 빠뜨리면 typecheck가 잡습니다. 갤러리(`src/components/guideline/widgets/gallery.tsx`)는 dev 미리보기용이라 별도이고, 여기만 등록하면 미리보기에서만 보입니다.
 
 🔴 **`dbName`은 필수입니다.** 중첩 블록의 이름이 길어지면 Postgres 식별자 63자 한계에 닿습니다. 예: `clearspaceViewerWidget` → `dbName: 'cvw'`. enum은 `enumName`으로 전역 이름을 공유합니다.
 
@@ -118,8 +118,8 @@ manifest.ts        →  GuidelineControllerScope   →  GuidelineControllerPill
 | --- | --- | --- |
 | `cards/displays/dynamics/<name>/manifest.ts` | 이 블록이 여는 컨트롤 계약 | 화면 어디에 그려지는지 |
 | `controllers/registry.ts` | `blockType` → 위젯의 컨트롤 설정 연결 | 규정값·언어별 표본·허용 범위 계산 |
-| `controllers/provider.tsx` | 카드 단위 값 스코프(기존 공유 위젯은 블록 단위) | 값의 뜻 |
-| `controllers/pill.tsx` | 그룹을 구분선으로 가른 한 줄 배치 | 도메인 |
+| `providers/guideline-controller-provider.tsx` | 카드 단위 값 스코프(기존 공유 위젯은 블록 단위) | 값의 뜻 |
+| `src/components/guideline/controllers/pill.tsx` | 그룹을 구분선으로 가른 한 줄 배치 | 도메인 |
 | `GuidelineHelperProvider` | 관측(IntersectionObserver)과 "누가 활성인가" | **값** |
 | `GuidelineHelperRegion` | 블록이 선언하는 **관측 영역** = 조작 대상이 놓인 면(제목·본문 아님) | 컨트롤이 무엇인지 |
 | `GuidelineHelperSlot` | 알약이 앉는 **자리 상자**(`absolute inset-0`인 세로 flex 열). sticky는 바가 갖는다 | 무엇이 들어오는지 |

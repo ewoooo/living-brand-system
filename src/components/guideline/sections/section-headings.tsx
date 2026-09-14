@@ -1,7 +1,7 @@
+import { GuidelineDescription } from '@/components/guideline/typography/guideline-description'
+import { GuidelineHeader } from '@/components/guideline/typography/guideline-header'
 import { ContentFrame } from '@/components/shared/content-frame'
 import type { SectionBlock } from '@/payload-types'
-import { GuidelineDescription } from '../typography/guideline-description'
-import { GuidelineHeader } from '../typography/guideline-header'
 
 export function SectionHeadings({
 	title,

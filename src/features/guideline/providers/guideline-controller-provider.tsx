@@ -1,17 +1,20 @@
 'use client'
 
-import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react'
+import { type ReactNode, useCallback, useMemo, useState } from 'react'
+import type { GuidelineControllerManifest } from '@/features/guideline/domain/contract/controller'
 import type {
 	ControllerControlValue,
-	ControllerGroupDefinition,
-	ControllerValues,
 	StudioControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
 import {
 	applyControllerRestrictions,
 	createControllerValues,
 } from '@/modules/studio-controller/controller-definition'
-import type { GuidelineControllerManifest } from './contract'
+
+import {
+	GuidelineControllerContext,
+	type GuidelineControllerScopeValue,
+} from '../contexts/guideline-controller-context'
 
 /**
  * 카드별 컨트롤 값 스코프. 기존 블록 공유 위젯은 블록 단위를 유지한다.
@@ -23,17 +26,6 @@ import type { GuidelineControllerManifest } from './contract'
  * 🔑 provider는 **매니페스트가 무엇을 뜻하는지 모른다.** `marginPct`가 마진인지 모르고, id로
  *    값을 넣고 뺄 뿐이다. 뜻은 매니페스트를 쓴 위젯이 갖는다.
  */
-
-type GuidelineControllerScopeValue = {
-	/** admin 제한까지 적용된 실효 그룹. 렌더러가 이것만 본다. */
-	groups: readonly ControllerGroupDefinition[]
-	/** 지금 값. 조작하면 여기가 바뀐다. */
-	values: ControllerValues
-	set: (controlId: string, value: ControllerControlValue) => void
-	reset: () => void
-}
-
-const GuidelineControllerContext = createContext<GuidelineControllerScopeValue | null>(null)
 
 export function GuidelineControllerScope({
 	manifest,
@@ -91,51 +83,4 @@ export function GuidelineControllerScope({
 			{children}
 		</GuidelineControllerContext.Provider>
 	)
-}
-
-const EMPTY: GuidelineControllerScopeValue = {
-	groups: [],
-	values: {},
-	set: () => {},
-	reset: () => {},
-}
-
-/** 스코프 밖(컨트롤 없이 그림만 둔 경우)이면 빈 값을 읽기 전용으로 준다. */
-export function useGuidelineController(): GuidelineControllerScopeValue {
-	return useContext(GuidelineControllerContext) ?? EMPTY
-}
-
-/**
- * 매니페스트의 기본값을 타입 좁히기와 함께 읽는다 — 스코프 밖이거나 admin이 컨트롤을 지웠을 때
- * 위젯이 `undefined`로 그려지지 않게 한다.
- *
- * ponytail: 위젯이 controlId 문자열로 값을 집는다. 매니페스트와 위젯이 id로 묶이는 것이 지금의
- * 천장이고, 올릴 길은 매니페스트가 위젯이 읽을 타입까지 함께 발행하는 것이다(2026-08-18 보류).
- */
-export function controllerNumber(values: ControllerValues, id: string, fallback: number): number {
-	const value = values[id]
-	return typeof value === 'number' ? value : fallback
-}
-
-/** 🔑 `select` 값을 읽는다. 허용 목록을 함께 받아, admin이 선택지를 좁혔거나 스코프 밖일 때
- *  위젯이 알 수 없는 문자열로 그려지지 않게 한다. */
-export function controllerString<T extends string>(
-	values: ControllerValues,
-	id: string,
-	allowed: readonly T[],
-	fallback: T,
-): T {
-	const value = values[id]
-	return typeof value === 'string' && (allowed as readonly string[]).includes(value)
-		? (value as T)
-		: fallback
-}
-
-export function controllerBoolean(
-	values: ControllerValues,
-	id: string,
-	fallback: boolean,
-): boolean {
-	const value = values[id]
-	return typeof value === 'boolean' ? value : fallback
 }

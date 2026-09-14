@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { PanelCard, PanelChip } from '@/components/shared/panel-card'
+import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 import { cn } from '@/lib/utils'
-import type { GetGuidelineNavigationOutput } from '../services/get-guideline-navigation.service'
 
 const CARD_LAYOUT = [
 	{ card: 'md:col-span-1 min-h-75', list: 'flex flex-col items-start gap-1.5' },

@@ -1,10 +1,7 @@
 'use client'
 
-import {
-	controllerNumber,
-	controllerString,
-	useGuidelineController,
-} from '@/features/guideline/controllers/provider'
+import { controllerNumber, controllerString } from '@/features/guideline/domain/controller-values'
+import { useGuidelineController } from '@/features/guideline/hooks/use-guideline-controller'
 import { THEME_PANEL } from '../surface'
 import { ALIGN, LEADING, TIER, TIER_PRESETS } from './manifest'
 

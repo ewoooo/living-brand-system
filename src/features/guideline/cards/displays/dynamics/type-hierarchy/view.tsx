@@ -1,6 +1,6 @@
 'use client'
 
-import { useGuidelineController } from '@/features/guideline/controllers/provider'
+import { useGuidelineController } from '@/features/guideline/hooks/use-guideline-controller'
 import {
 	BRAND_FONT_STACK,
 	type LanguageKey,

@@ -9,7 +9,7 @@ vi.mock('next/navigation', () => ({
 	usePathname: () => '/guideline/guidelines/lbs-structure',
 }))
 
-vi.mock('./guideline-section-navigation', () => ({
+vi.mock('@/features/guideline/hooks/use-guideline-section-navigation', () => ({
 	scrollToGuidelineSection: vi.fn(),
 	useActiveSectionAnchor: () => 'japanese',
 }))
