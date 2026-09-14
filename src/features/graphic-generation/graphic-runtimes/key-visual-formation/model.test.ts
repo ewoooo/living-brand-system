@@ -26,9 +26,9 @@ describe('createKeyVisualFormationScene', () => {
 
 	it('선의 영역은 면 비율이 남긴 만큼이고 unit은 모두 같다', () => {
 		const steps = 8
-		const planeRatio = 0.6
-		const unit = (viewport.height * (1 - planeRatio)) / steps
-		const { bands } = scene({ steps, planeRatio, anchor: 'bottom' })
+		const lineRatio = 0.3
+		const unit = (viewport.height * lineRatio) / steps
+		const { bands } = scene({ steps, lineRatio, anchor: 'bottom' })
 		// unit 격자에 얹혀 있는지는 자리에서 잰 시작 거리가 말한다.
 		const starts = bands.map((band) => viewport.height - band.y - band.height)
 		for (const [index, start] of starts.entries()) {
@@ -49,7 +49,7 @@ describe('createKeyVisualFormationScene', () => {
 	it('선도 그 사이에 남는 면도 최소 두께 아래로 내려가지 않는다', () => {
 		for (const decay of [0.1, 1, 4]) {
 			const steps = 20
-			const unit = (viewport.height * (1 - 0.5)) / steps
+			const unit = (viewport.height * KEY_VISUAL_FORMATION_DEFAULT_INPUT.lineRatio) / steps
 			const floor = Math.min(unit / 2, 2)
 			for (const band of scene({ decay, steps }).bands) {
 				expect(band.height).toBeGreaterThanOrEqual(floor - 1e-9)
@@ -72,34 +72,36 @@ describe('createKeyVisualFormationScene', () => {
 })
 
 describe('판은 [면] [선의 영역] [면] 세 토막이다', () => {
-	it('띄우기 0이면 자리 쪽 면이 없다 — 선이 변에 붙는다', () => {
-		const { planeAreas } = scene({ lineOffset: 0 })
-		expect(planeAreas[0]).toBe(0)
+	it('면 영역 비율이 0이면 선이 자리 변에 붙는다', () => {
+		expect(scene({ planeRatio: 0 }).planeAreas[0]).toBe(0)
 	})
 
-	it('어떤 값에서도 큰 쪽 면이 선의 영역보다 넓다 — 띄우기 상한이 그 조건에서 나온다', () => {
-		for (const planeRatio of [0.5, 0.6, 0.75, 0.9]) {
-			for (const lineOffset of [0, 0.25, 0.5, 0.75, 1]) {
-				const { planeAreas } = scene({ planeRatio, lineOffset })
-				const lineArea = viewport.height * (1 - planeRatio)
+	it('두 비율이 앞의 두 토막을 정하고 나머지가 반대쪽 면이다', () => {
+		const { planeAreas } = scene({ lineRatio: 0.3, planeRatio: 0.2 })
+		expect(planeAreas[0]).toBeCloseTo(viewport.height * 0.2, 6)
+		expect(planeAreas[1]).toBeCloseTo(viewport.height * 0.5, 6)
+	})
+
+	it('상한이 1/3씩이라 큰 쪽 면은 언제나 선의 영역보다 넓다', () => {
+		for (const lineRatio of [0.05, 0.15, 0.25, 0.33]) {
+			for (const planeRatio of [0, 0.1, 0.2, 0.33]) {
+				const { planeAreas } = scene({ lineRatio, planeRatio })
+				const lineArea = viewport.height * lineRatio
 				expect(Math.max(...planeAreas)).toBeGreaterThanOrEqual(lineArea - 1e-9)
 				expect(Math.min(...planeAreas)).toBeGreaterThanOrEqual(0)
 			}
 		}
 	})
 
-	it('면 비율이 1:1이면 띄울 자리가 없다', () => {
-		expect(scene({ planeRatio: 0.5, lineOffset: 1 }).planeAreas[0]).toBe(0)
-	})
-
-	it('띄운 만큼 선이 자리에서 밀려난다', () => {
-		const flush = scene({ planeRatio: 0.8, lineOffset: 0 }).bands[0]
-		const floated = scene({ planeRatio: 0.8, lineOffset: 1 }).bands[0]
-		if (!flush || !floated) throw new Error('선이 없다')
+	it('면 영역 비율만큼 선이 자리에서 밀려난다', () => {
+		const flush = scene({ planeRatio: 0 }).bands[0]
+		const pushed = scene({ planeRatio: 0.33 }).bands[0]
+		if (!flush || !pushed) throw new Error('선이 없다')
 
 		expect(flush.y + flush.height).toBeCloseTo(viewport.height, 6)
-		// 자리가 아래라 띄우면 위로 올라간다.
-		expect(floated.y).toBeLessThan(flush.y)
+		// 자리가 아래라 밀면 위로 올라간다.
+		expect(pushed.y).toBeLessThan(flush.y)
+		expect(viewport.height - pushed.y - pushed.height).toBeCloseTo(viewport.height * 0.33, 6)
 	})
 })
 

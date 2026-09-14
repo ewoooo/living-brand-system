@@ -62,8 +62,8 @@ export const KEY_VISUAL_FORMATION_DEFAULT_INPUT = {
 	dimmer: false,
 	dimmerOpacity: 0.2,
 	anchor: 'bottom',
-	lineOffset: 0,
-	planeRatio: 0.5,
+	lineRatio: 0.3,
+	planeRatio: 0,
 	steps: 8,
 	decay: 2,
 } as const
@@ -107,7 +107,7 @@ export default defineGraphicRuntime({
 	controller: {
 		// 면·선의 색과 재료는 창작자가 늘 만지는 큰 축이다 — 왼쪽 패널.
 		left: ['planeColor', 'lineColor', 'planeImage', 'dimmer', 'dimmerOpacity', 'anchor'],
-		right: ['planeRatio', 'lineOffset', 'steps', 'decay'],
+		right: ['lineRatio', 'planeRatio', 'steps', 'decay'],
 		groups: [
 			{
 				id: 'plane',
@@ -174,29 +174,29 @@ export default defineGraphicRuntime({
 				id: 'formation',
 				title: 'Formation',
 				controls: [
-					// 하한 0.5 — 면의 영역은 선의 영역보다 좁을 수 없다(최소 1:1).
+					/**
+					 * 판은 **[면] [선의 영역] [면]** 세 토막이고, 이 두 축이 앞의 둘을 정한다.
+					 * 나머지가 반대쪽 면이다.
+					 *
+					 * 🔴 각각의 상한이 1/3인 것이 곧 가이드라인의 1:1 규정이다 — 둘을 합쳐도 2/3을
+					 *    넘지 못하므로 반대쪽 면이 언제나 1/3 이상 남고, 그것이 선의 영역보다 좁을 수
+					 *    없다. 검사기를 따로 두지 않아도 깨지지 않는다.
+					 */
 					rangeControl(
-						'planeRatio',
-						'면 비율',
-						KEY_VISUAL_FORMATION_DEFAULT_INPUT.planeRatio,
-						0.5,
-						0.9,
+						'lineRatio',
+						'선 영역 비율',
+						KEY_VISUAL_FORMATION_DEFAULT_INPUT.lineRatio,
+						0.05,
+						0.33,
 						0.01,
 						{ precision: 2 },
 					),
-					/**
-					 * 선의 영역을 자리에서 띄운다 — 0이면 변에 붙고, 1이면 규칙이 허락하는 끝까지 간다.
-					 *
-					 * 🔴 범위가 곧 규정이다. 띄우는 만큼 자리 쪽 면이 생기고 반대쪽 면이 줄어드는데,
-					 *    **큰 쪽 면이 선의 영역보다 넓어야** 하므로 그 한계를 넘는 값 자체가 없다.
-					 *    면 비율이 1:1이면 띄울 자리가 없어 이 축이 아무것도 하지 않는다.
-					 */
 					rangeControl(
-						'lineOffset',
-						'선 영역 띄우기',
-						KEY_VISUAL_FORMATION_DEFAULT_INPUT.lineOffset,
+						'planeRatio',
+						'면 영역 비율',
+						KEY_VISUAL_FORMATION_DEFAULT_INPUT.planeRatio,
 						0,
-						1,
+						0.33,
 						0.01,
 						{ precision: 2 },
 					),

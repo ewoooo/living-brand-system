@@ -38,8 +38,8 @@ export const keyVisualFormationInputSchema = z.strictObject({
 	dimmer: z.boolean(),
 	dimmerOpacity: z.number().min(0).max(0.7),
 	anchor: z.enum(anchorIds),
-	lineOffset: z.number().min(0).max(1),
-	planeRatio: z.number().min(0.5).max(0.9),
+	lineRatio: z.number().min(0.05).max(0.33),
+	planeRatio: z.number().min(0).max(0.33),
 	steps: z.number().int().min(6).max(20),
 	decay: z.number().min(0.1).max(4),
 })
@@ -83,7 +83,7 @@ export function toKeyVisualFormationInput(values: ControllerValues): KeyVisualFo
 		dimmer: typeof values.dimmer === 'boolean' ? values.dimmer : base.dimmer,
 		dimmerOpacity: values.dimmerOpacity,
 		anchor: resolveOption(values.anchor, anchorIds, base.anchor),
-		lineOffset: values.lineOffset,
+		lineRatio: values.lineRatio,
 		planeRatio: values.planeRatio,
 		steps: values.steps,
 		decay: values.decay,
@@ -117,16 +117,15 @@ export type KeyVisualFormationScene = {
  * 🔑 실제 선언은 **unit(선 + 여백) 두께와 개수**다. 창작자에게는 그 둘 대신 면 비율과 단계를 묻고
  *    여기서 역산한다 — 미지수 둘에 식이 둘이라 정확히 풀린다.
  *
- *      선의 영역 = (1 − 면비율) × 판형
+ *      선의 영역 = 선영역비율 × 판형
  *      unit      = 선의 영역 / 단계        (모든 unit의 두께는 같다)
  *
  * 🔴 각 unit 안에서 선은 **「선의 자리」 쪽 모서리에 붙어** 반대쪽으로 찬다. 반대로 붙이면 굵어지는
  *    방향이 면에서 번져 나가는 모양이 되고 판 끝이 빈다.
  *
- * 🔑 판은 **[면] [선의 영역] [면]** 세 토막이다. 두 면은 각각 0이 될 수 있지만 **큰 쪽 면이 선의
- *    영역보다 넓어야** 한다(가이드라인의 1:1). 띄우기의 상한을 그 조건에서 역산해 두므로 어떤
- *    값을 넣어도 규칙이 깨지지 않는다 — 자리 쪽 면은 `면 − 선의 영역`을 넘지 못하고, 그래서
- *    반대쪽 면은 언제나 선의 영역 이상으로 남는다.
+ * 🔑 판은 **[면] [선의 영역] [면]** 세 토막이다. 앞의 둘을 비율로 받고 나머지가 반대쪽 면이다.
+ *    두 비율의 상한이 각각 1/3이라 합이 2/3을 넘지 못하고, 그래서 반대쪽 면은 언제나 1/3 이상 —
+ *    선의 영역보다 좁을 수 없다. **가이드라인의 1:1이 범위 자체로 지켜진다.**
  */
 export function createKeyVisualFormationScene(
 	input: KeyVisualFormationInput,
@@ -136,11 +135,9 @@ export function createKeyVisualFormationScene(
 	const vertical = anchor.axis === 'vertical'
 	const axisLength = vertical ? viewport.height : viewport.width
 	const crossLength = vertical ? viewport.width : viewport.height
-	const lineArea = axisLength * (1 - input.planeRatio)
+	const lineArea = axisLength * input.lineRatio
 	const unit = lineArea / input.steps
-	// 자리 쪽 면이 커질 수 있는 한계 — 여기까지만 띄워야 반대쪽 면이 선의 영역 이상으로 남는다.
-	const slack = Math.max(0, axisLength - lineArea - lineArea)
-	const nearPlane = slack * input.lineOffset
+	const nearPlane = axisLength * input.planeRatio
 	/**
 	 * 🔴 최소 두께는 **양쪽 모두**에 걸린다. unit에서 칠하는 쪽이 선이고 남는 쪽이 면인데, 그 면도
 	 *    눈에는 선으로 보인다 — 한쪽만 받치면 반대쪽이 머리카락처럼 남는다.
