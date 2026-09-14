@@ -2,6 +2,7 @@
 
 import { Controller } from '@/components/shared/controller'
 import { ControllerRenderer } from '@/components/shared/controller-renderer'
+import { GRAPHIC_ASSET_SOURCES } from '@/components/studio/graphic/graphic-asset-sources'
 import { GraphicProfilePicker } from '@/components/studio/graphic/graphic-profile-picker'
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import {
@@ -25,14 +26,14 @@ export function GraphicSidebar({
 	output: GraphicExportView
 	preview: ReturnType<typeof useProfilePreview>
 }) {
-	const { config, profiles, controls } = useGraphicStudio()
+	const { config, groups, profiles, controls } = useGraphicStudio()
 	/**
 	 * 🔑 이 패널은 **왼쪽에 서지 않은 축 전부**를 그린다 — 세기·속도처럼 세밀하고 잡다한 값들이다.
 	 *    감추지 않는다: 창작자가 다룰 수는 있어야 하고, 다만 다루리라 기대하지 않는 자리다.
 	 *    큰 축(색 조합·형태)은 `GraphicLeftPanel`이 캔버스 왼쪽에서 갖는다.
 	 */
 	const { right: rightGroups } = splitControllerGroups(
-		config.controller.groups,
+		groups,
 		config.controller.left,
 		config.controller.right,
 	)
@@ -122,6 +123,7 @@ export function GraphicSidebar({
 					presentation={config.controllerPresentation}
 					values={controls.values}
 					bindings={controls.bindings}
+					assetSources={GRAPHIC_ASSET_SOURCES}
 					onChange={controls.update}
 				/>
 			</StudioSidebar>
