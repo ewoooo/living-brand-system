@@ -17,6 +17,11 @@ describe('createKeyVisualFormationScene', () => {
 		expect(scene({ steps: 20 }).bands).toHaveLength(21)
 	})
 
+	it('면에 붙은 첫 선도 감쇠를 따라 움직인다', () => {
+		const first = (decay: number) => scene({ decay }).bands[1]?.height ?? 0
+		expect(first(0.5)).toBeGreaterThan(first(2))
+	})
+
 	it('면에서 멀어질수록 선이 굵어진다', () => {
 		const [, ...lines] = scene().bands
 		const heights = lines.map((band) => band.height)
@@ -24,7 +29,7 @@ describe('createKeyVisualFormationScene', () => {
 	})
 
 	it('선도 그 사이에 남는 면도 최소 두께 아래로 내려가지 않는다', () => {
-		for (const decay of [-4, 0, 4]) {
+		for (const decay of [0.1, 1, 4]) {
 			const [plane, ...lines] = scene({ decay, steps: 20 }).bands
 			if (!plane) throw new Error('면이 없다')
 			const slot = (viewport.height - plane.height) / 20

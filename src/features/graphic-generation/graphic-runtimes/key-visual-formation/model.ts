@@ -24,7 +24,7 @@ export const keyVisualFormationInputSchema = z.strictObject({
 	anchor: z.enum(anchorIds),
 	planeRatio: z.number().min(0.5).max(0.9),
 	steps: z.number().int().min(6).max(20),
-	decay: z.number().min(-4).max(4),
+	decay: z.number().min(0.1).max(4),
 })
 
 export type KeyVisualFormationInput = z.infer<typeof keyVisualFormationInputSchema>
@@ -99,10 +99,11 @@ export function createKeyVisualFormationScene(
 	)
 	const spans = [{ start: 0, size: planeLength }]
 	for (let index = 0; index < input.steps; index++) {
-		// index/steps라 마지막 칸도 두께가 0이 아니다 — 「단계」가 곧 보이는 선의 개수다.
-		const progress = index / input.steps
-		// 면에 가까울수록 얇고 멀어질수록 굵다. 감쇠가 음수면 그 방향이 뒤집힌다.
-		const falloff = input.decay >= 0 ? progress ** input.decay : (1 - progress) ** -input.decay
+		// 🔴 (index+1)/steps다. index/steps로 두면 첫 칸의 progress가 0이라 falloff도 0이 되어
+		//    그 선만 감쇠와 무관하게 하한에 눌린 채 멈춘다.
+		const progress = (index + 1) / input.steps
+		// 면에 가까울수록 얇고 멀어질수록 굵다.
+		const falloff = progress ** input.decay
 		const size = clamp(slotLength * falloff, minWeight, slotLength - minWeight)
 		// 🔴 선은 칸의 **먼 쪽 끝**에 붙는다 — 가까운 쪽에 붙이면 굵어지는 방향이 면에서 번져 나가는
 		//    모양이 되고 판 끝이 배경으로 남는다. 먼 쪽에 붙여야 반대 변에서 차올라 면을 만난다.

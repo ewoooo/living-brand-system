@@ -130,12 +130,12 @@ export default defineGraphicRuntime({
 					),
 					// 하한 6 — 면에서 선으로 이어지는 단계는 6단계 이상이어야 한다.
 					rangeControl('steps', '단계', KEY_VISUAL_FORMATION_DEFAULT_INPUT.steps, 6, 20),
-					// 음수는 반대 방향 — 면에서 멀어질수록 굵어진다. 어느 쪽이든 최소 두께가 바닥을 받친다.
+					// 0보다 커야 한다 — 0이면 모든 선이 같은 두께라 「점진적으로 확장」이 사라진다.
 					rangeControl(
 						'decay',
 						'가늘어지는 정도',
 						KEY_VISUAL_FORMATION_DEFAULT_INPUT.decay,
-						-4,
+						0.1,
 						4,
 						0.1,
 						{ precision: 1 },
