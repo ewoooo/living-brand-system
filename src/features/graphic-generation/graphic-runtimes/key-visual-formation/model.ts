@@ -103,9 +103,12 @@ export function createKeyVisualFormationScene(
 		const progress = index / input.steps
 		// 면에 가까울수록 얇고 멀어질수록 굵다. 감쇠가 음수면 그 방향이 뒤집힌다.
 		const falloff = input.decay >= 0 ? progress ** input.decay : (1 - progress) ** -input.decay
+		const size = clamp(slotLength * falloff, minWeight, slotLength - minWeight)
+		// 🔴 선은 칸의 **먼 쪽 끝**에 붙는다 — 가까운 쪽에 붙이면 굵어지는 방향이 면에서 번져 나가는
+		//    모양이 되고 판 끝이 배경으로 남는다. 먼 쪽에 붙여야 반대 변에서 차올라 면을 만난다.
 		spans.push({
-			start: planeLength + index * slotLength,
-			size: clamp(slotLength * falloff, minWeight, slotLength - minWeight),
+			start: planeLength + index * slotLength + (slotLength - size),
+			size,
 		})
 	}
 
