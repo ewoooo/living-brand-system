@@ -6,10 +6,14 @@ import {
 } from '@/features/graphic-generation/runtime/graphic-plugin'
 import type { VectorSceneArtifact } from '@/modules/studio-artifact/studio-artifact'
 import type {
+	ControllerGroupDefinition,
 	ControllerRuntimeBindings,
 	ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
-import { acceptsControllerExecutionValues } from '@/modules/studio-controller/controller-definition'
+import {
+	acceptsControllerExecutionValues,
+	applyControllerRestrictions,
+} from '@/modules/studio-controller/controller-definition'
 
 const graphicStudioPluginCatalog = createGraphicStudioPluginCatalog(graphicStudioPlugins)
 
@@ -42,6 +46,19 @@ export function getGraphicStudioRuntimeBindings(
 	viewport: { width: number; height: number },
 ): ControllerRuntimeBindings {
 	return getGraphicStudioPlugin(config)?.getBindings?.(viewport) ?? {}
+}
+
+/**
+ * 현재 값이 좁히는 만큼만 줄인 control 그룹을 낸다 — 값에 따라 선택지가 달라지는 축이 쓰는 유일한 길.
+ * 좁힐 것이 없으면 **같은 배열 참조**를 그대로 돌려준다(useMemo 아래에서 재렌더를 만들지 않게).
+ */
+export function getGraphicStudioRuntimeGroups(
+	config: GraphicRuntimeManifest,
+	values: ControllerValues,
+): readonly ControllerGroupDefinition[] {
+	const restrictions = getGraphicStudioPlugin(config)?.getRestrictions?.(values) ?? null
+	if (!restrictions) return config.controller.groups
+	return applyControllerRestrictions(config.controller.groups, restrictions)
 }
 
 function getGraphicStudioPluginById(id: string): GraphicStudioPlugin | null {

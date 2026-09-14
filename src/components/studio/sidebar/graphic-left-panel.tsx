@@ -1,6 +1,7 @@
 'use client'
 
 import { ControllerRenderer } from '@/components/shared/controller-renderer'
+import { GRAPHIC_ASSET_SOURCES } from '@/components/studio/graphic/graphic-asset-sources'
 import { StudioLeftPanel } from '@/components/studio/sidebar/studio-left-panel'
 import { useGraphicStudio } from '@/features/graphic-generation/hooks/use-graphic-studio'
 import { splitControllerGroups } from '@/modules/studio-controller/controller-definition'
@@ -13,12 +14,8 @@ import { splitControllerGroups } from '@/modules/studio-controller/controller-de
  * `controller.left`로 선언한다.
  */
 export function GraphicLeftPanel() {
-	const { config, controls } = useGraphicStudio()
-	const { left } = splitControllerGroups(
-		config.controller.groups,
-		config.controller.left,
-		config.controller.right,
-	)
+	const { config, groups, controls } = useGraphicStudio()
+	const { left } = splitControllerGroups(groups, config.controller.left, config.controller.right)
 
 	// 🔴 축이 없어도 `null`을 내지 않는다 — 레이아웃은 콘텐츠와 별개다. 빈 자리는 껍데기가 말한다.
 	return (
@@ -34,6 +31,7 @@ export function GraphicLeftPanel() {
 					presentation={config.controllerPresentation}
 					values={controls.values}
 					bindings={controls.bindings}
+					assetSources={GRAPHIC_ASSET_SOURCES}
 					onChange={controls.update}
 				/>
 			) : undefined}
