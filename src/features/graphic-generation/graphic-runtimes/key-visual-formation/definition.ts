@@ -2,39 +2,46 @@ import { defineGraphicRuntime } from '@/features/graphic-generation/graphic-runt
 import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
 
 /**
- * 색 단계. 숫자가 클수록 짙다 — 3·2·1이 p.67에서 실측한 초록 세 단계이고 0이 흰색이다.
+ * px 단위 control은 모두 캔버스 짧은 변이 이 길이일 때를 기준으로 읽는다.
+ * 실제 렌더는 `min(width, height) / 기준값`으로 환산하므로 미리보기와 export가 같은 구도를 만든다.
  */
-const COLOR_LEVELS = [
-	{ level: 0, key: 'white', label: '화이트', hex: '#FFFFFF' },
-	{ level: 1, key: 'heritage', label: '헤리티지', hex: '#00AF41' },
-	{ level: 2, key: 'prosperity', label: '프로스페리티', hex: '#007332' },
-	{ level: 3, key: 'deep', label: '딥', hex: '#00280A' },
-] as const
+export const KEY_VISUAL_FORMATION_REFERENCE_BASE = 1080
 
 /**
- * 면·선 두 색의 조합. 단계가 다른 두 색을 짝지어 **면이 언제나 더 짙은** 쌍만 남긴다.
- *
- * 🔴 한 조합은 **색 두 개뿐이다.** 면은 배경과 같은 색으로 칠하고 선만 다른 색이다 — 면은 형태가
- *    아니라 「선이 모여 메워진 자리」라서 배경에서 떠오르면 안 된다.
- * 🔑 네 단계에서 순서쌍은 12개지만 면이 더 짙은 쪽만 쓰므로 절반인 6개가 남는다.
- */
-export const KEY_VISUAL_FORMATION_COLORWAYS = Object.fromEntries(
-	COLOR_LEVELS.flatMap((plane) =>
-		COLOR_LEVELS.filter((line) => line.level < plane.level).map((line) => [
-			`${plane.key}On${line.key[0]?.toUpperCase()}${line.key.slice(1)}`,
-			{ label: `${plane.label} · ${line.label}`, plane: plane.hex, line: line.hex },
-		]),
-	),
-) as Record<string, { label: string; plane: string; line: string }>
-export type KeyVisualFormationColorwayId = keyof typeof KEY_VISUAL_FORMATION_COLORWAYS
-
-/**
- * 선이 이보다 얇아지지 않는다(기준 판 짧은 변 1080px 기준). 감쇠를 세게 걸면 끝쪽 선이 머리카락처럼
- * 남아 보기 불편해지고, 인쇄에서는 아예 사라진다.
+ * 선이 이보다 얇아지지 않는다(기준 판 짧은 변 1080px 기준). 감쇠를 세게 걸면 끝쪽이 머리카락처럼
+ * 남아 보기 불편해지고 인쇄에서는 아예 사라진다.
  */
 export const KEY_VISUAL_FORMATION_MIN_LINE_WEIGHT = 2
 
-/** 면이 놓이는 변. 선은 그 반대쪽으로 뻗어 나간다. */
+/**
+ * 색 단계. 숫자가 클수록 짙다 — 1·2·3이 p.67에서 실측한 초록 세 단계이고 0이 흰색이다.
+ *
+ * 🔴 **선은 면보다 언제나 밝다**(선 단계 < 면 단계). 뒤집히면 「선이 모여 면이 된다」가 반대로 읽힌다.
+ *    그래서 면으로는 0(흰색)을 고를 수 없다 — 그보다 밝은 선이 없다.
+ */
+export const KEY_VISUAL_FORMATION_COLOR_LEVELS = [
+	// 🔴 키 이름이 `id`가 아니다 — 카탈로그 생성기가 파일에서 **처음 만나는** `id:`를 런타임 id로 읽는다.
+	{ key: 'white', label: '화이트', hex: '#FFFFFF' },
+	{ key: 'heritage', label: '헤리티지', hex: '#00AF41' },
+	{ key: 'prosperity', label: '프로스페리티', hex: '#007332' },
+	{ key: 'deep', label: '딥', hex: '#00280A' },
+] as const
+
+export type KeyVisualFormationColorId = (typeof KEY_VISUAL_FORMATION_COLOR_LEVELS)[number]['key']
+
+/** 단계 번호 = 배열 순서. 짙을수록 크다. */
+export function keyVisualFormationColorLevel(id: string): number {
+	return KEY_VISUAL_FORMATION_COLOR_LEVELS.findIndex((color) => color.key === id)
+}
+
+export function keyVisualFormationColorHex(id: string): string {
+	return (
+		KEY_VISUAL_FORMATION_COLOR_LEVELS.find((color) => color.key === id)?.hex ??
+		KEY_VISUAL_FORMATION_COLOR_LEVELS[0].hex
+	)
+}
+
+/** 면이 놓이는 반대편 — 선이 붙는 변. 선은 이 변에서 반대쪽으로 차오른다. */
 export const KEY_VISUAL_FORMATION_ANCHORS = {
 	top: { label: '위', axis: 'vertical' },
 	bottom: { label: '아래', axis: 'vertical' },
@@ -46,12 +53,15 @@ export type KeyVisualFormationAnchorId = keyof typeof KEY_VISUAL_FORMATION_ANCHO
 /**
  * 가이드라인 B.8 TYPE C — FORMATION의 기본값.
  *
- * 면 하나가 한쪽 변을 채우고, 반대쪽으로 가면서 선이 점점 얇아진다.
- * 🔴 두 수치는 가이드라인 규정이라 컨트롤 범위가 곧 규정이다 — 면 비율 1:1 이상 · 단계 6 이상.
+ * 면이 판 전체를 덮고 그 **위에** 선이 얹힌다. 면에는 이미지를 깔 수 있고 디머로 눌러 둘 수 있다.
  */
 export const KEY_VISUAL_FORMATION_DEFAULT_INPUT = {
-	colorway: 'deepOnProsperity',
-	anchor: 'top',
+	planeColor: 'deep',
+	lineColor: 'prosperity',
+	planeImage: null,
+	dimmer: false,
+	dimmerOpacity: 0.2,
+	anchor: 'bottom',
 	planeRatio: 0.5,
 	steps: 8,
 	decay: 2,
@@ -71,6 +81,21 @@ function rangeControl(
 	return { id, kind: 'range', label, defaultValue, min, max, step, display }
 }
 
+function colorOptions(levels: readonly (typeof KEY_VISUAL_FORMATION_COLOR_LEVELS)[number][]) {
+	return levels.map((color) => ({
+		value: color.key,
+		label: color.label,
+		colors: [color.hex],
+	}))
+}
+
+// 🔴 면은 0(흰색)을 못 고른다 — 그보다 밝은 선이 없다.
+const PLANE_LEVELS = KEY_VISUAL_FORMATION_COLOR_LEVELS.filter((_, level) => level > 0)
+// 🔴 선의 기본 선택지는 **가장 넓은 경우**(면이 가장 짙을 때)다. 값에 따른 좁히기는 넓힐 수 없다.
+const LINE_LEVELS = KEY_VISUAL_FORMATION_COLOR_LEVELS.filter(
+	(_, level) => level < KEY_VISUAL_FORMATION_COLOR_LEVELS.length - 1,
+)
+
 export default defineGraphicRuntime({
 	studio: 'graphic',
 	id: 'key-visual-formation',
@@ -79,37 +104,67 @@ export default defineGraphicRuntime({
 	type: 'p5',
 	artifacts: { vector: {}, raster: {} },
 	controller: {
-		// 면이 어느 변에 붙는가가 이 런타임의 형태 축이다.
-		left: ['anchor', 'colorway'],
+		// 면·선의 색과 재료는 창작자가 늘 만지는 큰 축이다 — 왼쪽 패널.
+		left: ['planeColor', 'lineColor', 'planeImage', 'dimmer', 'dimmerOpacity', 'anchor'],
 		right: ['planeRatio', 'steps', 'decay'],
 		groups: [
 			{
-				id: 'graphic',
-				title: 'Graphic',
+				id: 'plane',
+				title: 'Plane',
 				controls: [
+					{
+						id: 'planeColor',
+						kind: 'select' as const,
+						label: '면 색상',
+						variant: 'list' as const,
+						defaultValue: KEY_VISUAL_FORMATION_DEFAULT_INPUT.planeColor,
+						options: colorOptions(PLANE_LEVELS),
+					},
+					{
+						id: 'planeImage',
+						kind: 'asset' as const,
+						label: '면 이미지',
+						source: 'sample-images' as const,
+						defaultValue: KEY_VISUAL_FORMATION_DEFAULT_INPUT.planeImage,
+					},
+					{
+						id: 'dimmer',
+						kind: 'toggle' as const,
+						label: 'Dimmer',
+						defaultValue: KEY_VISUAL_FORMATION_DEFAULT_INPUT.dimmer,
+					},
+					// Template 배경 디머와 같은 범위다 — 0.7을 넘기면 이미지가 사실상 사라진다.
+					rangeControl(
+						'dimmerOpacity',
+						'Dimmer Opacity',
+						KEY_VISUAL_FORMATION_DEFAULT_INPUT.dimmerOpacity,
+						0,
+						0.7,
+						0.01,
+						{ precision: 2 },
+					),
+				],
+			},
+			{
+				id: 'line',
+				title: 'Line',
+				controls: [
+					{
+						id: 'lineColor',
+						kind: 'select' as const,
+						label: '선 색상',
+						variant: 'list' as const,
+						defaultValue: KEY_VISUAL_FORMATION_DEFAULT_INPUT.lineColor,
+						options: colorOptions(LINE_LEVELS),
+					},
 					{
 						id: 'anchor',
 						kind: 'select' as const,
-						label: '면의 자리',
+						label: '선의 자리',
 						variant: 'segmented' as const,
 						defaultValue: KEY_VISUAL_FORMATION_DEFAULT_INPUT.anchor,
 						options: Object.entries(KEY_VISUAL_FORMATION_ANCHORS).map(
 							([value, anchor]) => ({ value, label: anchor.label }),
-						),
-					},
-					{
-						id: 'colorway',
-						kind: 'select' as const,
-						label: '컬러',
-						variant: 'list' as const,
-						defaultValue: KEY_VISUAL_FORMATION_DEFAULT_INPUT.colorway,
-						// 고르는 것이 색 하나가 아니라 배경·선 쌍이라 선택지가 색 자체를 내놓는다.
-						options: Object.entries(KEY_VISUAL_FORMATION_COLORWAYS).map(
-							([value, colorway]) => ({
-								value,
-								label: colorway.label,
-								colors: [colorway.plane, colorway.line],
-							}),
 						),
 					},
 				],

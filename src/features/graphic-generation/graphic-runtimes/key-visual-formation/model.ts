@@ -1,26 +1,42 @@
 import { z } from 'zod'
 import type { GraphicModelAdapter } from '@/features/graphic-generation/runtime/graphic-plugin'
-import type { VectorSceneArtifact } from '@/modules/studio-artifact/studio-artifact'
+import type {
+	VectorPrimitive,
+	VectorSceneArtifact,
+} from '@/modules/studio-artifact/studio-artifact'
 import type {
 	ControllerControlValue,
 	ControllerValues,
+	StudioControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
 import {
 	KEY_VISUAL_FORMATION_ANCHORS,
-	KEY_VISUAL_FORMATION_COLORWAYS,
+	KEY_VISUAL_FORMATION_COLOR_LEVELS,
 	KEY_VISUAL_FORMATION_DEFAULT_INPUT,
 	KEY_VISUAL_FORMATION_MIN_LINE_WEIGHT,
+	KEY_VISUAL_FORMATION_REFERENCE_BASE,
 	type KeyVisualFormationAnchorId,
-	type KeyVisualFormationColorwayId,
+	type KeyVisualFormationColorId,
+	keyVisualFormationColorHex,
+	keyVisualFormationColorLevel,
 } from './definition'
 
-export { KEY_VISUAL_FORMATION_DEFAULT_INPUT } from './definition'
+export {
+	KEY_VISUAL_FORMATION_DEFAULT_INPUT,
+	KEY_VISUAL_FORMATION_REFERENCE_BASE,
+} from './definition'
 
-const colorwayIds = Object.keys(KEY_VISUAL_FORMATION_COLORWAYS) as KeyVisualFormationColorwayId[]
+const colorIds = KEY_VISUAL_FORMATION_COLOR_LEVELS.map(
+	(color) => color.key,
+) as KeyVisualFormationColorId[]
 const anchorIds = Object.keys(KEY_VISUAL_FORMATION_ANCHORS) as KeyVisualFormationAnchorId[]
 
 export const keyVisualFormationInputSchema = z.strictObject({
-	colorway: z.enum(colorwayIds),
+	planeColor: z.enum(colorIds),
+	lineColor: z.enum(colorIds),
+	planeImage: z.string().min(1).nullable(),
+	dimmer: z.boolean(),
+	dimmerOpacity: z.number().min(0).max(0.7),
 	anchor: z.enum(anchorIds),
 	planeRatio: z.number().min(0.5).max(0.9),
 	steps: z.number().int().min(6).max(20),
@@ -39,10 +55,32 @@ function resolveOption<Id extends string>(
 		: fallback
 }
 
+/** 면보다 밝은(단계가 낮은) 색만 — 선이 고를 수 있는 전부다. */
+export function keyVisualFormationLineChoices(planeColor: string): KeyVisualFormationColorId[] {
+	const planeLevel = keyVisualFormationColorLevel(planeColor)
+	return KEY_VISUAL_FORMATION_COLOR_LEVELS.filter((_, level) => level < planeLevel).map(
+		(color) => color.key,
+	)
+}
+
 export function toKeyVisualFormationInput(values: ControllerValues): KeyVisualFormationInput {
 	const base = KEY_VISUAL_FORMATION_DEFAULT_INPUT
+	const planeColor = resolveOption(values.planeColor, colorIds, base.planeColor)
+	const choices = keyVisualFormationLineChoices(planeColor)
+	// 🔴 면을 더 밝게 바꾸면 들고 있던 선 색이 규칙 밖으로 나간다 — 남은 것 중 가장 짙은 쪽으로
+	//    끌어내린다. 화면은 좁아진 선택지를 보여 주지만 값은 사용자가 다시 고르기 전까지 옛 것이다.
+	const lineColor = resolveOption(
+		values.lineColor,
+		choices,
+		choices[choices.length - 1] ?? base.lineColor,
+	)
 	return keyVisualFormationInputSchema.parse({
-		colorway: resolveOption(values.colorway, colorwayIds, base.colorway),
+		planeColor,
+		lineColor,
+		planeImage:
+			typeof values.planeImage === 'string' && values.planeImage ? values.planeImage : null,
+		dimmer: typeof values.dimmer === 'boolean' ? values.dimmer : base.dimmer,
+		dimmerOpacity: values.dimmerOpacity,
 		anchor: resolveOption(values.anchor, anchorIds, base.anchor),
 		planeRatio: values.planeRatio,
 		steps: values.steps,
@@ -55,76 +93,76 @@ export type KeyVisualFormationBand = {
 	y: number
 	width: number
 	height: number
-	fill: string
 }
 
 export type KeyVisualFormationScene = {
 	width: number
 	height: number
-	backgroundColor: string
-	/** 면 하나 + 선 여러 개. 면이 더 짙으므로 색이 다르다 — 칠할 색을 밴드가 직접 갖는다. */
+	/** 면 — 판 전체다. 이미지가 있으면 그 위를 덮고, 디머는 다시 그 위를 덮는다. */
+	planeColor: string
+	planeImage: string | null
+	dimmerOpacity: number
+	lineColor: string
+	/** 면 **위에** 얹히는 선들. 면을 그리는 밴드는 없다 — 면이 곧 판이다. */
 	bands: KeyVisualFormationBand[]
 }
 
 /**
- * 면이 놓인 변에서 반대쪽으로 가며 선이 얇아진다.
+ * 선은 「선의 자리」 변에 붙어 반대쪽으로 차오른다.
  *
- * 🔑 칸을 먼저 균등하게 나누고 그 안에서 두께만 줄인다 — 두께를 줄이면 남는 자리가 곧 간격이 되므로
- *    "선이 얇아진다"와 "간격이 벌어진다"를 따로 조절할 필요가 없다.
+ * 🔑 실제 선언은 **unit(선 + 여백) 두께와 개수**다. 창작자에게는 그 둘 대신 면 비율과 단계를 묻고
+ *    여기서 역산한다 — 미지수 둘에 식이 둘이라 정확히 풀린다.
+ *
+ *      선의 영역 = (1 − 면비율) × 판형
+ *      unit      = 선의 영역 / 단계        (모든 unit의 두께는 같다)
+ *
+ * 🔴 각 unit 안에서 선은 **「선의 자리」 쪽 모서리에 붙어** 반대쪽으로 찬다. 반대로 붙이면 굵어지는
+ *    방향이 면에서 번져 나가는 모양이 되고 판 끝이 빈다.
  */
 export function createKeyVisualFormationScene(
 	input: KeyVisualFormationInput,
 	viewport: { width: number; height: number },
 ): KeyVisualFormationScene {
-	const colorway = KEY_VISUAL_FORMATION_COLORWAYS[input.colorway]
 	const anchor = KEY_VISUAL_FORMATION_ANCHORS[input.anchor]
 	const vertical = anchor.axis === 'vertical'
 	const axisLength = vertical ? viewport.height : viewport.width
 	const crossLength = vertical ? viewport.width : viewport.height
-	const planeLength = axisLength * input.planeRatio
-	const slotLength = (axisLength - planeLength) / input.steps
-	// 면이 끝나는 자리에서 선이 시작한다. top·left는 정방향, bottom·right는 반대편에서 되돌아온다.
-	const forward = input.anchor === 'top' || input.anchor === 'left'
-
-	// 🔴 얇아지는 데에 바닥이 있다 — 감쇠를 세게 걸면 끝쪽 선이 머리카락처럼 남아 보기 불편하고
-	//    인쇄에서는 사라진다. 부호를 뒤집어 굵어지는 방향으로 가도 반대쪽 끝에서 같은 일이 생긴다.
+	const unit = (axisLength * (1 - input.planeRatio)) / input.steps
 	/**
-	 * 🔴 최소 두께는 **양쪽 모두**에 걸린다. 칸에서 칠하는 쪽이 선이고 남는 쪽이 면인데, 그 면도
+	 * 🔴 최소 두께는 **양쪽 모두**에 걸린다. unit에서 칠하는 쪽이 선이고 남는 쪽이 면인데, 그 면도
 	 *    눈에는 선으로 보인다 — 한쪽만 받치면 반대쪽이 머리카락처럼 남는다.
-	 *    칸이 하한 두 몫보다 좁으면 반씩 나눈다.
+	 *    unit이 하한 두 몫보다 좁으면 반씩 나눈다.
 	 */
 	const minWeight = Math.min(
-		slotLength / 2,
-		KEY_VISUAL_FORMATION_MIN_LINE_WEIGHT * (Math.min(viewport.width, viewport.height) / 1080),
+		unit / 2,
+		KEY_VISUAL_FORMATION_MIN_LINE_WEIGHT *
+			(Math.min(viewport.width, viewport.height) / KEY_VISUAL_FORMATION_REFERENCE_BASE),
 	)
-	const spans = [{ start: 0, size: planeLength }]
+	// 「선의 자리」 변에서 잰 거리로 먼저 풀고, 판 좌표로는 마지막에 한 번만 옮긴다.
+	const nearEdge = input.anchor === 'top' || input.anchor === 'left'
+	const bands: KeyVisualFormationBand[] = []
+
 	for (let index = 0; index < input.steps; index++) {
-		// 🔴 (index+1)/steps다. index/steps로 두면 첫 칸의 progress가 0이라 falloff도 0이 되어
-		//    그 선만 감쇠와 무관하게 하한에 눌린 채 멈춘다.
-		const progress = (index + 1) / input.steps
-		// 면에 가까울수록 얇고 멀어질수록 굵다.
-		const falloff = progress ** input.decay
-		const size = clamp(slotLength * falloff, minWeight, slotLength - minWeight)
-		// 🔴 선은 칸의 **먼 쪽 끝**에 붙는다 — 가까운 쪽에 붙이면 굵어지는 방향이 면에서 번져 나가는
-		//    모양이 되고 판 끝이 배경으로 남는다. 먼 쪽에 붙여야 반대 변에서 차올라 면을 만난다.
-		spans.push({
-			start: planeLength + index * slotLength + (slotLength - size),
-			size,
-		})
+		// index 0이 자리에 붙은 unit이다. p가 1에서 시작해 1/steps까지 내려가므로 0으로 눌리지 않는다.
+		const progress = (input.steps - index) / input.steps
+		const size = clamp(unit * progress ** input.decay, minWeight, unit - minWeight)
+		const distance = index * unit
+		const offset = nearEdge ? distance : axisLength - distance - size
+		bands.push(
+			vertical
+				? { x: 0, y: offset, width: crossLength, height: size }
+				: { x: offset, y: 0, width: size, height: crossLength },
+		)
 	}
 
 	return {
 		width: viewport.width,
 		height: viewport.height,
-		backgroundColor: colorway.plane,
-		bands: spans.map(({ start, size }, index) => {
-			const offset = forward ? start : axisLength - start - size
-			// 첫 밴드가 면이다 — 나머지 선보다 짙게 칠한다.
-			const fill = index === 0 ? colorway.plane : colorway.line
-			return vertical
-				? { x: 0, y: offset, width: crossLength, height: size, fill }
-				: { x: offset, y: 0, width: size, height: crossLength, fill }
-		}),
+		planeColor: keyVisualFormationColorHex(input.planeColor),
+		planeImage: input.planeImage,
+		dimmerOpacity: input.dimmer ? input.dimmerOpacity : 0,
+		lineColor: keyVisualFormationColorHex(input.lineColor),
+		bands,
 	}
 }
 
@@ -135,20 +173,48 @@ function clamp(value: number, min: number, max: number) {
 export function createKeyVisualFormationVectorArtifact(
 	scene: KeyVisualFormationScene,
 ): VectorSceneArtifact {
+	const primitives: VectorPrimitive[] = []
+	if (scene.planeImage) {
+		// 면 이미지는 판을 덮는다 — 비율을 지키고 넘치는 쪽을 자른다(화면의 cover와 같게).
+		primitives.push({
+			kind: 'image',
+			x: 0,
+			y: 0,
+			width: scene.width,
+			height: scene.height,
+			href: scene.planeImage,
+			preserveAspectRatio: 'xMidYMid slice',
+		})
+	}
+	if (scene.dimmerOpacity > 0) {
+		primitives.push({
+			kind: 'rect',
+			x: 0,
+			y: 0,
+			width: scene.width,
+			height: scene.height,
+			fill: '#000000',
+			opacity: scene.dimmerOpacity,
+		})
+	}
+	for (const band of scene.bands) {
+		primitives.push({
+			kind: 'rect',
+			x: band.x,
+			y: band.y,
+			width: band.width,
+			height: band.height,
+			fill: scene.lineColor,
+		})
+	}
+
 	return {
 		kind: 'vector',
 		source: {
 			width: scene.width,
 			height: scene.height,
-			background: scene.backgroundColor,
-			primitives: scene.bands.map((band) => ({
-				kind: 'rect' as const,
-				x: band.x,
-				y: band.y,
-				width: band.width,
-				height: band.height,
-				fill: band.fill,
-			})),
+			background: scene.planeColor,
+			primitives,
 		},
 	}
 }
@@ -158,6 +224,26 @@ const model = {
 		createKeyVisualFormationVectorArtifact(
 			createKeyVisualFormationScene(toKeyVisualFormationInput(values), viewport),
 		),
+	/** 면을 고르면 선 선택지가 그보다 밝은 색으로 좁아진다. */
+	getRestrictions: (values): StudioControllerRestrictions => {
+		const planeColor = resolveOption(
+			values.planeColor,
+			colorIds,
+			KEY_VISUAL_FORMATION_DEFAULT_INPUT.planeColor,
+		)
+		const choices = keyVisualFormationLineChoices(planeColor)
+		return {
+			controls: [
+				{
+					controlId: 'lineColor',
+					optionValues: choices,
+					// 🔴 기본값도 함께 좁힌다 — 선택지만 줄이면 목록 밖으로 나간 기본값을 계약이 거부한다.
+					//    남은 것 중 가장 짙은 쪽이 원래 기본값에 가장 가깝다.
+					defaultValue: choices[choices.length - 1],
+				},
+			],
+		}
+	},
 } satisfies GraphicModelAdapter
 
 export default model
