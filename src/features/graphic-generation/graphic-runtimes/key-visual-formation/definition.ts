@@ -62,6 +62,7 @@ export const KEY_VISUAL_FORMATION_DEFAULT_INPUT = {
 	dimmer: false,
 	dimmerOpacity: 0.2,
 	anchor: 'bottom',
+	lineOffset: 0,
 	planeRatio: 0.5,
 	steps: 8,
 	decay: 2,
@@ -106,7 +107,7 @@ export default defineGraphicRuntime({
 	controller: {
 		// 면·선의 색과 재료는 창작자가 늘 만지는 큰 축이다 — 왼쪽 패널.
 		left: ['planeColor', 'lineColor', 'planeImage', 'dimmer', 'dimmerOpacity', 'anchor'],
-		right: ['planeRatio', 'steps', 'decay'],
+		right: ['planeRatio', 'lineOffset', 'steps', 'decay'],
 		groups: [
 			{
 				id: 'plane',
@@ -180,6 +181,22 @@ export default defineGraphicRuntime({
 						KEY_VISUAL_FORMATION_DEFAULT_INPUT.planeRatio,
 						0.5,
 						0.9,
+						0.01,
+						{ precision: 2 },
+					),
+					/**
+					 * 선의 영역을 자리에서 띄운다 — 0이면 변에 붙고, 1이면 규칙이 허락하는 끝까지 간다.
+					 *
+					 * 🔴 범위가 곧 규정이다. 띄우는 만큼 자리 쪽 면이 생기고 반대쪽 면이 줄어드는데,
+					 *    **큰 쪽 면이 선의 영역보다 넓어야** 하므로 그 한계를 넘는 값 자체가 없다.
+					 *    면 비율이 1:1이면 띄울 자리가 없어 이 축이 아무것도 하지 않는다.
+					 */
+					rangeControl(
+						'lineOffset',
+						'선 영역 띄우기',
+						KEY_VISUAL_FORMATION_DEFAULT_INPUT.lineOffset,
+						0,
+						1,
 						0.01,
 						{ precision: 2 },
 					),

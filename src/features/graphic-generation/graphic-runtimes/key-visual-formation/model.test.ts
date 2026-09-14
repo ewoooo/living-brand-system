@@ -71,6 +71,38 @@ describe('createKeyVisualFormationScene', () => {
 	})
 })
 
+describe('판은 [면] [선의 영역] [면] 세 토막이다', () => {
+	it('띄우기 0이면 자리 쪽 면이 없다 — 선이 변에 붙는다', () => {
+		const { planeAreas } = scene({ lineOffset: 0 })
+		expect(planeAreas[0]).toBe(0)
+	})
+
+	it('어떤 값에서도 큰 쪽 면이 선의 영역보다 넓다 — 띄우기 상한이 그 조건에서 나온다', () => {
+		for (const planeRatio of [0.5, 0.6, 0.75, 0.9]) {
+			for (const lineOffset of [0, 0.25, 0.5, 0.75, 1]) {
+				const { planeAreas } = scene({ planeRatio, lineOffset })
+				const lineArea = viewport.height * (1 - planeRatio)
+				expect(Math.max(...planeAreas)).toBeGreaterThanOrEqual(lineArea - 1e-9)
+				expect(Math.min(...planeAreas)).toBeGreaterThanOrEqual(0)
+			}
+		}
+	})
+
+	it('면 비율이 1:1이면 띄울 자리가 없다', () => {
+		expect(scene({ planeRatio: 0.5, lineOffset: 1 }).planeAreas[0]).toBe(0)
+	})
+
+	it('띄운 만큼 선이 자리에서 밀려난다', () => {
+		const flush = scene({ planeRatio: 0.8, lineOffset: 0 }).bands[0]
+		const floated = scene({ planeRatio: 0.8, lineOffset: 1 }).bands[0]
+		if (!flush || !floated) throw new Error('선이 없다')
+
+		expect(flush.y + flush.height).toBeCloseTo(viewport.height, 6)
+		// 자리가 아래라 띄우면 위로 올라간다.
+		expect(floated.y).toBeLessThan(flush.y)
+	})
+})
+
 describe('선 색은 면보다 밝다', () => {
 	it('면 단계보다 낮은 색만 고를 수 있다', () => {
 		expect(keyVisualFormationLineChoices('deep')).toEqual(['white', 'heritage', 'prosperity'])

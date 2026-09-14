@@ -38,6 +38,7 @@ export const keyVisualFormationInputSchema = z.strictObject({
 	dimmer: z.boolean(),
 	dimmerOpacity: z.number().min(0).max(0.7),
 	anchor: z.enum(anchorIds),
+	lineOffset: z.number().min(0).max(1),
 	planeRatio: z.number().min(0.5).max(0.9),
 	steps: z.number().int().min(6).max(20),
 	decay: z.number().min(0.1).max(4),
@@ -82,6 +83,7 @@ export function toKeyVisualFormationInput(values: ControllerValues): KeyVisualFo
 		dimmer: typeof values.dimmer === 'boolean' ? values.dimmer : base.dimmer,
 		dimmerOpacity: values.dimmerOpacity,
 		anchor: resolveOption(values.anchor, anchorIds, base.anchor),
+		lineOffset: values.lineOffset,
 		planeRatio: values.planeRatio,
 		steps: values.steps,
 		decay: values.decay,
@@ -105,6 +107,8 @@ export type KeyVisualFormationScene = {
 	lineColor: string
 	/** 면 **위에** 얹히는 선들. 면을 그리는 밴드는 없다 — 면이 곧 판이다. */
 	bands: KeyVisualFormationBand[]
+	/** 선의 영역 양쪽에 남는 순수한 면 — [자리 쪽, 반대쪽]. 각각 0일 수 있다. */
+	planeAreas: readonly [number, number]
 }
 
 /**
@@ -118,6 +122,11 @@ export type KeyVisualFormationScene = {
  *
  * 🔴 각 unit 안에서 선은 **「선의 자리」 쪽 모서리에 붙어** 반대쪽으로 찬다. 반대로 붙이면 굵어지는
  *    방향이 면에서 번져 나가는 모양이 되고 판 끝이 빈다.
+ *
+ * 🔑 판은 **[면] [선의 영역] [면]** 세 토막이다. 두 면은 각각 0이 될 수 있지만 **큰 쪽 면이 선의
+ *    영역보다 넓어야** 한다(가이드라인의 1:1). 띄우기의 상한을 그 조건에서 역산해 두므로 어떤
+ *    값을 넣어도 규칙이 깨지지 않는다 — 자리 쪽 면은 `면 − 선의 영역`을 넘지 못하고, 그래서
+ *    반대쪽 면은 언제나 선의 영역 이상으로 남는다.
  */
 export function createKeyVisualFormationScene(
 	input: KeyVisualFormationInput,
@@ -127,7 +136,11 @@ export function createKeyVisualFormationScene(
 	const vertical = anchor.axis === 'vertical'
 	const axisLength = vertical ? viewport.height : viewport.width
 	const crossLength = vertical ? viewport.width : viewport.height
-	const unit = (axisLength * (1 - input.planeRatio)) / input.steps
+	const lineArea = axisLength * (1 - input.planeRatio)
+	const unit = lineArea / input.steps
+	// 자리 쪽 면이 커질 수 있는 한계 — 여기까지만 띄워야 반대쪽 면이 선의 영역 이상으로 남는다.
+	const slack = Math.max(0, axisLength - lineArea - lineArea)
+	const nearPlane = slack * input.lineOffset
 	/**
 	 * 🔴 최소 두께는 **양쪽 모두**에 걸린다. unit에서 칠하는 쪽이 선이고 남는 쪽이 면인데, 그 면도
 	 *    눈에는 선으로 보인다 — 한쪽만 받치면 반대쪽이 머리카락처럼 남는다.
@@ -146,7 +159,7 @@ export function createKeyVisualFormationScene(
 		// index 0이 자리에 붙은 unit이다. p가 1에서 시작해 1/steps까지 내려가므로 0으로 눌리지 않는다.
 		const progress = (input.steps - index) / input.steps
 		const size = clamp(unit * progress ** input.decay, minWeight, unit - minWeight)
-		const distance = index * unit
+		const distance = nearPlane + index * unit
 		const offset = nearEdge ? distance : axisLength - distance - size
 		bands.push(
 			vertical
@@ -163,6 +176,7 @@ export function createKeyVisualFormationScene(
 		dimmerOpacity: input.dimmer ? input.dimmerOpacity : 0,
 		lineColor: keyVisualFormationColorHex(input.lineColor),
 		bands,
+		planeAreas: [nearPlane, axisLength - nearPlane - lineArea],
 	}
 }
 
