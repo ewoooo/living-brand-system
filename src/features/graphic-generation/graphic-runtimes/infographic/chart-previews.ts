@@ -1,7 +1,11 @@
-import type { ControllerOption } from '@/modules/studio-controller/controller-definition'
+import type {
+	ControllerOption,
+	ControllerPreviewCircle,
+	ControllerPreviewLine,
+} from '@/modules/studio-controller/controller-definition'
 import type { InfographicChartType } from './model'
 
-type Line = readonly [number, number, number, number]
+type Line = ControllerPreviewLine
 type Glyph = NonNullable<ControllerOption['preview']>
 
 /**
@@ -12,18 +16,8 @@ type Glyph = NonNullable<ControllerOption['preview']>
  *    서로 구별되지 않고, 고르는 정보는 색이 아니라 모양이다.
  */
 
-/** 원은 다각형으로 근사한다. 12각이면 칩 크기에서 원과 구별되지 않는다. */
-function circle(cx: number, cy: number, r: number, segments = 12): Line[] {
-	return Array.from({ length: segments }, (_, index) => {
-		const from = (index / segments) * Math.PI * 2
-		const to = ((index + 1) / segments) * Math.PI * 2
-		return [
-			cx + Math.cos(from) * r,
-			cy + Math.sin(from) * r,
-			cx + Math.cos(to) * r,
-			cy + Math.sin(to) * r,
-		] as Line
-	})
+function circle(cx: number, cy: number, r: number): ControllerPreviewCircle[] {
+	return [[cx, cy, r]]
 }
 
 function rect(x: number, y: number, width: number, height: number): Line[] {
@@ -121,11 +115,11 @@ export const INFOGRAPHIC_CHART_PREVIEWS: Record<InfographicChartType, Glyph> = {
 		[0.48, 0.86, 0.48, 0.45] as Line,
 		[0.68, 0.86, 0.68, 0.3] as Line,
 	],
-	// 바닥을 맞춘 겹침이라 작은 원일수록 아래에 붙는다 — 그 관계가 이 표현의 정보다.
+	// 바닥을 맞춘 겹침 — 세 원의 아래 가장자리가 한 선에 놓인다.
 	'nested-circle': [
-		...circle(0.5, 0.5, 0.36),
-		...circle(0.5, 0.62, 0.22),
-		...circle(0.5, 0.74, 0.11),
+		...circle(0.5, 0.52, 0.36),
+		...circle(0.5, 0.66, 0.22),
+		...circle(0.5, 0.78, 0.1),
 	],
 	'nested-square': [
 		...rect(0.34, 0.12, 0.46, 0.46),

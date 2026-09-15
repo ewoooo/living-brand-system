@@ -106,16 +106,28 @@ export type ControllerOption<Value extends string = string> = {
 	 */
 	colors?: readonly string[]
 	/**
-	 * 이 선택지가 곧 형태일 때 그 형태를 그리는 선분 목록. 한 선분은 단위 정사각형(0~1) 안의
-	 * `[x1, y1, x2, y2]`이고, 킷이 그것을 SVG로 그려 썸네일을 만든다.
+	 * 이 선택지가 곧 형태일 때 그 형태를 그리는 도형 목록. 좌표는 단위 정사각형(0~1)이고,
+	 * 킷이 그것을 SVG로 그려 썸네일을 만든다.
 	 *
 	 * 🔑 이미지가 아니라 **좌표**인 이유: 파일을 두면 이 축이 admin 업로드에 묶여 환경마다 달라지고,
 	 * 아이콘 이름을 두면 킷이 런타임의 어휘를 알아야 한다. 좌표는 런타임이 자기 기하를 그대로
 	 * 적는 것이라 둘 다 피한다.
 	 * `colors`와 마찬가지로 한 control의 선택지는 전부 갖거나 전부 없어야 한다.
 	 */
-	preview?: readonly (readonly [number, number, number, number])[]
+	preview?: readonly ControllerPreviewShape[]
 }
+
+/** 썸네일 선분 — 단위 정사각형 안의 `[x1, y1, x2, y2]`. */
+export type ControllerPreviewLine = readonly [number, number, number, number]
+
+/**
+ * 썸네일 원 — `[cx, cy, r]`.
+ * 🔴 선분으로 근사하지 않는다. 20px 남짓한 칩에서 다각형은 원이 아니라 **다각형으로 읽힌다**.
+ */
+export type ControllerPreviewCircle = readonly [number, number, number]
+
+/** 값의 길이가 곧 종류다 — 넷이면 선분, 셋이면 원. */
+export type ControllerPreviewShape = ControllerPreviewLine | ControllerPreviewCircle
 
 type ControllerControlBase = {
 	id: string
@@ -694,7 +706,7 @@ function validateControl(value: unknown, path: string) {
 					colorOptionCount += 1
 				}
 				if (option.preview !== undefined) {
-					assertPreviewLines(option.preview, `${optionPath}.preview`)
+					assertPreviewShapes(option.preview, `${optionPath}.preview`)
 					previewOptionCount += 1
 				}
 				if (optionValues.has(option.value)) {
@@ -1167,18 +1179,21 @@ function validateControlIdList(value: unknown, controlIds: ReadonlySet<string>, 
 	}
 }
 
-/** 단위 정사각형(0~1) 안의 선분 목록인가 — 밖으로 나가면 썸네일이 잘려 무엇인지 안 읽힌다. */
-function assertPreviewLines(value: unknown, path: string) {
-	if (!Array.isArray(value) || value.length === 0) invalid(path, '하나 이상의 선분이 필요합니다.')
-	for (const [index, line] of value.entries()) {
-		const linePath = `${path}[${index}]`
-		if (!Array.isArray(line) || line.length !== 4)
-			invalid(linePath, '[x1, y1, x2, y2] 네 값이어야 합니다.')
-		for (const coordinate of line) {
+/** 단위 정사각형(0~1) 안의 도형 목록인가 — 밖으로 나가면 썸네일이 잘려 무엇인지 안 읽힌다. */
+function assertPreviewShapes(value: unknown, path: string) {
+	if (!Array.isArray(value) || value.length === 0) invalid(path, '하나 이상의 도형이 필요합니다.')
+	for (const [index, shape] of value.entries()) {
+		const shapePath = `${path}[${index}]`
+		if (!Array.isArray(shape) || (shape.length !== 4 && shape.length !== 3))
+			invalid(shapePath, '선분 [x1, y1, x2, y2] 또는 원 [cx, cy, r]이어야 합니다.')
+		for (const coordinate of shape) {
 			if (typeof coordinate !== 'number' || !Number.isFinite(coordinate))
-				invalid(linePath, '좌표는 유한한 숫자여야 합니다.')
-			if (coordinate < 0 || coordinate > 1) invalid(linePath, '좌표는 0~1이어야 합니다.')
+				invalid(shapePath, '좌표는 유한한 숫자여야 합니다.')
+			if (coordinate < 0 || coordinate > 1) invalid(shapePath, '좌표는 0~1이어야 합니다.')
 		}
+		// 반지름 0은 아무것도 그리지 않는다 — 조용히 사라지는 대신 정의를 거부한다.
+		if (shape.length === 3 && shape[2] <= 0)
+			invalid(shapePath, '원의 반지름은 0보다 커야 합니다.')
 	}
 }
 

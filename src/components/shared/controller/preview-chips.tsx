@@ -2,7 +2,10 @@
 
 import { useId } from 'react'
 import { cn } from '@/lib/utils'
-import type { ControllerOption } from '@/modules/studio-controller/controller-definition'
+import type {
+	ControllerOption,
+	ControllerPreviewCircle,
+} from '@/modules/studio-controller/controller-definition'
 import { ControllerField } from './field'
 import { useRowControl } from './row'
 
@@ -84,7 +87,7 @@ function PreviewChipGrid({
 							disabled={row?.disabled || undefined}
 							onChange={() => onChange?.(option.value)}
 						/>
-						<PreviewGlyph lines={option.preview ?? []} />
+						<PreviewGlyph shapes={option.preview ?? []} />
 						<span className="truncate text-center text-muted-foreground text-xs">
 							{option.label}
 						</span>
@@ -96,29 +99,47 @@ function PreviewChipGrid({
 }
 
 /**
- * 단위 좌표 선분을 그대로 그린다.
+ * 단위 좌표 도형을 그대로 그린다 — 넷이면 선분, 셋이면 원.
  *
  * 선분마다 `<line>`을 두지 않고 `<path>` 하나로 이어 붙인다 — 한 점에서 뻗는 부챗살은 시작점이
- * 겹쳐 좌표가 유일한 신원이 되지 못하고, 그림은 어차피 통째로 하나다.
+ * 겹쳐 좌표가 유일한 신원이 되지 못하고, 그림은 어차피 통째로 하나다. 원은 겹침 관계가 곧
+ * 정보라 하나씩 선다.
  * 🔴 뷰박스가 1×1이므로 굵기를 좌표 단위로 주면 선이 보이지 않는다. `non-scaling-stroke`가
  *    굵기를 화면 px로 읽어 어느 칩 크기에서도 hairline 1px이 된다.
  */
-function PreviewGlyph({ lines }: { lines: NonNullable<ControllerOption['preview']> }) {
-	const path = lines.map(([x1, y1, x2, y2]) => `M${x1} ${y1}L${x2} ${y2}`).join('')
+function PreviewGlyph({ shapes }: { shapes: NonNullable<ControllerOption['preview']> }) {
+	const path = shapes
+		.filter((shape) => shape.length === 4)
+		.map(([x1, y1, x2, y2]) => `M${x1} ${y1}L${x2} ${y2}`)
+		.join('')
+	const circles = shapes.filter((shape): shape is ControllerPreviewCircle => shape.length === 3)
 	return (
 		<svg
 			aria-hidden="true"
 			viewBox="0 0 1 1"
-			preserveAspectRatio="none"
 			className="aspect-square w-full rounded-sm bg-background text-foreground/70"
 		>
-			<path
-				d={path}
-				fill="none"
-				stroke="currentColor"
-				strokeWidth={1}
-				vectorEffect="non-scaling-stroke"
-			/>
+			{path && (
+				<path
+					d={path}
+					fill="none"
+					stroke="currentColor"
+					strokeWidth={1}
+					vectorEffect="non-scaling-stroke"
+				/>
+			)}
+			{circles.map(([cx, cy, r]) => (
+				<circle
+					key={`${cx}-${cy}-${r}`}
+					cx={cx}
+					cy={cy}
+					r={r}
+					fill="none"
+					stroke="currentColor"
+					strokeWidth={1}
+					vectorEffect="non-scaling-stroke"
+				/>
+			))}
 		</svg>
 	)
 }
