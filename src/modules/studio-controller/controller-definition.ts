@@ -144,8 +144,18 @@ export type ControllerControlDefinition =
 			kind: 'text'
 			defaultValue: string | null
 			multiline?: boolean
+			/** 여러 줄 필드가 한 번에 보여 줄 줄 수. 표 데이터처럼 줄이 많은 값이 쓴다. */
+			rows?: number
 			maxLength?: number
 			placeholder?: string
+			/**
+			 * 값을 기본값으로 되돌리는 버튼을 세운다. 값이 기본값과 같으면 버튼이 없다 —
+			 * 되돌릴 것이 없는데 버튼이 있으면 눌러도 아무 일이 없는 조작 요소가 된다.
+			 *
+			 * 🔑 새 control kind를 만들지 않는 이유: 이 버튼은 값을 **이 control의 기본값으로**
+			 * 되돌리는 것뿐이라 자기 값도 자기 자리도 갖지 않는다. 계약이 이미 아는 것만 쓴다.
+			 */
+			resettable?: boolean
 	  })
 	| (ControllerControlBase & {
 			kind: 'toggle'
@@ -649,7 +659,14 @@ function validateControl(value: unknown, path: string) {
 		case 'text':
 			assertOnlyKeys(
 				control,
-				[...CONTROL_BASE_KEYS, 'multiline', 'maxLength', 'placeholder'],
+				[
+					...CONTROL_BASE_KEYS,
+					'multiline',
+					'rows',
+					'maxLength',
+					'placeholder',
+					'resettable',
+				],
 				path,
 			)
 			assertNullableString(control.defaultValue, `${path}.defaultValue`)

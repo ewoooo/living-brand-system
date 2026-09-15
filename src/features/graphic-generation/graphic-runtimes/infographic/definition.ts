@@ -1,6 +1,12 @@
 import { defineGraphicRuntime } from '@/features/graphic-generation/graphic-runtimes/define-graphic-runtime'
+import { INFOGRAPHIC_SAMPLE_DATA } from './chart-data'
 import { INFOGRAPHIC_CHART_PREVIEWS } from './chart-previews'
-import { INFOGRAPHIC_CHART_TYPES, INFOGRAPHIC_DEFAULT_INPUT } from './model'
+import {
+	INFOGRAPHIC_CHART_TYPES,
+	INFOGRAPHIC_DEFAULT_CHART_TYPE,
+	INFOGRAPHIC_DEFAULT_PALETTE,
+	INFOGRAPHIC_DEFAULT_SHOW_VALUE_LABELS,
+} from './model'
 import { HD_INFOGRAPHIC_PALETTES } from './palette'
 
 /**
@@ -20,9 +26,9 @@ export default defineGraphicRuntime({
 	type: 'p5',
 	artifacts: { vector: {}, raster: {} },
 	controller: {
-		// 보이는 것을 정하는 축은 전부 왼쪽이다 — 오른쪽은 내보내기 설정만 갖는다.
+		// 보이는 것을 정하는 축은 전부 왼쪽, 데이터는 오른쪽이다.
 		left: ['chartType', 'palette', 'showValueLabels'],
-		right: [],
+		right: ['data'],
 		groups: [
 			{
 				id: 'chart',
@@ -32,7 +38,7 @@ export default defineGraphicRuntime({
 						id: 'chartType',
 						kind: 'select' as const,
 						label: '표현',
-						defaultValue: INFOGRAPHIC_DEFAULT_INPUT.chartType,
+						defaultValue: INFOGRAPHIC_DEFAULT_CHART_TYPE,
 						// 고르는 정보가 이름이 아니라 모양이라 목록이 아니라 썸네일 그리드로 선다.
 						options: INFOGRAPHIC_CHART_TYPES.map(({ id, label }) => ({
 							value: id,
@@ -45,7 +51,7 @@ export default defineGraphicRuntime({
 						kind: 'select' as const,
 						label: '팔레트',
 						variant: 'list' as const,
-						defaultValue: INFOGRAPHIC_DEFAULT_INPUT.palette,
+						defaultValue: INFOGRAPHIC_DEFAULT_PALETTE,
 						options: Object.entries(HD_INFOGRAPHIC_PALETTES).map(
 							([value, palette]) => ({
 								value,
@@ -57,6 +63,24 @@ export default defineGraphicRuntime({
 				],
 			},
 			{
+				id: 'data',
+				title: 'Data',
+				controls: [
+					{
+						id: 'data',
+						kind: 'text' as const,
+						label: '데이터',
+						multiline: true,
+						// 12종 중 가장 긴 샘플이 6줄이다 — 스크롤 없이 한 화면에 든다.
+						rows: 8,
+						resettable: true,
+						// 표현을 고르면 그 표현의 이상적인 데이터로 바뀐다(model의 getRestrictions).
+						defaultValue: INFOGRAPHIC_SAMPLE_DATA[INFOGRAPHIC_DEFAULT_CHART_TYPE],
+						placeholder: '라벨\t값',
+					},
+				],
+			},
+			{
 				id: 'labels',
 				title: 'Labels',
 				controls: [
@@ -64,7 +88,7 @@ export default defineGraphicRuntime({
 						id: 'showValueLabels',
 						kind: 'toggle' as const,
 						label: '값 표시',
-						defaultValue: INFOGRAPHIC_DEFAULT_INPUT.showValueLabels,
+						defaultValue: INFOGRAPHIC_DEFAULT_SHOW_VALUE_LABELS,
 					},
 				],
 			},
