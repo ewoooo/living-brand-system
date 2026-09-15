@@ -1,6 +1,7 @@
 import { defineGraphicRuntime } from '@/features/graphic-generation/graphic-runtimes/define-graphic-runtime'
 import { INFOGRAPHIC_SAMPLE_DATA } from './chart-data'
 import { INFOGRAPHIC_CHART_PREVIEWS } from './chart-previews'
+import { EXTENDED_CHART_SUFFIX } from './chart-shapes'
 import {
 	INFOGRAPHIC_CHART_TYPES,
 	INFOGRAPHIC_DEFAULT_CHART_TYPE,
@@ -40,9 +41,12 @@ export default defineGraphicRuntime({
 						label: '표현',
 						defaultValue: INFOGRAPHIC_DEFAULT_CHART_TYPE,
 						// 고르는 정보가 이름이 아니라 모양이라 목록이 아니라 썸네일 그리드로 선다.
-						options: INFOGRAPHIC_CHART_TYPES.map(({ id, label }) => ({
+						options: INFOGRAPHIC_CHART_TYPES.map(({ id, label, source }) => ({
 							value: id,
-							label,
+							// 🔴 정본 밖 표현은 이름에 표시가 붙는다 — 화면에서 「이건 규정인가」에
+							//    답이 나와야 한다. 근거는 `chart-shapes.ts`의 source가 갖는다.
+							label:
+								source === 'extended' ? `${label}${EXTENDED_CHART_SUFFIX}` : label,
 							preview: INFOGRAPHIC_CHART_PREVIEWS[id],
 						})),
 					},

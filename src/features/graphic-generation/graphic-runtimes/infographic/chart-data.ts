@@ -82,11 +82,15 @@ export const INFOGRAPHIC_SAMPLE_DATA: Record<InfographicChartType, string> = {
 	// 둘의 크기 비교. 셋 이상이면 버블 클러스터가 맞다.
 	'proportional-circle': '달성\t67\n미달\t33',
 	// 크기만 견주는 여러 항목 — 순서도 축도 없다.
-	'bubble-cluster': '대형\t46\n중형\t22\n소형\t14\n특수\t10\n기타\t8',
+	'bubble-cluster': '대형\t52\n중형\t31\n소형\t24\n특수\t18\n기타\t11',
 	// 서로 독립인 값. 합이 100이 아니어도 된다.
 	bar: '1분기\t26\n2분기\t49\n3분기\t78\n4분기\t58',
+	// 이름이 길어 세로 막대에 안 들어갈 때. 정본 밖(확장)이다.
+	'bar-horizontal': '설계 부문\t72\n생산 부문\t58\n품질 부문\t45\n물류 부문\t31',
 	// 각 항목이 자기 100%를 갖는다 — 달성률처럼 상한이 정해진 값.
 	'bar-track': '생산\t54\n품질\t82\n납기\t27\n안전\t64',
+	// 같은 달성률을 가로로. 정본 밖(확장)이다.
+	'bar-track-horizontal': '안전 관리\t88\n납기 준수\t64\n원가 절감\t41\n에너지 절감\t26',
 	// 하나의 전체를 세로로 가른다.
 	'stacked-column': '기타\t10\n경비\t25\n재료비\t55\n노무비\t10',
 	// 하나의 전체를 가로로 가른다 — 조각이 적고 이름이 길 때.
@@ -97,6 +101,8 @@ export const INFOGRAPHIC_SAMPLE_DATA: Record<InfographicChartType, string> = {
 	area: '\t누적\t기준\n1월\t0\t0\n2월\t18\t12\n3월\t62\t45\n4월\t90\t68\n5월\t100\t76',
 	// 포함 관계 — 큰 것 안에 작은 것이 든다.
 	'nested-circle': '전체\t100\n유효\t55\n핵심\t22',
+	// 같은 포함 관계를 중심 맞춰서. 정본 밖(확장)이다.
+	'concentric-circle': '전사\t100\n사업부\t62\n팀\t30',
 	// 면적으로 규모를 견준다. 자리가 셋뿐이다.
 	'nested-square': '국내\t54\n아시아\t82\n기타\t32',
 }

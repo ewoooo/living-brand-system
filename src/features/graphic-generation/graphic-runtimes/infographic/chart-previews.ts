@@ -74,6 +74,14 @@ export const INFOGRAPHIC_CHART_PREVIEWS: Record<InfographicChartType, Glyph> = {
 		// 트랙 안을 어디까지 채웠는지가 이 표현의 정보다. 채움선 하나로 보인다.
 		[x, 0.9 - BAR_HEIGHTS[index] * 0.8, x + 0.13, 0.9 - BAR_HEIGHTS[index] * 0.8] as Line,
 	]),
+	// 가로 막대 — 세로 막대를 눕힌 것이 곧 이 표현의 정보다.
+	'bar-horizontal': BAR_SLOTS.flatMap((y, index) =>
+		rect(0.08, y, BAR_HEIGHTS[index] * 0.84, 0.13),
+	),
+	'bar-track-horizontal': BAR_SLOTS.flatMap((y, index) => [
+		...rect(0.08, y, 0.84, 0.13),
+		[0.08 + BAR_HEIGHTS[index] * 0.84, y, 0.08 + BAR_HEIGHTS[index] * 0.84, y + 0.13] as Line,
+	]),
 	'stacked-column': [
 		...rect(0.3, 0.1, 0.4, 0.8),
 		[0.3, 0.32, 0.7, 0.32],
@@ -120,6 +128,12 @@ export const INFOGRAPHIC_CHART_PREVIEWS: Record<InfographicChartType, Glyph> = {
 		...circle(0.5, 0.52, 0.36),
 		...circle(0.5, 0.66, 0.22),
 		...circle(0.5, 0.78, 0.1),
+	],
+	// 동심원 — 중심이 하나인 것이 겹친 원과 갈리는 자리다.
+	'concentric-circle': [
+		...circle(0.5, 0.5, 0.38),
+		...circle(0.5, 0.5, 0.24),
+		...circle(0.5, 0.5, 0.11),
 	],
 	'nested-square': [
 		...rect(0.34, 0.12, 0.46, 0.46),

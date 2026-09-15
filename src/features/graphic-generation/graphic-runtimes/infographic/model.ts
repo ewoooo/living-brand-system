@@ -11,6 +11,7 @@ import {
 	INFOGRAPHIC_SAMPLE_DATA,
 	parseChartData,
 } from './chart-data'
+import { acceptsChartData, type ChartDataShape, type InfographicChartSource } from './chart-shapes'
 import {
 	HD_INFOGRAPHIC_COLORS,
 	type InfographicPaletteId,
@@ -20,25 +21,106 @@ import {
 } from './palette'
 
 /**
- * 정본 도판의 12칸. 값은 URL·프로파일에 남으므로 이름을 바꾸지 않는다.
- * 🔴 여기 없는 표현은 오남용이 아니라 **아직 규정되지 않은 것**이다 — 임의로 늘리지 말 것.
+ * 쓸 수 있는 표현 전부. 값은 URL·프로파일에 남으므로 이름을 바꾸지 않는다.
+ *
+ * 🔑 `shape`가 이 표현이 받을 수 있는 데이터를 선언한다 — 같은 shape를 요구하는 것들이 곧
+ *    한 묶음이고, 그 안의 차이는 지면뿐이다(세로로 길쭉한 자리인가, 가로로 넓은 자리인가).
+ * 🔴 `source`가 정본과 확장을 가른다. 새 표현을 정본이라고 적지 말 것 — 근거는 `chart-shapes.ts`.
  */
 export const INFOGRAPHIC_CHART_TYPES = [
-	{ id: 'pie', label: '파이' },
-	{ id: 'donut', label: '도넛' },
-	{ id: 'proportional-circle', label: '비례 원' },
-	{ id: 'bubble-cluster', label: '버블 클러스터' },
-	{ id: 'bar', label: '막대' },
-	{ id: 'bar-track', label: '막대 · 트랙' },
-	{ id: 'stacked-column', label: '세로 100% 누적' },
-	{ id: 'stacked-bar', label: '가로 100% 누적' },
-	{ id: 'line', label: '다계열 선' },
-	{ id: 'area', label: '영역' },
-	{ id: 'nested-circle', label: '겹친 원' },
-	{ id: 'nested-square', label: '겹친 사각형' },
-] as const
+	{ id: 'pie', label: '파이', shape: { series: 'single', minRows: 2 }, source: 'canon' },
+	{ id: 'donut', label: '도넛', shape: { series: 'single', minRows: 2 }, source: 'canon' },
+	{
+		id: 'stacked-column',
+		label: '세로 100% 누적',
+		shape: { series: 'single', minRows: 2 },
+		source: 'canon',
+	},
+	{
+		id: 'stacked-bar',
+		label: '가로 100% 누적',
+		shape: { series: 'single', minRows: 2 },
+		source: 'canon',
+	},
+	{ id: 'bar', label: '막대', shape: { series: 'single', minRows: 1 }, source: 'canon' },
+	{
+		id: 'bar-horizontal',
+		label: '가로 막대',
+		shape: { series: 'single', minRows: 1 },
+		source: 'extended',
+	},
+	{
+		id: 'bubble-cluster',
+		label: '버블 클러스터',
+		// 자리가 다섯뿐이다(CLUSTER_LAYOUT).
+		shape: { series: 'single', minRows: 2, maxRows: 5 },
+		source: 'canon',
+	},
+	{
+		id: 'proportional-circle',
+		label: '비례 원',
+		// 둘의 크기를 견주는 표현이라 셋째 값을 그릴 자리가 없다.
+		shape: { series: 'single', minRows: 2, maxRows: 2 },
+		source: 'canon',
+	},
+	{
+		id: 'nested-square',
+		label: '겹친 사각형',
+		// 자리가 셋뿐이다(OVERLAP_ANCHORS).
+		shape: { series: 'single', minRows: 2, maxRows: 3 },
+		source: 'canon',
+	},
+	{
+		id: 'bar-track',
+		label: '막대 · 트랙',
+		// 트랙이 100을 뜻한다 — 값이 100을 넘으면 전부 꽉 찬 트랙이 되어 아무것도 못 읽는다.
+		shape: { series: 'single', minRows: 1, bounded: true },
+		source: 'canon',
+	},
+	{
+		id: 'bar-track-horizontal',
+		label: '가로 막대 · 트랙',
+		shape: { series: 'single', minRows: 1, bounded: true },
+		source: 'extended',
+	},
+	{
+		id: 'nested-circle',
+		label: '겹친 원',
+		// 큰 것 안에 작은 것이 들려면 값이 계속 줄어야 한다.
+		shape: { series: 'single', minRows: 2, maxRows: 4, descending: true },
+		source: 'canon',
+	},
+	{
+		id: 'concentric-circle',
+		label: '동심원',
+		shape: { series: 'single', minRows: 2, maxRows: 4, descending: true },
+		source: 'extended',
+	},
+	{
+		id: 'line',
+		label: '다계열 선',
+		shape: { series: 'multi', minRows: 2 },
+		source: 'canon',
+	},
+	{ id: 'area', label: '영역', shape: { series: 'multi', minRows: 2 }, source: 'canon' },
+] as const satisfies readonly {
+	id: string
+	label: string
+	shape: ChartDataShape
+	source: InfographicChartSource
+}[]
 
 export type InfographicChartType = (typeof INFOGRAPHIC_CHART_TYPES)[number]['id']
+
+/**
+ * 이 데이터로 그릴 수 있는 표현들. 🔑 이것이 「추천」의 전부다 — 따로 분류를 두지 않고
+ * 데이터 형태가 맞는 것만 남긴다. 목록 순서는 카탈로그 순서(정본이 먼저, 확장이 뒤)를 지킨다.
+ */
+export function chartTypesForData(data: ChartData) {
+	const fits = INFOGRAPHIC_CHART_TYPES.filter((chart) => acceptsChartData(chart.shape, data))
+	// 어느 것도 맞지 않으면 빈 목록이 되어 계약이 깨진다 — 막대는 값 하나만 있어도 선다.
+	return fits.length > 0 ? fits : INFOGRAPHIC_CHART_TYPES.filter((chart) => chart.id === 'bar')
+}
 
 const CHART_TYPE_IDS = INFOGRAPHIC_CHART_TYPES.map(({ id }) => id)
 
@@ -119,12 +201,15 @@ const CHART_BUILDERS: Record<InfographicChartType, ChartBuilder> = {
 	'proportional-circle': buildProportionalCircle,
 	'bubble-cluster': buildBubbleCluster,
 	bar: (box, input) => buildBars(box, input, false),
+	'bar-horizontal': (box, input) => buildHorizontalBars(box, input, false),
 	'bar-track': (box, input) => buildBars(box, input, true),
+	'bar-track-horizontal': (box, input) => buildHorizontalBars(box, input, true),
 	'stacked-column': buildStackedColumn,
 	'stacked-bar': buildStackedBar,
 	line: buildLine,
 	area: buildArea,
 	'nested-circle': buildNestedCircle,
+	'concentric-circle': buildConcentricCircle,
 	'nested-square': buildNestedSquare,
 }
 
@@ -166,13 +251,17 @@ function label(
  * 넓어서 같은 글자 수라도 「Group A」는 들어가고 「서울특별시」는 칸을 넘는다(실제로 넘었다).
  * 정확한 폭은 폰트가 알지만 model은 순수 함수라 측정할 수 없으므로, 글자 종류로 어림한다.
  */
-function fitFontSize(text: string, boxWidth: number, max: number): number {
-	const ems = [...text].reduce(
+function textEms(text: string): number {
+	return [...text].reduce(
 		(total, character) =>
 			total +
 			(/[\u1100-\u11FF\u3000-\u9FFF\uAC00-\uD7AF\uFF00-\uFF60]/.test(character) ? 1 : 0.55),
 		0,
 	)
+}
+
+function fitFontSize(text: string, boxWidth: number, max: number): number {
+	const ems = textEms(text)
 	return ems > 0 ? Math.min(max, boxWidth / ems) : max
 }
 
@@ -301,12 +390,31 @@ function buildProportionalCircle(box: Box, input: InfographicInput): VectorPrimi
  * 물리 시뮬레이션으로 풀지 않는다 — 같은 입력에 같은 결과여야 미리보기와 내보내기가 갈리지 않는다.
  */
 const CLUSTER_LAYOUT = [
-	{ x: 0.54, y: 0.3 },
-	{ x: 0.68, y: 0.72 },
-	{ x: 0.42, y: 0.76 },
-	{ x: 0.2, y: 0.6 },
-	{ x: 0.88, y: 0.56 },
+	{ x: 0.5, y: 0.26 },
+	{ x: 0.76, y: 0.7 },
+	{ x: 0.4, y: 0.78 },
+	{ x: 0.13, y: 0.52 },
+	{ x: 0.9, y: 0.34 },
 ] as const
+
+/**
+ * 원을 얼마나 키울 수 있나. 🔴 자리가 고정이라 값 분포에 따라 이웃끼리 겹친다 — 특례로 몇몇
+ * 경우를 막는 대신, 가장 빡빡한 이웃 쌍이 **닿는 선**을 상한으로 삼아 겹침이 생길 자리를 없앤다.
+ * 입력이 같으면 결과도 같으므로 미리보기와 내보내기가 갈리지 않는다.
+ */
+function clusterScale(ratios: readonly number[], box: Box): number {
+	const base = Math.min(box.width, box.height)
+	let scale = base * 0.3
+	for (let a = 0; a < ratios.length; a += 1) {
+		for (let b = a + 1; b < ratios.length; b += 1) {
+			const dx = (CLUSTER_LAYOUT[a].x - CLUSTER_LAYOUT[b].x) * box.width
+			const dy = (CLUSTER_LAYOUT[a].y - CLUSTER_LAYOUT[b].y) * box.height
+			const sum = ratios[a] + ratios[b]
+			if (sum > 0) scale = Math.min(scale, Math.hypot(dx, dy) / sum)
+		}
+	}
+	return scale
+}
 
 function buildBubbleCluster(box: Box, input: InfographicInput): VectorPrimitive[] {
 	// 자리가 고정 레이아웃이라 그보다 많은 항목은 그릴 자리가 없다.
@@ -314,10 +422,13 @@ function buildBubbleCluster(box: Box, input: InfographicInput): VectorPrimitive[
 	const max = Math.max(...rows.map((row) => row.values[0] ?? 0))
 	if (max <= 0) return []
 	const colors = pickSeriesColors(input.palette, rows.length)
-	const base = Math.min(box.width, box.height)
+	const scale = clusterScale(
+		rows.map((row) => Math.sqrt((row.values[0] ?? 0) / max)),
+		box,
+	)
 	const primitives: VectorPrimitive[] = []
 	rows.forEach((row, index) => {
-		const radius = base * 0.3 * Math.sqrt((row.values[0] ?? 0) / max)
+		const radius = scale * Math.sqrt((row.values[0] ?? 0) / max)
 		const spot = CLUSTER_LAYOUT[index]
 		const cx = box.x + box.width * spot.x
 		const cy = box.y + box.height * spot.y
@@ -393,6 +504,80 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 					box.y + box.height - fontSize * 0.6,
 					fitFontSize(row.label, barWidth * 0.9, fontSize * 0.3),
 					readableTextColor(colors[index]),
+				),
+			)
+		}
+	})
+	return primitives
+}
+
+/**
+ * 가로 막대 — 정본 밖(확장)이다. 세로 막대와 **같은 데이터, 같은 말**이고 지면만 다르다:
+ * 항목 이름이 길거나 항목 수가 많을 때 세로 막대는 이름이 설 자리를 잃는다.
+ */
+function buildHorizontalBars(
+	box: Box,
+	input: InfographicInput,
+	withTrack: boolean,
+): VectorPrimitive[] {
+	const rows = input.data.rows
+	const colors = pickSeriesColors(input.palette, rows.length + 1).slice(withTrack ? 1 : 0)
+	const gap = box.height * 0.04
+	const barHeight = (box.height - gap * (rows.length - 1)) / rows.length
+	const scaleMax = withTrack ? 100 : Math.max(...rows.map((row) => row.values[0] ?? 0))
+	if (scaleMax <= 0) return []
+	const fontSize = barHeight * 0.4
+	const primitives: VectorPrimitive[] = []
+	rows.forEach((row, index) => {
+		const value = row.values[0] ?? 0
+		const y = box.y + (barHeight + gap) * index
+		const filled = Math.max(0, Math.min(value / scaleMax, 1)) * box.width
+		if (withTrack) {
+			primitives.push({
+				kind: 'rect',
+				x: box.x,
+				y,
+				width: box.width,
+				height: barHeight,
+				fill: HD_INFOGRAPHIC_COLORS.lightGreen,
+			})
+		}
+		primitives.push({
+			kind: 'rect',
+			x: box.x,
+			y,
+			width: filled,
+			height: barHeight,
+			fill: colors[index],
+		})
+		if (!input.showValueLabels) return
+		const textColor = readableTextColor(colors[index])
+		const padding = fontSize * 0.5
+		const valueLabel = valueText(value)
+		const valueSize = fitFontSize(valueLabel, filled - padding * 2, fontSize)
+		primitives.push(
+			label(
+				valueLabel,
+				box.x + filled - padding,
+				y + barHeight / 2,
+				valueSize,
+				textColor,
+				'end',
+			),
+		)
+		// 이름은 막대 머리에, 값은 막대 끝에 — 가로 막대를 쓰는 이유가 이름이라 이름을 먼저 읽는다.
+		// 🔴 값이 쓰고 남은 폭만 이름이 갖는다. 남지 않으면 이름을 적지 않는다 — 겹쳐서 둘 다
+		//    못 읽게 되느니 하나만 읽히는 쪽이 낫다(실제로 겹쳤다).
+		const nameWidth = filled - textEms(valueLabel) * valueSize - padding * 3
+		if (row.label && nameWidth > fontSize * 0.6) {
+			primitives.push(
+				label(
+					row.label,
+					box.x + padding,
+					y + barHeight / 2,
+					fitFontSize(row.label, nameWidth, fontSize),
+					textColor,
+					'start',
 				),
 			)
 		}
@@ -642,6 +827,40 @@ function buildNestedCircle(box: Box, input: InfographicInput): VectorPrimitive[]
 	return primitives
 }
 
+/**
+ * 동심원 — 정본 밖(확장)이다. 겹친 원과 **같은 포함 관계**를 말하지만 중심을 맞춘다:
+ * 바닥 정렬은 아래쪽에 무게가 쏠려 가로로 넓은 자리에서 판이 비어 보인다.
+ */
+function buildConcentricCircle(box: Box, input: InfographicInput): VectorPrimitive[] {
+	const rows = input.data.rows
+	const max = Math.max(...firstColumn(input.data))
+	if (max <= 0) return []
+	const colors = pickSeriesColors(input.palette, rows.length)
+	const base = Math.min(box.width, box.height)
+	const outer = base / 2
+	const cx = box.x + box.width / 2
+	const cy = box.y + box.height / 2
+	const primitives: VectorPrimitive[] = []
+	rows.forEach((row, index) => {
+		const radius = outer * Math.sqrt((row.values[0] ?? 0) / max)
+		primitives.push({ kind: 'circle', cx, cy, radius, fill: colors[index] })
+		if (!input.showValueLabels || !row.label) return
+		// 다음 원에 덮이지 않고 남는 위쪽 고리의 한가운데가 이름이 설 자리다.
+		const innerRadius =
+			index + 1 < rows.length ? outer * Math.sqrt((rows[index + 1].values[0] ?? 0) / max) : 0
+		primitives.push(
+			label(
+				row.label,
+				cx,
+				cy - (radius + innerRadius) / 2,
+				fitFontSize(row.label, radius * 1.2, base * 0.06),
+				readableTextColor(colors[index]),
+			),
+		)
+	})
+	return primitives
+}
+
 // ── ⑫ 겹친 사각형 ────────────────────────────────────────────────────────────
 
 /** 세 사각형이 면적으로 값을 말한다. 자리는 정본 도판처럼 계단으로 어긋나게 둔다. */
@@ -697,17 +916,26 @@ const model = {
 	 * 🔴 현재 값은 건드리지 않는다 — 표현을 바꿀 때마다 사용자가 넣은 데이터를 덮으면 안 된다.
 	 *    포맷이 12종 공통이라 대개 그대로 유효하고, 아니면 초기화가 있다.
 	 */
-	getRestrictions: (values): StudioControllerRestrictions => ({
-		controls: [
-			{
-				controlId: 'data',
-				defaultValue:
-					INFOGRAPHIC_SAMPLE_DATA[
-						pick(values.chartType, CHART_TYPE_IDS, INFOGRAPHIC_DEFAULT_CHART_TYPE)
-					],
-			},
-		],
-	}),
+	getRestrictions: (values): StudioControllerRestrictions => {
+		const data = parseChartData(typeof values.data === 'string' ? values.data : '')
+		const members = chartTypesForData(data).map(({ id }) => id)
+		return {
+			controls: [
+				{
+					controlId: 'chartType',
+					optionValues: members,
+					// 🔴 기본값도 함께 좁힌다 — 선택지만 줄이면 목록 밖으로 나간 기본값을 계약이
+					//    거부한다. 남은 것 중 첫 표현이 대표다(정본이 확장보다 앞에 선다).
+					defaultValue: members[0],
+				},
+				{
+					controlId: 'data',
+					defaultValue:
+						INFOGRAPHIC_SAMPLE_DATA[pick(values.chartType, members, members[0])],
+				},
+			],
+		}
+	},
 } satisfies GraphicModelAdapter
 
 export default model

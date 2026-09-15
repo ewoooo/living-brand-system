@@ -3,6 +3,7 @@ import type { ControllerControlDefinition } from '@/modules/studio-controller/co
 import { INFOGRAPHIC_SAMPLE_DATA, parseChartData } from './chart-data'
 import manifest from './definition'
 import model, {
+	chartTypesForData,
 	createInfographicScene,
 	INFOGRAPHIC_CHART_TYPES,
 	INFOGRAPHIC_DEFAULT_PALETTE,
@@ -31,8 +32,10 @@ function sceneFor(
 }
 
 describe('infographic model', () => {
-	it('12종 전부 자기 샘플 데이터로 무언가를 그린다', () => {
-		expect(chartTypes).toHaveLength(12)
+	it('모든 표현이 자기 샘플 데이터로 무언가를 그린다', () => {
+		// 정본 12 + 확장 3. 수를 박아 두는 것은 표현이 조용히 늘거나 사라지는 것을 잡기 위해서다.
+		expect(chartTypes).toHaveLength(15)
+		expect(INFOGRAPHIC_CHART_TYPES.filter((chart) => chart.source === 'canon')).toHaveLength(12)
 		for (const chartType of chartTypes) {
 			const scene = sceneFor(chartType)
 			expect(scene.primitives.length, chartType).toBeGreaterThan(0)
@@ -92,11 +95,37 @@ describe('infographic model', () => {
 
 	it('표현을 고르면 그 표현의 샘플이 데이터 기본값이 된다 — 초기화가 되돌리는 자리다', () => {
 		for (const chartType of chartTypes) {
-			expect(model.getRestrictions({ chartType })?.controls[0]).toEqual({
+			const data = INFOGRAPHIC_SAMPLE_DATA[chartType]
+			const restrictions = model.getRestrictions({ data, chartType })
+			expect(restrictions?.controls.find((control) => control.controlId === 'data')).toEqual({
 				controlId: 'data',
-				defaultValue: INFOGRAPHIC_SAMPLE_DATA[chartType],
+				defaultValue: data,
 			})
 		}
+	})
+
+	it('표현 선택지는 데이터 형태가 정한다 — 분류를 따로 두지 않는다', () => {
+		const single = model
+			.getRestrictions({ data: INFOGRAPHIC_SAMPLE_DATA.pie })
+			?.controls.find((control) => control.controlId === 'chartType')
+		// 단일 계열 5행이면 시계열 표현도, 자리가 모자란 표현도 설 수 없다.
+		expect(single?.optionValues).not.toContain('line')
+		expect(single?.optionValues).not.toContain('proportional-circle')
+		expect(single?.optionValues).toContain('pie')
+		// 좁힌 목록 밖으로 나간 기본값은 계약이 거부한다 — 기본값도 같이 좁혀야 한다.
+		expect(single?.optionValues).toContain(single?.defaultValue)
+	})
+
+	it('다계열 데이터에는 시계열 표현만 남는다', () => {
+		expect(
+			chartTypesForData(parseChartData(INFOGRAPHIC_SAMPLE_DATA.line)).map(
+				(chart) => chart.id,
+			),
+		).toEqual(['line', 'area'])
+	})
+
+	it('빈 데이터에는 전부 남는다 — 아직 모르는 것이지 안 맞는 것이 아니다', () => {
+		expect(chartTypesForData(parseChartData(''))).toHaveLength(chartTypes.length)
 	})
 })
 
