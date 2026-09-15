@@ -22,9 +22,15 @@ import { splitControllerGroups } from '@/modules/studio-controller/controller-de
 export function GraphicSidebar({
 	output,
 	preview,
+	profileSwitching = true,
 }: {
 	output: GraphicExportView
 	preview: ReturnType<typeof useProfilePreview>
+	/**
+	 * 프로파일 카드를 세울지. 🔴 프로파일이 하나뿐인 스튜디오(Graph)에서는 이 카드가 보여줄 것이
+	 * 자기 이름밖에 없고 「Change」가 빈 목록을 연다 — 고를 것이 없으면 고르는 자리도 없다.
+	 */
+	profileSwitching?: boolean
 }) {
 	const { config, groups, profiles, controls } = useGraphicStudio()
 	/**
@@ -95,26 +101,28 @@ export function GraphicSidebar({
 		<Controller.Browser.Root>
 			<StudioSidebar
 				header={
-					<PreviewRefreshSlot error={preview.error}>
-						<Controller.AssetCard
-							title={config.name}
-							subtitle={`${config.type.toUpperCase()} Graphic`}
-							buttonLabel="Change"
-							aria-label="그래픽 변경"
-							tabs={['Graphic Profiles']}
-							previewImage={preview.image ?? config.previewImage}
-							onRefreshPreview={preview.canRefresh ? preview.refresh : undefined}
-							refreshingPreview={preview.refreshing}
-							empty={browseEmptyMessage(
-								profiles.browse.status,
-								(profiles.browse.data?.length ?? 0) > 1,
-								'교체할 다른 그래픽 프로파일이 없습니다.',
-							)}
-							className="min-h-32 items-start"
-						>
-							<GraphicProfilePicker />
-						</Controller.AssetCard>
-					</PreviewRefreshSlot>
+					profileSwitching ? (
+						<PreviewRefreshSlot error={preview.error}>
+							<Controller.AssetCard
+								title={config.name}
+								subtitle={`${config.type.toUpperCase()} Graphic`}
+								buttonLabel="Change"
+								aria-label="그래픽 변경"
+								tabs={['Graphic Profiles']}
+								previewImage={preview.image ?? config.previewImage}
+								onRefreshPreview={preview.canRefresh ? preview.refresh : undefined}
+								refreshingPreview={preview.refreshing}
+								empty={browseEmptyMessage(
+									profiles.browse.status,
+									(profiles.browse.data?.length ?? 0) > 1,
+									'교체할 다른 그래픽 프로파일이 없습니다.',
+								)}
+								className="min-h-32 items-start"
+							>
+								<GraphicProfilePicker />
+							</Controller.AssetCard>
+						</PreviewRefreshSlot>
+					) : undefined
 				}
 				footer={footer}
 			>

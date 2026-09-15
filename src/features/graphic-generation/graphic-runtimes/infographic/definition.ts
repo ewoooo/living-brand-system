@@ -1,4 +1,5 @@
 import { defineGraphicRuntime } from '@/features/graphic-generation/graphic-runtimes/define-graphic-runtime'
+import { INFOGRAPHIC_CHART_PREVIEWS } from './chart-previews'
 import { INFOGRAPHIC_CHART_TYPES, INFOGRAPHIC_DEFAULT_INPUT } from './model'
 import { HD_INFOGRAPHIC_PALETTES } from './palette'
 
@@ -19,9 +20,9 @@ export default defineGraphicRuntime({
 	type: 'p5',
 	artifacts: { vector: {}, raster: {} },
 	controller: {
-		// 표현과 색이 창작자가 실제로 다루는 두 축이다.
-		left: ['chartType', 'palette'],
-		right: ['showValueLabels'],
+		// 보이는 것을 정하는 축은 전부 왼쪽이다 — 오른쪽은 내보내기 설정만 갖는다.
+		left: ['chartType', 'palette', 'showValueLabels'],
+		right: [],
 		groups: [
 			{
 				id: 'chart',
@@ -31,11 +32,12 @@ export default defineGraphicRuntime({
 						id: 'chartType',
 						kind: 'select' as const,
 						label: '표현',
-						variant: 'list' as const,
 						defaultValue: INFOGRAPHIC_DEFAULT_INPUT.chartType,
+						// 고르는 정보가 이름이 아니라 모양이라 목록이 아니라 썸네일 그리드로 선다.
 						options: INFOGRAPHIC_CHART_TYPES.map(({ id, label }) => ({
 							value: id,
 							label,
+							preview: INFOGRAPHIC_CHART_PREVIEWS[id],
 						})),
 					},
 					{

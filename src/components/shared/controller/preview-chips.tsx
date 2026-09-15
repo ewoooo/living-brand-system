@@ -58,7 +58,8 @@ function PreviewChipGrid({
 			id={row?.controlId}
 			role="radiogroup"
 			aria-label={label}
-			className="grid grid-cols-2 gap-1.5"
+			// 선택지가 많으면 2열은 스크롤이 된다 — 한 눈에 다 보이는 것이 이 칩의 존재 이유다.
+			className={cn('grid gap-1.5', options.length > 4 ? 'grid-cols-3' : 'grid-cols-2')}
 		>
 			{options.map((option) => {
 				const current = option.value === value
@@ -109,7 +110,7 @@ function PreviewGlyph({ lines }: { lines: NonNullable<ControllerOption['preview'
 			aria-hidden="true"
 			viewBox="0 0 1 1"
 			preserveAspectRatio="none"
-			className="aspect-[4/3] w-full rounded-sm bg-background text-foreground/70"
+			className="aspect-square w-full rounded-sm bg-background text-foreground/70"
 		>
 			<path
 				d={path}

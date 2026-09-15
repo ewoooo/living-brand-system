@@ -25,12 +25,13 @@ type GraphicGeneratorProps = {
 export function GraphicGenerator({ config, studioKind }: GraphicGeneratorProps) {
 	return (
 		<GraphicStudioProvider config={config} studioKind={studioKind}>
-			<GraphicWorkspace />
+			{/* Graph는 프로파일이 하나뿐이라 교체 카드를 세우지 않는다. */}
+			<GraphicWorkspace profileSwitching={studioKind !== 'graph'} />
 		</GraphicStudioProvider>
 	)
 }
 
-function GraphicWorkspace() {
+function GraphicWorkspace({ profileSwitching }: { profileSwitching: boolean }) {
 	const { config, controls, profiles } = useGraphicStudio()
 	const [browserState, setBrowserState] = useState<{
 		profileId: string
@@ -67,7 +68,13 @@ function GraphicWorkspace() {
 	return (
 		<StudioWorkspace
 			leftPanel={<GraphicLeftPanel />}
-			sidebar={<GraphicSidebar output={output} preview={preview} />}
+			sidebar={
+				<GraphicSidebar
+					output={output}
+					preview={preview}
+					profileSwitching={profileSwitching}
+				/>
+			}
 		>
 			<GraphicCanvas output={output} registerArtifacts={registerArtifacts} />
 		</StudioWorkspace>
