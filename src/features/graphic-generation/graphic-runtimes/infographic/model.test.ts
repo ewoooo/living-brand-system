@@ -181,3 +181,39 @@ describe('글자 크기', () => {
 		expect(open).toBeUndefined()
 	})
 })
+
+describe('수치 크기 맞춤', () => {
+	/** 수치(`…%`)로 그려진 글자 크기만. */
+	function valueSizes(chartType: InfographicChartType, uniformValueSize: boolean) {
+		return sceneFor(chartType, { uniformValueSize, showNameLabels: false })
+			.primitives.filter(
+				(primitive) => primitive.kind === 'text' && /^-?[\d.]+%$/.test(primitive.text),
+			)
+			.map((primitive) =>
+				primitive.kind === 'text' ? Number(primitive.fontSize.toFixed(4)) : 0,
+			)
+	}
+
+	it('켜면 한 차트의 수치가 전부 같은 크기다', () => {
+		for (const chart of INFOGRAPHIC_CHART_TYPES) {
+			// 선 차트의 `%`는 수치가 아니라 축 눈금이라 이 축을 따르지 않는다.
+			if (chart.id === 'line') continue
+			const sizes = valueSizes(chart.id, true)
+			if (sizes.length < 2) continue
+			expect(new Set(sizes).size, chart.id).toBe(1)
+		}
+	})
+
+	it('🔴 끄면 실제로 달라진다 — 값 크기가 고정이면 이 스위치는 아무것도 하지 않는다', () => {
+		// 정본 12종 중 수치를 여럿 적는 표현은 전부 칸에 맞춰 갈려야 한다.
+		for (const chartType of [
+			'pie',
+			'donut',
+			'bar',
+			'stacked-column',
+			'nested-square',
+		] as const) {
+			expect(new Set(valueSizes(chartType, false)).size, chartType).toBeGreaterThan(1)
+		}
+	})
+})

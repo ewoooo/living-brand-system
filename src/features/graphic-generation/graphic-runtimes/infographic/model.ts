@@ -335,6 +335,40 @@ function sharedFontSize(entries: readonly { text: string; width: number }[], max
 	)
 }
 
+/**
+ * 수치의 크기.
+ *
+ * - **맞춤 켜짐** — 전부 한 크기다. 정본 도판이 그렇게 적는다.
+ * - **맞춤 꺼짐** — 도형 크기를 따라간다. 큰 조각이 큰 숫자를 갖는 편이 나은 판이 있다.
+ *
+ * 🔴 「각자 칸에 맞춰 줄인다」로 읽으면 안 된다. 기준 크기가 넉넉하면 어느 칸에도 다 들어가
+ *    결국 전부 같은 크기가 되고, 스위치가 아무것도 하지 않는다(실제로 파이에서 그랬다).
+ * 🔑 비율은 제곱근으로 눌러 둔다 — 넓이가 1/4인 조각의 글자를 1/4로 줄이면 읽을 수 없다.
+ */
+function valueFontSizes(
+	entries: readonly { text: string; width: number; height?: number; weight?: number }[],
+	max: number,
+	uniform: boolean,
+): number[] {
+	// 어느 쪽이든 자기 칸을 넘지는 않는다.
+	const fitted = entries.map((entry) =>
+		Math.min(fitFontSize(entry.text, entry.width, max), entry.height ?? max),
+	)
+	if (entries.length === 0) return fitted
+	if (uniform) {
+		const smallest = Math.min(...fitted)
+		return fitted.map(() => smallest)
+	}
+	const heaviest = Math.max(...entries.map((entry) => entry.weight ?? 1))
+	return entries.map((entry, index) =>
+		Math.min(
+			fitted[index],
+			// 작은 조각도 읽혀야 하므로 절반 아래로는 내려가지 않는다.
+			max * Math.max(0.5, Math.sqrt((entry.weight ?? 1) / (heaviest || 1))),
+		),
+	)
+}
+
 function fitFontSize(text: string, boxWidth: number, max: number): number {
 	const ems = textEms(text)
 	return ems > 0 ? Math.min(max, boxWidth / ems) : max
@@ -392,6 +426,17 @@ function buildRadialSlices(
 	const colors = pickSeriesColors(input.palette, values.length)
 	const fontSize = radius * 0.13 * input.textScale
 	const labelRadius = radius * (innerRatio === 0 ? 0.66 : (1 + innerRatio) / 2)
+	// 조각이 좁을수록 글자가 설 호가 짧다 — 그 호가 이 조각의 칸 너비다.
+	const valueSizes = valueFontSizes(
+		values.map((value) => ({
+			text: valueText(value),
+			width: Math.PI * 2 * labelRadius * (value / sum) * 0.9,
+			height: radius * (innerRatio === 0 ? 0.45 : (1 - innerRatio) * 0.7),
+			weight: value,
+		})),
+		fontSize,
+		input.uniformValueSize,
+	)
 	const primitives: VectorPrimitive[] = []
 	let cursor = 0
 	values.forEach((value, index) => {
@@ -404,7 +449,13 @@ function buildRadialSlices(
 		if (input.showValueLabels) {
 			const at = onCircle(cx, cy, labelRadius, cursor + span / 2)
 			primitives.push(
-				label(valueText(value), at.x, at.y, fontSize, readableTextColor(colors[index])),
+				label(
+					valueText(value),
+					at.x,
+					at.y,
+					valueSizes[index],
+					readableTextColor(colors[index]),
+				),
 			)
 		}
 		cursor += span
@@ -428,6 +479,15 @@ function buildProportionalCircle(box: Box, input: InfographicInput): VectorPrimi
 		x: box.x + box.width * 0.18,
 		y: box.y + box.height - smallRadius - base * 0.04,
 	}
+	const valueSizes = valueFontSizes(
+		[
+			{ text: valueText(big), width: bigRadius * 1.4, weight: big },
+			{ text: valueText(small), width: smallRadius * 1.4, weight: small },
+		],
+		bigRadius * 0.26 * input.textScale,
+		// 두 원의 크기 차이가 곧 정보다 — 맞추면 작은 원이 글자에 덮인다.
+		input.uniformValueSize,
+	)
 	const primitives: VectorPrimitive[] = [
 		{ kind: 'circle', cx: bigCenter.x, cy: bigCenter.y, radius: bigRadius, fill: colors[0] },
 		{
@@ -445,15 +505,14 @@ function buildProportionalCircle(box: Box, input: InfographicInput): VectorPrimi
 			valueText(big),
 			bigCenter.x,
 			bigCenter.y,
-			bigRadius * 0.26 * input.textScale,
+			valueSizes[0],
 			readableTextColor(colors[0]),
 		),
 		label(
 			valueText(small),
 			smallCenter.x,
 			smallCenter.y,
-			// 두 원의 크기 차이가 곧 정보라 기본은 원을 따라간다 — 맞추면 작은 원이 글자에 덮인다.
-			(input.uniformValueSize ? bigRadius * 0.26 : smallRadius * 0.34) * input.textScale,
+			valueSizes[1],
 			readableTextColor(colors[1]),
 		),
 	]
@@ -535,7 +594,21 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 	const scaleMax = withTrack ? 100 : Math.max(...rows.map((row) => row.values[0] ?? 0))
 	if (scaleMax <= 0) return []
 	const fontSize = barWidth * 0.3 * input.textScale
-	// 칸 너비가 모두 같아 수치는 이미 한 크기다. 이름은 길이가 달라 가장 긴 것이 크기를 정한다.
+	// 칸 너비는 같지만 막대 높이가 달라, 낮은 막대에서는 글자가 막대를 넘는다.
+	const valueSizes = valueFontSizes(
+		rows.map((row) => {
+			const value = row.values[0] ?? 0
+			return {
+				text: valueText(value),
+				width: barWidth * 0.9,
+				height: Math.max(0, Math.min(value / scaleMax, 1)) * box.height * 0.7,
+				weight: value,
+			}
+		}),
+		fontSize,
+		input.uniformValueSize,
+	)
+	// 이름은 길이가 달라 가장 긴 것이 크기를 정한다.
 	const nameSize = sharedFontSize(
 		rows.map((row) => ({ text: row.label, width: barWidth * 0.9 })),
 		fontSize * 0.3,
@@ -568,8 +641,8 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 			label(
 				valueText(value),
 				x + barWidth / 2,
-				box.y + box.height - filled + fontSize,
-				fontSize,
+				box.y + box.height - filled + valueSizes[index],
+				valueSizes[index],
 				readableTextColor(colors[index]),
 			),
 		)
@@ -619,14 +692,16 @@ function buildHorizontalBars(
 			color: colors[index],
 		}
 	})
-	const uniformValue = sharedFontSize(
-		bars.map((bar) => ({ text: bar.valueLabel, width: bar.filled - padding * 2 })),
+	const valueSizes = valueFontSizes(
+		bars.map((bar) => ({
+			text: bar.valueLabel,
+			width: bar.filled - padding * 2,
+			weight: bar.value,
+		})),
 		fontSize,
+		input.uniformValueSize,
 	)
-	const valueSizeOf = (bar: (typeof bars)[number]) =>
-		input.uniformValueSize
-			? uniformValue
-			: fitFontSize(bar.valueLabel, bar.filled - padding * 2, fontSize)
+	const valueSizeOf = (bar: (typeof bars)[number]) => valueSizes[bars.indexOf(bar)]
 	// 🔴 값이 쓰고 남은 폭만 이름이 갖는다. 겹쳐서 둘 다 못 읽게 되느니 하나만 읽히는 쪽이 낫다.
 	const nameWidthOf = (bar: (typeof bars)[number]) =>
 		bar.filled - textEms(bar.valueLabel) * valueSizeOf(bar) - padding * 3
@@ -697,6 +772,17 @@ function buildStackedColumn(box: Box, input: InfographicInput): VectorPrimitive[
 	const width = box.width * 0.62
 	const x = box.x + (box.width - width) / 2
 	const fontSize = width * 0.11 * input.textScale
+	// 조각 높이가 값에 비례한다 — 얇은 조각이 글자를 담을 수 있는 높이가 곧 상한이다.
+	const valueSizes = valueFontSizes(
+		values.map((value) => ({
+			text: valueText(value),
+			width: width * 0.9,
+			height: (value / sum) * box.height * 0.7,
+			weight: value,
+		})),
+		fontSize,
+		input.uniformValueSize,
+	)
 	const primitives: VectorPrimitive[] = []
 	let cursor = box.y
 	// 정본 도판이 위를 작은 조각으로 시작한다 — 데이터 순서가 곧 쌓이는 순서다.
@@ -709,7 +795,7 @@ function buildStackedColumn(box: Box, input: InfographicInput): VectorPrimitive[
 					valueText(value),
 					x + width / 2,
 					cursor + height / 2,
-					fontSize,
+					valueSizes[index],
 					readableTextColor(colors[index]),
 				),
 			)
@@ -1002,13 +1088,15 @@ function buildNestedSquare(box: Box, input: InfographicInput): VectorPrimitive[]
 	const colors = pickSeriesColors(input.palette, rows.length)
 	const base = Math.min(box.width, box.height)
 	const sideOf = (value: number) => base * 0.62 * Math.sqrt(value / max)
-	// 사각형 크기가 곧 값이라 기본은 수치도 사각형을 따라간다.
-	const uniformValue = sharedFontSize(
+	// 사각형 크기가 곧 값이라 맞춤을 끄면 수치도 사각형을 따라간다.
+	const valueSizes = valueFontSizes(
 		rows.map((row) => ({
 			text: valueText(row.values[0] ?? 0),
 			width: sideOf(row.values[0] ?? 0) * 0.8,
+			weight: row.values[0] ?? 0,
 		})),
 		base * 0.11 * input.textScale,
+		input.uniformValueSize,
 	)
 	const primitives: VectorPrimitive[] = []
 	// 큰 것부터 그린다 — 작은 사각형과 그 라벨이 큰 사각형에 덮이지 않게 하는 유일한 순서다.
@@ -1029,7 +1117,7 @@ function buildNestedSquare(box: Box, input: InfographicInput): VectorPrimitive[]
 					valueText(row.values[0] ?? 0),
 					x + side * 0.1,
 					y + side * 0.2,
-					input.uniformValueSize ? uniformValue : side * 0.18 * input.textScale,
+					valueSizes[index],
 					readableTextColor(colors[index]),
 					'start',
 				),
