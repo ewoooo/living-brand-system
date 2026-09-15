@@ -324,7 +324,14 @@ function buildBubbleCluster(box: Box, input: InfographicInput): VectorPrimitive[
 		primitives.push({ kind: 'circle', cx, cy, radius, fill: colors[index] })
 		if (input.showValueLabels && row.label) {
 			primitives.push(
-				label(row.label, cx, cy, radius * 0.44, readableTextColor(colors[index])),
+				label(
+					row.label,
+					cx,
+					cy,
+					// 원 안에 드는 폭은 지름보다 좁다 — 가장자리로 갈수록 세로 여유가 없다.
+					fitFontSize(row.label, radius * 1.5, radius * 0.44),
+					readableTextColor(colors[index]),
+				),
 			)
 		}
 	})

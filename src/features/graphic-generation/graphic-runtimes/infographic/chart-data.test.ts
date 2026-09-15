@@ -38,6 +38,11 @@ describe('parseChartData', () => {
 		expect(parseChartData('   \n\n').rows).toHaveLength(0)
 	})
 
+	it('12종 샘플이 서로 다르다 — 같으면 표현이 무엇에 쓰이는지 말해 주지 못한다', () => {
+		const samples = INFOGRAPHIC_CHART_TYPES.map(({ id }) => INFOGRAPHIC_SAMPLE_DATA[id])
+		expect(new Set(samples).size).toBe(samples.length)
+	})
+
 	it('12종 샘플이 전부 파싱되고 값이 하나 이상 있다', () => {
 		for (const { id } of INFOGRAPHIC_CHART_TYPES) {
 			const data = parseChartData(INFOGRAPHIC_SAMPLE_DATA[id])

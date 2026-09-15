@@ -68,19 +68,35 @@ export function firstColumn(data: ChartData): number[] {
 
 /**
  * 표현마다 「이상적인 데이터」. 표현을 고르면 이 값이 기본값이 되고, 초기화가 되돌리는 자리도 여기다.
- * 🔴 값은 정본 도판(B.11 INFOGRAPHIC OVERVIEW)이 각 칸에 싣고 있는 것 그대로다.
+ *
+ * 🔑 12종이 **서로 다른 데이터**를 갖는다. 같은 값을 돌려 쓰면 「이 표현이 무엇에 쓰이는가」를
+ *    샘플이 말해 주지 못하고, 조각 수·분포가 같아 표현끼리 구별도 안 된다.
+ * 🔴 라벨은 회사·제품을 특정하지 않는 일반 명사다. 그럴듯한 실적처럼 읽히면 샘플이 아니라
+ *    자료가 되어 버린다.
  */
 export const INFOGRAPHIC_SAMPLE_DATA: Record<InfographicChartType, string> = {
-	pie: '항목 A\t34\n항목 B\t33\n항목 C\t12\n항목 D\t12\n항목 E\t9',
-	donut: '항목 A\t34\n항목 B\t33\n항목 C\t12\n항목 D\t12\n항목 E\t9',
-	'proportional-circle': '전체\t67\n일부\t33',
-	'bubble-cluster': 'A\t46\nB\t22\nC\t14\nD\t10\nE\t8',
+	// 구성비 — 조각이 많아도 읽히는 표현이라 다섯을 싣는다.
+	pie: '아시아\t34\n유럽\t33\n북미\t12\n중동\t12\n기타\t9',
+	// 같은 구성비지만 가운데가 비어 조각 수가 적을 때 낫다.
+	donut: '직판\t42\n대리점\t28\n온라인\t19\n기타\t11',
+	// 둘의 크기 비교. 셋 이상이면 버블 클러스터가 맞다.
+	'proportional-circle': '달성\t67\n미달\t33',
+	// 크기만 견주는 여러 항목 — 순서도 축도 없다.
+	'bubble-cluster': '대형\t46\n중형\t22\n소형\t14\n특수\t10\n기타\t8',
+	// 서로 독립인 값. 합이 100이 아니어도 된다.
 	bar: '1분기\t26\n2분기\t49\n3분기\t78\n4분기\t58',
-	'bar-track': 'Group A Area\t54\nGroup B Area\t82\nGroup C Area\t27\nGroup D Area\t64',
-	'stacked-column': '기타\t10\n서비스\t25\n제품\t55\n부품\t10',
-	'stacked-bar': 'Group A\t15\nGroup B\t55\nGroup C\t30',
-	line: '\t계열 1\t계열 2\t계열 3\n2025.03\t3\t1.5\t0\n2025.06\t10\t5\t0.5\n2025.09\t3.5\t-0.5\t-2.5\n2026.03\t9\t5.5\t4',
-	area: '\t09\t08\n1\t0\t0\n2\t18\t12\n3\t62\t45\n4\t90\t68\n5\t100\t76',
-	'nested-circle': 'C\t100\nB\t55\nA\t22',
-	'nested-square': '항목 A\t54\n항목 B\t82\n항목 C\t32',
+	// 각 항목이 자기 100%를 갖는다 — 달성률처럼 상한이 정해진 값.
+	'bar-track': '생산\t54\n품질\t82\n납기\t27\n안전\t64',
+	// 하나의 전체를 세로로 가른다.
+	'stacked-column': '기타\t10\n경비\t25\n재료비\t55\n노무비\t10',
+	// 하나의 전체를 가로로 가른다 — 조각이 적고 이름이 길 때.
+	'stacked-bar': '연구\t15\n생산\t55\n관리\t30',
+	// 시계열 여러 계열. 첫 칸이 비어 있어 둘째 칸부터 계열 이름이다.
+	line: '\t매출\t영업이익\t수주\n2025.03\t3\t1.5\t0\n2025.06\t10\t5\t0.5\n2025.09\t3.5\t-0.5\t-2.5\n2026.03\t9\t5.5\t4',
+	// 쌓아 올라가는 두 계열 — 값 자체보다 늘어나는 모양이 정보다.
+	area: '\t누적\t기준\n1월\t0\t0\n2월\t18\t12\n3월\t62\t45\n4월\t90\t68\n5월\t100\t76',
+	// 포함 관계 — 큰 것 안에 작은 것이 든다.
+	'nested-circle': '전체\t100\n유효\t55\n핵심\t22',
+	// 면적으로 규모를 견준다. 자리가 셋뿐이다.
+	'nested-square': '국내\t54\n아시아\t82\n기타\t32',
 }
