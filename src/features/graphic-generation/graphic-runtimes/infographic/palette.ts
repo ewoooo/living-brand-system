@@ -60,6 +60,15 @@ export function pickSeriesColors(palette: InfographicPaletteId, count: number): 
 }
 
 /**
+ * 획에 쓸 색. 🔴 면과 다르다 — 가장 연한 색은 넓은 면으로는 읽히지만 1~2px 선으로는 흰 판에서
+ * 사라진다(오남용 ①). 그래서 짙은 쪽부터 뽑고 가장 연한 한 색은 선에 쓰지 않는다.
+ */
+export function pickStrokeColors(palette: InfographicPaletteId, count: number): string[] {
+	const usable = [...HD_INFOGRAPHIC_PALETTES[palette].colors].reverse().slice(0, -1)
+	return Array.from({ length: count }, (_, index) => usable[index % usable.length])
+}
+
+/**
  * 면 위에 얹는 글자 색. 오남용 ①「시인성이 확보되지 않는 컬러를 사용하지 않습니다」를
  * 검사기가 아니라 **선택의 부재**로 지킨다 — 글자 색을 고를 수 있게 두지 않고 대비로 정한다.
  * WCAG 상대 휘도 기준이며, 경계값 0.45는 팔레트 5색이 모두 올바른 쪽으로 갈리는 자리다.

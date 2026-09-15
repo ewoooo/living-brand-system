@@ -369,6 +369,14 @@ function ControllerControl({
 						}
 						disabled={disabled}
 					>
+						{definition.grid && (
+							<Controller.DataGrid
+								value={text}
+								columnLabels={definition.grid}
+								onChange={onChange}
+							/>
+						)}
+						{/* 격자가 있어도 입력창은 남는다 — 붙여넣기와 통째로 고쳐 쓰기는 격자가 대신하지 못한다. */}
 						<Controller.Textarea
 							rows={definition.rows ?? 3}
 							className="field-sizing-fixed min-h-0 overflow-y-auto scrollbar-none"

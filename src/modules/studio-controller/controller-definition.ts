@@ -146,6 +146,14 @@ export type ControllerControlDefinition =
 			multiline?: boolean
 			/** 여러 줄 필드가 한 번에 보여 줄 줄 수. 표 데이터처럼 줄이 많은 값이 쓴다. */
 			rows?: number
+			/**
+			 * 줄·칸으로 된 값을 **격자로도** 편집하게 한다. 배열은 열 제목이고, 모자란 열은 제목 없이 선다.
+			 *
+			 * 🔑 값은 여전히 문자열이다 — 격자는 같은 값의 다른 표현이라 control 값 타입이 넓어지지 않고,
+			 * 격자와 입력창이 한 값을 공유해 한쪽을 고치면 다른 쪽이 바로 따라온다.
+			 * 🔴 `multiline`과 함께 쓴다. 한 줄 입력에는 격자로 보여 줄 줄이 없다.
+			 */
+			grid?: readonly string[]
 			maxLength?: number
 			placeholder?: string
 			/**
@@ -663,6 +671,7 @@ function validateControl(value: unknown, path: string) {
 					...CONTROL_BASE_KEYS,
 					'multiline',
 					'rows',
+					'grid',
 					'maxLength',
 					'placeholder',
 					'resettable',
@@ -672,6 +681,17 @@ function validateControl(value: unknown, path: string) {
 			assertNullableString(control.defaultValue, `${path}.defaultValue`)
 			if (control.multiline !== undefined && typeof control.multiline !== 'boolean') {
 				invalid(`${path}.multiline`, 'boolean이어야 합니다.')
+			}
+			if (
+				control.grid !== undefined &&
+				(!Array.isArray(control.grid) ||
+					control.grid.some((label) => typeof label !== 'string'))
+			) {
+				invalid(`${path}.grid`, '열 제목 문자열 배열이어야 합니다.')
+			}
+			// 격자는 줄을 행으로 읽는다 — 한 줄 입력에는 읽을 행이 없다.
+			if (control.grid !== undefined && !control.multiline) {
+				invalid(`${path}.grid`, 'multiline과 함께 써야 합니다.')
 			}
 			if (
 				control.maxLength !== undefined &&

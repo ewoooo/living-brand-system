@@ -71,8 +71,10 @@ export default defineGraphicRuntime({
 						kind: 'text' as const,
 						label: '데이터',
 						multiline: true,
-						// 12종 중 가장 긴 샘플이 6줄이다 — 스크롤 없이 한 화면에 든다.
-						rows: 8,
+						// 격자로도 고치고 붙여넣기로도 고친다 — 같은 값의 두 표현이다.
+						grid: ['라벨', '값'],
+						// 붙여넣기용이라 통째로 보일 만큼만. 줄 단위 편집은 격자가 갖는다.
+						rows: 4,
 						resettable: true,
 						// 표현을 고르면 그 표현의 이상적인 데이터로 바뀐다(model의 getRestrictions).
 						defaultValue: INFOGRAPHIC_SAMPLE_DATA[INFOGRAPHIC_DEFAULT_CHART_TYPE],

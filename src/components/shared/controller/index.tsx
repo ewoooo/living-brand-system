@@ -8,6 +8,7 @@ import { ControllerChips } from './chips'
 import { ControllerColorChips } from './color-chips'
 import { ControllerColorRow } from './color-row'
 import { ControllerColorStrip } from './color-strip'
+import { ControllerDataGrid } from './data-grid'
 import { ControllerField } from './field'
 import { ControllerGroup } from './group'
 import { ControllerInput, ControllerTextarea } from './input'
@@ -67,6 +68,7 @@ export const Controller = {
 	PadPair: ControllerPadPair,
 	Pagination: ControllerPagination,
 	Action: ControllerAction,
+	DataGrid: ControllerDataGrid,
 	Status: ControllerStatus,
 	Bar: ControllerBar,
 	CameraControl: ControllerCameraControl,
@@ -87,6 +89,7 @@ export {
 	ControllerColorRow,
 	ControllerColorStrip,
 	ControllerContent,
+	ControllerDataGrid,
 	ControllerField,
 	ControllerFooter,
 	ControllerGroup,

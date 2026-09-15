@@ -99,3 +99,13 @@ describe('infographic model', () => {
 		}
 	})
 })
+
+describe('선 색', () => {
+	it('획에는 팔레트의 가장 연한 색을 쓰지 않는다 — 흰 판에서 선이 사라진다', () => {
+		const strokes = sceneFor('line')
+			.primitives.filter((primitive) => primitive.kind === 'path')
+			.map((primitive) => primitive.stroke)
+		expect(strokes.length).toBeGreaterThan(1)
+		expect(strokes).not.toContain(HD_INFOGRAPHIC_PALETTES.greenNavy.colors[0])
+	})
+})

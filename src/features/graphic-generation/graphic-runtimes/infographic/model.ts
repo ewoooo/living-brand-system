@@ -15,6 +15,7 @@ import {
 	HD_INFOGRAPHIC_COLORS,
 	type InfographicPaletteId,
 	pickSeriesColors,
+	pickStrokeColors,
 	readableTextColor,
 } from './palette'
 
@@ -480,7 +481,8 @@ function buildLine(box: Box, input: InfographicInput): VectorPrimitive[] {
 		width: box.width - fontSize * 3.5,
 		height: box.height - fontSize * 2.4,
 	}
-	const colors = pickSeriesColors(input.palette, lines)
+	// 선은 면이 아니라 획이다 — 팔레트를 그대로 쓰면 연한 계열이 흰 판에서 사라진다.
+	const colors = pickStrokeColors(input.palette, lines)
 	const toY = (value: number) =>
 		plot.y + plot.height - ((value - low) / (high - low)) * plot.height
 	const toX = (index: number) => plot.x + (index / (rows.length - 1)) * plot.width
@@ -530,7 +532,7 @@ function buildLine(box: Box, input: InfographicInput): VectorPrimitive[] {
 				rows.map((row, index) => ({ x: toX(index), y: toY(row.values[series]) })),
 				false,
 			),
-			stroke: colors[colors.length - 1 - series],
+			stroke: colors[series],
 			strokeWidth: Math.max(1.5, fontSize * 0.18),
 			fill: 'none',
 		})
