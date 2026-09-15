@@ -618,7 +618,7 @@ function isControllerValueShape(
 	}
 }
 
-function controllerValuesEqual(left: ControllerControlValue, right: ControllerControlValue) {
+export function controllerValuesEqual(left: ControllerControlValue, right: ControllerControlValue) {
 	if (isControllerPadValue(left) && isControllerPadValue(right)) {
 		return padValuesEqual(left, right)
 	}

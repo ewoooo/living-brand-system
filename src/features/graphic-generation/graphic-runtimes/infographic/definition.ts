@@ -6,7 +6,11 @@ import {
 	INFOGRAPHIC_CHART_TYPES,
 	INFOGRAPHIC_DEFAULT_CHART_TYPE,
 	INFOGRAPHIC_DEFAULT_PALETTE,
+	INFOGRAPHIC_DEFAULT_SHOW_NAME_LABELS,
 	INFOGRAPHIC_DEFAULT_SHOW_VALUE_LABELS,
+	INFOGRAPHIC_DEFAULT_TEXT_SCALE,
+	INFOGRAPHIC_DEFAULT_UNIFORM_VALUE_SIZE,
+	INFOGRAPHIC_TEXT_SCALE_RANGE,
 } from './model'
 import { HD_INFOGRAPHIC_PALETTES } from './palette'
 
@@ -28,8 +32,9 @@ export default defineGraphicRuntime({
 	artifacts: { vector: {}, raster: {} },
 	controller: {
 		// 보이는 것을 정하는 축은 전부 왼쪽, 데이터는 오른쪽이다.
-		left: ['chartType', 'palette', 'showValueLabels'],
-		right: ['data'],
+		left: ['chartType', 'palette', 'showNameLabels', 'showValueLabels'],
+		// 글자 크기는 데이터 곁에 둔다 — 무엇이 적히는가를 보면서 맞추는 축이다.
+		right: ['data', 'textScale', 'uniformValueSize'],
 		groups: [
 			{
 				id: 'chart',
@@ -91,10 +96,39 @@ export default defineGraphicRuntime({
 				title: 'Labels',
 				controls: [
 					{
+						id: 'showNameLabels',
+						kind: 'toggle' as const,
+						label: '이름 표시',
+						defaultValue: INFOGRAPHIC_DEFAULT_SHOW_NAME_LABELS,
+					},
+					{
 						id: 'showValueLabels',
 						kind: 'toggle' as const,
 						label: '값 표시',
 						defaultValue: INFOGRAPHIC_DEFAULT_SHOW_VALUE_LABELS,
+					},
+				],
+			},
+			{
+				id: 'text',
+				title: 'Text',
+				controls: [
+					{
+						id: 'textScale',
+						kind: 'range' as const,
+						label: '글자 크기',
+						defaultValue: INFOGRAPHIC_DEFAULT_TEXT_SCALE,
+						min: INFOGRAPHIC_TEXT_SCALE_RANGE.min,
+						max: INFOGRAPHIC_TEXT_SCALE_RANGE.max,
+						step: INFOGRAPHIC_TEXT_SCALE_RANGE.step,
+						display: { unit: '×', precision: 2 },
+					},
+					{
+						id: 'uniformValueSize',
+						kind: 'toggle' as const,
+						// 🔴 이름은 이 축을 따르지 않는다 — 이름은 언제나 한 크기다(model 주석).
+						label: '수치 크기 맞춤',
+						defaultValue: INFOGRAPHIC_DEFAULT_UNIFORM_VALUE_SIZE,
 					},
 				],
 			},

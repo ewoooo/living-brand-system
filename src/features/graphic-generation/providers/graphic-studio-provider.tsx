@@ -17,6 +17,7 @@ import {
 	type ControllerControlValue,
 	type ControllerRuntimeBinding,
 	type ControllerRuntimeBindings,
+	controllerValuesEqual,
 	createControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 
@@ -79,6 +80,12 @@ export function GraphicStudioProvider({
 					) {
 						continue
 					}
+					/**
+					 * 🔴 이미 기본값이면 손대지 않는다. 잠긴(`disabled`) control의 값은
+					 * `acceptsControllerDraftValue`가 **언제나** 거부하므로, 여기서 매번 새 객체를
+					 * 만들면 그것이 다시 이 effect를 깨워 무한 루프가 된다(실제로 화면이 죽었다).
+					 */
+					if (controllerValuesEqual(value, control.defaultValue)) continue
 					if (next === current) next = { ...current }
 					next[control.id] = control.defaultValue
 				}

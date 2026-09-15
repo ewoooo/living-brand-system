@@ -8,6 +8,7 @@ import model, {
 	INFOGRAPHIC_CHART_TYPES,
 	INFOGRAPHIC_DEFAULT_PALETTE,
 	type InfographicChartType,
+	type InfographicInput,
 	toInfographicInput,
 } from './model'
 import { HD_INFOGRAPHIC_PALETTES, readableTextColor } from './palette'
@@ -15,15 +16,15 @@ import { HD_INFOGRAPHIC_PALETTES, readableTextColor } from './palette'
 const VIEWPORT = { width: 1080, height: 1080 }
 const chartTypes = INFOGRAPHIC_CHART_TYPES.map(({ id }) => id)
 
-function sceneFor(
-	chartType: InfographicChartType,
-	overrides: Partial<{ showValueLabels: boolean }> = {},
-) {
+function sceneFor(chartType: InfographicChartType, overrides: Partial<InfographicInput> = {}) {
 	return createInfographicScene(
 		{
 			chartType,
 			palette: INFOGRAPHIC_DEFAULT_PALETTE,
+			showNameLabels: true,
 			showValueLabels: true,
+			textScale: 1,
+			uniformValueSize: true,
 			data: parseChartData(INFOGRAPHIC_SAMPLE_DATA[chartType]),
 			...overrides,
 		},
@@ -45,24 +46,17 @@ describe('infographic model', () => {
 
 	it('데이터가 없으면 빈 판이다 — 입력 중인 상태라 오류가 아니다', () => {
 		for (const chartType of chartTypes) {
-			const scene = createInfographicScene(
-				{
-					chartType,
-					palette: INFOGRAPHIC_DEFAULT_PALETTE,
-					showValueLabels: true,
-					data: parseChartData(''),
-				},
-				VIEWPORT,
-			)
+			const scene = sceneFor(chartType, { data: parseChartData('') })
 			expect(scene.primitives, chartType).toHaveLength(0)
 		}
 	})
 
 	it('값 표시를 끄면 축 눈금 말고는 글자가 남지 않는다', () => {
 		for (const chartType of chartTypes) {
-			const texts = sceneFor(chartType, { showValueLabels: false }).primitives.filter(
-				(primitive) => primitive.kind === 'text',
-			)
+			const texts = sceneFor(chartType, {
+				showValueLabels: false,
+				showNameLabels: false,
+			}).primitives.filter((primitive) => primitive.kind === 'text')
 			// 선 차트의 축 눈금은 값 라벨이 아니라 좌표계라 남는다.
 			expect(texts.length === 0 || chartType === 'line', chartType).toBe(true)
 		}
@@ -136,5 +130,54 @@ describe('선 색', () => {
 			.map((primitive) => primitive.stroke)
 		expect(strokes.length).toBeGreaterThan(1)
 		expect(strokes).not.toContain(HD_INFOGRAPHIC_PALETTES.greenNavy.colors[0])
+	})
+})
+
+describe('글자 크기', () => {
+	/** 이름으로 그려진 글자만 — 수치(%)와 축 눈금은 제외한다. */
+	function nameSizes(chartType: InfographicChartType) {
+		// 영역은 행 라벨이 아니라 머리글(계열 이름)을 적는다 — 둘 다 「이름」이다.
+		const data = parseChartData(INFOGRAPHIC_SAMPLE_DATA[chartType])
+		const labels = [...data.series, ...data.rows.map((row) => row.label)]
+		return sceneFor(chartType)
+			.primitives.filter(
+				(primitive) => primitive.kind === 'text' && labels.includes(primitive.text),
+			)
+			.map((primitive) => (primitive.kind === 'text' ? primitive.fontSize : 0))
+	}
+
+	it('이름은 한 차트 안에서 언제나 같은 크기다', () => {
+		for (const chart of INFOGRAPHIC_CHART_TYPES) {
+			if (!chart.usesNameLabels) continue
+			const sizes = nameSizes(chart.id)
+			expect(sizes.length, chart.id).toBeGreaterThan(1)
+			expect(new Set(sizes.map((size) => size.toFixed(4))).size, chart.id).toBe(1)
+		}
+	})
+
+	it('배율이 모든 글자에 곱해진다', () => {
+		const at = (scale: number) =>
+			sceneFor('bar', { textScale: scale })
+				.primitives.filter((primitive) => primitive.kind === 'text')
+				.map((primitive) => (primitive.kind === 'text' ? primitive.fontSize : 0))
+		const single = at(1)
+		const double = at(1.6)
+		expect(double.every((size, index) => Math.abs(size - single[index] * 1.6) < 0.01)).toBe(
+			true,
+		)
+	})
+
+	it('이름을 쓰지 않는 표현에서는 이름 표시가 잠긴다', () => {
+		const locked = model
+			.getRestrictions({ data: INFOGRAPHIC_SAMPLE_DATA.pie, chartType: 'pie' })
+			?.controls.find((control) => control.controlId === 'showNameLabels')
+		expect(locked?.availability).toBe('disabled')
+		const open = model
+			.getRestrictions({
+				data: INFOGRAPHIC_SAMPLE_DATA['stacked-bar'],
+				chartType: 'stacked-bar',
+			})
+			?.controls.find((control) => control.controlId === 'showNameLabels')
+		expect(open).toBeUndefined()
 	})
 })
