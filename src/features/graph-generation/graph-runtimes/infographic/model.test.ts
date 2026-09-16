@@ -215,3 +215,53 @@ describe('수치 크기 맞춤', () => {
 		}
 	})
 })
+
+describe('정본 도판과의 대조', () => {
+	it('영역의 머릿수치는 카피가 아니라 데이터에서 나온다', () => {
+		// 정본 도판의 「+24%」 = 마지막 시점에서 첫 계열이 마지막 계열보다 앞선 폭(100 − 76).
+		const headline = sceneFor('area').primitives.find(
+			(primitive) => primitive.kind === 'text' && primitive.text.startsWith('+'),
+		)
+		expect(headline?.kind === 'text' && headline.text).toBe('+24%')
+		// 값을 바꾸면 따라 움직인다 — 박아 둔 문자열이 아니다.
+		const moved = createInfographicScene(
+			{
+				chartType: 'area',
+				palette: INFOGRAPHIC_DEFAULT_PALETTE,
+				showNameLabels: true,
+				showValueLabels: true,
+				textScale: 1,
+				uniformValueSize: true,
+				data: parseChartData('\tA\tB\n1\t0\t0\n2\t90\t50'),
+			},
+			VIEWPORT,
+		).primitives.find(
+			(primitive) => primitive.kind === 'text' && primitive.text.startsWith('+'),
+		)
+		expect(moved?.kind === 'text' && moved.text).toBe('+40%')
+	})
+
+	it('선 차트의 보조선은 점선이다 — 데이터 선과 층위가 다르다', () => {
+		const gridlines = sceneFor('line').primitives.filter(
+			(primitive) => primitive.kind === 'line',
+		)
+		expect(gridlines.length).toBeGreaterThan(0)
+		expect(gridlines.every((line) => line.kind === 'line' && line.dash !== undefined)).toBe(
+			true,
+		)
+	})
+
+	it('비례 원 둘은 맞닿는다 — 벌리면 크기 차이를 견주기 어렵다', () => {
+		const circles = sceneFor('proportional-circle').primitives.filter(
+			(primitive) => primitive.kind === 'circle',
+		)
+		expect(circles).toHaveLength(2)
+		const [big, small] = circles.map((circle) =>
+			circle.kind === 'circle' ? circle : { cx: 0, cy: 0, radius: 0 },
+		)
+		const distance = Math.hypot(big.cx - small.cx, big.cy - small.cy)
+		// 살짝 물리되 한쪽이 다른 쪽을 삼키지는 않는다.
+		expect(distance).toBeLessThan(big.radius + small.radius)
+		expect(distance).toBeGreaterThan(big.radius)
+	})
+})

@@ -130,6 +130,12 @@ export type VectorPrimitive =
 			stroke: string
 			strokeWidth: number
 			lineCap?: 'butt' | 'round' | 'square'
+			/**
+			 * 점선 패턴 — `[칠, 빈]` 길이 목록. 좌표와 같은 단위다.
+			 * 🔑 보조선을 데이터 선과 **층위로** 가르는 자리다. 색만 연하게 하면 흰 판에서
+			 * 사라지고(오남용 ①), 같은 실선이면 데이터와 같은 층위로 읽힌다.
+			 */
+			dash?: readonly number[]
 	  }
 	| { kind: 'circle'; cx: number; cy: number; radius: number; fill: string }
 	| {

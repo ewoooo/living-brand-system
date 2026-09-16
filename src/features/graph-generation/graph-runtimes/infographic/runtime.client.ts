@@ -39,10 +39,13 @@ function paintPrimitive(context: CanvasRenderingContext2D, primitive: VectorPrim
 		case 'line': {
 			context.strokeStyle = primitive.stroke
 			context.lineWidth = primitive.strokeWidth
+			// 🔴 다음 도형에 새지 않게 그린 뒤 되돌린다 — 캔버스 대시는 컨텍스트 상태다.
+			context.setLineDash(primitive.dash ? [...primitive.dash] : [])
 			context.beginPath()
 			context.moveTo(primitive.x1, primitive.y1)
 			context.lineTo(primitive.x2, primitive.y2)
 			context.stroke()
+			context.setLineDash([])
 			return
 		}
 		case 'text': {

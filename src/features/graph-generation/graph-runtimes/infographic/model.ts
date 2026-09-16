@@ -453,6 +453,33 @@ function buildRadialSlices(
 	return primitives
 }
 
+/**
+ * 원들을 판에 꽉 맞춘다 — 자리와 크기의 **비는 그대로 두고** 전체만 키우거나 줄여 가운데 세운다.
+ *
+ * 🔑 배치를 판 크기로 직접 계산하면 값 분포에 따라 판이 비거나 넘친다. 단위 좌표로 관계만
+ *    정해 두고 마지막에 한 번 맞추면, 어떤 데이터가 와도 판을 꽉 쓴다.
+ */
+function fitCircles(
+	circles: readonly { x: number; y: number; r: number }[],
+	box: Box,
+): { x: number; y: number; r: number }[] {
+	if (circles.length === 0) return []
+	const left = Math.min(...circles.map((circle) => circle.x - circle.r))
+	const right = Math.max(...circles.map((circle) => circle.x + circle.r))
+	const top = Math.min(...circles.map((circle) => circle.y - circle.r))
+	const bottom = Math.max(...circles.map((circle) => circle.y + circle.r))
+	const width = right - left
+	const height = bottom - top
+	const scale = Math.min(box.width / (width || 1), box.height / (height || 1))
+	const offsetX = box.x + (box.width - width * scale) / 2 - left * scale
+	const offsetY = box.y + (box.height - height * scale) / 2 - top * scale
+	return circles.map((circle) => ({
+		x: circle.x * scale + offsetX,
+		y: circle.y * scale + offsetY,
+		r: circle.r * scale,
+	}))
+}
+
 // ── ③ 비례 원 ────────────────────────────────────────────────────────────────
 
 function buildProportionalCircle(box: Box, input: InfographicInput): VectorPrimitive[] {
@@ -460,31 +487,34 @@ function buildProportionalCircle(box: Box, input: InfographicInput): VectorPrimi
 	const [big, small] = values.length === 2 ? values : [values[0], values[0]]
 	if (big <= 0) return []
 	const colors = pickSeriesColors(input.palette, 2)
-	const base = Math.min(box.width, box.height)
 	// 값은 넓이에 비례한다 — 반지름을 값에 비례시키면 큰 쪽이 규정보다 훨씬 커 보인다.
-	const bigRadius = base * 0.34
-	const smallRadius = bigRadius * Math.sqrt(Math.max(small, 0) / big)
-	const bigCenter = { x: box.x + box.width * 0.56, y: box.y + box.height * 0.36 }
-	const smallCenter = {
-		x: box.x + box.width * 0.18,
-		y: box.y + box.height - smallRadius - base * 0.04,
-	}
+	const smallRatio = Math.sqrt(Math.max(small, 0) / big)
+	// 🔴 두 원은 **맞닿는다**. 사이를 벌리면 크기 차이를 견주기 어려워지고 판이 빈다.
+	//    작은 원은 큰 원의 왼쪽 아래에 붙는다(정본 도판의 자리).
+	const angle = Math.PI * (160 / 180)
+	const distance = (1 + smallRatio) * 0.96
+	const [bigCircle, smallCircle] = fitCircles(
+		[
+			{ x: 0, y: 0, r: 1 },
+			{ x: Math.cos(angle) * distance, y: Math.sin(angle) * distance, r: smallRatio },
+		],
+		box,
+	)
 	const valueSizes = valueFontSizes(
 		[
-			{ text: valueText(big), width: bigRadius * 1.4, weight: big },
-			{ text: valueText(small), width: smallRadius * 1.4, weight: small },
+			{ text: valueText(big), width: bigCircle.r * 1.4, weight: big },
+			{ text: valueText(small), width: smallCircle.r * 1.4, weight: small },
 		],
-		bigRadius * 0.26 * input.textScale,
-		// 두 원의 크기 차이가 곧 정보다 — 맞추면 작은 원이 글자에 덮인다.
+		bigCircle.r * 0.26 * input.textScale,
 		input.uniformValueSize,
 	)
 	const primitives: VectorPrimitive[] = [
-		{ kind: 'circle', cx: bigCenter.x, cy: bigCenter.y, radius: bigRadius, fill: colors[0] },
+		{ kind: 'circle', cx: bigCircle.x, cy: bigCircle.y, radius: bigCircle.r, fill: colors[0] },
 		{
 			kind: 'circle',
-			cx: smallCenter.x,
-			cy: smallCenter.y,
-			radius: smallRadius,
+			cx: smallCircle.x,
+			cy: smallCircle.y,
+			radius: smallCircle.r,
 			fill: colors[1],
 		},
 	]
@@ -493,15 +523,15 @@ function buildProportionalCircle(box: Box, input: InfographicInput): VectorPrimi
 		...primitives,
 		label(
 			valueText(big),
-			bigCenter.x,
-			bigCenter.y,
+			bigCircle.x,
+			bigCircle.y,
 			valueSizes[0],
 			readableTextColor(colors[0]),
 		),
 		label(
 			valueText(small),
-			smallCenter.x,
-			smallCenter.y,
+			smallCircle.x,
+			smallCircle.y,
 			valueSizes[1],
 			readableTextColor(colors[1]),
 		),
@@ -523,22 +553,21 @@ const CLUSTER_LAYOUT = [
 ] as const
 
 /**
- * 원을 얼마나 키울 수 있나. 🔴 자리가 고정이라 값 분포에 따라 이웃끼리 겹친다 — 특례로 몇몇
- * 경우를 막는 대신, 가장 빡빡한 이웃 쌍이 **닿는 선**을 상한으로 삼아 겹침이 생길 자리를 없앤다.
- * 입력이 같으면 결과도 같으므로 미리보기와 내보내기가 갈리지 않는다.
+ * 단위 좌표에서 원을 얼마나 키울 수 있나. 🔴 자리가 고정이라 값 분포에 따라 이웃끼리 겹친다 —
+ * 특례로 몇몇 경우를 막는 대신, 가장 빡빡한 이웃 쌍이 **닿는 선**을 상한으로 삼아 겹침이 생길
+ * 자리를 없앤다. 입력이 같으면 결과도 같으므로 미리보기와 내보내기가 갈리지 않는다.
  */
-function clusterScale(ratios: readonly number[], box: Box): number {
-	const base = Math.min(box.width, box.height)
-	let scale = base * 0.3
+function clusterScale(ratios: readonly number[]): number {
+	let scale = Number.POSITIVE_INFINITY
 	for (let a = 0; a < ratios.length; a += 1) {
 		for (let b = a + 1; b < ratios.length; b += 1) {
-			const dx = (CLUSTER_LAYOUT[a].x - CLUSTER_LAYOUT[b].x) * box.width
-			const dy = (CLUSTER_LAYOUT[a].y - CLUSTER_LAYOUT[b].y) * box.height
+			const dx = CLUSTER_LAYOUT[a].x - CLUSTER_LAYOUT[b].x
+			const dy = CLUSTER_LAYOUT[a].y - CLUSTER_LAYOUT[b].y
 			const sum = ratios[a] + ratios[b]
 			if (sum > 0) scale = Math.min(scale, Math.hypot(dx, dy) / sum)
 		}
 	}
-	return scale
+	return Number.isFinite(scale) ? scale : 0.3
 }
 
 function buildBubbleCluster(box: Box, input: InfographicInput): VectorPrimitive[] {
@@ -547,25 +576,36 @@ function buildBubbleCluster(box: Box, input: InfographicInput): VectorPrimitive[
 	const max = Math.max(...rows.map((row) => row.values[0] ?? 0))
 	if (max <= 0) return []
 	const colors = pickSeriesColors(input.palette, rows.length)
-	const scale = clusterScale(
-		rows.map((row) => Math.sqrt((row.values[0] ?? 0) / max)),
+	const ratios = rows.map((row) => Math.sqrt((row.values[0] ?? 0) / max))
+	// 자리는 단위 좌표로 관계만 정하고, 겹치지 않을 최대 크기를 구한 뒤 판에 맞춘다.
+	const scale = clusterScale(ratios)
+	const circles = fitCircles(
+		ratios.map((ratio, index) => ({
+			x: CLUSTER_LAYOUT[index].x,
+			y: CLUSTER_LAYOUT[index].y,
+			r: ratio * scale,
+		})),
 		box,
 	)
-	const primitives: VectorPrimitive[] = []
-	const radiusOf = (value: number) => scale * Math.sqrt(value / max)
 	const nameSize = sharedFontSize(
-		rows.map((row) => ({ text: row.label, width: radiusOf(row.values[0] ?? 0) * 1.5 })),
-		scale * 0.44 * input.textScale,
+		rows.map((row, index) => ({ text: row.label, width: circles[index].r * 1.5 })),
+		Math.max(...circles.map((circle) => circle.r)) * 0.44 * input.textScale,
 	)
+	const primitives: VectorPrimitive[] = []
 	rows.forEach((row, index) => {
-		const radius = radiusOf(row.values[0] ?? 0)
-		const spot = CLUSTER_LAYOUT[index]
-		const cx = box.x + box.width * spot.x
-		const cy = box.y + box.height * spot.y
-		primitives.push({ kind: 'circle', cx, cy, radius, fill: colors[index] })
+		const circle = circles[index]
+		primitives.push({
+			kind: 'circle',
+			cx: circle.x,
+			cy: circle.y,
+			radius: circle.r,
+			fill: colors[index],
+		})
 		// 원 안에 드는 폭은 지름보다 좁다 — 가장자리로 갈수록 세로 여유가 없다.
 		if (input.showNameLabels && row.label) {
-			primitives.push(label(row.label, cx, cy, nameSize, readableTextColor(colors[index])))
+			primitives.push(
+				label(row.label, circle.x, circle.y, nameSize, readableTextColor(colors[index])),
+			)
 		}
 	})
 	return primitives
@@ -599,9 +639,11 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 		input.uniformValueSize,
 	)
 	// 이름은 길이가 달라 가장 긴 것이 크기를 정한다.
+	// 🔴 상한을 기준 크기의 0.3배로 박아 두면 폭이 남아도 글자가 안 커져 읽히지 않는다 —
+	//    상한은 「수치보다 작다」만 뜻하고, 실제 크기는 칸 너비가 정하게 둔다.
 	const nameSize = sharedFontSize(
-		rows.map((row) => ({ text: row.label, width: barWidth * 0.9 })),
-		fontSize * 0.3,
+		rows.map((row) => ({ text: row.label, width: barWidth * 0.86 })),
+		fontSize * 0.62,
 	)
 	const primitives: VectorPrimitive[] = []
 	rows.forEach((row, index) => {
@@ -642,7 +684,7 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 				label(
 					row.label,
 					x + barWidth / 2,
-					box.y + box.height - fontSize * 0.6,
+					box.y + box.height - nameSize * 0.9,
 					nameSize,
 					readableTextColor(colors[index]),
 				),
@@ -736,17 +778,22 @@ function buildHorizontalBars(
 			)
 		}
 		// 이름은 막대 머리에, 값은 막대 끝에 — 가로 막대를 쓰는 이유가 이름이라 이름을 먼저 읽는다.
-		if (input.showNameLabels && bar.row.label && nameWidthOf(bar) > fontSize * 0.6) {
-			primitives.push(
-				label(
-					bar.row.label,
-					box.x + padding,
-					bar.y + barHeight / 2,
-					nameSize,
-					textColor,
-					'start',
-				),
-			)
+		// 🔴 막대가 짧으면 이름이 설 자리가 없다. 트랙형은 트랙이 판 끝까지 있으므로 채운 자리
+		//    **밖**에 적을 수 있다 — 이름을 통째로 잃는 것보다 낫다.
+		if (input.showNameLabels && bar.row.label) {
+			const insideName = nameWidthOf(bar) > fontSize * 0.6
+			if (insideName || withTrack) {
+				primitives.push(
+					label(
+						bar.row.label,
+						box.x + (insideName ? padding : bar.filled + padding),
+						bar.y + barHeight / 2,
+						nameSize,
+						insideName ? textColor : HD_INFOGRAPHIC_COLORS.deepGreen,
+						'start',
+					),
+				)
+			}
 		}
 	}
 	return primitives
@@ -873,8 +920,11 @@ function buildLine(box: Box, input: InfographicInput): VectorPrimitive[] {
 			y1: y,
 			x2: plot.x + plot.width,
 			y2: y,
-			stroke: HD_INFOGRAPHIC_COLORS.lightGreen,
+			// 보조선은 데이터가 아니라 좌표계다 — 점선이 그 층위를 말한다. 색만 연하게 하면
+			// 흰 판에서 사라지고(오남용 ①), 실선이면 데이터 선과 같은 층위로 읽힌다.
+			stroke: HD_INFOGRAPHIC_COLORS.ecoGreen,
 			strokeWidth: Math.max(1, fontSize * 0.04),
+			dash: [fontSize * 0.18, fontSize * 0.28],
 		})
 		primitives.push(
 			label(
@@ -937,11 +987,32 @@ function buildArea(box: Box, input: InfographicInput): VectorPrimitive[] {
 	const colors = pickSeriesColors(input.palette, areas + 1)
 	const fontSize = Math.min(box.width, box.height) * 0.09 * input.textScale
 	const primitives: VectorPrimitive[] = []
+	/**
+	 * 머릿수치 — 마지막 시점에서 **첫 계열이 마지막 계열보다 얼마나 앞섰나**.
+	 * 🔑 정본 도판의 「+24%」가 바로 이 값이다(100 − 76). 카피가 아니라 데이터에서 나오므로
+	 *    값을 바꾸면 따라 움직인다. 계열이 하나면 견줄 것이 없어 적지 않는다.
+	 */
+	if (input.showValueLabels && areas > 1) {
+		const last = rows[rows.length - 1].values
+		const lead = last[0] - last[areas - 1]
+		primitives.push(
+			label(
+				`${lead > 0 ? '+' : ''}${valueText(lead)}`,
+				box.x,
+				box.y + fontSize * 0.6,
+				fontSize * 1.6,
+				HD_INFOGRAPHIC_COLORS.deepGreen,
+				'start',
+			),
+		)
+	}
 	// 큰 값부터 그린다 — 뒤에 그린 작은 영역이 위에 얹혀야 두 계열이 모두 보인다.
 	for (let series = 0; series < areas; series += 1) {
+		const plotTop = box.y + (input.showValueLabels && areas > 1 ? box.height * 0.28 : 0)
+		const plotHeight = box.y + box.height - plotTop
 		const points = rows.map((row, index) => ({
 			x: box.x + (index / (rows.length - 1)) * box.width,
-			y: box.y + box.height - (row.values[series] / max) * box.height,
+			y: plotTop + plotHeight - (row.values[series] / max) * plotHeight,
 		}))
 		const fill = colors[colors.length - 1 - series]
 		primitives.push({
