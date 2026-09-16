@@ -628,6 +628,24 @@ function isControllerValueShape(
 	}
 }
 
+/**
+ * 기본값이 바뀌었을 때 들고 있던 값이 **따라가야 하는가**.
+ *
+ * 🔑 기본값이 바뀌었다는 것은 계약이 다른 것을 가리키게 됐다는 뜻이다(표현을 바꾸면 그 표현의
+ *    데이터가 기본값이 된다). 따라갈지는 창작자가 그 값을 손댔는가로 갈린다 —
+ *    **옛 기본값 그대로면 손대지 않은 것**이므로 새 기본값으로 끌어온다.
+ * 🔴 손댄 값은 따라가지 않는다. 덮으면 창작자가 적은 것이 되돌릴 방법 없이 사라진다.
+ */
+export function followsChangedDefault(
+	value: ControllerControlValue,
+	before: ControllerControlValue | undefined,
+	next: ControllerControlValue,
+): boolean {
+	if (before === undefined) return false
+	if (controllerValuesEqual(before, next)) return false
+	return controllerValuesEqual(value, before)
+}
+
 export function controllerValuesEqual(left: ControllerControlValue, right: ControllerControlValue) {
 	if (isControllerPadValue(left) && isControllerPadValue(right)) {
 		return padValuesEqual(left, right)

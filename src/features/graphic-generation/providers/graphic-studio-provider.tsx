@@ -16,6 +16,7 @@ import {
 	type ControllerRuntimeBindings,
 	controllerValuesEqual,
 	createControllerValues,
+	followsChangedDefault,
 } from '@/modules/studio-controller/controller-definition'
 
 /**
@@ -48,6 +49,12 @@ export function GraphicStudioProvider({
 	const groups = useMemo(() => getGraphicStudioRuntimeGroups(config, values), [config, values])
 	const [bindings, setBindings] = useState<ControllerRuntimeBindings>({})
 	const bindingsRef = useRef<ControllerRuntimeBindings>({})
+	/**
+	 * 직전에 본 기본값. 🔑 기본값이 바뀌었다는 것은 **계약이 다른 것을 가리키게 됐다**는 뜻이고
+	 * (표현을 바꾸면 그 표현의 데이터가 기본값이 된다), 그때 값이 따라가야 할지는 창작자가
+	 * 그 값을 손댔는가로 갈린다. 옛 기본값 그대로면 손대지 않은 것이다.
+	 */
+	const defaultsRef = useRef<Record<string, ControllerControlValue>>({})
 	const definitions = useMemo(
 		() =>
 			new Map(
@@ -66,12 +73,34 @@ export function GraphicStudioProvider({
 	 *    같은 객체가 돌아와 여기서 멈춘다(무한 루프가 아니다).
 	 */
 	useEffect(() => {
+		const previousDefaults = defaultsRef.current
+		defaultsRef.current = Object.fromEntries(
+			groups.flatMap((group) =>
+				group.controls.map((control) => [control.id, control.defaultValue] as const),
+			),
+		)
 		setValues((current) => {
 			let next = current
 			for (const group of groups) {
 				for (const control of group.controls) {
 					if (!(control.id in current)) continue
 					const value = current[control.id]
+					/**
+					 * 🔑 기본값이 바뀌었고 값이 **옛 기본값 그대로**면 손대지 않은 값이므로 새 기본값을
+					 * 따라간다 — 표현을 바꾸면 그 표현의 데이터가 따라오는 자리가 여기다.
+					 * 🔴 손댄 값은 지킨다. 덮으면 창작자가 적은 것이 되돌릴 방법 없이 사라진다.
+					 */
+					if (
+						followsChangedDefault(
+							value,
+							previousDefaults[control.id],
+							control.defaultValue,
+						)
+					) {
+						if (next === current) next = { ...current }
+						next[control.id] = control.defaultValue
+						continue
+					}
 					if (
 						value === undefined ||
 						acceptsControllerDraftValue(control, value, bindingsRef.current[control.id])
