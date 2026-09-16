@@ -5,6 +5,13 @@ import type {
 	StudioControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
 import {
+	type ChartAxes,
+	INFOGRAPHIC_AXES,
+	INFOGRAPHIC_AXIS_NEUTRAL,
+	INFOGRAPHIC_AXIS_RANGE,
+	type InfographicAxis,
+} from './chart-axes'
+import {
 	type ChartData,
 	EMPTY_CHART_DATA,
 	firstColumn,
@@ -34,6 +41,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
+		axes: ['spacing'],
 	},
 	{
 		id: 'donut',
@@ -41,6 +49,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
+		axes: ['thickness', 'spacing'],
 	},
 	{
 		id: 'stacked-column',
@@ -48,6 +57,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
+		axes: ['thickness'],
 	},
 	{
 		id: 'stacked-bar',
@@ -55,6 +65,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: true,
+		axes: ['thickness'],
 	},
 	{
 		id: 'bar',
@@ -62,6 +73,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
+		axes: ['spacing'],
 	},
 	{
 		id: 'bar-horizontal',
@@ -69,6 +81,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single' },
 		source: 'extended',
 		usesNameLabels: true,
+		axes: ['spacing'],
 	},
 	{
 		id: 'bubble-cluster',
@@ -77,6 +90,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: true,
+		axes: ['spacing'],
 	},
 	{
 		id: 'proportional-circle',
@@ -85,6 +99,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
+		axes: ['spacing'],
 	},
 	{
 		id: 'nested-square',
@@ -93,6 +108,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
+		axes: ['spacing'],
 	},
 	{
 		id: 'bar-track',
@@ -101,6 +117,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single', bounded: true },
 		source: 'canon',
 		usesNameLabels: true,
+		axes: ['spacing'],
 	},
 	{
 		id: 'bar-track-horizontal',
@@ -108,6 +125,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single', bounded: true },
 		source: 'extended',
 		usesNameLabels: true,
+		axes: ['spacing'],
 	},
 	{
 		id: 'nested-circle',
@@ -116,6 +134,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single', descending: true },
 		source: 'canon',
 		usesNameLabels: true,
+		axes: ['thickness'],
 	},
 	{
 		id: 'concentric-circle',
@@ -123,6 +142,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'single', descending: true },
 		source: 'extended',
 		usesNameLabels: true,
+		axes: ['thickness'],
 	},
 	{
 		id: 'line',
@@ -130,6 +150,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'multi' },
 		source: 'canon',
 		usesNameLabels: false,
+		axes: ['thickness', 'curvature'],
 	},
 	{
 		id: 'area',
@@ -137,12 +158,15 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		shape: { series: 'multi' },
 		source: 'canon',
 		usesNameLabels: true,
+		axes: ['curvature'],
 	},
 ] as const satisfies readonly {
 	id: string
 	label: string
 	shape: ChartDataShape
 	source: InfographicChartSource
+	/** 이 표현이 쓰는 형태 축. 여기 없는 축은 창작자 화면에서 잠긴다. */
+	axes: ChartAxes
 	/**
 	 * 항목 이름을 그리는가. 🔴 「이름 표시」 옵션은 이름을 쓰는 표현에서만 살아 있다 —
 	 * 파이는 조각에 수치만 적으므로 그 표현에서 이름을 끄고 켜는 스위치는 아무것도 하지 않는다.
@@ -175,6 +199,10 @@ export type InfographicInput = {
 	 * 있는 것처럼 읽힌다). 수치는 칸 크기를 따라가는 편이 나을 때가 있어 고를 수 있게 둔다.
 	 */
 	uniformValueSize: boolean
+	/** 형태 축 — 값은 0~1이고 무엇으로 읽을지는 표현이 정한다(`chart-axes.ts`). */
+	thickness: number
+	spacing: number
+	curvature: number
 	data: ChartData
 }
 
@@ -201,12 +229,29 @@ export function toInfographicInput(values: ControllerValues): InfographicInput {
 					)
 				: INFOGRAPHIC_DEFAULT_TEXT_SCALE,
 		uniformValueSize: boolish(values.uniformValueSize, INFOGRAPHIC_DEFAULT_UNIFORM_VALUE_SIZE),
+		thickness: axis(values.thickness, chartType, 'thickness'),
+		spacing: axis(values.spacing, chartType, 'spacing'),
+		curvature: axis(values.curvature, chartType, 'curvature'),
 		// 값이 아직 없을 때만 그 표현의 샘플로 떨어진다. 비운 것은 비운 대로 둔다 — 빈 판이
 		// 「데이터가 없다」를 말해 주는데 샘플을 되살리면 지운 것이 되살아난 것처럼 보인다.
 		data: parseChartData(
 			typeof values.data === 'string' ? values.data : INFOGRAPHIC_SAMPLE_DATA[chartType],
 		),
 	}
+}
+
+/**
+ * 형태 축 값. 🔴 그 표현이 쓰지 않는 축은 **언제나 중립**이다 — 잠긴 축의 값이 기하에 새어
+ * 들어가면 화면이 왜 그렇게 그려졌는지 설명할 수 없게 된다.
+ */
+function axis(raw: unknown, chartType: InfographicChartType, name: InfographicAxis): number {
+	const declared = INFOGRAPHIC_CHART_TYPES.find((chart) => chart.id === chartType)?.axes as
+		| ChartAxes
+		| undefined
+	const uses = declared?.includes(name)
+	if (!uses) return INFOGRAPHIC_AXIS_NEUTRAL
+	if (typeof raw !== 'number' || !Number.isFinite(raw)) return INFOGRAPHIC_AXIS_NEUTRAL
+	return Math.min(INFOGRAPHIC_AXIS_RANGE.max, Math.max(INFOGRAPHIC_AXIS_RANGE.min, raw))
 }
 
 function boolish(raw: unknown, fallback: boolean): boolean {
@@ -251,7 +296,8 @@ type ChartBuilder = (box: Box, input: InfographicInput) => VectorPrimitive[]
 
 const CHART_BUILDERS: Record<InfographicChartType, ChartBuilder> = {
 	pie: (box, input) => buildRadialSlices(box, input, 0),
-	donut: (box, input) => buildRadialSlices(box, input, 0.46),
+	// 두께가 클수록 링이 두껍다 — 창작자가 읽는 방향과 값의 방향이 같아야 한다.
+	donut: (box, input) => buildRadialSlices(box, input, 0.72 - input.thickness * 0.55),
 	'proportional-circle': buildProportionalCircle,
 	'bubble-cluster': buildBubbleCluster,
 	bar: (box, input) => buildBars(box, input, false),
@@ -263,7 +309,7 @@ const CHART_BUILDERS: Record<InfographicChartType, ChartBuilder> = {
 	line: buildLine,
 	area: buildArea,
 	'nested-circle': buildNestedCircle,
-	'concentric-circle': buildConcentricCircle,
+	'concentric-circle': buildNestedCircle,
 	'nested-square': buildNestedSquare,
 }
 
@@ -277,6 +323,18 @@ function valueText(value: number): string {
 	return `${Math.round(value * 10) / 10}%`
 }
 
+/**
+ * 글자 굵기.
+ *
+ * 🔴 HD OTF가 실제로 가진 것은 **300·500·700 셋뿐**이다 — 그 밖의 값을 주면 브라우저가
+ *    합성해 원본과 다른 모양이 된다(`brand-typeface.ts`의 `AVAILABLE_WEIGHTS`).
+ * 🔑 흰 글자는 Medium, 어두운 글자는 Light다. 같은 굵기라도 **흰 바탕의 어두운 글자가 더
+ *    굵어 보이므로**, 한 단계 더 내려야 두 경우의 무게가 같게 읽힌다.
+ */
+function labelWeight(fill: string): 300 | 500 {
+	return fill === HD_INFOGRAPHIC_COLORS.white ? 500 : 300
+}
+
 function label(
 	text: string,
 	x: number,
@@ -284,7 +342,6 @@ function label(
 	fontSize: number,
 	fill: string,
 	anchor: 'start' | 'middle' | 'end' = 'middle',
-	fontWeight = 700,
 ): VectorPrimitive {
 	return {
 		kind: 'text',
@@ -294,7 +351,7 @@ function label(
 		text,
 		fontFamily: INFOGRAPHIC_FONT_FAMILY,
 		fontSize,
-		fontWeight,
+		fontWeight: labelWeight(fill),
 		fill,
 		textAnchor: anchor,
 	}
@@ -365,11 +422,12 @@ function fitFontSize(text: string, boxWidth: number, max: number): number {
 }
 
 /**
- * 점들을 부드럽게 잇는다 — Catmull-Rom을 3차 베지어로 옮긴 것.
- * 🔑 마디가 보이지 않아야 하는 표현(영역)만 쓴다. 꺾은선이 정보인 선 차트는 `polylinePath`.
+ * 점들을 잇는다 — 곡률 0이면 꺾은선, 크면 Catmull-Rom을 3차 베지어로 옮겨 부드럽게 잇는다.
+ * 🔑 선과 영역이 같은 함수를 쓴다. 마디를 보일지 말지는 표현이 아니라 **축**이 정한다.
  */
-function smoothPath(points: readonly { x: number; y: number }[]): string {
-	if (points.length < 3) return polylinePath(points, false)
+function curvePath(points: readonly { x: number; y: number }[], curvature: number): string {
+	if (points.length < 3 || curvature <= 0) return polylinePath(points, false)
+	const tension = curvature / 6
 	let path = `M${round(points[0].x)} ${round(points[0].y)}`
 	for (let index = 0; index < points.length - 1; index += 1) {
 		const previous = points[Math.max(0, index - 1)]
@@ -377,12 +435,12 @@ function smoothPath(points: readonly { x: number; y: number }[]): string {
 		const next = points[index + 1]
 		const after = points[Math.min(points.length - 1, index + 2)]
 		const control1 = {
-			x: current.x + (next.x - previous.x) / 6,
-			y: current.y + (next.y - previous.y) / 6,
+			x: current.x + (next.x - previous.x) * tension,
+			y: current.y + (next.y - previous.y) * tension,
 		}
 		const control2 = {
-			x: next.x - (after.x - current.x) / 6,
-			y: next.y - (after.y - current.y) / 6,
+			x: next.x - (after.x - current.x) * tension,
+			y: next.y - (after.y - current.y) * tension,
 		}
 		path += `C${round(control1.x)} ${round(control1.y)},${round(control2.x)} ${round(control2.y)},${round(next.x)} ${round(next.y)}`
 	}
@@ -441,7 +499,7 @@ function buildRadialSlices(
 	const cx = box.x + box.width / 2
 	const cy = box.y + box.height / 2
 	const colors = pickSeriesColors(input.palette, values.length)
-	const fontSize = radius * 0.1 * input.textScale
+	const fontSize = radius * 0.14 * input.textScale
 	const labelRadius = radius * (innerRatio === 0 ? 0.66 : (1 + innerRatio) / 2)
 	// 조각이 좁을수록 글자가 설 호가 짧다 — 그 호가 이 조각의 칸 너비다.
 	const valueSizes = valueFontSizes(
@@ -454,13 +512,22 @@ function buildRadialSlices(
 		fontSize,
 		input.uniformValueSize,
 	)
+	// 조각 사이를 벌린다. 정본 도판은 맞붙어 있으므로 **중립까지는 0**이고, 그 위로 갈라진다.
+	const pad = Math.max(0, input.spacing - INFOGRAPHIC_AXIS_NEUTRAL) * 0.024
 	const primitives: VectorPrimitive[] = []
 	let cursor = 0
 	values.forEach((value, index) => {
 		const span = value / sum
 		primitives.push({
 			kind: 'path',
-			d: sectorPath(cx, cy, radius, innerRatio, cursor, cursor + span),
+			d: sectorPath(
+				cx,
+				cy,
+				radius,
+				innerRatio,
+				cursor + pad / 2,
+				Math.max(cursor + pad / 2, cursor + span - pad / 2),
+			),
 			fill: colors[index],
 		})
 		if (input.showValueLabels) {
@@ -519,7 +586,7 @@ function buildProportionalCircle(box: Box, input: InfographicInput): VectorPrimi
 	// 🔴 두 원은 **떨어져 선다**(정본 도판). 붙이면 두 덩어리가 한 도형으로 읽힌다.
 	//    작은 원은 큰 원의 왼쪽 아래에 놓인다.
 	const angle = Math.PI * (152 / 180)
-	const distance = (1 + smallRatio) * 1.22
+	const distance = (1 + smallRatio) * (1 + input.spacing * 0.5)
 	const [bigCircle, smallCircle] = fitCircles(
 		[
 			{ x: 0, y: 0, r: 1 },
@@ -584,12 +651,15 @@ const CLUSTER_LAYOUT = [
  * 특례로 몇몇 경우를 막는 대신, 가장 빡빡한 이웃 쌍이 **닿는 선**을 상한으로 삼아 겹침이 생길
  * 자리를 없앤다. 입력이 같으면 결과도 같으므로 미리보기와 내보내기가 갈리지 않는다.
  */
-function clusterScale(ratios: readonly number[]): number {
+function clusterScale(
+	ratios: readonly number[],
+	layout: readonly { x: number; y: number }[],
+): number {
 	let scale = Number.POSITIVE_INFINITY
 	for (let a = 0; a < ratios.length; a += 1) {
 		for (let b = a + 1; b < ratios.length; b += 1) {
-			const dx = CLUSTER_LAYOUT[a].x - CLUSTER_LAYOUT[b].x
-			const dy = CLUSTER_LAYOUT[a].y - CLUSTER_LAYOUT[b].y
+			const dx = layout[a].x - layout[b].x
+			const dy = layout[a].y - layout[b].y
 			const sum = ratios[a] + ratios[b]
 			if (sum > 0) scale = Math.min(scale, Math.hypot(dx, dy) / sum)
 		}
@@ -605,11 +675,18 @@ function buildBubbleCluster(box: Box, input: InfographicInput): VectorPrimitive[
 	const colors = pickSeriesColors(input.palette, rows.length)
 	const ratios = rows.map((row) => Math.sqrt((row.values[0] ?? 0) / max))
 	// 자리는 단위 좌표로 관계만 정하고, 겹치지 않을 최대 크기를 구한 뒤 판에 맞춘다.
-	const scale = clusterScale(ratios)
+	// 간격이 흩어짐을 정한다 — 자리를 판 가운데에서 밀고 당긴다. 겹치지 않을 상한은
+	// 그 뒤에 구하므로, 모을수록 원이 작아지고 벌릴수록 커진다.
+	const spread = 0.7 + input.spacing * 0.6
+	const layout = CLUSTER_LAYOUT.map((spot) => ({
+		x: 0.5 + (spot.x - 0.5) * spread,
+		y: 0.5 + (spot.y - 0.5) * spread,
+	}))
+	const scale = clusterScale(ratios, layout)
 	const circles = fitCircles(
 		ratios.map((ratio, index) => ({
-			x: CLUSTER_LAYOUT[index].x,
-			y: CLUSTER_LAYOUT[index].y,
+			x: layout[index].x,
+			y: layout[index].y,
 			r: ratio * scale,
 		})),
 		box,
@@ -645,7 +722,8 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 	// 트랙형은 팔레트의 가장 연한 색이 트랙 자리를 가져간다 — 채움은 그 다음 색부터 뽑아야
 	// 첫 막대가 트랙과 같은 색이 되어 사라지지 않는다.
 	const colors = pickSeriesColors(input.palette, rows.length + 1).slice(withTrack ? 1 : 0)
-	const gap = box.width * 0.055
+	// 간격 축이 막대 사이를 정한다.
+	const gap = box.width * (0.012 + input.spacing * 0.095)
 	const barWidth = (box.width - gap * (rows.length - 1)) / rows.length
 	// 트랙형은 100%가 판의 높이다. 그냥 막대는 최댓값이 판의 높이다.
 	const scaleMax = withTrack ? 100 : Math.max(...rows.map((row) => row.values[0] ?? 0))
@@ -737,7 +815,7 @@ function buildHorizontalBars(
 ): VectorPrimitive[] {
 	const rows = input.data.rows
 	const colors = pickSeriesColors(input.palette, rows.length + 1).slice(withTrack ? 1 : 0)
-	const gap = box.height * 0.04
+	const gap = box.height * (0.012 + input.spacing * 0.062)
 	const barHeight = (box.height - gap * (rows.length - 1)) / rows.length
 	const scaleMax = withTrack ? 100 : Math.max(...rows.map((row) => row.values[0] ?? 0))
 	if (scaleMax <= 0) return []
@@ -838,7 +916,8 @@ function buildStackedColumn(box: Box, input: InfographicInput): VectorPrimitive[
 	const sum = values.reduce((total, value) => total + value, 0)
 	if (sum <= 0) return []
 	const colors = pickSeriesColors(input.palette, values.length)
-	const width = box.width * 0.44
+	// 두께 축이 기둥 폭을 정한다.
+	const width = box.width * (0.16 + input.thickness * 0.58)
 	const x = box.x + (box.width - width) / 2
 	const fontSize = width * 0.11 * input.textScale
 	// 조각 높이가 값에 비례한다 — 얇은 조각이 글자를 담을 수 있는 높이가 곧 상한이다.
@@ -879,7 +958,8 @@ function buildStackedBar(box: Box, input: InfographicInput): VectorPrimitive[] {
 	const sum = rows.reduce((total, row) => total + (row.values[0] ?? 0), 0)
 	if (sum <= 0) return []
 	const colors = pickSeriesColors(input.palette, rows.length)
-	const height = box.height * 0.16
+	// 두께 축이 띠 높이를 정한다.
+	const height = box.height * (0.05 + input.thickness * 0.22)
 	const y = box.y + (box.height - height) / 2
 	const fontSize = height * 0.22 * input.textScale
 	// 좁은 칸에서는 글자가 칸을 넘는다 — 가장 좁은 칸이 모든 이름의 크기를 정한다.
@@ -966,7 +1046,6 @@ function buildLine(box: Box, input: InfographicInput): VectorPrimitive[] {
 				fontSize,
 				HD_INFOGRAPHIC_COLORS.deepGreen,
 				'end',
-				400,
 			),
 		)
 	}
@@ -980,19 +1059,19 @@ function buildLine(box: Box, input: InfographicInput): VectorPrimitive[] {
 				fontSize,
 				HD_INFOGRAPHIC_COLORS.deepGreen,
 				'middle',
-				400,
 			),
 		)
 	})
 	for (let series = 0; series < lines; series += 1) {
 		primitives.push({
 			kind: 'path',
-			d: polylinePath(
+			// 정본 도판의 선은 꺾은선이다 — 중립까지는 마디를 남기고, 그 위로 부드러워진다.
+			d: curvePath(
 				rows.map((row, index) => ({ x: toX(index), y: toY(row.values[series]) })),
-				false,
+				Math.max(0, input.curvature - INFOGRAPHIC_AXIS_NEUTRAL) * 2,
 			),
 			stroke: colors[series],
-			strokeWidth: Math.max(1.5, fontSize * 0.18),
+			strokeWidth: Math.max(1.5, fontSize * (0.06 + input.thickness * 0.24)),
 			fill: 'none',
 		})
 	}
@@ -1051,7 +1130,8 @@ function buildArea(box: Box, input: InfographicInput): VectorPrimitive[] {
 			kind: 'path',
 			// 정본 도판은 시점을 잇는 선이 **곡선**이다 — 꺾은선은 선 차트의 몫이고,
 			// 영역은 「쌓여 올라가는 흐름」을 말하므로 마디가 보이면 안 된다.
-			d: `${smoothPath(points)}L${round(box.x + box.width)} ${round(box.y + box.height)}L${round(box.x)} ${round(box.y + box.height)}Z`,
+			// 정본 도판의 영역은 곡선이다 — 중립에서 이미 부드럽고, 내리면 마디가 드러난다.
+			d: `${curvePath(points, Math.min(1, input.curvature * 2))}L${round(box.x + box.width)} ${round(box.y + box.height)}L${round(box.x)} ${round(box.y + box.height)}Z`,
 			fill,
 		})
 		// 끝점의 점 — 「지금 여기까지」를 찍는다.
@@ -1088,78 +1168,64 @@ function buildArea(box: Box, input: InfographicInput): VectorPrimitive[] {
  */
 function buildNestedCircle(box: Box, input: InfographicInput): VectorPrimitive[] {
 	const rows = input.data.rows
-	const values = firstColumn(input.data)
-	const max = Math.max(...values)
-	if (max <= 0) return []
-	const colors = pickSeriesColors(input.palette, rows.length)
-	const base = Math.min(box.width, box.height)
-	const outer = base / 2
-	const cx = box.x + box.width / 2
-	const bottom = box.y + box.height / 2 + outer
-	// 이름이 서는 띠의 폭이 원마다 다르다 — 가장 좁은 띠가 모든 이름의 크기를 정한다.
-	const nameSize = sharedFontSize(
-		rows.map((row) => ({
-			text: row.label,
-			width: outer * Math.sqrt((row.values[0] ?? 0) / max) * 1.2,
-		})),
-		base * 0.06 * input.textScale,
-	)
-	const primitives: VectorPrimitive[] = []
-	rows.forEach((row, index) => {
-		const radius = outer * Math.sqrt((row.values[0] ?? 0) / max)
-		primitives.push({ kind: 'circle', cx, cy: bottom - radius, radius, fill: colors[index] })
-		if (!input.showNameLabels || !row.label) return
-		// 다음 원에 덮이지 않고 남는 위쪽 띠의 한가운데가 이름이 설 자리다.
-		const innerDiameter =
-			index + 1 < rows.length
-				? outer * Math.sqrt((rows[index + 1].values[0] ?? 0) / max) * 2
-				: 0
-		primitives.push(
-			label(
-				row.label,
-				cx,
-				bottom - radius * 2 + (radius * 2 - innerDiameter) / 2,
-				nameSize,
-				readableTextColor(colors[index]),
-			),
-		)
-	})
-	return primitives
-}
-
-/**
- * 동심원 — 정본 밖(확장)이다. 겹친 원과 **같은 포함 관계**를 말하지만 중심을 맞춘다:
- * 바닥 정렬은 아래쪽에 무게가 쏠려 가로로 넓은 자리에서 판이 비어 보인다.
- */
-function buildConcentricCircle(box: Box, input: InfographicInput): VectorPrimitive[] {
-	const rows = input.data.rows
 	const max = Math.max(...firstColumn(input.data))
 	if (max <= 0) return []
 	const colors = pickSeriesColors(input.palette, rows.length)
-	const base = Math.min(box.width, box.height)
-	const outer = base / 2
-	const cx = box.x + box.width / 2
-	const cy = box.y + box.height / 2
-	const nameSize = sharedFontSize(
-		rows.map((row) => ({
-			text: row.label,
-			width: outer * Math.sqrt((row.values[0] ?? 0) / max) * 1.2,
-		})),
-		base * 0.06 * input.textScale,
+	const outer = Math.min(box.width, box.height) / 2
+	/**
+	 * 🔑 「겹친 원」과 「동심원」은 **같은 기하의 양 끝**이다 — 간격 0이면 중심이 하나(동심),
+	 *    1이면 아래 가장자리가 한 선에 놓인다(겹친 원). 그래서 빌더도 하나다.
+	 */
+	/**
+	 * 🔴 정렬은 **축이 아니다** — 아래 가장자리를 맞추면 「겹친 원」이고 중심을 맞추면 「동심원」이라,
+	 *    그것이 두 표현을 가르는 정체성이다. 축으로 두면 중립에서 둘 중 하나는 자기 모양이 아니게 된다.
+	 */
+	const alignment = input.chartType === 'concentric-circle' ? 0 : 1
+	/**
+	 * 두께 — 고리가 얼마나 고르게 나뉘나. 중립은 **넓이 비례**(정본)이고, 내리면 차이가 벌어져
+	 * 안쪽 고리가 얇아지며, 올리면 고리 두께가 고르게 된다. 값이 서로 가까울 때(100·99·98)
+	 * 원이 포개져 구분되지 않는 것을 이 축이 푼다.
+	 */
+	const exponent = 1 - input.thickness
+	const spaced = rows.map(
+		(row) => outer * ((row.values[0] ?? 0) / max) ** Math.max(0.08, exponent),
+	)
+	const circles = fitCircles(
+		spaced.map((radius) => ({ x: 0, y: (outer - radius) * alignment, r: radius })),
+		box,
+	)
+	// 🔴 이름이 서는 곳은 원이 아니라 **고리**다 — 폭만 보면 얇은 고리를 글자가 넘는다.
+	const ringHeights = circles.map((circle, index) => {
+		const inner = index + 1 < circles.length ? circles[index + 1] : null
+		const innerTop = inner ? inner.y - inner.r : circle.y + circle.r
+		return Math.max(0, innerTop - (circle.y - circle.r))
+	})
+	const nameSize = Math.min(
+		sharedFontSize(
+			rows.map((row, index) => ({ text: row.label, width: circles[index].r * 1.2 })),
+			Math.min(box.width, box.height) * 0.06 * input.textScale,
+		),
+		...ringHeights.map((height) => height * 0.62),
 	)
 	const primitives: VectorPrimitive[] = []
 	rows.forEach((row, index) => {
-		const radius = outer * Math.sqrt((row.values[0] ?? 0) / max)
-		primitives.push({ kind: 'circle', cx, cy, radius, fill: colors[index] })
+		const circle = circles[index]
+		primitives.push({
+			kind: 'circle',
+			cx: circle.x,
+			cy: circle.y,
+			radius: circle.r,
+			fill: colors[index],
+		})
 		if (!input.showNameLabels || !row.label) return
-		// 다음 원에 덮이지 않고 남는 위쪽 고리의 한가운데가 이름이 설 자리다.
-		const innerRadius =
-			index + 1 < rows.length ? outer * Math.sqrt((rows[index + 1].values[0] ?? 0) / max) : 0
+		// 다음 원에 덮이지 않고 남는 위쪽 띠의 한가운데가 이름이 설 자리다.
+		const inner = index + 1 < circles.length ? circles[index + 1] : null
+		const innerTop = inner ? inner.y - inner.r : circle.y + circle.r
 		primitives.push(
 			label(
 				row.label,
-				cx,
-				cy - (radius + innerRadius) / 2,
+				circle.x,
+				(circle.y - circle.r + innerTop) / 2,
 				nameSize,
 				readableTextColor(colors[index]),
 			),
@@ -1202,9 +1268,11 @@ function buildNestedSquare(box: Box, input: InfographicInput): VectorPrimitive[]
 		.sort((a, b) => (b.row.values[0] ?? 0) - (a.row.values[0] ?? 0))
 		.forEach(({ row, index }) => {
 			const side = sideOf(row.values[0] ?? 0)
+			// 간격이 겹침을 정한다 — 0이면 한 점에 포개지고 1이면 모서리로 흩어진다.
 			const anchor = OVERLAP_ANCHORS[index]
-			const x = box.x + (box.width - side) * anchor.x
-			const y = box.y + (box.height - side) * anchor.y
+			const spread = input.spacing * 2
+			const x = box.x + (box.width - side) * (0.5 + (anchor.x - 0.5) * spread)
+			const y = box.y + (box.height - side) * (0.5 + (anchor.y - 0.5) * spread)
 			primitives.push({ kind: 'rect', x, y, width: side, height: side, fill: colors[index] })
 			if (!input.showValueLabels) return
 			// 겹치는 도형이라 라벨은 가운데가 아니라 **자기 쪽 모서리**에 붙인다 —
@@ -1248,6 +1316,13 @@ const model = {
 				...(chart?.usesNameLabels === false
 					? [{ controlId: 'showNameLabels', availability: 'disabled' as const }]
 					: []),
+				/**
+				 * 형태 축은 표현마다 뜻이 다르다 — 쓰지 않는 축은 잠근다. 기본값은 좁히지 않는다:
+				 * 가운데(0.5)가 어느 표현에서든 정본 모양이라, 표현을 바꿔도 값이 그대로 뜻이 통한다.
+				 */
+				...INFOGRAPHIC_AXES.filter(
+					(name) => !((chart?.axes ?? []) as ChartAxes).includes(name),
+				).map((name) => ({ controlId: name, availability: 'disabled' as const })),
 				{ controlId: 'data', defaultValue: INFOGRAPHIC_SAMPLE_DATA[chartType] },
 			],
 		}

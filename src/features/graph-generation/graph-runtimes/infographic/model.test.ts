@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
+import { INFOGRAPHIC_AXES } from './chart-axes'
 import { INFOGRAPHIC_SAMPLE_DATA, parseChartData } from './chart-data'
 import { CHART_SHAPE_LABELS, chartShapeKey } from './chart-shapes'
 import manifest from './definition'
@@ -16,6 +17,11 @@ import { HD_INFOGRAPHIC_PALETTES, readableTextColor } from './palette'
 const VIEWPORT = { width: 1080, height: 1080 }
 const chartTypes = INFOGRAPHIC_CHART_TYPES.map(({ id }) => id)
 
+/** 형태 축의 가운데가 정본이다 — 어느 표현이든 0.5가 「원래 모양」이다. */
+function axisDefaults(_chartType: InfographicChartType) {
+	return { thickness: 0.5, spacing: 0.5, curvature: 0.5 }
+}
+
 function sceneFor(chartType: InfographicChartType, overrides: Partial<InfographicInput> = {}) {
 	return createInfographicScene(
 		{
@@ -25,6 +31,7 @@ function sceneFor(chartType: InfographicChartType, overrides: Partial<Infographi
 			showValueLabels: true,
 			textScale: 1,
 			uniformValueSize: true,
+			...axisDefaults(chartType),
 			data: parseChartData(INFOGRAPHIC_SAMPLE_DATA[chartType]),
 			...overrides,
 		},
@@ -232,6 +239,7 @@ describe('정본 도판과의 대조', () => {
 				showValueLabels: true,
 				textScale: 1,
 				uniformValueSize: true,
+				...axisDefaults('area'),
 				data: parseChartData('\tA\tB\n1\t0\t0\n2\t90\t50'),
 			},
 			VIEWPORT,
@@ -264,5 +272,68 @@ describe('정본 도판과의 대조', () => {
 		const gap = distance - (big.radius + small.radius)
 		expect(gap).toBeGreaterThan(0)
 		expect(gap).toBeLessThan(big.radius)
+	})
+})
+
+describe('형태 축', () => {
+	/** 그 표현이 실제로 쓰는 축만 — 잠긴 축은 값을 바꿔도 화면이 같아야 한다. */
+	function sceneJson(chartType: InfographicChartType, axis: string, value: number) {
+		return JSON.stringify(sceneFor(chartType, { [axis]: value } as never).primitives)
+	}
+
+	it('표현이 선언한 축은 값을 바꾸면 화면이 달라진다', () => {
+		for (const chart of INFOGRAPHIC_CHART_TYPES) {
+			for (const axis of chart.axes as readonly string[]) {
+				expect(
+					sceneJson(chart.id, axis, 0) !== sceneJson(chart.id, axis, 1),
+					`${chart.id}.${axis}`,
+				).toBe(true)
+			}
+		}
+	})
+
+	it('🔴 선언하지 않은 축은 값이 새어 들어가지 않는다', () => {
+		for (const chart of INFOGRAPHIC_CHART_TYPES) {
+			for (const axis of INFOGRAPHIC_AXES) {
+				if ((chart.axes as readonly string[]).includes(axis)) continue
+				expect(
+					sceneJson(chart.id, axis, 0) === sceneJson(chart.id, axis, 1),
+					`${chart.id}.${axis}`,
+				).toBe(true)
+			}
+		}
+	})
+
+	it('쓰지 않는 축만 잠긴다 — 기본값은 좁히지 않는다', () => {
+		for (const chart of INFOGRAPHIC_CHART_TYPES) {
+			const controls = model.getRestrictions({ chartType: chart.id })?.controls ?? []
+			for (const axis of INFOGRAPHIC_AXES) {
+				const restriction = controls.find((control) => control.controlId === axis)
+				const uses = (chart.axes as readonly string[]).includes(axis)
+				expect(restriction?.availability, `${chart.id}.${axis}`).toBe(
+					uses ? undefined : 'disabled',
+				)
+				expect(restriction?.defaultValue, `${chart.id}.${axis}`).toBeUndefined()
+			}
+		}
+	})
+
+	it('🔑 가운데가 정본이다 — 축을 만지지 않은 상태가 도판 모양이다', () => {
+		// 파이 조각은 맞붙어 있다.
+		expect(sceneFor('pie').primitives.filter((p) => p.kind === 'path')).toHaveLength(5)
+		// 선은 꺾은선, 영역은 곡선이다.
+		const linePaths = sceneFor('line').primitives.filter((p) => p.kind === 'path' && p.stroke)
+		expect(linePaths.every((path) => path.kind === 'path' && !path.d.includes('C'))).toBe(true)
+		const areaPath = sceneFor('area').primitives.find((p) => p.kind === 'path')
+		expect(areaPath?.kind === 'path' && areaPath.d.includes('C')).toBe(true)
+		// 겹친 원은 아래 가장자리가 한 선에 놓이고, 동심원은 중심이 하나다.
+		const bottoms = sceneFor('nested-circle')
+			.primitives.filter((p) => p.kind === 'circle')
+			.map((c) => (c.kind === 'circle' ? c.cy + c.radius : 0))
+		expect(Math.max(...bottoms) - Math.min(...bottoms)).toBeLessThan(1)
+		const centers = sceneFor('concentric-circle')
+			.primitives.filter((p) => p.kind === 'circle')
+			.map((c) => (c.kind === 'circle' ? c.cy : 0))
+		expect(Math.max(...centers) - Math.min(...centers)).toBeLessThan(1)
 	})
 })

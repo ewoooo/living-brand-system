@@ -1,4 +1,5 @@
 import { defineGraphicRuntime } from '@/features/graphic-generation/graphic-runtimes/define-graphic-runtime'
+import { INFOGRAPHIC_AXES, INFOGRAPHIC_AXIS_LABELS, INFOGRAPHIC_AXIS_RANGE } from './chart-axes'
 import { INFOGRAPHIC_SAMPLE_DATA } from './chart-data'
 import { INFOGRAPHIC_CHART_PREVIEWS } from './chart-previews'
 import { CHART_SHAPE_LABELS, chartShapeKey, EXTENDED_CHART_SUFFIX } from './chart-shapes'
@@ -35,7 +36,8 @@ export default defineGraphicRuntime({
 	artifacts: { vector: {}, raster: {} },
 	controller: {
 		// 보이는 것을 정하는 축은 전부 왼쪽, 데이터는 오른쪽이다.
-		left: ['chartType', 'palette', 'showNameLabels', 'showValueLabels'],
+		// 형태 축은 표현 바로 아래에 선다 — 무엇을 고르든 그 표현을 다듬는 자리다.
+		left: ['chartType', ...INFOGRAPHIC_AXES, 'palette', 'showNameLabels', 'showValueLabels'],
 		// 글자 크기는 데이터 곁에 둔다 — 무엇이 적히는가를 보면서 맞추는 축이다.
 		right: ['data', 'textScale', 'uniformValueSize'],
 		groups: [
@@ -103,6 +105,21 @@ export default defineGraphicRuntime({
 						placeholder: '라벨\t값',
 					},
 				],
+			},
+			{
+				id: 'shape',
+				title: 'Shape',
+				controls: INFOGRAPHIC_AXES.map((axis) => ({
+					id: axis,
+					kind: 'range' as const,
+					label: INFOGRAPHIC_AXIS_LABELS[axis],
+					// 기본값·사용 여부는 표현이 정한다(model의 getRestrictions).
+					defaultValue: 0.5,
+					min: INFOGRAPHIC_AXIS_RANGE.min,
+					max: INFOGRAPHIC_AXIS_RANGE.max,
+					step: INFOGRAPHIC_AXIS_RANGE.step,
+					display: { precision: 2 },
+				})),
 			},
 			{
 				id: 'labels',
