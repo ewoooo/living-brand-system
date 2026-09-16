@@ -100,8 +100,9 @@ export default defineGraphicRuntime({
 						multiline: true,
 						// 격자로도 고치고 붙여넣기로도 고친다 — 같은 값의 두 표현이다.
 						grid: ['라벨', '값'],
-						// 붙여넣기용이라 통째로 보일 만큼만. 줄 단위 편집은 격자가 갖는다.
-						rows: 4,
+						// 🔑 붙여넣기가 주력이다 — 붙여넣은 표가 한눈에 보일 만큼 띄운다.
+						//    칸 단위 손보기는 격자가 갖는다.
+						rows: 8,
 						resettable: true,
 						// 표현을 고르면 그 표현의 이상적인 데이터로 바뀐다(model의 getRestrictions).
 						defaultValue: INFOGRAPHIC_SAMPLE_DATA[INFOGRAPHIC_DEFAULT_CHART_TYPE],
