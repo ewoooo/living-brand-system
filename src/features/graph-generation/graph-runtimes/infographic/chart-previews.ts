@@ -49,6 +49,23 @@ function spokes(cx: number, cy: number, inner: number, outer: number, turns: rea
 	})
 }
 
+/** 판의 두 축 — 정보량이 많은 표현은 축 위에 선다는 것이 썸네일에서도 먼저 보여야 한다. */
+const FRAME: Line[] = [
+	[0.12, 0.1, 0.12, 0.86],
+	[0.12, 0.86, 0.92, 0.86],
+]
+
+/** 행 × 열 칸 격자. 히트맵이 「값이 아니라 자리마다 색」이라는 것을 윤곽만으로 말한다. */
+function cells(columns: number, rows: number): Line[] {
+	const width = 0.8 / columns
+	const height = 0.76 / rows
+	return Array.from({ length: rows }, (_, row) =>
+		Array.from({ length: columns }, (_, column) =>
+			rect(0.1 + column * width, 0.12 + row * height, width * 0.82, height * 0.78),
+		).flat(),
+	).flat()
+}
+
 const BAR_SLOTS = [0.1, 0.33, 0.56, 0.79] as const
 const BAR_HEIGHTS = [0.3, 0.5, 0.78, 0.6] as const
 
@@ -135,9 +152,52 @@ export const INFOGRAPHIC_CHART_PREVIEWS: Record<InfographicChartType, Glyph> = {
 		...circle(0.5, 0.5, 0.24),
 		...circle(0.5, 0.5, 0.11),
 	],
+	// 크기가 같고 아랫변이 한 선에 놓인 셋 — 겹침만 다르다.
 	'nested-square': [
-		...rect(0.34, 0.12, 0.46, 0.46),
-		...rect(0.1, 0.44, 0.38, 0.38),
-		...rect(0.56, 0.62, 0.28, 0.28),
+		...rect(0.08, 0.32, 0.44, 0.44),
+		...rect(0.28, 0.32, 0.44, 0.44),
+		...rect(0.48, 0.32, 0.44, 0.44),
+	],
+	// ── 복합 ────────────────────────────────────────────────────────────────
+	heatmap: cells(5, 4),
+	// 한 해를 주(가로) × 요일(세로)로 편다 — 가로로 길쭉한 것이 이 표현의 정체다.
+	'calendar-heatmap': cells(10, 5),
+	'stacked-area': [
+		...FRAME,
+		...polyline([
+			[0.12, 0.7],
+			[0.35, 0.62],
+			[0.6, 0.5],
+			[0.92, 0.42],
+		]),
+		...polyline([
+			[0.12, 0.56],
+			[0.35, 0.45],
+			[0.6, 0.3],
+			[0.92, 0.18],
+		]),
+	],
+	// 막대마다 100%라 키가 모두 같고, 가른 자리만 다르다.
+	'stacked-bar-normalized': [
+		...FRAME,
+		...rect(0.2, 0.14, 0.16, 0.72),
+		[0.2, 0.44, 0.36, 0.44],
+		[0.2, 0.66, 0.36, 0.66],
+		...rect(0.44, 0.14, 0.16, 0.72),
+		[0.44, 0.36, 0.6, 0.36],
+		[0.44, 0.6, 0.6, 0.6],
+		...rect(0.68, 0.14, 0.16, 0.72),
+		[0.68, 0.5, 0.84, 0.5],
+		[0.68, 0.7, 0.84, 0.7],
+	],
+	// 한 자리에 계열이 나란히 — 묶음 사이만 벌어진다.
+	'grouped-bar': [
+		...FRAME,
+		...rect(0.18, 0.5, 0.08, 0.36),
+		...rect(0.27, 0.36, 0.08, 0.5),
+		...rect(0.46, 0.58, 0.08, 0.28),
+		...rect(0.55, 0.44, 0.08, 0.42),
+		...rect(0.74, 0.3, 0.08, 0.56),
+		...rect(0.83, 0.18, 0.08, 0.68),
 	],
 }

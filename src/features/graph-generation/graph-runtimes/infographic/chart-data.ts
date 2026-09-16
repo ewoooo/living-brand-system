@@ -74,6 +74,31 @@ export function firstColumn(data: ChartData): number[] {
  * 🔴 라벨은 회사·제품을 특정하지 않는 일반 명사다. 그럴듯한 실적처럼 읽히면 샘플이 아니라
  *    자료가 되어 버린다.
  */
+/**
+ * 한 해 365일을 `YYYY-MM-DD\t값`으로 편다. 캘린더 히트맵의 샘플이다.
+ *
+ * 🔴 ECharts 예제는 `Math.random()`을 쓰지만 여기서는 못 쓴다 — 장면은 순수 함수라야
+ *    미리보기와 내보내기가 같은 것을 본다. 값은 계절 곡선 + 요일 주기 + 결정론 잡음이다.
+ * 🔑 값은 백분율이다. 이 런타임은 수치 표기가 하나뿐이라(`valueText`), 다른 단위를 섞으면
+ *    표현끼리 look이 갈린다.
+ */
+function calendarYear(year: number): string {
+	const day = 24 * 60 * 60 * 1000
+	const start = Date.UTC(year, 0, 1)
+	const end = Date.UTC(year + 1, 0, 1)
+	const lines: string[] = []
+	for (let time = start, index = 0; time < end; time += day, index += 1) {
+		const date = new Date(time)
+		// 여름에 높고 겨울에 낮은 계절 곡선 + 주말에 낮아지는 요일 주기 + 흔들림.
+		const season = 50 + 28 * Math.sin(((index - 100) / 365) * Math.PI * 2)
+		const weekday = [0, 6].includes(date.getUTCDay()) ? -18 : 4
+		const jitter = ((Math.sin(index * 12.9898) * 43758.5453) % 1) * 14
+		const value = Math.max(0, Math.min(100, Math.round(season + weekday + jitter)))
+		lines.push(`${date.toISOString().slice(0, 10)}\t${value}`)
+	}
+	return lines.join('\n')
+}
+
 export const INFOGRAPHIC_SAMPLE_DATA: Record<InfographicChartType, string> = {
 	// 구성비 — 조각이 많아도 읽히는 표현이라 다섯을 싣는다.
 	pie: '아시아\t34\n유럽\t33\n북미\t12\n중동\t12\n기타\t9',
@@ -105,4 +130,18 @@ export const INFOGRAPHIC_SAMPLE_DATA: Record<InfographicChartType, string> = {
 	'concentric-circle': '전사\t100\n사업부\t62\n팀\t30',
 	// 면적으로 규모를 견준다. 자리가 셋뿐이다.
 	'nested-square': '국내\t54\n아시아\t82\n기타\t32',
+	// ── 복합 ────────────────────────────────────────────────────────────────
+	// 🔑 복합 표현의 샘플은 **크다**. 작은 표로는 이 표현들이 무엇에 쓰이는지 안 보이고,
+	//    도형 몇 개짜리 표현과 구별도 되지 않는다.
+	// 🔴 넷이 **같은 모양**의 표를 먹는다 — 첫 줄이 열 이름, 줄마다 이름 하나와 값 여럿.
+	heatmap:
+		'\t1월\t2월\t3월\t4월\t5월\t6월\t7월\t8월\t9월\t10월\t11월\t12월\n설계\t18\t22\t31\t44\t52\t61\t73\t78\t64\t49\t33\t21\n구매\t24\t28\t36\t41\t55\t63\t70\t72\t61\t47\t35\t26\n생산\t31\t35\t42\t58\t66\t74\t85\t88\t72\t58\t44\t33\n품질\t12\t16\t21\t29\t38\t45\t52\t56\t44\t31\t22\t15\n물류\t27\t30\t38\t47\t59\t68\t76\t80\t66\t52\t38\t28\n안전\t9\t11\t15\t22\t28\t34\t41\t45\t33\t24\t17\t12\n환경\t15\t19\t25\t33\t41\t49\t57\t61\t48\t36\t26\t18',
+	'stacked-area':
+		'\t조선\t해양\t엔진\t건설기계\n2025.01\t18\t12\t9\t6\n2025.02\t19\t13\t9\t6\n2025.03\t21\t14\t10\t7\n2025.04\t24\t15\t10\t7\n2025.05\t26\t17\t11\t8\n2025.06\t29\t18\t12\t8\n2025.07\t31\t20\t12\t9\n2025.08\t33\t21\t13\t9\n2025.09\t36\t23\t14\t10\n2025.10\t38\t24\t14\t10\n2025.11\t41\t26\t15\t11\n2025.12\t44\t28\t16\t12',
+	'stacked-bar-normalized':
+		'\t재료비\t노무비\t경비\t기타\n조선\t52\t24\t16\t8\n해양\t46\t28\t18\t8\n엔진\t58\t20\t14\t8\n건설기계\t44\t30\t18\t8\n에너지\t50\t22\t20\t8\n로보틱스\t38\t34\t20\t8',
+	// 한 해를 하루씩 — 이 런타임에서 가장 큰 데이터다(365칸).
+	'calendar-heatmap': calendarYear(2026),
+	'grouped-bar':
+		'\t2024\t2025\t2026\n조선\t62\t71\t83\n해양\t48\t55\t61\n엔진\t57\t64\t72\n건설기계\t41\t46\t54\n에너지\t35\t44\t58\n로보틱스\t22\t31\t45',
 }

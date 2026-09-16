@@ -15,7 +15,19 @@ import model, {
 import { HD_INFOGRAPHIC_PALETTES, readableTextColor } from './palette'
 
 const VIEWPORT = { width: 1080, height: 1080 }
+/** 수치로 그려진 글자. 영역의 머릿수치(`+24%`)도 수치다. */
+const VALUE_TEXT = /^[+-]?[\d.]+%$/
 const chartTypes = INFOGRAPHIC_CHART_TYPES.map(({ id }) => id)
+
+/**
+ * 값 축을 가진 표현인가. 🔑 목록으로 박지 않고 **화면에서 읽는다** — 판이 그리는 점선 보조선이
+ * 곧 값 축의 증거다. 목록으로 두면 새 표현이 조용히 빠진다.
+ */
+function hasValueAxis(chartType: InfographicChartType): boolean {
+	return sceneFor(chartType).primitives.some(
+		(primitive) => primitive.kind === 'line' && primitive.dash !== undefined,
+	)
+}
 
 /** 형태 축의 가운데가 정본이다 — 어느 표현이든 0.5가 「원래 모양」이다. */
 function axisDefaults(_chartType: InfographicChartType) {
@@ -40,8 +52,9 @@ function sceneFor(chartType: InfographicChartType, overrides: Partial<Infographi
 
 describe('infographic model', () => {
 	it('모든 표현이 자기 샘플 데이터로 무언가를 그린다', () => {
-		// 정본 12 + 확장 3. 수를 박아 두는 것은 표현이 조용히 늘거나 사라지는 것을 잡기 위해서다.
-		expect(chartTypes).toHaveLength(15)
+		// 정본 12 + 확장 8. 수를 박아 두는 것은 표현이 조용히 늘거나 사라지는 것을 잡기 위해서다.
+		expect(chartTypes).toHaveLength(20)
+		expect(INFOGRAPHIC_CHART_TYPES.filter((chart) => chart.group === 'complex')).toHaveLength(5)
 		expect(INFOGRAPHIC_CHART_TYPES.filter((chart) => chart.source === 'canon')).toHaveLength(12)
 		for (const chartType of chartTypes) {
 			const scene = sceneFor(chartType)
@@ -63,8 +76,8 @@ describe('infographic model', () => {
 				showValueLabels: false,
 				showNameLabels: false,
 			}).primitives.filter((primitive) => primitive.kind === 'text')
-			// 선 차트의 축 눈금은 값 라벨이 아니라 좌표계라 남는다.
-			expect(texts.length === 0 || chartType === 'line', chartType).toBe(true)
+			// 축 눈금은 값 라벨이 아니라 좌표계라 남는다.
+			expect(texts.length === 0 || hasValueAxis(chartType), chartType).toBe(true)
 		}
 	})
 
@@ -89,7 +102,8 @@ describe('infographic model', () => {
 			const control = controls.find((candidate) => candidate.id === controlId)
 			return control?.kind === 'select' ? control.options.map((option) => option.value) : []
 		}
-		expect(optionValues('chartType')).toEqual(chartTypes)
+		// 순서는 묶음이 정한다(아래 「묶음은 목록에서 흩어지지 않는다」) — 여기서는 빠짐만 본다.
+		expect([...optionValues('chartType')].sort()).toEqual([...chartTypes].sort())
 		expect(optionValues('palette')).toEqual(Object.keys(HD_INFOGRAPHIC_PALETTES))
 	})
 
@@ -147,14 +161,15 @@ describe('infographic model', () => {
 })
 
 describe('글자 크기', () => {
-	/** 이름으로 그려진 글자만 — 수치(%)와 축 눈금은 제외한다. */
+	/**
+	 * 이름으로 그려진 글자만 — **수치가 아닌 것**이 곧 이름이다.
+	 * 🔴 데이터의 라벨과 대조하면 안 된다: 캘린더 히트맵처럼 축 이름을 스스로 만드는 표현
+	 *    (요일·달)에서는 하나도 안 잡혀 검사가 조용히 비어 버린다.
+	 */
 	function nameSizes(chartType: InfographicChartType) {
-		// 영역은 행 라벨이 아니라 머리글(계열 이름)을 적는다 — 둘 다 「이름」이다.
-		const data = parseChartData(INFOGRAPHIC_SAMPLE_DATA[chartType])
-		const labels = [...data.series, ...data.rows.map((row) => row.label)]
 		return sceneFor(chartType)
 			.primitives.filter(
-				(primitive) => primitive.kind === 'text' && labels.includes(primitive.text),
+				(primitive) => primitive.kind === 'text' && !VALUE_TEXT.test(primitive.text),
 			)
 			.map((primitive) => (primitive.kind === 'text' ? primitive.fontSize : 0))
 	}
@@ -200,7 +215,7 @@ describe('한 판의 글자 크기는 둘뿐이다', () => {
 	function valueSizes(chartType: InfographicChartType) {
 		return sceneFor(chartType, { showNameLabels: false })
 			.primitives.filter(
-				(primitive) => primitive.kind === 'text' && /^-?[\d.]+%$/.test(primitive.text),
+				(primitive) => primitive.kind === 'text' && VALUE_TEXT.test(primitive.text),
 			)
 			.map((primitive) =>
 				primitive.kind === 'text' ? Number(primitive.fontSize.toFixed(4)) : 0,
@@ -209,18 +224,18 @@ describe('한 판의 글자 크기는 둘뿐이다', () => {
 
 	it('수치는 한 차트 안에서 언제나 같은 크기다', () => {
 		for (const chart of INFOGRAPHIC_CHART_TYPES) {
-			// 선 차트의 `%`는 수치가 아니라 축 눈금이라 층위가 다르다.
-			if (chart.id === 'line') continue
+			// 🔴 값 축이 있는 표현은 눈금도 `…%`라 글자만 보고는 수치와 가를 수 없다.
+			//    그쪽은 아래 「둘을 넘지 않는다」가 본다.
+			if (hasValueAxis(chart.id)) continue
 			const sizes = valueSizes(chart.id)
 			if (sizes.length < 2) continue
 			expect(new Set(sizes).size, chart.id).toBe(1)
 		}
 	})
 
+	/** 🔴 예외 없다. 복합 표현이 늘어도 여기 목록을 만들지 말 것 — 만드는 순간 규칙이 아니게 된다. */
 	it('🔴 한 판에 서는 크기가 둘을 넘지 않는다 — 수치 하나, 이름 하나', () => {
 		for (const chart of INFOGRAPHIC_CHART_TYPES) {
-			// 선·영역은 눈금이라는 셋째 층위를 갖는다(이번 재작업에서 다루지 않는다).
-			if (chart.id === 'line' || chart.id === 'area') continue
 			const sizes = sceneFor(chart.id)
 				.primitives.filter((primitive) => primitive.kind === 'text')
 				.map((primitive) =>

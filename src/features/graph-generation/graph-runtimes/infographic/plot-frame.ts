@@ -73,7 +73,17 @@ export function plotFrame(
 		fontSize: number
 	},
 ): PlotFrame {
-	const { left, bottom, fontSize } = spec
+	const { left, bottom } = spec
+	/**
+	 * 🔴 판에 서는 글자는 **한 크기뿐이다.** 범례 이름이 길어 줄어들면 눈금·항목 이름도 함께
+	 *    줄인다 — 같은 층위의 것이 크기로 갈리면 순서가 있는 것처럼 읽힌다. 「한 판의 글자
+	 *    크기는 둘(이름 하나·수치 하나)」이라는 규칙이 여기서 지켜진다.
+	 * 🔑 맞춤 폭은 판이 아니라 **상자**로 잰다 — 판의 폭은 여백이 정하고 여백은 글자 크기가
+	 *    정하므로, 판으로 재면 고리가 돈다.
+	 */
+	const legendNames = spec.legend?.names.filter((name) => name !== '') ?? []
+	const fontSize =
+		legendNames.length > 1 ? legendFit(box, legendNames, spec.fontSize) : spec.fontSize
 	const gap = fontSize * 0.6
 	const ticks = left?.kind === 'value' ? ticksOf(left.min, left.max) : null
 	const format = left?.kind === 'value' ? (left.format ?? DEFAULT_FORMAT) : DEFAULT_FORMAT
@@ -86,10 +96,10 @@ export function plotFrame(
 			: left?.kind === 'category'
 				? [...left.labels]
 				: []
-	const tickWidth =
-		leftTexts.length === 0
-			? 0
-			: Math.max(...leftTexts.map((text) => textEms(text))) * fontSize + gap
+	// 🔑 이름이 전부 비어 있으면 자리를 먹지 않는다 — 칸 수만 쓰고 이름은 안 그리는 판이 있다.
+	const widestEms =
+		leftTexts.length === 0 ? 0 : Math.max(...leftTexts.map((text) => textEms(text)))
+	const tickWidth = widestEms === 0 ? 0 : widestEms * fontSize + gap
 
 	/**
 	 * 🔴 `point` 축은 처음과 끝 이름이 판의 **양 끝에 걸터앉는다** — 그 절반이 판 밖으로 나간다.
@@ -103,11 +113,14 @@ export function plotFrame(
 
 	const leftInset = Math.max(tickWidth, headRoom)
 	const rightInset = tailRoom
-	const bottomInset = bottom === null ? 0 : fontSize + gap
+	const bottomInset =
+		bottom?.kind === 'category' && bottom.labels.some((text) => text !== '')
+			? fontSize + gap
+			: bottom?.kind === 'value'
+				? fontSize + gap
+				: 0
 
-	// 범례는 판 위에 한 줄로 선다. 줄을 넘기지 않고 글자를 줄여 맞춘다 — 두 줄이 되면
-	// 판이 얼마나 줄어들지 표현이 알 수 없게 된다.
-	const legendNames = spec.legend?.names.filter((name) => name !== '') ?? []
+	// 범례는 판 위에 한 줄로 선다 — 두 줄이 되면 판이 얼마나 줄어들지 표현이 알 수 없게 된다.
 	const legendHeight = legendNames.length > 1 ? fontSize + gap : 0
 
 	const plot: Box = {
@@ -160,8 +173,14 @@ export function plotFrame(
 			)
 		}
 	} else if (left?.kind === 'category') {
+		// 아래 축과 같은 규칙 — 칸이 글자보다 낮으면 전부 겹쳐 못 읽으므로 건너뛴다.
+		const filled = left.labels.filter((text) => text !== '').length
+		const stride =
+			filled * 2 <= left.labels.length
+				? 1
+				: Math.max(1, Math.ceil((fontSize * 1.2) / Math.max(bandHeight, 1)))
 		left.labels.forEach((text, index) => {
-			if (!text) return
+			if (!text || index % stride !== 0) return
 			primitives.push(
 				label(
 					text,
@@ -176,8 +195,23 @@ export function plotFrame(
 	}
 
 	if (bottom?.kind === 'category') {
+		/**
+		 * 🔴 이름이 서로 겹치면 전부 못 읽는다 — 12시점을 다 적었더니 한 덩어리가 됐다.
+		 *    줄이는 대신 **건너뛴다**: 글자 크기는 판 전체가 하나로 쓰므로 여기서만 줄일 수 없다.
+		 */
+		const room =
+			bottom.scale === 'point' && bottom.labels.length > 1
+				? plot.width / (bottom.labels.length - 1)
+				: bandWidth
+		const widest = Math.max(...bottom.labels.map((text) => textEms(text) * fontSize), 1)
+		// 🔑 절반도 안 채워진 축은 표현이 이미 솎아 놓은 것이다(달력의 달 이름) — 또 솎지 않는다.
+		const filled = bottom.labels.filter((text) => text !== '').length
+		const stride =
+			filled * 2 <= bottom.labels.length
+				? 1
+				: Math.max(1, Math.ceil((widest + gap) / Math.max(room, 1)))
 		bottom.labels.forEach((text, index) => {
-			if (!text) return
+			if (!text || index % stride !== 0) return
 			primitives.push(
 				label(
 					text,
@@ -209,16 +243,8 @@ function legendRow(
 	gap: number,
 ): VectorPrimitive[] {
 	const chip = fontSize * 0.8
-	// 칩·글자·항목 사이가 먹는 폭을 뺀 나머지를 이름들이 나눠 쓴다.
-	const spare = plot.width - names.length * (chip + gap * 0.5) - (names.length - 1) * gap
-	const size = sharedFontSize(
-		names.map((text) => ({
-			text,
-			width: Math.max(fontSize, (spare * textEms(text)) / totalEms(names)),
-		})),
-		fontSize,
-	)
-	const widths = names.map((text) => chip + gap * 0.5 + textEms(text) * size)
+	// 🔑 글자 크기는 판이 이미 정했다(`legendFit`). 여기서 또 줄이면 한 판에 크기가 셋이 된다.
+	const widths = names.map((text) => chip + gap * 0.5 + textEms(text) * fontSize)
 	const total = widths.reduce((sum, width) => sum + width, 0) + (names.length - 1) * gap
 	let cursor = plot.x + Math.max(0, (plot.width - total) / 2)
 	const center = plot.y - gap - chip / 2
@@ -235,7 +261,7 @@ function legendRow(
 			text,
 			cursor + chip + gap * 0.5,
 			center,
-			size,
+			fontSize,
 			HD_INFOGRAPHIC_COLORS.deepGreen,
 			'start',
 		)
@@ -248,5 +274,19 @@ function totalEms(names: readonly string[]): number {
 	return Math.max(
 		1,
 		names.reduce((sum, text) => sum + textEms(text), 0),
+	)
+}
+
+/** 범례 한 줄이 상자 폭에 들어가는 글자 크기. 들어가면 그대로, 넘치면 줄여서 준다. */
+function legendFit(box: Box, names: readonly string[], fontSize: number): number {
+	// 칩과 사이 여백이 먼저 먹고, 남는 폭을 이름들이 글자 수에 비례해 나눠 쓴다.
+	const spare = box.width - names.length * fontSize * 1.4 - (names.length - 1) * fontSize * 0.6
+	if (spare <= 0) return fontSize * 0.5
+	return Math.max(
+		fontSize * 0.5,
+		sharedFontSize(
+			names.map((text) => ({ text, width: (spare * textEms(text)) / totalEms(names) })),
+			fontSize,
+		),
 	)
 }

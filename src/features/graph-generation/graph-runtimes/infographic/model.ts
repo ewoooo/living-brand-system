@@ -54,7 +54,8 @@ export const INFOGRAPHIC_CHART_TYPES = [
 	},
 	{
 		id: 'stacked-column',
-		label: '세로 100% 누적',
+		// 전체 **하나**를 가른다. 범주마다 100%인 것은 `stacked-bar-normalized`다.
+		label: '전체 100% 세로',
 		group: 'basic',
 		source: 'canon',
 		usesNameLabels: false,
@@ -62,7 +63,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 	},
 	{
 		id: 'stacked-bar',
-		label: '가로 100% 누적',
+		label: '전체 100% 가로',
 		group: 'basic',
 		source: 'canon',
 		usesNameLabels: true,
@@ -155,8 +156,49 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		axes: ['thickness', 'curvature'],
 	},
 	{
+		id: 'heatmap',
+		label: '히트맵',
+		group: 'complex',
+		source: 'extended',
+		usesNameLabels: true,
+		axes: ['spacing'],
+	},
+	{
+		id: 'calendar-heatmap',
+		label: '캘린더 히트맵',
+		group: 'complex',
+		source: 'extended',
+		usesNameLabels: true,
+		axes: ['spacing'],
+	},
+	{
+		id: 'stacked-area',
+		label: '누적 영역',
+		group: 'complex',
+		source: 'extended',
+		usesNameLabels: true,
+		axes: ['curvature'],
+	},
+	{
+		id: 'stacked-bar-normalized',
+		label: '100% 누적 막대',
+		group: 'complex',
+		source: 'extended',
+		usesNameLabels: true,
+		axes: ['thickness', 'spacing'],
+	},
+	{
+		id: 'grouped-bar',
+		label: '다계열 막대',
+		group: 'complex',
+		source: 'extended',
+		usesNameLabels: true,
+		axes: ['thickness', 'spacing'],
+	},
+	{
 		id: 'area',
-		label: '영역',
+		// 🔴 계열을 **겹쳐** 그린다. 쌓는 것은 `stacked-area`다 — 목록에서 갈려 보여야 한다.
+		label: '겹친 영역',
 		group: 'basic',
 		source: 'canon',
 		usesNameLabels: true,
@@ -298,6 +340,11 @@ const CHART_BUILDERS: Record<InfographicChartType, ChartBuilder> = {
 	'nested-circle': buildNestedCircle,
 	'concentric-circle': buildNestedCircle,
 	'nested-square': buildNestedSquare,
+	heatmap: buildHeatmap,
+	'calendar-heatmap': buildCalendarHeatmap,
+	'stacked-area': buildStackedArea,
+	'stacked-bar-normalized': buildNormalizedStack,
+	'grouped-bar': buildGroupedBars,
 }
 
 // ── 공통 유틸 ────────────────────────────────────────────────────────────────
@@ -1150,6 +1197,376 @@ function buildNestedSquare(box: Box, input: InfographicInput): VectorPrimitive[]
 		)
 	})
 	return primitives
+}
+
+// ── 복합 표현 ────────────────────────────────────────────────────────────────
+
+/**
+ * 🔑 넷은 **같은 데이터**를 먹는다 — 첫 줄이 열 이름(계열), 줄마다 이름 하나와 값 여럿.
+ *    그래서 한 표를 붙여넣고 표현만 갈아 끼우며 볼 수 있다.
+ * 🔑 넷 다 판(`plot-frame.ts`) 위에 선다. 축·눈금·범례를 각자 그리지 않는 것이 단순 표현과
+ *    갈리는 자리이고, 「정보량이 많아도 통일성이 유지된다」가 성립하는 이유다.
+ */
+
+/** 계열 이름. 머리글이 없으면 빈 배열이라 범례가 서지 않는다. */
+function seriesNames(data: ChartData, count: number): string[] {
+	return data.series.length >= count ? data.series.slice(0, count) : []
+}
+
+/** 줄마다 계열 값을 잘라 온다 — 모자란 칸은 0이다. */
+function seriesValues(row: { values: readonly number[] }, count: number): number[] {
+	return Array.from({ length: count }, (_, index) => row.values[index] ?? 0)
+}
+
+/** 복합 표현이 쓰는 두 크기 중 **이름 쪽**. 축·범례·행열 이름이 전부 이 크기다. */
+function frameFontSize(box: Box, input: InfographicInput): number {
+	return Math.min(box.width, box.height) * 0.032 * input.textScale
+}
+
+/**
+ * 히트맵 — 행 × 열 격자의 색이 값이다.
+ *
+ * 🔴 값→색을 **보간하지 않는다.** 브랜드 색은 정본 값이 있고 출력이 CMYK라, 두 색 사이를
+ *    섞어 만든 색은 정본에 없는 색이 된다. 팔레트 색 수만큼 구간을 끊어 이산으로 칠한다.
+ */
+function buildHeatmap(box: Box, input: InfographicInput): VectorPrimitive[] {
+	const rows = input.data.rows
+	const columns = seriesCount(input.data)
+	if (rows.length === 0 || columns === 0) return []
+	const values = rows.flatMap((row) => seriesValues(row, columns))
+	const ramp = colorSteps(input, Math.min(...values), Math.max(...values))
+	const fontSize = frameFontSize(box, input)
+	/**
+	 * 🔴 이름을 꺼도 축을 **없애지는 않는다** — 칸 수를 판이 알아야 격자가 선다. 이름만 비운다.
+	 *    없앴더니 7×12 격자가 한 칸이 됐다.
+	 */
+	const blank = (labels: readonly string[]) =>
+		input.showNameLabels ? labels : labels.map(() => '')
+	const frame = plotFrame(box, {
+		left: { kind: 'category', labels: blank(rows.map((row) => row.label)) },
+		bottom: { kind: 'category', labels: blank(seriesNames(input.data, columns)) },
+		// 🔑 색 눈금도 범례다 — 캘린더 히트맵과 같은 줄, 같은 칩, 같은 크기로 선다.
+		//    그래서 켜고 끄는 스위치도 같다: 범례는 어느 표현에서든 「이름 표시」가 정한다.
+		legend: input.showNameLabels ? { names: ramp.names, colors: ramp.colors } : undefined,
+		fontSize,
+	})
+	// 간격이 칸 사이를 정한다 — 0이면 면이 이어지고, 올리면 칸이 하나씩 떨어져 읽힌다.
+	const gap = Math.min(frame.bandWidth, frame.bandHeight) * input.spacing * 0.24
+	const cellWidth = Math.max(1, frame.bandWidth - gap)
+	const cellHeight = Math.max(1, frame.bandHeight - gap)
+	const valueSizes = valueFontSizes(
+		values.map((value) => ({
+			text: valueText(value),
+			width: cellWidth * 0.86,
+			height: cellHeight * 0.7,
+		})),
+		fontSize,
+	)
+	// 🔴 칸이 작으면 수치가 읽을 수 없는 크기로 남는다 — 그럴 바엔 적지 않는다(색이 이미 말한다).
+	const showValues = input.showValueLabels && valueSizes[0] >= fontSize * 0.45
+	const primitives: VectorPrimitive[] = [...frame.primitives]
+	rows.forEach((row, rowIndex) => {
+		seriesValues(row, columns).forEach((value, column) => {
+			const fill = ramp.fillOf(value)
+			primitives.push({
+				kind: 'rect',
+				x: frame.x(column) - cellWidth / 2,
+				y: frame.y(rowIndex) - cellHeight / 2,
+				width: cellWidth,
+				height: cellHeight,
+				fill,
+			})
+			if (!showValues) return
+			primitives.push(
+				label(
+					valueText(value),
+					frame.x(column),
+					frame.y(rowIndex),
+					valueSizes[0],
+					readableTextColor(fill),
+				),
+			)
+		})
+	})
+	return primitives
+}
+
+/** 누적 영역 — 계열을 **쌓아** 전체의 흐름과 구성을 한 번에 본다(겹친 영역과 갈리는 자리다). */
+function buildStackedArea(box: Box, input: InfographicInput): VectorPrimitive[] {
+	const rows = input.data.rows
+	const areas = seriesCount(input.data)
+	if (rows.length < 2 || areas === 0) return []
+	const totals = rows.map((row) =>
+		seriesValues(row, areas).reduce((sum, value) => sum + value, 0),
+	)
+	const colors = pickSeriesColors(input.palette, areas)
+	const fontSize = frameFontSize(box, input)
+	const frame = plotFrame(box, {
+		left: { kind: 'value', min: 0, max: Math.max(...totals) },
+		bottom: { kind: 'category', labels: rows.map((row) => row.label), scale: 'point' },
+		legend: input.showNameLabels
+			? { names: seriesNames(input.data, areas), colors }
+			: undefined,
+		fontSize,
+	})
+	const primitives: VectorPrimitive[] = [...frame.primitives]
+	// 아래에서부터 쌓는다. 각 계열의 윗선은 그 아래 계열들의 합이다.
+	const below = rows.map(() => 0)
+	for (let series = 0; series < areas; series += 1) {
+		const top = rows.map((row, index) => below[index] + seriesValues(row, areas)[series])
+		const upper = top.map((value, index) => ({ x: frame.x(index), y: frame.y(value) }))
+		const lower = below.map((value, index) => ({ x: frame.x(index), y: frame.y(value) }))
+		const smooth = Math.min(1, input.curvature * 2)
+		/**
+		 * 🔴 되돌아오는 아랫선은 `M`으로 시작하면 안 된다 — 면이 끊기고 얇은 조각만 남는다.
+		 *    `curvePath`가 내는 첫 글자 `M`을 `L`로 바꿔 윗선에 이어 붙인다.
+		 */
+		const back = curvePath([...lower].reverse(), smooth)
+		primitives.push({
+			kind: 'path',
+			d: `${curvePath(upper, smooth)}L${back.slice(1)}Z`,
+			fill: colors[series],
+		})
+		top.forEach((value, index) => {
+			below[index] = value
+		})
+	}
+	return primitives
+}
+
+/**
+ * 100% 누적 막대 — 범주마다 제 몫을 100으로 맞춰 **구성만** 견준다.
+ * 🔴 기존 「전체 100% 세로」와 다르다: 그쪽은 전체 **하나**를 가르고, 이쪽은 범주가 여럿이다.
+ */
+function buildNormalizedStack(box: Box, input: InfographicInput): VectorPrimitive[] {
+	const rows = input.data.rows
+	const layers = seriesCount(input.data)
+	if (rows.length === 0 || layers === 0) return []
+	const colors = pickSeriesColors(input.palette, layers)
+	const fontSize = frameFontSize(box, input)
+	const frame = plotFrame(box, {
+		left: { kind: 'value', min: 0, max: 100 },
+		bottom: { kind: 'category', labels: rows.map((row) => row.label) },
+		legend: input.showNameLabels
+			? { names: seriesNames(input.data, layers), colors }
+			: undefined,
+		fontSize,
+	})
+	const { width, offset } = barSlot(frame.bandWidth, input)
+	const primitives: VectorPrimitive[] = [...frame.primitives]
+	const shares = rows.map((row) => {
+		const values = seriesValues(row, layers)
+		const sum = values.reduce((total, value) => total + value, 0)
+		return sum > 0 ? values.map((value) => (value / sum) * 100) : values.map(() => 0)
+	})
+	const valueSizes = valueFontSizes(
+		shares.flat().map((share) => ({
+			text: valueText(share),
+			width: width * 0.86,
+			height: (share / 100) * frame.plot.height * 0.7,
+		})),
+		fontSize,
+	)
+	rows.forEach((_, index) => {
+		let base = 0
+		shares[index].forEach((share, layer) => {
+			const top = frame.y(base + share)
+			const height = frame.y(base) - top
+			primitives.push({
+				kind: 'rect',
+				x: frame.x(index) + offset,
+				y: top,
+				width,
+				height,
+				fill: colors[layer],
+			})
+			if (input.showValueLabels && height > valueSizes[0] * 1.2) {
+				primitives.push(
+					label(
+						valueText(share),
+						frame.x(index) + offset + width / 2,
+						top + height / 2,
+						valueSizes[0],
+						readableTextColor(colors[layer]),
+					),
+				)
+			}
+			base += share
+		})
+	})
+	return primitives
+}
+
+/** 다계열 막대 — 범주마다 계열을 **나란히** 세워 같은 자리에서 맞견준다. */
+function buildGroupedBars(box: Box, input: InfographicInput): VectorPrimitive[] {
+	const rows = input.data.rows
+	const series = seriesCount(input.data)
+	if (rows.length === 0 || series === 0) return []
+	const values = rows.flatMap((row) => seriesValues(row, series))
+	const max = Math.max(...values)
+	if (max <= 0) return []
+	const colors = pickSeriesColors(input.palette, series)
+	const fontSize = frameFontSize(box, input)
+	const frame = plotFrame(box, {
+		left: { kind: 'value', min: Math.min(0, ...values), max },
+		bottom: { kind: 'category', labels: rows.map((row) => row.label) },
+		legend: input.showNameLabels
+			? { names: seriesNames(input.data, series), colors }
+			: undefined,
+		fontSize,
+	})
+	const group = barSlot(frame.bandWidth, input)
+	// 묶음 안에서 계열이 자리를 나눠 갖는다 — 묶음 사이는 간격 축이, 계열 사이는 붙는다.
+	const width = group.width / series
+	/**
+	 * 🔴 막대의 밑바닥은 **0**이다. 최솟값을 바닥으로 삼았더니 막대가 판 위에 떠 있었고,
+	 *    가장 낮은 막대는 높이가 0이라 수치 크기까지 0으로 눌러 글자가 통째로 사라졌다.
+	 */
+	const zero = frame.y(0)
+	const valueSizes = valueFontSizes(
+		values.map((value) => ({
+			text: valueText(value),
+			width: width * 0.9,
+			height: Math.abs(zero - frame.y(value)) * 0.7,
+		})),
+		fontSize,
+	)
+	const primitives: VectorPrimitive[] = [...frame.primitives]
+	rows.forEach((row, index) => {
+		seriesValues(row, series).forEach((value, column) => {
+			const x = frame.x(index) + group.offset + width * column
+			const y = Math.min(zero, frame.y(value))
+			const height = Math.abs(zero - frame.y(value))
+			primitives.push({ kind: 'rect', x, y, width, height, fill: colors[column] })
+			if (input.showValueLabels && height > valueSizes[0] * 1.3) {
+				primitives.push(
+					label(
+						valueText(value),
+						x + width / 2,
+						y + valueSizes[0],
+						valueSizes[0],
+						readableTextColor(colors[column]),
+					),
+				)
+			}
+		})
+	})
+	return primitives
+}
+
+/**
+ * 값 구간을 팔레트 색으로 끊는다. 🔴 두 색 사이를 **섞지 않는다** — 브랜드 색은 정본 값이 있고
+ * 출력이 CMYK라, 보간해 만든 색은 정본에 없는 색이 된다(ECharts의 `visualMap: piecewise`와 같다).
+ */
+function colorSteps(
+	input: InfographicInput,
+	min: number,
+	max: number,
+): { colors: string[]; fillOf: (value: number) => string; names: string[] } {
+	const colors = pickSeriesColors(input.palette, 5)
+	const span = max - min
+	return {
+		colors,
+		fillOf: (value) => {
+			if (span <= 0) return colors[colors.length - 1]
+			const step = Math.floor(((value - min) / span) * colors.length)
+			return colors[Math.min(colors.length - 1, Math.max(0, step))]
+		},
+		// 🔑 눈금은 **구간의 아래끝**이다. 「0~20%」처럼 적으면 글자가 길어 범례가 두 줄이 된다.
+		//    소수점은 버린다 — 눈금은 값이 아니라 구간을 가리키므로 자릿수가 정보가 아니다.
+		names: colors.map((_, index) =>
+			valueText(Math.round(min + (span * index) / colors.length)),
+		),
+	}
+}
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** `YYYY-MM-DD`만 읽는다. 읽히지 않는 줄은 날짜가 아니라 건너뛴다. */
+function parseDay(label: string): number | null {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(label.trim())
+	if (!match) return null
+	return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+}
+
+/**
+ * 캘린더 히트맵 — 한 해를 주(가로) × 요일(세로)로 펴고 하루를 한 칸으로 칠한다.
+ *
+ * 🔑 자리는 날짜가 정한다(ECharts `calendar` 좌표계와 같다) — 값은 색만 정하므로 빈 날이 있어도
+ *    달력이 어긋나지 않는다. 주의 시작은 일요일이다.
+ */
+function buildCalendarHeatmap(box: Box, input: InfographicInput): VectorPrimitive[] {
+	const days = input.data.rows.flatMap((row) => {
+		const time = parseDay(row.label)
+		return time === null ? [] : [{ time, value: row.values[0] ?? 0 }]
+	})
+	if (days.length === 0) return []
+	const first = Math.min(...days.map((day) => day.time))
+	// 첫 날이 속한 주의 일요일이 좌표계의 원점이다.
+	const origin = first - new Date(first).getUTCDay() * DAY_MS
+	const weekOf = (time: number) => Math.floor((time - origin) / (7 * DAY_MS))
+	const weeks = Math.max(...days.map((day) => weekOf(day.time))) + 1
+	const values = days.map((day) => day.value)
+	const ramp = colorSteps(input, Math.min(...values), Math.max(...values))
+	const fontSize = frameFontSize(box, input)
+
+	// 달이 시작하는 주에만 달 이름을 적는다 — 53칸에 전부 적으면 한 덩어리가 된다.
+	const months = Array.from({ length: weeks }, () => '')
+	for (const day of days) {
+		const date = new Date(day.time)
+		// 🔴 「1~7일이 든 주」로 잡으면 한 달이 두 주에 걸쳐 같은 이름이 두 번 서고 서로 겹친다.
+		if (date.getUTCDate() === 1) months[weekOf(day.time)] = `${date.getUTCMonth() + 1}월`
+	}
+	const spec = {
+		left: {
+			kind: 'category' as const,
+			labels: input.showNameLabels ? [...WEEKDAYS] : WEEKDAYS.map(() => ''),
+		},
+		bottom: {
+			kind: 'category' as const,
+			labels: input.showNameLabels ? months : months.map(() => ''),
+		},
+		legend: input.showNameLabels ? { names: ramp.names, colors: ramp.colors } : undefined,
+		fontSize,
+	}
+	/**
+	 * 🔴 달력은 판을 **세로로 채우지 않는다.** 하루가 정사각형이고 일곱 줄이 맞붙어야 달력으로
+	 *    읽히는데, 판 높이를 7로 나누면 줄 사이가 벌어져 띠 일곱 개가 된다.
+	 * 🔑 그래서 두 번 잰다 — 한 번은 여백이 얼마인지 알아내려고, 한 번은 그 여백에 하루 일곱 줄만
+	 *    더한 높이로. 여백은 글자가 정하므로 미리 계산할 수 없다.
+	 */
+	const probe = plotFrame(box, spec)
+	const compact = Math.min(box.height, box.height - probe.plot.height + probe.bandWidth * 7)
+	// 줄인 만큼 위로 붙지 않게 가운데로 내린다.
+	const frame = plotFrame(
+		{ ...box, y: box.y + (box.height - compact) / 2, height: compact },
+		spec,
+	)
+	const gap = frame.bandWidth * input.spacing * 0.24
+	const cell = Math.max(1, Math.min(frame.bandWidth, frame.bandHeight) - gap)
+	return [
+		...frame.primitives,
+		...days.map((day) => ({
+			kind: 'rect' as const,
+			x: frame.x(weekOf(day.time)) - cell / 2,
+			y: frame.y(new Date(day.time).getUTCDay()) - cell / 2,
+			width: cell,
+			height: cell,
+			fill: ramp.fillOf(day.value),
+		})),
+	]
+}
+
+/**
+ * 한 칸 안에서 막대가 차지하는 폭과 그 시작 위치. 🔑 두께와 간격이 **서로를 잠그지 않는다** —
+ * 합이 칸을 넘으면 통째로 줄여 맞춘다(막대·트랙과 같은 규칙).
+ */
+function barSlot(band: number, input: InfographicInput): { width: number; offset: number } {
+	const raw = band * (0.3 + input.thickness * 1.1)
+	const gap = band * input.spacing * 0.32
+	const width = Math.max(1, Math.min(raw, band - gap))
+	return { width, offset: -width / 2 }
 }
 
 const model = {
