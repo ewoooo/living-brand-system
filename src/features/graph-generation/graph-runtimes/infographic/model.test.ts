@@ -251,7 +251,7 @@ describe('정본 도판과의 대조', () => {
 		)
 	})
 
-	it('비례 원 둘은 맞닿는다 — 벌리면 크기 차이를 견주기 어렵다', () => {
+	it('비례 원 둘은 떨어져 선다 — 붙이면 두 덩어리가 한 도형으로 읽힌다', () => {
 		const circles = sceneFor('proportional-circle').primitives.filter(
 			(primitive) => primitive.kind === 'circle',
 		)
@@ -260,8 +260,9 @@ describe('정본 도판과의 대조', () => {
 			circle.kind === 'circle' ? circle : { cx: 0, cy: 0, radius: 0 },
 		)
 		const distance = Math.hypot(big.cx - small.cx, big.cy - small.cy)
-		// 살짝 물리되 한쪽이 다른 쪽을 삼키지는 않는다.
-		expect(distance).toBeLessThan(big.radius + small.radius)
-		expect(distance).toBeGreaterThan(big.radius)
+		// 정본 도판처럼 사이가 벌어지되, 둘이 한 장면으로 읽힐 만큼만 떨어진다.
+		const gap = distance - (big.radius + small.radius)
+		expect(gap).toBeGreaterThan(0)
+		expect(gap).toBeLessThan(big.radius)
 	})
 })

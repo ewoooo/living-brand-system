@@ -251,7 +251,7 @@ type ChartBuilder = (box: Box, input: InfographicInput) => VectorPrimitive[]
 
 const CHART_BUILDERS: Record<InfographicChartType, ChartBuilder> = {
 	pie: (box, input) => buildRadialSlices(box, input, 0),
-	donut: (box, input) => buildRadialSlices(box, input, 0.55),
+	donut: (box, input) => buildRadialSlices(box, input, 0.46),
 	'proportional-circle': buildProportionalCircle,
 	'bubble-cluster': buildBubbleCluster,
 	bar: (box, input) => buildBars(box, input, false),
@@ -364,6 +364,31 @@ function fitFontSize(text: string, boxWidth: number, max: number): number {
 	return ems > 0 ? Math.min(max, boxWidth / ems) : max
 }
 
+/**
+ * 점들을 부드럽게 잇는다 — Catmull-Rom을 3차 베지어로 옮긴 것.
+ * 🔑 마디가 보이지 않아야 하는 표현(영역)만 쓴다. 꺾은선이 정보인 선 차트는 `polylinePath`.
+ */
+function smoothPath(points: readonly { x: number; y: number }[]): string {
+	if (points.length < 3) return polylinePath(points, false)
+	let path = `M${round(points[0].x)} ${round(points[0].y)}`
+	for (let index = 0; index < points.length - 1; index += 1) {
+		const previous = points[Math.max(0, index - 1)]
+		const current = points[index]
+		const next = points[index + 1]
+		const after = points[Math.min(points.length - 1, index + 2)]
+		const control1 = {
+			x: current.x + (next.x - previous.x) / 6,
+			y: current.y + (next.y - previous.y) / 6,
+		}
+		const control2 = {
+			x: next.x - (after.x - current.x) / 6,
+			y: next.y - (after.y - current.y) / 6,
+		}
+		path += `C${round(control1.x)} ${round(control1.y)},${round(control2.x)} ${round(control2.y)},${round(next.x)} ${round(next.y)}`
+	}
+	return path
+}
+
 function polylinePath(points: readonly { x: number; y: number }[], close: boolean): string {
 	const [first, ...rest] = points
 	const body = rest.map(({ x, y }) => `L${round(x)} ${round(y)}`).join('')
@@ -410,11 +435,13 @@ function buildRadialSlices(
 	const values = firstColumn(input.data)
 	const sum = values.reduce((total, value) => total + value, 0)
 	if (sum <= 0) return []
-	const radius = Math.min(box.width, box.height) / 2
+	// 🔴 판을 꽉 채우지 않는다 — 정본 도판의 원은 칸의 절반 남짓이고, 그래서 조각 라벨이
+	//    도형에 눌리지 않고 읽힌다. 판을 채우면 같은 라벨 크기라도 훨씬 크게 보인다.
+	const radius = (Math.min(box.width, box.height) / 2) * 0.72
 	const cx = box.x + box.width / 2
 	const cy = box.y + box.height / 2
 	const colors = pickSeriesColors(input.palette, values.length)
-	const fontSize = radius * 0.13 * input.textScale
+	const fontSize = radius * 0.1 * input.textScale
 	const labelRadius = radius * (innerRatio === 0 ? 0.66 : (1 + innerRatio) / 2)
 	// 조각이 좁을수록 글자가 설 호가 짧다 — 그 호가 이 조각의 칸 너비다.
 	const valueSizes = valueFontSizes(
@@ -489,10 +516,10 @@ function buildProportionalCircle(box: Box, input: InfographicInput): VectorPrimi
 	const colors = pickSeriesColors(input.palette, 2)
 	// 값은 넓이에 비례한다 — 반지름을 값에 비례시키면 큰 쪽이 규정보다 훨씬 커 보인다.
 	const smallRatio = Math.sqrt(Math.max(small, 0) / big)
-	// 🔴 두 원은 **맞닿는다**. 사이를 벌리면 크기 차이를 견주기 어려워지고 판이 빈다.
-	//    작은 원은 큰 원의 왼쪽 아래에 붙는다(정본 도판의 자리).
-	const angle = Math.PI * (160 / 180)
-	const distance = (1 + smallRatio) * 0.96
+	// 🔴 두 원은 **떨어져 선다**(정본 도판). 붙이면 두 덩어리가 한 도형으로 읽힌다.
+	//    작은 원은 큰 원의 왼쪽 아래에 놓인다.
+	const angle = Math.PI * (152 / 180)
+	const distance = (1 + smallRatio) * 1.22
 	const [bigCircle, smallCircle] = fitCircles(
 		[
 			{ x: 0, y: 0, r: 1 },
@@ -618,7 +645,7 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 	// 트랙형은 팔레트의 가장 연한 색이 트랙 자리를 가져간다 — 채움은 그 다음 색부터 뽑아야
 	// 첫 막대가 트랙과 같은 색이 되어 사라지지 않는다.
 	const colors = pickSeriesColors(input.palette, rows.length + 1).slice(withTrack ? 1 : 0)
-	const gap = box.width * 0.04
+	const gap = box.width * 0.055
 	const barWidth = (box.width - gap * (rows.length - 1)) / rows.length
 	// 트랙형은 100%가 판의 높이다. 그냥 막대는 최댓값이 판의 높이다.
 	const scaleMax = withTrack ? 100 : Math.max(...rows.map((row) => row.values[0] ?? 0))
@@ -669,11 +696,16 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 			fill: colors[index],
 		})
 		if (!input.showValueLabels) return
+		// 🔴 값은 막대 **바닥**에 앉는다(정본 도판) — 위에 얹으면 막대가 낮을 때 판 위로 뜬다.
+		//    트랙형은 이름이 바닥을 쓰므로 그 위에 선다.
 		primitives.push(
 			label(
 				valueText(value),
 				x + barWidth / 2,
-				box.y + box.height - filled + valueSizes[index],
+				box.y +
+					box.height -
+					(withTrack ? nameSize * 2.1 : valueSizes[index] * 0.9) -
+					valueSizes[index] * 0.5,
 				valueSizes[index],
 				readableTextColor(colors[index]),
 			),
@@ -806,7 +838,7 @@ function buildStackedColumn(box: Box, input: InfographicInput): VectorPrimitive[
 	const sum = values.reduce((total, value) => total + value, 0)
 	if (sum <= 0) return []
 	const colors = pickSeriesColors(input.palette, values.length)
-	const width = box.width * 0.62
+	const width = box.width * 0.44
 	const x = box.x + (box.width - width) / 2
 	const fontSize = width * 0.11 * input.textScale
 	// 조각 높이가 값에 비례한다 — 얇은 조각이 글자를 담을 수 있는 높이가 곧 상한이다.
@@ -847,7 +879,7 @@ function buildStackedBar(box: Box, input: InfographicInput): VectorPrimitive[] {
 	const sum = rows.reduce((total, row) => total + (row.values[0] ?? 0), 0)
 	if (sum <= 0) return []
 	const colors = pickSeriesColors(input.palette, rows.length)
-	const height = box.height * 0.34
+	const height = box.height * 0.16
 	const y = box.y + (box.height - height) / 2
 	const fontSize = height * 0.22 * input.textScale
 	// 좁은 칸에서는 글자가 칸을 넘는다 — 가장 좁은 칸이 모든 이름의 크기를 정한다.
@@ -1017,15 +1049,19 @@ function buildArea(box: Box, input: InfographicInput): VectorPrimitive[] {
 		const fill = colors[colors.length - 1 - series]
 		primitives.push({
 			kind: 'path',
-			d: polylinePath(
-				[
-					...points,
-					{ x: box.x + box.width, y: box.y + box.height },
-					{ x: box.x, y: box.y + box.height },
-				],
-				true,
-			),
+			// 정본 도판은 시점을 잇는 선이 **곡선**이다 — 꺾은선은 선 차트의 몫이고,
+			// 영역은 「쌓여 올라가는 흐름」을 말하므로 마디가 보이면 안 된다.
+			d: `${smoothPath(points)}L${round(box.x + box.width)} ${round(box.y + box.height)}L${round(box.x)} ${round(box.y + box.height)}Z`,
 			fill,
+		})
+		// 끝점의 점 — 「지금 여기까지」를 찍는다.
+		const tip = points[points.length - 1]
+		primitives.push({
+			kind: 'circle',
+			cx: tip.x,
+			cy: tip.y,
+			radius: Math.max(1.5, fontSize * 0.09),
+			fill: HD_INFOGRAPHIC_COLORS.deepGreen,
 		})
 		const name = input.data.series[series]
 		if (!input.showNameLabels || !name) continue
