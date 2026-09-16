@@ -39,7 +39,7 @@ ${body}
 function serialize(primitive: VectorPrimitive, indent: string, path: string): string {
 	switch (primitive.kind) {
 		case 'line':
-			return `${indent}<line x1="${fixed(primitive.x1)}" y1="${fixed(primitive.y1)}" x2="${fixed(primitive.x2)}" y2="${fixed(primitive.y2)}" stroke="${attribute(primitive.stroke)}" stroke-width="${fixed(primitive.strokeWidth)}"${primitive.lineCap ? ` stroke-linecap="${primitive.lineCap}"` : ''} />`
+			return `${indent}<line x1="${fixed(primitive.x1)}" y1="${fixed(primitive.y1)}" x2="${fixed(primitive.x2)}" y2="${fixed(primitive.y2)}" stroke="${attribute(primitive.stroke)}" stroke-width="${fixed(primitive.strokeWidth)}"${primitive.lineCap ? ` stroke-linecap="${primitive.lineCap}"` : ''}${primitive.dash ? ` stroke-dasharray="${primitive.dash.map(fixed).join(' ')}"` : ''} />`
 		case 'circle':
 			return `${indent}<circle cx="${fixed(primitive.cx)}" cy="${fixed(primitive.cy)}" r="${fixed(primitive.radius)}" fill="${attribute(primitive.fill)}" />`
 		case 'rect':

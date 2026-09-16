@@ -7,6 +7,7 @@ import {
 	type ControllerGroupDefinition,
 	controllerRemountKey,
 	createControllerValues,
+	followsChangedDefault,
 	isControllerPadValue,
 	parseStudioControllerConfig,
 	projectPayloadControllerRestrictions,
@@ -954,3 +955,25 @@ function configWith(control: unknown) {
 		},
 	}
 }
+
+describe('기본값이 바뀌면 값이 따라가는가', () => {
+	const 파이 = '아시아\t34\n유럽\t33'
+	const 히트맵 = '구분\t1월\t2월\n설계\t18\t22'
+
+	it('손대지 않은 값은 새 기본값을 따라간다 — 표현을 바꾸면 그 표현의 데이터가 온다', () => {
+		expect(followsChangedDefault(파이, 파이, 히트맵)).toBe(true)
+	})
+
+	it('🔴 손댄 값은 따라가지 않는다 — 덮으면 적은 것이 되돌릴 방법 없이 사라진다', () => {
+		expect(followsChangedDefault('내가 적은 표\t1', 파이, 히트맵)).toBe(false)
+	})
+
+	it('기본값이 그대로면 아무것도 하지 않는다 — 매번 새 값을 만들면 무한 루프가 된다', () => {
+		expect(followsChangedDefault(파이, 파이, 파이)).toBe(false)
+		expect(followsChangedDefault('내가 적은 표', 파이, 파이)).toBe(false)
+	})
+
+	it('직전 기본값을 모르면(첫 렌더) 따라가지 않는다', () => {
+		expect(followsChangedDefault(파이, undefined, 히트맵)).toBe(false)
+	})
+})

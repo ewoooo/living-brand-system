@@ -450,6 +450,7 @@ async function draw(
 				...(primitive.lineCap === undefined
 					? {}
 					: { lineCap: PDF_LINE_CAP[primitive.lineCap] }),
+				...(primitive.dash === undefined ? {} : { dashArray: [...primitive.dash] }),
 			})
 			return
 		case 'circle':

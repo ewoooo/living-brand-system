@@ -1,7 +1,7 @@
 'use client'
 
+import { graphRuntimeCatalog } from '@/features/graph-generation/graph-runtimes/catalog/runtime.generated.client'
 import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
-import type { GraphicRuntimeId } from '@/features/graphic-generation/graphic-runtimes/catalog/manifest.generated'
 import { graphicRuntimeCatalog } from '@/features/graphic-generation/graphic-runtimes/catalog/runtime.generated.client'
 import type {
 	CanvasVideoSource,
@@ -79,11 +79,17 @@ export function createGraphicRasterArtifact({
 	}
 }
 
+/** 🔴 서버의 plugin 카탈로그와 같은 갈래다 — 한쪽만 고치면 미리보기와 내보내기가 어긋난다. */
+const CANVAS_RUNTIME_CATALOGS: Record<string, Record<string, GraphicRuntimeLoader | undefined>> = {
+	graphic: graphicRuntimeCatalog,
+	graph: graphRuntimeCatalog,
+}
+
 /** 선택한 Config의 브라우저 runtime만 지연 로드하고 id와 runtime type이 맞는 adapter를 반환한다. */
 export async function loadGraphicRuntimeAdapter(
 	config: GraphicRuntimeManifest,
 ): Promise<GraphicRuntimeAdapter | null> {
-	const load = graphicRuntimeCatalog[config.id as GraphicRuntimeId]
+	const load = CANVAS_RUNTIME_CATALOGS[config.studio]?.[config.id]
 	const adapter = await load?.()
 	return adapter?.type === config.type ? adapter : null
 }

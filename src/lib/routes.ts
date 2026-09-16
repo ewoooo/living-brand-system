@@ -4,6 +4,7 @@ export const routes = {
 	home: '/',
 	studio: {
 		assets: '/studio/assets',
+		graph: '/studio/graph',
 		graphic: '/studio/graphic',
 		image: '/studio/image',
 		mcp: '/studio/mcp',
@@ -25,6 +26,10 @@ export function getStudioImageRoute(profileSlug: string) {
 
 export function getStudioGraphicRoute(profileSlug: string) {
 	return `${routes.studio.graphic}/${profileSlug}`
+}
+
+export function getStudioGraphRoute(profileSlug: string) {
+	return `${routes.studio.graph}/${profileSlug}`
 }
 
 export function getStudioTemplateRoute(templateSlug: string) {

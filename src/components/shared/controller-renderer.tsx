@@ -1,5 +1,6 @@
 'use client'
 
+import { Reset } from '@carbon/icons-react'
 import type { ReactNode } from 'react'
 import { Controller } from '@/components/shared/controller'
 import type { ControllerGroupSectionProps } from '@/components/shared/controller/group'
@@ -345,6 +346,8 @@ function ControllerControl({
 			const text = typeof value === 'string' ? value : ''
 			if (readonly) return <ReadonlyRow label={definition.label} value={text || '—'} />
 			if (definition.multiline) {
+				// 되돌릴 것이 없으면 버튼도 없다 — 눌러도 아무 일이 없는 조작 요소를 두지 않는다.
+				const resettable = definition.resettable && text !== (definition.defaultValue ?? '')
 				return (
 					<Controller.Field
 						label={definition.label}
@@ -353,10 +356,29 @@ function ControllerControl({
 								? `${text.length}/${definition.maxLength}`
 								: undefined
 						}
+						action={
+							resettable ? (
+								<Controller.Action
+									aria-label={`${definition.label} 초기화`}
+									title="기본값으로 되돌리기"
+									onClick={() => onChange(definition.defaultValue ?? '')}
+								>
+									<Reset aria-hidden />
+								</Controller.Action>
+							) : undefined
+						}
 						disabled={disabled}
 					>
+						{definition.grid && (
+							<Controller.DataGrid
+								value={text}
+								columnLabels={definition.grid}
+								onChange={onChange}
+							/>
+						)}
+						{/* 격자가 있어도 입력창은 남는다 — 붙여넣기와 통째로 고쳐 쓰기는 격자가 대신하지 못한다. */}
 						<Controller.Textarea
-							rows={3}
+							rows={definition.rows ?? 3}
 							className="field-sizing-fixed min-h-0 overflow-y-auto scrollbar-none"
 							value={text}
 							maxLength={definition.maxLength}

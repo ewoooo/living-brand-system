@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic'
  */
 const PROFILE_TARGETS = {
 	graphic: { collection: 'graphic-profiles', lookup: 'runtime' },
+	graph: { collection: 'graph-profiles', lookup: 'runtime' },
 	image: { collection: 'image-profiles', lookup: 'id' },
 	template: { collection: 'templates', lookup: 'id' },
 } as const

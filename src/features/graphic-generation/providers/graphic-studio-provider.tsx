@@ -7,14 +7,16 @@ import {
 } from '@/features/graphic-generation/contexts/graphic-studio-context'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { getGraphicStudioRuntimeGroups } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
-import { fetchGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.client'
+import { fetchCanvasStudioConfigs } from '@/features/graphic-generation/services/list-canvas-studio-configs.client'
 import { useLazyResource } from '@/hooks/use-lazy-resource'
 import {
 	acceptsControllerDraftValue,
 	type ControllerControlValue,
 	type ControllerRuntimeBinding,
 	type ControllerRuntimeBindings,
+	controllerValuesEqual,
 	createControllerValues,
+	followsChangedDefault,
 } from '@/modules/studio-controller/controller-definition'
 
 /**
@@ -28,8 +30,13 @@ export function GraphicStudioProvider({
 	config: GraphicStudioConfig
 	children: ReactNode
 }) {
-	// 교체 후보 전체는 자산 브라우저가 열릴 때 가져온다 — 페이지는 시작 계약 하나만 싣는다.
-	const browse = useLazyResource(fetchGraphicStudioConfigs)
+	/**
+	 * 교체 후보 전체는 자산 브라우저가 열릴 때 가져온다 — 페이지는 시작 계약 하나만 싣는다.
+	 * 🔴 어느 컬렉션을 보는지는 config가 이미 안다. 계약이 같다고 목록까지 같으면
+	 *    Graph에서 Graphic 런타임이 나온다.
+	 */
+	const studio = initial.studio
+	const browse = useLazyResource(useCallback(() => fetchCanvasStudioConfigs(studio), [studio]))
 	const [config, setConfig] = useState(initial)
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	/**
@@ -42,6 +49,12 @@ export function GraphicStudioProvider({
 	const groups = useMemo(() => getGraphicStudioRuntimeGroups(config, values), [config, values])
 	const [bindings, setBindings] = useState<ControllerRuntimeBindings>({})
 	const bindingsRef = useRef<ControllerRuntimeBindings>({})
+	/**
+	 * 직전에 본 기본값. 🔑 기본값이 바뀌었다는 것은 **계약이 다른 것을 가리키게 됐다**는 뜻이고
+	 * (표현을 바꾸면 그 표현의 데이터가 기본값이 된다), 그때 값이 따라가야 할지는 창작자가
+	 * 그 값을 손댔는가로 갈린다. 옛 기본값 그대로면 손대지 않은 것이다.
+	 */
+	const defaultsRef = useRef<Record<string, ControllerControlValue>>({})
 	const definitions = useMemo(
 		() =>
 			new Map(
@@ -60,18 +73,46 @@ export function GraphicStudioProvider({
 	 *    같은 객체가 돌아와 여기서 멈춘다(무한 루프가 아니다).
 	 */
 	useEffect(() => {
+		const previousDefaults = defaultsRef.current
+		defaultsRef.current = Object.fromEntries(
+			groups.flatMap((group) =>
+				group.controls.map((control) => [control.id, control.defaultValue] as const),
+			),
+		)
 		setValues((current) => {
 			let next = current
 			for (const group of groups) {
 				for (const control of group.controls) {
 					if (!(control.id in current)) continue
 					const value = current[control.id]
+					/**
+					 * 🔑 기본값이 바뀌었고 값이 **옛 기본값 그대로**면 손대지 않은 값이므로 새 기본값을
+					 * 따라간다 — 표현을 바꾸면 그 표현의 데이터가 따라오는 자리가 여기다.
+					 * 🔴 손댄 값은 지킨다. 덮으면 창작자가 적은 것이 되돌릴 방법 없이 사라진다.
+					 */
+					if (
+						followsChangedDefault(
+							value,
+							previousDefaults[control.id],
+							control.defaultValue,
+						)
+					) {
+						if (next === current) next = { ...current }
+						next[control.id] = control.defaultValue
+						continue
+					}
 					if (
 						value === undefined ||
 						acceptsControllerDraftValue(control, value, bindingsRef.current[control.id])
 					) {
 						continue
 					}
+					/**
+					 * 🔴 이미 기본값이면 손대지 않는다. 잠긴(`disabled`) control의 값은
+					 * `acceptsControllerDraftValue`가 **언제나** 거부하므로, 여기서 매번 새 객체를
+					 * 만들면 그것이 다시 이 effect를 깨워 무한 루프가 된다(실제로 화면이 죽었다).
+					 */
+					if (controllerValuesEqual(value, control.defaultValue)) continue
 					if (next === current) next = { ...current }
 					next[control.id] = control.defaultValue
 				}

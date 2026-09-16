@@ -27,7 +27,11 @@ export type ControllerRuntimeBinding = {
 
 export type ControllerRuntimeBindings = Readonly<Record<string, ControllerRuntimeBinding>>
 
-export type StudioKind = 'template' | 'image' | 'graphic'
+/**
+ * 창작자 화면에 나란히 서는 스튜디오들. 🔴 이 목록이 곧 메뉴이자 admin 컬렉션의 갈래다 —
+ * 늘리면 프로파일 컬렉션·런타임 카탈로그·라우트가 함께 생겨야 한다.
+ */
+export type StudioKind = 'template' | 'image' | 'graphic' | 'graph'
 
 /** Admin 제한을 적용하기 전 Studio runtime이 발행하는 결정적 원본 계약. */
 export type StudioRuntimeManifest = {
@@ -106,16 +110,34 @@ export type ControllerOption<Value extends string = string> = {
 	 */
 	colors?: readonly string[]
 	/**
-	 * 이 선택지가 곧 형태일 때 그 형태를 그리는 선분 목록. 한 선분은 단위 정사각형(0~1) 안의
-	 * `[x1, y1, x2, y2]`이고, 킷이 그것을 SVG로 그려 썸네일을 만든다.
+	 * 이 선택지가 곧 형태일 때 그 형태를 그리는 도형 목록. 좌표는 단위 정사각형(0~1)이고,
+	 * 킷이 그것을 SVG로 그려 썸네일을 만든다.
 	 *
 	 * 🔑 이미지가 아니라 **좌표**인 이유: 파일을 두면 이 축이 admin 업로드에 묶여 환경마다 달라지고,
 	 * 아이콘 이름을 두면 킷이 런타임의 어휘를 알아야 한다. 좌표는 런타임이 자기 기하를 그대로
 	 * 적는 것이라 둘 다 피한다.
 	 * `colors`와 마찬가지로 한 control의 선택지는 전부 갖거나 전부 없어야 한다.
 	 */
-	preview?: readonly (readonly [number, number, number, number])[]
+	preview?: readonly ControllerPreviewShape[]
+	/**
+	 * 같은 성격끼리 묶는 이름. 선택지가 많을 때 **숨기는 대신 묶는다** — 숨기면 창작자는
+	 * 무엇이 왜 사라졌는지 알 수 없고, 목록이 조용히 달라지면 고르던 것을 잃는다.
+	 * 🔑 `colors`·`preview`와 같은 자리다: `variant`는 선택지의 **성격**이고 이것은 **내용**이다.
+	 */
+	group?: string
 }
+
+/** 썸네일 선분 — 단위 정사각형 안의 `[x1, y1, x2, y2]`. */
+export type ControllerPreviewLine = readonly [number, number, number, number]
+
+/**
+ * 썸네일 원 — `[cx, cy, r]`.
+ * 🔴 선분으로 근사하지 않는다. 20px 남짓한 칩에서 다각형은 원이 아니라 **다각형으로 읽힌다**.
+ */
+export type ControllerPreviewCircle = readonly [number, number, number]
+
+/** 값의 길이가 곧 종류다 — 넷이면 선분, 셋이면 원. */
+export type ControllerPreviewShape = ControllerPreviewLine | ControllerPreviewCircle
 
 type ControllerControlBase = {
 	id: string
@@ -132,8 +154,26 @@ export type ControllerControlDefinition =
 			kind: 'text'
 			defaultValue: string | null
 			multiline?: boolean
+			/** 여러 줄 필드가 한 번에 보여 줄 줄 수. 표 데이터처럼 줄이 많은 값이 쓴다. */
+			rows?: number
+			/**
+			 * 줄·칸으로 된 값을 **격자로도** 편집하게 한다. 배열은 열 제목이고, 모자란 열은 제목 없이 선다.
+			 *
+			 * 🔑 값은 여전히 문자열이다 — 격자는 같은 값의 다른 표현이라 control 값 타입이 넓어지지 않고,
+			 * 격자와 입력창이 한 값을 공유해 한쪽을 고치면 다른 쪽이 바로 따라온다.
+			 * 🔴 `multiline`과 함께 쓴다. 한 줄 입력에는 격자로 보여 줄 줄이 없다.
+			 */
+			grid?: readonly string[]
 			maxLength?: number
 			placeholder?: string
+			/**
+			 * 값을 기본값으로 되돌리는 버튼을 세운다. 값이 기본값과 같으면 버튼이 없다 —
+			 * 되돌릴 것이 없는데 버튼이 있으면 눌러도 아무 일이 없는 조작 요소가 된다.
+			 *
+			 * 🔑 새 control kind를 만들지 않는 이유: 이 버튼은 값을 **이 control의 기본값으로**
+			 * 되돌리는 것뿐이라 자기 값도 자기 자리도 갖지 않는다. 계약이 이미 아는 것만 쓴다.
+			 */
+			resettable?: boolean
 	  })
 	| (ControllerControlBase & {
 			kind: 'toggle'
@@ -298,7 +338,7 @@ export type StudioControllerRestrictions = {
 
 export type ControllerValues = Record<string, ControllerControlValue>
 
-const STUDIO_KINDS: readonly StudioKind[] = ['template', 'image', 'graphic']
+const STUDIO_KINDS: readonly StudioKind[] = ['template', 'image', 'graphic', 'graph']
 const AVAILABILITIES: readonly ControllerAvailability[] = ['enabled', 'readonly', 'disabled']
 const COLOR_PATTERN = /^#[0-9a-f]{6}$/i
 const CONTROL_BASE_KEYS = ['id', 'kind', 'label', 'defaultValue', 'availability'] as const
@@ -588,7 +628,25 @@ function isControllerValueShape(
 	}
 }
 
-function controllerValuesEqual(left: ControllerControlValue, right: ControllerControlValue) {
+/**
+ * 기본값이 바뀌었을 때 들고 있던 값이 **따라가야 하는가**.
+ *
+ * 🔑 기본값이 바뀌었다는 것은 계약이 다른 것을 가리키게 됐다는 뜻이다(표현을 바꾸면 그 표현의
+ *    데이터가 기본값이 된다). 따라갈지는 창작자가 그 값을 손댔는가로 갈린다 —
+ *    **옛 기본값 그대로면 손대지 않은 것**이므로 새 기본값으로 끌어온다.
+ * 🔴 손댄 값은 따라가지 않는다. 덮으면 창작자가 적은 것이 되돌릴 방법 없이 사라진다.
+ */
+export function followsChangedDefault(
+	value: ControllerControlValue,
+	before: ControllerControlValue | undefined,
+	next: ControllerControlValue,
+): boolean {
+	if (before === undefined) return false
+	if (controllerValuesEqual(before, next)) return false
+	return controllerValuesEqual(value, before)
+}
+
+export function controllerValuesEqual(left: ControllerControlValue, right: ControllerControlValue) {
 	if (isControllerPadValue(left) && isControllerPadValue(right)) {
 		return padValuesEqual(left, right)
 	}
@@ -637,12 +695,31 @@ function validateControl(value: unknown, path: string) {
 		case 'text':
 			assertOnlyKeys(
 				control,
-				[...CONTROL_BASE_KEYS, 'multiline', 'maxLength', 'placeholder'],
+				[
+					...CONTROL_BASE_KEYS,
+					'multiline',
+					'rows',
+					'grid',
+					'maxLength',
+					'placeholder',
+					'resettable',
+				],
 				path,
 			)
 			assertNullableString(control.defaultValue, `${path}.defaultValue`)
 			if (control.multiline !== undefined && typeof control.multiline !== 'boolean') {
 				invalid(`${path}.multiline`, 'boolean이어야 합니다.')
+			}
+			if (
+				control.grid !== undefined &&
+				(!Array.isArray(control.grid) ||
+					control.grid.some((label) => typeof label !== 'string'))
+			) {
+				invalid(`${path}.grid`, '열 제목 문자열 배열이어야 합니다.')
+			}
+			// 격자는 줄을 행으로 읽는다 — 한 줄 입력에는 읽을 행이 없다.
+			if (control.grid !== undefined && !control.multiline) {
+				invalid(`${path}.grid`, 'multiline과 함께 써야 합니다.')
 			}
 			if (
 				control.maxLength !== undefined &&
@@ -685,7 +762,7 @@ function validateControl(value: unknown, path: string) {
 			for (const [optionIndex, optionValue] of control.options.entries()) {
 				const optionPath = `${path}.options[${optionIndex}]`
 				const option = asRecord(optionValue, optionPath)
-				assertOnlyKeys(option, ['colors', 'label', 'preview', 'value'], optionPath)
+				assertOnlyKeys(option, ['colors', 'group', 'label', 'preview', 'value'], optionPath)
 				assertNonEmptyString(option.value, `${optionPath}.value`)
 				assertNonEmptyString(option.label, `${optionPath}.label`)
 				// 색 조합 선택지 — 형식·중복 규칙은 color control의 팔레트와 같은 것을 쓴다.
@@ -694,8 +771,11 @@ function validateControl(value: unknown, path: string) {
 					colorOptionCount += 1
 				}
 				if (option.preview !== undefined) {
-					assertPreviewLines(option.preview, `${optionPath}.preview`)
+					assertPreviewShapes(option.preview, `${optionPath}.preview`)
 					previewOptionCount += 1
+				}
+				if (option.group !== undefined && typeof option.group !== 'string') {
+					invalid(`${optionPath}.group`, '문자열이어야 합니다.')
 				}
 				if (optionValues.has(option.value)) {
 					invalid(`${optionPath}.value`, `중복되었습니다: ${option.value}`)
@@ -1167,18 +1247,21 @@ function validateControlIdList(value: unknown, controlIds: ReadonlySet<string>, 
 	}
 }
 
-/** 단위 정사각형(0~1) 안의 선분 목록인가 — 밖으로 나가면 썸네일이 잘려 무엇인지 안 읽힌다. */
-function assertPreviewLines(value: unknown, path: string) {
-	if (!Array.isArray(value) || value.length === 0) invalid(path, '하나 이상의 선분이 필요합니다.')
-	for (const [index, line] of value.entries()) {
-		const linePath = `${path}[${index}]`
-		if (!Array.isArray(line) || line.length !== 4)
-			invalid(linePath, '[x1, y1, x2, y2] 네 값이어야 합니다.')
-		for (const coordinate of line) {
+/** 단위 정사각형(0~1) 안의 도형 목록인가 — 밖으로 나가면 썸네일이 잘려 무엇인지 안 읽힌다. */
+function assertPreviewShapes(value: unknown, path: string) {
+	if (!Array.isArray(value) || value.length === 0) invalid(path, '하나 이상의 도형이 필요합니다.')
+	for (const [index, shape] of value.entries()) {
+		const shapePath = `${path}[${index}]`
+		if (!Array.isArray(shape) || (shape.length !== 4 && shape.length !== 3))
+			invalid(shapePath, '선분 [x1, y1, x2, y2] 또는 원 [cx, cy, r]이어야 합니다.')
+		for (const coordinate of shape) {
 			if (typeof coordinate !== 'number' || !Number.isFinite(coordinate))
-				invalid(linePath, '좌표는 유한한 숫자여야 합니다.')
-			if (coordinate < 0 || coordinate > 1) invalid(linePath, '좌표는 0~1이어야 합니다.')
+				invalid(shapePath, '좌표는 유한한 숫자여야 합니다.')
+			if (coordinate < 0 || coordinate > 1) invalid(shapePath, '좌표는 0~1이어야 합니다.')
 		}
+		// 반지름 0은 아무것도 그리지 않는다 — 조용히 사라지는 대신 정의를 거부한다.
+		if (shape.length === 3 && shape[2] <= 0)
+			invalid(shapePath, '원의 반지름은 0보다 커야 합니다.')
 	}
 }
 

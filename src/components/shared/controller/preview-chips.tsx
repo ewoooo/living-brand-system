@@ -2,7 +2,10 @@
 
 import { useId } from 'react'
 import { cn } from '@/lib/utils'
-import type { ControllerOption } from '@/modules/studio-controller/controller-definition'
+import type {
+	ControllerOption,
+	ControllerPreviewCircle,
+} from '@/modules/studio-controller/controller-definition'
 import { ControllerField } from './field'
 import { useRowControl } from './row'
 
@@ -50,15 +53,71 @@ function PreviewChipGrid({
 }: Pick<ControllerPreviewChipsProps, 'label' | 'options' | 'value' | 'onChange'>) {
 	const row = useRowControl()
 	const groupName = useId()
+	// 같은 성격끼리 붙여 그린다 — 순서는 옵션 순서를 지킨다(정본이 먼저, 확장이 뒤).
+	const sections: { title: string | null; options: ControllerOption[] }[] = []
+	for (const option of options) {
+		const title = option.group ?? null
+		const last = sections[sections.length - 1]
+		if (last && last.title === title) last.options.push(option)
+		else sections.push({ title, options: [option] })
+	}
+	if (sections.length > 1) {
+		return (
+			<div className="flex flex-col gap-3" id={row?.controlId}>
+				{sections.map((section) => (
+					<div key={section.title ?? 'ungrouped'} className="flex flex-col gap-1.5">
+						{section.title && (
+							<span className="text-muted-foreground text-xs">{section.title}</span>
+						)}
+						<ChipGrid
+							label={section.title ? `${label} · ${section.title}` : label}
+							options={section.options}
+							value={value}
+							onChange={onChange}
+							groupName={groupName}
+							disabled={row?.disabled}
+						/>
+					</div>
+				))}
+			</div>
+		)
+	}
+	return (
+		<ChipGrid
+			label={label}
+			options={options}
+			value={value}
+			onChange={onChange}
+			groupName={groupName}
+			disabled={row?.disabled}
+			id={row?.controlId}
+		/>
+	)
+}
+
+function ChipGrid({
+	label,
+	options,
+	value,
+	onChange,
+	groupName,
+	disabled,
+	id,
+}: Pick<ControllerPreviewChipsProps, 'label' | 'options' | 'value' | 'onChange'> & {
+	groupName: string
+	disabled?: boolean
+	id?: string
+}) {
 	return (
 		<div
 			data-slot="controller-preview-chips"
 			// label이 가리키는 요소 = 묶음. div는 label 대상이 아니라 클릭이 아무 값도 바꾸지 않고,
 			// 묶음의 이름은 radiogroup의 aria-label이 준다.
-			id={row?.controlId}
+			id={id}
 			role="radiogroup"
 			aria-label={label}
-			className="grid grid-cols-2 gap-1.5"
+			// 선택지가 많으면 2열은 스크롤이 된다 — 한 눈에 다 보이는 것이 이 칩의 존재 이유다.
+			className={cn('grid gap-1.5', options.length > 4 ? 'grid-cols-3' : 'grid-cols-2')}
 		>
 			{options.map((option) => {
 				const current = option.value === value
@@ -72,7 +131,7 @@ function PreviewChipGrid({
 							current
 								? 'border-transparent bg-muted ring-2 ring-foreground/40'
 								: 'border-border hover:bg-muted/60',
-							row?.disabled && 'cursor-not-allowed opacity-50',
+							disabled && 'cursor-not-allowed opacity-50',
 						)}
 					>
 						<input
@@ -80,10 +139,10 @@ function PreviewChipGrid({
 							name={groupName}
 							className="sr-only"
 							checked={current}
-							disabled={row?.disabled || undefined}
+							disabled={disabled || undefined}
 							onChange={() => onChange?.(option.value)}
 						/>
-						<PreviewGlyph lines={option.preview ?? []} />
+						<PreviewGlyph shapes={option.preview ?? []} />
 						<span className="truncate text-center text-muted-foreground text-xs">
 							{option.label}
 						</span>
@@ -95,29 +154,47 @@ function PreviewChipGrid({
 }
 
 /**
- * 단위 좌표 선분을 그대로 그린다.
+ * 단위 좌표 도형을 그대로 그린다 — 넷이면 선분, 셋이면 원.
  *
  * 선분마다 `<line>`을 두지 않고 `<path>` 하나로 이어 붙인다 — 한 점에서 뻗는 부챗살은 시작점이
- * 겹쳐 좌표가 유일한 신원이 되지 못하고, 그림은 어차피 통째로 하나다.
+ * 겹쳐 좌표가 유일한 신원이 되지 못하고, 그림은 어차피 통째로 하나다. 원은 겹침 관계가 곧
+ * 정보라 하나씩 선다.
  * 🔴 뷰박스가 1×1이므로 굵기를 좌표 단위로 주면 선이 보이지 않는다. `non-scaling-stroke`가
  *    굵기를 화면 px로 읽어 어느 칩 크기에서도 hairline 1px이 된다.
  */
-function PreviewGlyph({ lines }: { lines: NonNullable<ControllerOption['preview']> }) {
-	const path = lines.map(([x1, y1, x2, y2]) => `M${x1} ${y1}L${x2} ${y2}`).join('')
+function PreviewGlyph({ shapes }: { shapes: NonNullable<ControllerOption['preview']> }) {
+	const path = shapes
+		.filter((shape) => shape.length === 4)
+		.map(([x1, y1, x2, y2]) => `M${x1} ${y1}L${x2} ${y2}`)
+		.join('')
+	const circles = shapes.filter((shape): shape is ControllerPreviewCircle => shape.length === 3)
 	return (
 		<svg
 			aria-hidden="true"
 			viewBox="0 0 1 1"
-			preserveAspectRatio="none"
-			className="aspect-[4/3] w-full rounded-sm bg-background text-foreground/70"
+			className="aspect-square w-full rounded-sm bg-background text-foreground/70"
 		>
-			<path
-				d={path}
-				fill="none"
-				stroke="currentColor"
-				strokeWidth={1}
-				vectorEffect="non-scaling-stroke"
-			/>
+			{path && (
+				<path
+					d={path}
+					fill="none"
+					stroke="currentColor"
+					strokeWidth={1}
+					vectorEffect="non-scaling-stroke"
+				/>
+			)}
+			{circles.map(([cx, cy, r]) => (
+				<circle
+					key={`${cx}-${cy}-${r}`}
+					cx={cx}
+					cy={cy}
+					r={r}
+					fill="none"
+					stroke="currentColor"
+					strokeWidth={1}
+					vectorEffect="non-scaling-stroke"
+				/>
+			))}
 		</svg>
 	)
 }

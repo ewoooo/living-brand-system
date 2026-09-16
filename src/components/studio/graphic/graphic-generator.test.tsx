@@ -14,10 +14,10 @@ import type { ControllerValues } from '@/modules/studio-controller/controller-de
 import { GraphicGenerator } from './graphic-generator'
 
 const browseMocks = vi.hoisted(() => ({
-	fetchGraphicStudioConfigs: vi.fn(async () => [] as unknown[]),
+	fetchCanvasStudioConfigs: vi.fn(async () => [] as unknown[]),
 }))
 vi.mock(
-	'@/features/graphic-generation/services/list-graphic-studio-configs.client',
+	'@/features/graphic-generation/services/list-canvas-studio-configs.client',
 	() => browseMocks,
 )
 
@@ -589,7 +589,7 @@ describe('GraphicGenerator', () => {
 
 	it('Change 브라우저에서 Graphic을 교체하고 새 계약의 기본값으로 초기화한다', async () => {
 		// 교체 후보 목록은 패널이 열릴 때 /api/graphic-profiles에서 온다.
-		browseMocks.fetchGraphicStudioConfigs.mockResolvedValue([
+		browseMocks.fetchCanvasStudioConfigs.mockResolvedValue([
 			forwardStraightConfig,
 			flutedGlassConfig,
 		])
