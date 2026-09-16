@@ -19,6 +19,7 @@ import {
 	parseChartData,
 } from './chart-data'
 import type { InfographicChartGroup, InfographicChartSource } from './chart-groups'
+import { type Box, fitFontSize, label, round, sharedFontSize, textEms } from './chart-primitives'
 import {
 	HD_INFOGRAPHIC_COLORS,
 	type InfographicPaletteId,
@@ -26,6 +27,7 @@ import {
 	pickStrokeColors,
 	readableTextColor,
 } from './palette'
+import { plotFrame } from './plot-frame'
 
 /**
  * 쓸 수 있는 표현 전부. 값은 URL·프로파일에 남으므로 이름을 바꾸지 않는다.
@@ -178,13 +180,6 @@ export type InfographicChartType = (typeof INFOGRAPHIC_CHART_TYPES)[number]['id'
 
 const CHART_TYPE_IDS = INFOGRAPHIC_CHART_TYPES.map(({ id }) => id)
 
-/**
- * 지정 서체. 오남용 ②「지정 서체 외의 다른 서체를 사용하지 않습니다」를 축으로 두지 않는 것으로
- * 지킨다 — 고를 수 없으면 어길 수 없다. 정본은 `theme.css`의 `HD OTF` @font-face다.
- * 🔴 `var(--font-body)`를 쓰지 않는다. 이 값은 SVG·PDF attribute로 그대로 나가 CSS 변수가 풀리지 않는다.
- */
-export const INFOGRAPHIC_FONT_FAMILY = '"HD OTF", "Pretendard", sans-serif'
-
 export type InfographicInput = {
 	chartType: InfographicChartType
 	palette: InfographicPaletteId
@@ -260,8 +255,6 @@ function pick<Value extends string>(
 	return allowed.includes(raw as Value) ? (raw as Value) : fallback
 }
 
-type Box = { x: number; y: number; width: number; height: number }
-
 /**
  * 판 전체가 아니라 여백을 뺀 상자 안에 그린다. 정본 도판이 칸마다 같은 여백을 두고 있고,
  * 상자를 한 번 정해 두면 12종이 서로 다른 좌표계를 발명하지 않는다.
@@ -318,65 +311,6 @@ function valueText(value: number): string {
 }
 
 /**
- * 글자 굵기.
- *
- * 🔴 HD OTF가 실제로 가진 것은 **300·500·700 셋뿐**이다 — 그 밖의 값을 주면 브라우저가
- *    합성해 원본과 다른 모양이 된다(`brand-typeface.ts`의 `AVAILABLE_WEIGHTS`).
- * 🔑 흰 글자는 Medium, 어두운 글자는 Light다. 같은 굵기라도 **흰 바탕의 어두운 글자가 더
- *    굵어 보이므로**, 한 단계 더 내려야 두 경우의 무게가 같게 읽힌다.
- */
-function labelWeight(fill: string): 300 | 500 {
-	return fill === HD_INFOGRAPHIC_COLORS.white ? 500 : 300
-}
-
-function label(
-	text: string,
-	x: number,
-	y: number,
-	fontSize: number,
-	fill: string,
-	anchor: 'start' | 'middle' | 'end' = 'middle',
-): VectorPrimitive {
-	return {
-		kind: 'text',
-		x,
-		// 글자 상자의 세로 중앙을 받아 baseline으로 옮긴다 — cap height 대략 0.35em.
-		y: y + fontSize * 0.35,
-		text,
-		fontFamily: INFOGRAPHIC_FONT_FAMILY,
-		fontSize,
-		fontWeight: labelWeight(fill),
-		fill,
-		textAnchor: anchor,
-	}
-}
-
-/**
- * 칸 안에 들어가는 글자 크기. 🔴 글자 수 × 고정 배수로는 안 된다 — 한글은 라틴·숫자의 두 배 가까이
- * 넓어서 같은 글자 수라도 「Group A」는 들어가고 「서울특별시」는 칸을 넘는다(실제로 넘었다).
- * 정확한 폭은 폰트가 알지만 model은 순수 함수라 측정할 수 없으므로, 글자 종류로 어림한다.
- */
-function textEms(text: string): number {
-	return [...text].reduce(
-		(total, character) =>
-			total +
-			(/[\u1100-\u11FF\u3000-\u9FFF\uAC00-\uD7AF\uFF00-\uFF60]/.test(character) ? 1 : 0.55),
-		0,
-	)
-}
-
-/**
- * 여럿이 함께 설 때의 글자 크기. 🔴 각자 칸에 맞춰 줄이면 같은 층위의 것이 크기로 갈려
- * 순서가 있는 것처럼 읽힌다 — 가장 빡빡한 칸이 전체 크기를 정한다.
- */
-function sharedFontSize(entries: readonly { text: string; width: number }[], max: number): number {
-	return entries.reduce(
-		(size, entry) => Math.min(size, fitFontSize(entry.text, entry.width, max)),
-		max,
-	)
-}
-
-/**
  * 수치의 크기.
  *
  * 🔴 **한 판의 글자 크기는 둘뿐이다** — 수치 하나, 이름 하나. 조각마다 칸에 맞춰 줄이면 같은
@@ -402,11 +336,6 @@ function valueFontSizes(
  */
 function rotationAngle(rotation: number, canonDegrees: number): number {
 	return ((canonDegrees + (rotation - INFOGRAPHIC_AXIS_NEUTRAL) * 360) * Math.PI) / 180
-}
-
-function fitFontSize(text: string, boxWidth: number, max: number): number {
-	const ems = textEms(text)
-	return ems > 0 ? Math.min(max, boxWidth / ems) : max
 }
 
 /**
@@ -439,10 +368,6 @@ function polylinePath(points: readonly { x: number; y: number }[], close: boolea
 	const [first, ...rest] = points
 	const body = rest.map(({ x, y }) => `L${round(x)} ${round(y)}`).join('')
 	return `M${round(first.x)} ${round(first.y)}${body}${close ? 'Z' : ''}`
-}
-
-function round(value: number): number {
-	return Math.round(value * 100) / 100
 }
 
 /** 부채꼴(innerRatio 0) 또는 도넛 섹터의 path d. 각도는 12시에서 시작해 시계 방향이다. */
@@ -992,71 +917,24 @@ function buildLine(box: Box, input: InfographicInput): VectorPrimitive[] {
 	if (rows.length < 2) return []
 	const lines = seriesCount(input.data)
 	const values = rows.flatMap((row) => row.values.slice(0, lines))
-	const min = Math.min(...values)
-	const max = Math.max(...values)
-	// 눈금은 판을 4~6칸으로 끊는다 — 정본 도판의 -4/0/4/8/12와 같은 간격 감각이다.
-	const step = niceStep((max - min) / 4)
-	const low = Math.floor(min / step) * step
-	const high = Math.max(Math.ceil(max / step) * step, low + step)
 	// 축 글자는 데이터가 아니라 좌표계다 — 정본 도판도 값 라벨보다 한참 작게 둔다.
 	const fontSize = Math.min(box.width, box.height) * 0.032 * input.textScale
-	const plot: Box = {
-		x: box.x + fontSize * 3.5,
-		y: box.y,
-		width: box.width - fontSize * 3.5,
-		height: box.height - fontSize * 2.4,
-	}
 	// 선은 면이 아니라 획이다 — 팔레트를 그대로 쓰면 연한 계열이 흰 판에서 사라진다.
 	const colors = pickStrokeColors(input.palette, lines)
-	const toY = (value: number) =>
-		plot.y + plot.height - ((value - low) / (high - low)) * plot.height
-	const toX = (index: number) => plot.x + (index / (rows.length - 1)) * plot.width
-
-	const primitives: VectorPrimitive[] = []
-	for (let tick = low; tick <= high + step / 2; tick += step) {
-		const y = toY(tick)
-		primitives.push({
-			kind: 'line',
-			x1: plot.x,
-			y1: y,
-			x2: plot.x + plot.width,
-			y2: y,
-			// 보조선은 데이터가 아니라 좌표계다 — 점선이 그 층위를 말한다. 색만 연하게 하면
-			// 흰 판에서 사라지고(오남용 ①), 실선이면 데이터 선과 같은 층위로 읽힌다.
-			stroke: HD_INFOGRAPHIC_COLORS.ecoGreen,
-			strokeWidth: Math.max(1, fontSize * 0.04),
-			dash: [fontSize * 0.18, fontSize * 0.28],
-		})
-		primitives.push(
-			label(
-				valueText(tick),
-				plot.x - fontSize * 0.5,
-				y,
-				fontSize,
-				HD_INFOGRAPHIC_COLORS.deepGreen,
-				'end',
-			),
-		)
-	}
-	rows.forEach((row, index) => {
-		if (!row.label) return
-		primitives.push(
-			label(
-				row.label,
-				toX(index),
-				plot.y + plot.height + fontSize * 1.2,
-				fontSize,
-				HD_INFOGRAPHIC_COLORS.deepGreen,
-				'middle',
-			),
-		)
+	// 눈금·이름·범례와 그것들이 먹는 여백은 판이 정한다(`plot-frame.ts`).
+	const frame = plotFrame(box, {
+		left: { kind: 'value', min: Math.min(...values), max: Math.max(...values) },
+		bottom: { kind: 'category', labels: rows.map((row) => row.label), scale: 'point' },
+		legend: input.showNameLabels ? { names: input.data.series, colors } : undefined,
+		fontSize,
 	})
+	const primitives: VectorPrimitive[] = [...frame.primitives]
 	for (let series = 0; series < lines; series += 1) {
 		primitives.push({
 			kind: 'path',
 			// 정본 도판의 선은 꺾은선이다 — 중립까지는 마디를 남기고, 그 위로 부드러워진다.
 			d: curvePath(
-				rows.map((row, index) => ({ x: toX(index), y: toY(row.values[series]) })),
+				rows.map((row, index) => ({ x: frame.x(index), y: frame.y(row.values[series]) })),
 				Math.max(0, input.curvature - INFOGRAPHIC_AXIS_NEUTRAL) * 2,
 			),
 			stroke: colors[series],
@@ -1065,15 +943,6 @@ function buildLine(box: Box, input: InfographicInput): VectorPrimitive[] {
 		})
 	}
 	return primitives
-}
-
-/** 1·2·5의 10의 거듭제곱 배수로 올린다 — 사람이 읽는 눈금은 늘 그 셋 중 하나다. */
-function niceStep(rough: number): number {
-	if (!Number.isFinite(rough) || rough <= 0) return 1
-	const magnitude = 10 ** Math.floor(Math.log10(rough))
-	const normalized = rough / magnitude
-	const step = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10
-	return step * magnitude
 }
 
 // ── ⑩ 영역 ───────────────────────────────────────────────────────────────────
