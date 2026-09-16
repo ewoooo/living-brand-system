@@ -11,7 +11,7 @@ import {
 	INFOGRAPHIC_SAMPLE_DATA,
 	parseChartData,
 } from './chart-data'
-import { acceptsChartData, type ChartDataShape, type InfographicChartSource } from './chart-shapes'
+import type { ChartDataShape, InfographicChartSource } from './chart-shapes'
 import {
 	HD_INFOGRAPHIC_COLORS,
 	type InfographicPaletteId,
@@ -31,42 +31,42 @@ export const INFOGRAPHIC_CHART_TYPES = [
 	{
 		id: 'pie',
 		label: '파이',
-		shape: { series: 'single', minRows: 2 },
+		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
 	},
 	{
 		id: 'donut',
 		label: '도넛',
-		shape: { series: 'single', minRows: 2 },
+		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
 	},
 	{
 		id: 'stacked-column',
 		label: '세로 100% 누적',
-		shape: { series: 'single', minRows: 2 },
+		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
 	},
 	{
 		id: 'stacked-bar',
 		label: '가로 100% 누적',
-		shape: { series: 'single', minRows: 2 },
+		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: true,
 	},
 	{
 		id: 'bar',
 		label: '막대',
-		shape: { series: 'single', minRows: 1 },
+		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
 	},
 	{
 		id: 'bar-horizontal',
 		label: '가로 막대',
-		shape: { series: 'single', minRows: 1 },
+		shape: { series: 'single' },
 		source: 'extended',
 		usesNameLabels: true,
 	},
@@ -74,7 +74,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		id: 'bubble-cluster',
 		label: '버블 클러스터',
 		// 자리가 다섯뿐이다(CLUSTER_LAYOUT).
-		shape: { series: 'single', minRows: 2, maxRows: 5 },
+		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: true,
 	},
@@ -82,7 +82,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		id: 'proportional-circle',
 		label: '비례 원',
 		// 둘의 크기를 견주는 표현이라 셋째 값을 그릴 자리가 없다.
-		shape: { series: 'single', minRows: 2, maxRows: 2 },
+		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
 	},
@@ -90,7 +90,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		id: 'nested-square',
 		label: '겹친 사각형',
 		// 자리가 셋뿐이다(OVERLAP_ANCHORS).
-		shape: { series: 'single', minRows: 2, maxRows: 3 },
+		shape: { series: 'single' },
 		source: 'canon',
 		usesNameLabels: false,
 	},
@@ -98,14 +98,14 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		id: 'bar-track',
 		label: '막대 · 트랙',
 		// 트랙이 100을 뜻한다 — 값이 100을 넘으면 전부 꽉 찬 트랙이 되어 아무것도 못 읽는다.
-		shape: { series: 'single', minRows: 1, bounded: true },
+		shape: { series: 'single', bounded: true },
 		source: 'canon',
 		usesNameLabels: true,
 	},
 	{
 		id: 'bar-track-horizontal',
 		label: '가로 막대 · 트랙',
-		shape: { series: 'single', minRows: 1, bounded: true },
+		shape: { series: 'single', bounded: true },
 		source: 'extended',
 		usesNameLabels: true,
 	},
@@ -113,28 +113,28 @@ export const INFOGRAPHIC_CHART_TYPES = [
 		id: 'nested-circle',
 		label: '겹친 원',
 		// 큰 것 안에 작은 것이 들려면 값이 계속 줄어야 한다.
-		shape: { series: 'single', minRows: 2, maxRows: 4, descending: true },
+		shape: { series: 'single', descending: true },
 		source: 'canon',
 		usesNameLabels: true,
 	},
 	{
 		id: 'concentric-circle',
 		label: '동심원',
-		shape: { series: 'single', minRows: 2, maxRows: 4, descending: true },
+		shape: { series: 'single', descending: true },
 		source: 'extended',
 		usesNameLabels: true,
 	},
 	{
 		id: 'line',
 		label: '다계열 선',
-		shape: { series: 'multi', minRows: 2 },
+		shape: { series: 'multi' },
 		source: 'canon',
 		usesNameLabels: false,
 	},
 	{
 		id: 'area',
 		label: '영역',
-		shape: { series: 'multi', minRows: 2 },
+		shape: { series: 'multi' },
 		source: 'canon',
 		usesNameLabels: true,
 	},
@@ -151,16 +151,6 @@ export const INFOGRAPHIC_CHART_TYPES = [
 }[]
 
 export type InfographicChartType = (typeof INFOGRAPHIC_CHART_TYPES)[number]['id']
-
-/**
- * 이 데이터로 그릴 수 있는 표현들. 🔑 이것이 「추천」의 전부다 — 따로 분류를 두지 않고
- * 데이터 형태가 맞는 것만 남긴다. 목록 순서는 카탈로그 순서(정본이 먼저, 확장이 뒤)를 지킨다.
- */
-export function chartTypesForData(data: ChartData) {
-	const fits = INFOGRAPHIC_CHART_TYPES.filter((chart) => acceptsChartData(chart.shape, data))
-	// 어느 것도 맞지 않으면 빈 목록이 되어 계약이 깨진다 — 막대는 값 하나만 있어도 선다.
-	return fits.length > 0 ? fits : INFOGRAPHIC_CHART_TYPES.filter((chart) => chart.id === 'bar')
-}
 
 const CHART_TYPE_IDS = INFOGRAPHIC_CHART_TYPES.map(({ id }) => id)
 
@@ -1137,31 +1127,21 @@ const model = {
 	 * 🔴 현재 값은 건드리지 않는다 — 표현을 바꿀 때마다 사용자가 넣은 데이터를 덮으면 안 된다.
 	 *    포맷이 12종 공통이라 대개 그대로 유효하고, 아니면 초기화가 있다.
 	 */
+	/**
+	 * 🔴 표현 **선택지는 좁히지 않는다**. 데이터에 맞지 않는다고 숨기면 창작자는 왜 사라졌는지
+	 *    알 수 없고, 자리가 모자란 것은 앞에서부터 쓰면 그만이다. 대신 같은 성격끼리 묶어
+	 *    보여 준다(`shape`).
+	 */
 	getRestrictions: (values): StudioControllerRestrictions => {
-		const data = parseChartData(typeof values.data === 'string' ? values.data : '')
-		const members = chartTypesForData(data).map(({ id }) => id)
-		// 🔴 이름을 쓰지 않는 표현에서는 「이름 표시」가 아무것도 하지 않는다 — 눌러도 화면이
-		//    안 바뀌는 스위치를 두느니 잠근다. 강제로 끄는 것이 아니라 **가능할 때만** 살려 둔다.
-		const chart = INFOGRAPHIC_CHART_TYPES.find(
-			(candidate) => candidate.id === pick(values.chartType, members, members[0]),
-		)
+		const chartType = pick(values.chartType, CHART_TYPE_IDS, INFOGRAPHIC_DEFAULT_CHART_TYPE)
+		const chart = INFOGRAPHIC_CHART_TYPES.find((candidate) => candidate.id === chartType)
 		return {
 			controls: [
+				// 이름을 쓰지 않는 표현에서는 「이름 표시」가 아무것도 하지 않는다 — 잠근다.
 				...(chart?.usesNameLabels === false
 					? [{ controlId: 'showNameLabels', availability: 'disabled' as const }]
 					: []),
-				{
-					controlId: 'chartType',
-					optionValues: members,
-					// 🔴 기본값도 함께 좁힌다 — 선택지만 줄이면 목록 밖으로 나간 기본값을 계약이
-					//    거부한다. 남은 것 중 첫 표현이 대표다(정본이 확장보다 앞에 선다).
-					defaultValue: members[0],
-				},
-				{
-					controlId: 'data',
-					defaultValue:
-						INFOGRAPHIC_SAMPLE_DATA[pick(values.chartType, members, members[0])],
-				},
+				{ controlId: 'data', defaultValue: INFOGRAPHIC_SAMPLE_DATA[chartType] },
 			],
 		}
 	},

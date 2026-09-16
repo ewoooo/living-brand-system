@@ -119,6 +119,12 @@ export type ControllerOption<Value extends string = string> = {
 	 * `colors`와 마찬가지로 한 control의 선택지는 전부 갖거나 전부 없어야 한다.
 	 */
 	preview?: readonly ControllerPreviewShape[]
+	/**
+	 * 같은 성격끼리 묶는 이름. 선택지가 많을 때 **숨기는 대신 묶는다** — 숨기면 창작자는
+	 * 무엇이 왜 사라졌는지 알 수 없고, 목록이 조용히 달라지면 고르던 것을 잃는다.
+	 * 🔑 `colors`·`preview`와 같은 자리다: `variant`는 선택지의 **성격**이고 이것은 **내용**이다.
+	 */
+	group?: string
 }
 
 /** 썸네일 선분 — 단위 정사각형 안의 `[x1, y1, x2, y2]`. */
@@ -738,7 +744,7 @@ function validateControl(value: unknown, path: string) {
 			for (const [optionIndex, optionValue] of control.options.entries()) {
 				const optionPath = `${path}.options[${optionIndex}]`
 				const option = asRecord(optionValue, optionPath)
-				assertOnlyKeys(option, ['colors', 'label', 'preview', 'value'], optionPath)
+				assertOnlyKeys(option, ['colors', 'group', 'label', 'preview', 'value'], optionPath)
 				assertNonEmptyString(option.value, `${optionPath}.value`)
 				assertNonEmptyString(option.label, `${optionPath}.label`)
 				// 색 조합 선택지 — 형식·중복 규칙은 color control의 팔레트와 같은 것을 쓴다.
@@ -749,6 +755,9 @@ function validateControl(value: unknown, path: string) {
 				if (option.preview !== undefined) {
 					assertPreviewShapes(option.preview, `${optionPath}.preview`)
 					previewOptionCount += 1
+				}
+				if (option.group !== undefined && typeof option.group !== 'string') {
+					invalid(`${optionPath}.group`, '문자열이어야 합니다.')
 				}
 				if (optionValues.has(option.value)) {
 					invalid(`${optionPath}.value`, `중복되었습니다: ${option.value}`)

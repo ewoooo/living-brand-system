@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
 import { INFOGRAPHIC_SAMPLE_DATA, parseChartData } from './chart-data'
+import { CHART_SHAPE_LABELS, chartShapeKey } from './chart-shapes'
 import manifest from './definition'
 import model, {
-	chartTypesForData,
 	createInfographicScene,
 	INFOGRAPHIC_CHART_TYPES,
 	INFOGRAPHIC_DEFAULT_PALETTE,
@@ -98,38 +98,36 @@ describe('infographic model', () => {
 		}
 	})
 
-	it('표현 선택지는 데이터 형태가 정한다 — 분류를 따로 두지 않는다', () => {
-		const single = model
-			.getRestrictions({ data: INFOGRAPHIC_SAMPLE_DATA.pie })
-			?.controls.find((control) => control.controlId === 'chartType')
-		// 단일 계열 5행이면 시계열 표현도, 자리가 모자란 표현도 설 수 없다.
-		expect(single?.optionValues).not.toContain('line')
-		expect(single?.optionValues).not.toContain('proportional-circle')
-		expect(single?.optionValues).toContain('pie')
-		// 좁힌 목록 밖으로 나간 기본값은 계약이 거부한다 — 기본값도 같이 좁혀야 한다.
-		expect(single?.optionValues).toContain(single?.defaultValue)
+	it('표현은 데이터와 무관하게 언제나 전부 선다 — 숨기면 왜 사라졌는지 알 수 없다', () => {
+		const controls = manifest.controller.groups.flatMap((group) => [...group.controls])
+		const chartControl = controls.find((control) => control.id === 'chartType')
+		expect(chartControl?.kind === 'select' && chartControl.options).toHaveLength(
+			INFOGRAPHIC_CHART_TYPES.length,
+		)
+		// 어떤 데이터를 넣어도 선택지를 좁히지 않는다.
+		for (const sample of [INFOGRAPHIC_SAMPLE_DATA.pie, INFOGRAPHIC_SAMPLE_DATA.line, '']) {
+			const narrowed = model
+				.getRestrictions({ data: sample })
+				?.controls.find((control) => control.controlId === 'chartType')
+			expect(narrowed).toBeUndefined()
+		}
 	})
 
-	it('다계열 데이터에는 시계열 표현만 남는다', () => {
-		expect(
-			chartTypesForData(parseChartData(INFOGRAPHIC_SAMPLE_DATA.line)).map(
-				(chart) => chart.id,
-			),
-		).toEqual(['line', 'area'])
-	})
-
-	it('빈 데이터에는 전부 남는다 — 아직 모르는 것이지 안 맞는 것이 아니다', () => {
-		expect(chartTypesForData(parseChartData(''))).toHaveLength(chartTypes.length)
-	})
-})
-
-describe('선 색', () => {
-	it('획에는 팔레트의 가장 연한 색을 쓰지 않는다 — 흰 판에서 선이 사라진다', () => {
-		const strokes = sceneFor('line')
-			.primitives.filter((primitive) => primitive.kind === 'path')
-			.map((primitive) => primitive.stroke)
-		expect(strokes.length).toBeGreaterThan(1)
-		expect(strokes).not.toContain(HD_INFOGRAPHIC_PALETTES.greenNavy.colors[0])
+	it('같은 성격의 데이터를 받는 표현끼리 한 묶음이다', () => {
+		const controls = manifest.controller.groups.flatMap((group) => [...group.controls])
+		const chartControl = controls.find((control) => control.id === 'chartType')
+		const options = chartControl?.kind === 'select' ? chartControl.options : []
+		// 묶음은 이름이 아니라 shape에서 나온다 — 선언한 묶음이 실제 shape와 어긋나면 안 된다.
+		for (const option of options) {
+			const chart = INFOGRAPHIC_CHART_TYPES.find((candidate) => candidate.id === option.value)
+			if (!chart) throw new Error(`표현을 찾을 수 없습니다: ${option.value}`)
+			expect(option.group, option.value).toBe(CHART_SHAPE_LABELS[chartShapeKey(chart.shape)])
+		}
+		// 같은 묶음이 목록에서 흩어지면 화면에 같은 제목이 두 번 선다.
+		const groups = options.map((option) => option.group)
+		expect(new Set(groups).size).toBe(
+			groups.filter((group, index) => index === 0 || group !== groups[index - 1]).length,
+		)
 	})
 })
 

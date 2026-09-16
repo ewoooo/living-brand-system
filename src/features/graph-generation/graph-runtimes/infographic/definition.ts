@@ -1,7 +1,7 @@
 import { defineGraphicRuntime } from '@/features/graphic-generation/graphic-runtimes/define-graphic-runtime'
 import { INFOGRAPHIC_SAMPLE_DATA } from './chart-data'
 import { INFOGRAPHIC_CHART_PREVIEWS } from './chart-previews'
-import { EXTENDED_CHART_SUFFIX } from './chart-shapes'
+import { CHART_SHAPE_LABELS, chartShapeKey, EXTENDED_CHART_SUFFIX } from './chart-shapes'
 import {
 	INFOGRAPHIC_CHART_TYPES,
 	INFOGRAPHIC_DEFAULT_CHART_TYPE,
@@ -23,6 +23,9 @@ import { HD_INFOGRAPHIC_PALETTES } from './palette'
  * 🔴 오남용 6종(3D·아이콘 겹침·이미지 겹침·타 서체·저대비 색·과밀)은 검사기로 막지 않는다 —
  *    그 축을 **아예 만들지 않았다.** 규정을 값 검사가 아니라 선택지의 부재로 표현한다.
  */
+/** 묶음이 서는 순서. 흔한 데이터부터 위에 둔다. */
+const SHAPE_ORDER = ['single', 'single:bounded', 'single:descending', 'multi']
+
 export default defineGraphicRuntime({
 	studio: 'graph',
 	id: 'infographic',
@@ -46,14 +49,24 @@ export default defineGraphicRuntime({
 						label: '표현',
 						defaultValue: INFOGRAPHIC_DEFAULT_CHART_TYPE,
 						// 고르는 정보가 이름이 아니라 모양이라 목록이 아니라 썸네일 그리드로 선다.
-						options: INFOGRAPHIC_CHART_TYPES.map(({ id, label, source }) => ({
-							value: id,
-							// 🔴 정본 밖 표현은 이름에 표시가 붙는다 — 화면에서 「이건 규정인가」에
-							//    답이 나와야 한다. 근거는 `chart-shapes.ts`의 source가 갖는다.
-							label:
-								source === 'extended' ? `${label}${EXTENDED_CHART_SUFFIX}` : label,
-							preview: INFOGRAPHIC_CHART_PREVIEWS[id],
-						})),
+						// 🔴 데이터에 맞지 않는다고 숨기지 않는다 — 같은 성격끼리 묶어 전부 세운다.
+						options: [...INFOGRAPHIC_CHART_TYPES]
+							.sort(
+								(left, right) =>
+									SHAPE_ORDER.indexOf(chartShapeKey(left.shape)) -
+									SHAPE_ORDER.indexOf(chartShapeKey(right.shape)),
+							)
+							.map(({ id, label, shape, source }) => ({
+								value: id,
+								group: CHART_SHAPE_LABELS[chartShapeKey(shape)],
+								// 🔴 정본 밖 표현은 이름에 표시가 붙는다 — 화면에서 「이건 규정인가」에
+								//    답이 나와야 한다. 근거는 `chart-shapes.ts`의 source가 갖는다.
+								label:
+									source === 'extended'
+										? `${label}${EXTENDED_CHART_SUFFIX}`
+										: label,
+								preview: INFOGRAPHIC_CHART_PREVIEWS[id],
+							})),
 					},
 					{
 						id: 'palette',
