@@ -1,8 +1,12 @@
 import { defineGraphicRuntime } from '@/features/graphic-generation/graphic-runtimes/define-graphic-runtime'
 import { INFOGRAPHIC_AXES, INFOGRAPHIC_AXIS_LABELS, INFOGRAPHIC_AXIS_RANGE } from './chart-axes'
 import { INFOGRAPHIC_SAMPLE_DATA } from './chart-data'
+import {
+	EXTENDED_CHART_SUFFIX,
+	INFOGRAPHIC_CHART_GROUP_LABELS,
+	INFOGRAPHIC_CHART_GROUPS,
+} from './chart-groups'
 import { INFOGRAPHIC_CHART_PREVIEWS } from './chart-previews'
-import { CHART_SHAPE_LABELS, chartShapeKey, EXTENDED_CHART_SUFFIX } from './chart-shapes'
 import {
 	INFOGRAPHIC_CHART_TYPES,
 	INFOGRAPHIC_DEFAULT_CHART_TYPE,
@@ -10,7 +14,6 @@ import {
 	INFOGRAPHIC_DEFAULT_SHOW_NAME_LABELS,
 	INFOGRAPHIC_DEFAULT_SHOW_VALUE_LABELS,
 	INFOGRAPHIC_DEFAULT_TEXT_SCALE,
-	INFOGRAPHIC_DEFAULT_UNIFORM_VALUE_SIZE,
 	INFOGRAPHIC_TEXT_SCALE_RANGE,
 } from './model'
 import { HD_INFOGRAPHIC_PALETTES } from './palette'
@@ -24,8 +27,6 @@ import { HD_INFOGRAPHIC_PALETTES } from './palette'
  * 🔴 오남용 6종(3D·아이콘 겹침·이미지 겹침·타 서체·저대비 색·과밀)은 검사기로 막지 않는다 —
  *    그 축을 **아예 만들지 않았다.** 규정을 값 검사가 아니라 선택지의 부재로 표현한다.
  */
-/** 묶음이 서는 순서. 흔한 데이터부터 위에 둔다. */
-const SHAPE_ORDER = ['single', 'single:bounded', 'single:descending', 'multi']
 
 export default defineGraphicRuntime({
 	studio: 'graph',
@@ -39,7 +40,7 @@ export default defineGraphicRuntime({
 		// 형태 축은 표현 바로 아래에 선다 — 무엇을 고르든 그 표현을 다듬는 자리다.
 		left: ['chartType', ...INFOGRAPHIC_AXES, 'palette', 'showNameLabels', 'showValueLabels'],
 		// 글자 크기는 데이터 곁에 둔다 — 무엇이 적히는가를 보면서 맞추는 축이다.
-		right: ['data', 'textScale', 'uniformValueSize'],
+		right: ['data', 'textScale'],
 		groups: [
 			{
 				id: 'chart',
@@ -53,16 +54,18 @@ export default defineGraphicRuntime({
 						// 고르는 정보가 이름이 아니라 모양이라 목록이 아니라 썸네일 그리드로 선다.
 						// 🔴 데이터에 맞지 않는다고 숨기지 않는다 — 같은 성격끼리 묶어 전부 세운다.
 						options: [...INFOGRAPHIC_CHART_TYPES]
+							// 묶음 순서는 `INFOGRAPHIC_CHART_GROUPS`가 갖는다. 같은 묶음 안에서는
+							// 선언 순서를 지킨다 — 정본이 먼저, 확장이 뒤다.
 							.sort(
 								(left, right) =>
-									SHAPE_ORDER.indexOf(chartShapeKey(left.shape)) -
-									SHAPE_ORDER.indexOf(chartShapeKey(right.shape)),
+									INFOGRAPHIC_CHART_GROUPS.indexOf(left.group) -
+									INFOGRAPHIC_CHART_GROUPS.indexOf(right.group),
 							)
-							.map(({ id, label, shape, source }) => ({
+							.map(({ id, label, group, source }) => ({
 								value: id,
-								group: CHART_SHAPE_LABELS[chartShapeKey(shape)],
+								group: INFOGRAPHIC_CHART_GROUP_LABELS[group],
 								// 🔴 정본 밖 표현은 이름에 표시가 붙는다 — 화면에서 「이건 규정인가」에
-								//    답이 나와야 한다. 근거는 `chart-shapes.ts`의 source가 갖는다.
+								//    답이 나와야 한다. 근거는 `chart-groups.ts`의 source가 갖는다.
 								label:
 									source === 'extended'
 										? `${label}${EXTENDED_CHART_SUFFIX}`
@@ -152,13 +155,6 @@ export default defineGraphicRuntime({
 						max: INFOGRAPHIC_TEXT_SCALE_RANGE.max,
 						step: INFOGRAPHIC_TEXT_SCALE_RANGE.step,
 						display: { unit: '×', precision: 2 },
-					},
-					{
-						id: 'uniformValueSize',
-						kind: 'toggle' as const,
-						// 🔴 이름은 이 축을 따르지 않는다 — 이름은 언제나 한 크기다(model 주석).
-						label: '수치 크기 맞춤',
-						defaultValue: INFOGRAPHIC_DEFAULT_UNIFORM_VALUE_SIZE,
 					},
 				],
 			},

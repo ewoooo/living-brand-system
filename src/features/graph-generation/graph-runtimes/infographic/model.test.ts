@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { ControllerControlDefinition } from '@/modules/studio-controller/controller-definition'
 import { INFOGRAPHIC_AXES } from './chart-axes'
 import { INFOGRAPHIC_SAMPLE_DATA, parseChartData } from './chart-data'
-import { CHART_SHAPE_LABELS, chartShapeKey } from './chart-shapes'
+import { INFOGRAPHIC_CHART_GROUP_LABELS, INFOGRAPHIC_CHART_GROUPS } from './chart-groups'
 import manifest from './definition'
 import model, {
 	createInfographicScene,
@@ -19,7 +19,7 @@ const chartTypes = INFOGRAPHIC_CHART_TYPES.map(({ id }) => id)
 
 /** 형태 축의 가운데가 정본이다 — 어느 표현이든 0.5가 「원래 모양」이다. */
 function axisDefaults(_chartType: InfographicChartType) {
-	return { thickness: 0.5, spacing: 0.5, curvature: 0.5 }
+	return { thickness: 0.5, spacing: 0.5, curvature: 0.5, rotation: 0.5 }
 }
 
 function sceneFor(chartType: InfographicChartType, overrides: Partial<InfographicInput> = {}) {
@@ -30,7 +30,6 @@ function sceneFor(chartType: InfographicChartType, overrides: Partial<Infographi
 			showNameLabels: true,
 			showValueLabels: true,
 			textScale: 1,
-			uniformValueSize: true,
 			...axisDefaults(chartType),
 			data: parseChartData(INFOGRAPHIC_SAMPLE_DATA[chartType]),
 			...overrides,
@@ -120,21 +119,30 @@ describe('infographic model', () => {
 		}
 	})
 
-	it('같은 성격의 데이터를 받는 표현끼리 한 묶음이다', () => {
+	it('표현은 자기가 선언한 묶음에 서고, 묶음은 목록에서 흩어지지 않는다', () => {
 		const controls = manifest.controller.groups.flatMap((group) => [...group.controls])
 		const chartControl = controls.find((control) => control.id === 'chartType')
 		const options = chartControl?.kind === 'select' ? chartControl.options : []
-		// 묶음은 이름이 아니라 shape에서 나온다 — 선언한 묶음이 실제 shape와 어긋나면 안 된다.
 		for (const option of options) {
 			const chart = INFOGRAPHIC_CHART_TYPES.find((candidate) => candidate.id === option.value)
 			if (!chart) throw new Error(`표현을 찾을 수 없습니다: ${option.value}`)
-			expect(option.group, option.value).toBe(CHART_SHAPE_LABELS[chartShapeKey(chart.shape)])
+			expect(option.group, option.value).toBe(INFOGRAPHIC_CHART_GROUP_LABELS[chart.group])
 		}
 		// 같은 묶음이 목록에서 흩어지면 화면에 같은 제목이 두 번 선다.
 		const groups = options.map((option) => option.group)
 		expect(new Set(groups).size).toBe(
 			groups.filter((group, index) => index === 0 || group !== groups[index - 1]).length,
 		)
+	})
+
+	/**
+	 * 🔴 복합 묶음은 지금 비어 있다 — 화면은 묶음이 하나뿐이면 제목을 그리지 않으므로,
+	 *    첫 복합 표현이 들어오는 순간 제목 둘이 함께 선다. 그 자리를 여기서 지킨다.
+	 */
+	it('묶음은 기본·복합 둘뿐이다', () => {
+		expect([...INFOGRAPHIC_CHART_GROUPS]).toEqual(['basic', 'complex'])
+		const declared = new Set(INFOGRAPHIC_CHART_TYPES.map((chart) => chart.group))
+		for (const group of declared) expect(INFOGRAPHIC_CHART_GROUPS).toContain(group)
 	})
 })
 
@@ -187,10 +195,10 @@ describe('글자 크기', () => {
 	})
 })
 
-describe('수치 크기 맞춤', () => {
+describe('한 판의 글자 크기는 둘뿐이다', () => {
 	/** 수치(`…%`)로 그려진 글자 크기만. */
-	function valueSizes(chartType: InfographicChartType, uniformValueSize: boolean) {
-		return sceneFor(chartType, { uniformValueSize, showNameLabels: false })
+	function valueSizes(chartType: InfographicChartType) {
+		return sceneFor(chartType, { showNameLabels: false })
 			.primitives.filter(
 				(primitive) => primitive.kind === 'text' && /^-?[\d.]+%$/.test(primitive.text),
 			)
@@ -199,26 +207,26 @@ describe('수치 크기 맞춤', () => {
 			)
 	}
 
-	it('켜면 한 차트의 수치가 전부 같은 크기다', () => {
+	it('수치는 한 차트 안에서 언제나 같은 크기다', () => {
 		for (const chart of INFOGRAPHIC_CHART_TYPES) {
-			// 선 차트의 `%`는 수치가 아니라 축 눈금이라 이 축을 따르지 않는다.
+			// 선 차트의 `%`는 수치가 아니라 축 눈금이라 층위가 다르다.
 			if (chart.id === 'line') continue
-			const sizes = valueSizes(chart.id, true)
+			const sizes = valueSizes(chart.id)
 			if (sizes.length < 2) continue
 			expect(new Set(sizes).size, chart.id).toBe(1)
 		}
 	})
 
-	it('🔴 끄면 실제로 달라진다 — 값 크기가 고정이면 이 스위치는 아무것도 하지 않는다', () => {
-		// 정본 12종 중 수치를 여럿 적는 표현은 전부 칸에 맞춰 갈려야 한다.
-		for (const chartType of [
-			'pie',
-			'donut',
-			'bar',
-			'stacked-column',
-			'nested-square',
-		] as const) {
-			expect(new Set(valueSizes(chartType, false)).size, chartType).toBeGreaterThan(1)
+	it('🔴 한 판에 서는 크기가 둘을 넘지 않는다 — 수치 하나, 이름 하나', () => {
+		for (const chart of INFOGRAPHIC_CHART_TYPES) {
+			// 선·영역은 눈금이라는 셋째 층위를 갖는다(이번 재작업에서 다루지 않는다).
+			if (chart.id === 'line' || chart.id === 'area') continue
+			const sizes = sceneFor(chart.id)
+				.primitives.filter((primitive) => primitive.kind === 'text')
+				.map((primitive) =>
+					primitive.kind === 'text' ? primitive.fontSize.toFixed(4) : '',
+				)
+			expect(new Set(sizes).size, chart.id).toBeLessThanOrEqual(2)
 		}
 	})
 })
@@ -238,7 +246,6 @@ describe('정본 도판과의 대조', () => {
 				showNameLabels: true,
 				showValueLabels: true,
 				textScale: 1,
-				uniformValueSize: true,
 				...axisDefaults('area'),
 				data: parseChartData('\tA\tB\n1\t0\t0\n2\t90\t50'),
 			},
@@ -259,19 +266,104 @@ describe('정본 도판과의 대조', () => {
 		)
 	})
 
-	it('비례 원 둘은 떨어져 선다 — 붙이면 두 덩어리가 한 도형으로 읽힌다', () => {
-		const circles = sceneFor('proportional-circle').primitives.filter(
-			(primitive) => primitive.kind === 'circle',
-		)
-		expect(circles).toHaveLength(2)
-		const [big, small] = circles.map((circle) =>
-			circle.kind === 'circle' ? circle : { cx: 0, cy: 0, radius: 0 },
-		)
+	function circlesOf(chartType: InfographicChartType) {
+		return sceneFor(chartType)
+			.primitives.filter((primitive) => primitive.kind === 'circle')
+			.map((circle) => (circle.kind === 'circle' ? circle : { cx: 0, cy: 0, radius: 0 }))
+	}
+
+	it('비례 원 둘은 맞닿는다 — 떼어 놓으면 두 덩어리가 따로 읽힌다', () => {
+		const [big, small] = circlesOf('proportional-circle')
 		const distance = Math.hypot(big.cx - small.cx, big.cy - small.cy)
-		// 정본 도판처럼 사이가 벌어지되, 둘이 한 장면으로 읽힐 만큼만 떨어진다.
-		const gap = distance - (big.radius + small.radius)
-		expect(gap).toBeGreaterThan(0)
-		expect(gap).toBeLessThan(big.radius)
+		expect(Math.abs(distance - (big.radius + small.radius))).toBeLessThan(0.5)
+	})
+
+	it('버블 클러스터는 모든 원이 이웃과 맞닿는다', () => {
+		const circles = circlesOf('bubble-cluster')
+		expect(circles.length).toBeGreaterThan(2)
+		// 가장 큰 것이 가운데다 — 나머지는 전부 그것과 맞닿는다.
+		const hub = circles.reduce((big, one) => (one.radius > big.radius ? one : big))
+		for (const circle of circles) {
+			if (circle === hub) continue
+			const distance = Math.hypot(hub.cx - circle.cx, hub.cy - circle.cy)
+			expect(Math.abs(distance - (hub.radius + circle.radius))).toBeLessThan(0.5)
+		}
+		// 둘레의 이웃끼리도 맞닿는다 — 어느 원도 혼자 떠 있지 않다.
+		for (const circle of circles) {
+			if (circle === hub) continue
+			const touches = circles.some((other) => {
+				if (other === circle || other === hub) return false
+				const distance = Math.hypot(other.cx - circle.cx, other.cy - circle.cy)
+				return Math.abs(distance - (other.radius + circle.radius)) < 0.5
+			})
+			expect(touches).toBe(true)
+		}
+	})
+
+	it('겹친 원은 아래 가장자리가 붙지 않는다 — 일정한 간격으로 올라선다', () => {
+		const bottoms = circlesOf('nested-circle').map((circle) => circle.cy + circle.radius)
+		const steps = bottoms.slice(1).map((bottom, index) => bottoms[index] - bottom)
+		expect(steps.length).toBeGreaterThan(0)
+		for (const step of steps) expect(step).toBeGreaterThan(1)
+		expect(Math.max(...steps) - Math.min(...steps)).toBeLessThan(0.5)
+	})
+
+	it('막대는 사이를 두지 않는다 — 트랙형만 사이를 갖는다', () => {
+		const spans = (chartType: InfographicChartType) =>
+			sceneFor(chartType)
+				.primitives.filter((primitive) => primitive.kind === 'rect')
+				.map((rect) => (rect.kind === 'rect' ? [rect.x, rect.x + rect.width] : [0, 0]))
+				.sort((left, right) => left[0] - right[0])
+		const bars = spans('bar')
+		for (let index = 1; index < bars.length; index += 1) {
+			expect(bars[index][0] - bars[index - 1][1]).toBeLessThan(0.5)
+		}
+		// 트랙형은 트랙과 채움이 겹쳐 서므로 자리의 수만큼만 본다.
+		const tracks = spans('bar-track').filter((_, index) => index % 2 === 0)
+		expect(tracks.length).toBeGreaterThan(1)
+		expect(tracks[1][0] - tracks[0][1]).toBeGreaterThan(1)
+	})
+
+	it('겹친 사각형은 크기가 같고 아랫변이 한 선에 놓인다', () => {
+		const rects = sceneFor('nested-square')
+			.primitives.filter((primitive) => primitive.kind === 'rect')
+			.map((rect) => (rect.kind === 'rect' ? rect : { x: 0, y: 0, width: 0, height: 0 }))
+		expect(rects.length).toBeGreaterThan(1)
+		expect(new Set(rects.map((rect) => rect.width.toFixed(4))).size).toBe(1)
+		expect(new Set(rects.map((rect) => rect.height.toFixed(4))).size).toBe(1)
+		expect(new Set(rects.map((rect) => (rect.y + rect.height).toFixed(4))).size).toBe(1)
+	})
+})
+
+describe('면 위의 글자는 사라지지 않는다', () => {
+	/**
+	 * 🔴 짧은 막대에서는 라벨이 채움 밖(트랙·바탕)으로 올라선다. 색을 채움 기준으로만 고르면
+	 *    어두운 계열의 짧은 막대에서 흰 글자가 연한 트랙에 얹혀 통째로 사라진다 — 실제로 그랬다.
+	 */
+	it('막대 트랙의 모든 글자가 자기 뒤에 있는 면과 대비된다', () => {
+		const scene = sceneFor('bar-track', {
+			// 어두운 계열(마지막 색)에 짧은 막대를 준다 — 이 조합에서 글자가 사라졌다.
+			data: parseChartData('아시아\t34\n유럽\t33\n북미\t12\n중동\t4\n기타\t9'),
+		})
+		const rects = scene.primitives.filter((primitive) => primitive.kind === 'rect')
+		const texts = scene.primitives.filter((primitive) => primitive.kind === 'text')
+		expect(texts.length).toBeGreaterThan(4)
+		for (const text of texts) {
+			if (text.kind !== 'text') continue
+			// label()이 글자 상자 중앙을 baseline으로 옮겨 놓았으므로 되돌려 중앙을 구한다.
+			const centerY = text.y - text.fontSize * 0.35
+			// 나중에 그려진 것이 위에 있다 — 마지막으로 닿는 면이 글자 뒤의 면이다.
+			const behind = rects.reduce<string>((surface, rect) => {
+				if (rect.kind !== 'rect' || !rect.fill) return surface
+				const inside =
+					text.x >= rect.x &&
+					text.x <= rect.x + rect.width &&
+					centerY >= rect.y &&
+					centerY <= rect.y + rect.height
+				return inside ? rect.fill : surface
+			}, scene.background ?? '#FFFFFF')
+			expect(text.fill, `${text.text} on ${behind}`).toBe(readableTextColor(behind))
+		}
 	})
 })
 
@@ -281,11 +373,18 @@ describe('형태 축', () => {
 		return JSON.stringify(sceneFor(chartType, { [axis]: value } as never).primitives)
 	}
 
+	/**
+	 * 🔴 회전만 양 끝이 만난다 — 정본 ±180°는 같은 각이라 0과 1이 같은 화면이다.
+	 *    축이 살아 있는지는 한 바퀴가 아닌 값끼리 견줘야 보인다.
+	 */
+	const probe = (axis: string) => (axis === 'rotation' ? [0, 0.25] : [0, 1])
+
 	it('표현이 선언한 축은 값을 바꾸면 화면이 달라진다', () => {
 		for (const chart of INFOGRAPHIC_CHART_TYPES) {
 			for (const axis of chart.axes as readonly string[]) {
+				const [low, high] = probe(axis)
 				expect(
-					sceneJson(chart.id, axis, 0) !== sceneJson(chart.id, axis, 1),
+					sceneJson(chart.id, axis, low) !== sceneJson(chart.id, axis, high),
 					`${chart.id}.${axis}`,
 				).toBe(true)
 			}
@@ -296,8 +395,9 @@ describe('형태 축', () => {
 		for (const chart of INFOGRAPHIC_CHART_TYPES) {
 			for (const axis of INFOGRAPHIC_AXES) {
 				if ((chart.axes as readonly string[]).includes(axis)) continue
+				const [low, high] = probe(axis)
 				expect(
-					sceneJson(chart.id, axis, 0) === sceneJson(chart.id, axis, 1),
+					sceneJson(chart.id, axis, low) === sceneJson(chart.id, axis, high),
 					`${chart.id}.${axis}`,
 				).toBe(true)
 			}
@@ -326,11 +426,7 @@ describe('형태 축', () => {
 		expect(linePaths.every((path) => path.kind === 'path' && !path.d.includes('C'))).toBe(true)
 		const areaPath = sceneFor('area').primitives.find((p) => p.kind === 'path')
 		expect(areaPath?.kind === 'path' && areaPath.d.includes('C')).toBe(true)
-		// 겹친 원은 아래 가장자리가 한 선에 놓이고, 동심원은 중심이 하나다.
-		const bottoms = sceneFor('nested-circle')
-			.primitives.filter((p) => p.kind === 'circle')
-			.map((c) => (c.kind === 'circle' ? c.cy + c.radius : 0))
-		expect(Math.max(...bottoms) - Math.min(...bottoms)).toBeLessThan(1)
+		// 동심원은 중심이 하나다(겹친 원의 아래 간격은 「정본 도판과의 대조」가 본다).
 		const centers = sceneFor('concentric-circle')
 			.primitives.filter((p) => p.kind === 'circle')
 			.map((c) => (c.kind === 'circle' ? c.cy : 0))

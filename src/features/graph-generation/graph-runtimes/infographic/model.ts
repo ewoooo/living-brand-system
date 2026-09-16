@@ -18,7 +18,7 @@ import {
 	INFOGRAPHIC_SAMPLE_DATA,
 	parseChartData,
 } from './chart-data'
-import type { ChartDataShape, InfographicChartSource } from './chart-shapes'
+import type { InfographicChartGroup, InfographicChartSource } from './chart-groups'
 import {
 	HD_INFOGRAPHIC_COLORS,
 	type InfographicPaletteId,
@@ -30,15 +30,14 @@ import {
 /**
  * 쓸 수 있는 표현 전부. 값은 URL·프로파일에 남으므로 이름을 바꾸지 않는다.
  *
- * 🔑 `shape`가 이 표현이 받을 수 있는 데이터를 선언한다 — 같은 shape를 요구하는 것들이 곧
- *    한 묶음이고, 그 안의 차이는 지면뿐이다(세로로 길쭉한 자리인가, 가로로 넓은 자리인가).
- * 🔴 `source`가 정본과 확장을 가른다. 새 표현을 정본이라고 적지 말 것 — 근거는 `chart-shapes.ts`.
+ * 🔑 `group`이 화면에서 어디에 서는지를 정한다 — 가르는 것은 표현의 복잡도뿐이다(`chart-groups.ts`).
+ * 🔴 `source`가 정본과 확장을 가른다. 새 표현을 정본이라고 적지 말 것 — 근거는 `chart-groups.ts`.
  */
 export const INFOGRAPHIC_CHART_TYPES = [
 	{
 		id: 'pie',
 		label: '파이',
-		shape: { series: 'single' },
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: false,
 		axes: ['spacing'],
@@ -46,7 +45,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 	{
 		id: 'donut',
 		label: '도넛',
-		shape: { series: 'single' },
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: false,
 		axes: ['thickness', 'spacing'],
@@ -54,7 +53,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 	{
 		id: 'stacked-column',
 		label: '세로 100% 누적',
-		shape: { series: 'single' },
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: false,
 		axes: ['thickness'],
@@ -62,7 +61,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 	{
 		id: 'stacked-bar',
 		label: '가로 100% 누적',
-		shape: { series: 'single' },
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: true,
 		axes: ['thickness'],
@@ -70,42 +69,44 @@ export const INFOGRAPHIC_CHART_TYPES = [
 	{
 		id: 'bar',
 		label: '막대',
-		shape: { series: 'single' },
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: false,
-		axes: ['spacing'],
+		// 🔴 정본 도판의 막대는 사이가 없다 — 자리를 꽉 채우므로 다듬을 축이 없다.
+		axes: [],
 	},
 	{
 		id: 'bar-horizontal',
 		label: '가로 막대',
-		shape: { series: 'single' },
+		group: 'basic',
 		source: 'extended',
 		usesNameLabels: true,
-		axes: ['spacing'],
+		axes: [],
 	},
 	{
 		id: 'bubble-cluster',
 		label: '버블 클러스터',
-		// 자리가 다섯뿐이다(CLUSTER_LAYOUT).
-		shape: { series: 'single' },
+		// 자리가 다섯뿐이다(CLUSTER_MAX_CIRCLES).
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: true,
-		axes: ['spacing'],
+		// 원끼리 맞닿아 사이가 없다 — 남는 자유는 무리를 어느 쪽으로 돌려 세우는가뿐이다.
+		axes: ['rotation'],
 	},
 	{
 		id: 'proportional-circle',
 		label: '비례 원',
 		// 둘의 크기를 견주는 표현이라 셋째 값을 그릴 자리가 없다.
-		shape: { series: 'single' },
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: false,
-		axes: ['spacing'],
+		axes: ['rotation'],
 	},
 	{
 		id: 'nested-square',
 		label: '겹친 사각형',
-		// 자리가 셋뿐이다(OVERLAP_ANCHORS).
-		shape: { series: 'single' },
+		// 자리가 셋뿐이다(OVERLAP_SLOTS).
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: false,
 		axes: ['spacing'],
@@ -113,25 +114,24 @@ export const INFOGRAPHIC_CHART_TYPES = [
 	{
 		id: 'bar-track',
 		label: '막대 · 트랙',
-		// 트랙이 100을 뜻한다 — 값이 100을 넘으면 전부 꽉 찬 트랙이 되어 아무것도 못 읽는다.
-		shape: { series: 'single', bounded: true },
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: true,
-		axes: ['spacing'],
+		// 트랙이 자리를 말해 주므로 막대가 그 안에서 좁아질 수 있다 — 폭과 사이 둘 다 갖는다.
+		axes: ['thickness', 'spacing'],
 	},
 	{
 		id: 'bar-track-horizontal',
 		label: '가로 막대 · 트랙',
-		shape: { series: 'single', bounded: true },
+		group: 'basic',
 		source: 'extended',
 		usesNameLabels: true,
-		axes: ['spacing'],
+		axes: ['thickness', 'spacing'],
 	},
 	{
 		id: 'nested-circle',
 		label: '겹친 원',
-		// 큰 것 안에 작은 것이 들려면 값이 계속 줄어야 한다.
-		shape: { series: 'single', descending: true },
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: true,
 		axes: ['thickness'],
@@ -139,7 +139,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 	{
 		id: 'concentric-circle',
 		label: '동심원',
-		shape: { series: 'single', descending: true },
+		group: 'basic',
 		source: 'extended',
 		usesNameLabels: true,
 		axes: ['thickness'],
@@ -147,7 +147,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 	{
 		id: 'line',
 		label: '다계열 선',
-		shape: { series: 'multi' },
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: false,
 		axes: ['thickness', 'curvature'],
@@ -155,7 +155,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 	{
 		id: 'area',
 		label: '영역',
-		shape: { series: 'multi' },
+		group: 'basic',
 		source: 'canon',
 		usesNameLabels: true,
 		axes: ['curvature'],
@@ -163,7 +163,7 @@ export const INFOGRAPHIC_CHART_TYPES = [
 ] as const satisfies readonly {
 	id: string
 	label: string
-	shape: ChartDataShape
+	group: InfographicChartGroup
 	source: InfographicChartSource
 	/** 이 표현이 쓰는 형태 축. 여기 없는 축은 창작자 화면에서 잠긴다. */
 	axes: ChartAxes
@@ -193,16 +193,11 @@ export type InfographicInput = {
 	showValueLabels: boolean
 	/** 글자 크기 배율. 표현이 정한 기준 크기에 곱한다. */
 	textScale: number
-	/**
-	 * 수치의 크기를 하나로 맞출 것인가.
-	 * 🔑 이름과 다르다 — **이름은 언제나 하나로 맞춘다**(같은 층위의 것이 크기로 갈리면 순서가
-	 * 있는 것처럼 읽힌다). 수치는 칸 크기를 따라가는 편이 나을 때가 있어 고를 수 있게 둔다.
-	 */
-	uniformValueSize: boolean
 	/** 형태 축 — 값은 0~1이고 무엇으로 읽을지는 표현이 정한다(`chart-axes.ts`). */
 	thickness: number
 	spacing: number
 	curvature: number
+	rotation: number
 	data: ChartData
 }
 
@@ -211,7 +206,6 @@ export const INFOGRAPHIC_DEFAULT_PALETTE: InfographicPaletteId = 'greenNavy'
 export const INFOGRAPHIC_DEFAULT_SHOW_VALUE_LABELS = true
 export const INFOGRAPHIC_DEFAULT_SHOW_NAME_LABELS = true
 export const INFOGRAPHIC_DEFAULT_TEXT_SCALE = 1
-export const INFOGRAPHIC_DEFAULT_UNIFORM_VALUE_SIZE = true
 export const INFOGRAPHIC_TEXT_SCALE_RANGE = { min: 0.5, max: 1.6, step: 0.05 } as const
 
 export function toInfographicInput(values: ControllerValues): InfographicInput {
@@ -228,10 +222,10 @@ export function toInfographicInput(values: ControllerValues): InfographicInput {
 						Math.max(INFOGRAPHIC_TEXT_SCALE_RANGE.min, values.textScale),
 					)
 				: INFOGRAPHIC_DEFAULT_TEXT_SCALE,
-		uniformValueSize: boolish(values.uniformValueSize, INFOGRAPHIC_DEFAULT_UNIFORM_VALUE_SIZE),
 		thickness: axis(values.thickness, chartType, 'thickness'),
 		spacing: axis(values.spacing, chartType, 'spacing'),
 		curvature: axis(values.curvature, chartType, 'curvature'),
+		rotation: axis(values.rotation, chartType, 'rotation'),
 		// 값이 아직 없을 때만 그 표현의 샘플로 떨어진다. 비운 것은 비운 대로 둔다 — 빈 판이
 		// 「데이터가 없다」를 말해 주는데 샘플을 되살리면 지운 것이 되살아난 것처럼 보인다.
 		data: parseChartData(
@@ -385,35 +379,29 @@ function sharedFontSize(entries: readonly { text: string; width: number }[], max
 /**
  * 수치의 크기.
  *
- * - **맞춤 켜짐** — 전부 한 크기다. 정본 도판이 그렇게 적는다.
- * - **맞춤 꺼짐** — 도형 크기를 따라간다. 큰 조각이 큰 숫자를 갖는 편이 나은 판이 있다.
- *
- * 🔴 「각자 칸에 맞춰 줄인다」로 읽으면 안 된다. 기준 크기가 넉넉하면 어느 칸에도 다 들어가
- *    결국 전부 같은 크기가 되고, 스위치가 아무것도 하지 않는다(실제로 파이에서 그랬다).
- * 🔑 비율은 제곱근으로 눌러 둔다 — 넓이가 1/4인 조각의 글자를 1/4로 줄이면 읽을 수 없다.
+ * 🔴 **한 판의 글자 크기는 둘뿐이다** — 수치 하나, 이름 하나. 조각마다 칸에 맞춰 줄이면 같은
+ *    층위의 것이 크기로 갈려 순서가 있는 것처럼 읽힌다. 정본 도판도 한 크기로 적는다.
+ * 🔑 그래서 이름과 같은 규칙이다 — 가장 빡빡한 칸이 전체 크기를 정한다(`sharedFontSize`).
  */
 function valueFontSizes(
-	entries: readonly { text: string; width: number; height?: number; weight?: number }[],
+	entries: readonly { text: string; width: number; height?: number }[],
 	max: number,
-	uniform: boolean,
 ): number[] {
-	// 어느 쪽이든 자기 칸을 넘지는 않는다.
+	// 어느 것도 자기 칸을 넘지 않는 크기를 구하고, 그중 가장 작은 것으로 전부 맞춘다.
 	const fitted = entries.map((entry) =>
 		Math.min(fitFontSize(entry.text, entry.width, max), entry.height ?? max),
 	)
-	if (entries.length === 0) return fitted
-	if (uniform) {
-		const smallest = Math.min(...fitted)
-		return fitted.map(() => smallest)
-	}
-	const heaviest = Math.max(...entries.map((entry) => entry.weight ?? 1))
-	return entries.map((entry, index) =>
-		Math.min(
-			fitted[index],
-			// 작은 조각도 읽혀야 하므로 절반 아래로는 내려가지 않는다.
-			max * Math.max(0.5, Math.sqrt((entry.weight ?? 1) / (heaviest || 1))),
-		),
-	)
+	if (fitted.length === 0) return fitted
+	const smallest = Math.min(...fitted)
+	return fitted.map(() => smallest)
+}
+
+/**
+ * 회전 축이 만드는 각(라디안). 🔑 축이 각을 정하는 것이 아니라 **정본으로부터의 회전**을 정한다 —
+ * 중립이 도판 그대로이고, 양 끝이 정본 ±180°다.
+ */
+function rotationAngle(rotation: number, canonDegrees: number): number {
+	return ((canonDegrees + (rotation - INFOGRAPHIC_AXIS_NEUTRAL) * 360) * Math.PI) / 180
 }
 
 function fitFontSize(text: string, boxWidth: number, max: number): number {
@@ -507,10 +495,8 @@ function buildRadialSlices(
 			text: valueText(value),
 			width: Math.PI * 2 * labelRadius * (value / sum) * 0.9,
 			height: radius * (innerRatio === 0 ? 0.45 : (1 - innerRatio) * 0.7),
-			weight: value,
 		})),
 		fontSize,
-		input.uniformValueSize,
 	)
 	// 조각 사이를 벌린다. 정본 도판은 맞붙어 있으므로 **중립까지는 0**이고, 그 위로 갈라진다.
 	const pad = Math.max(0, input.spacing - INFOGRAPHIC_AXIS_NEUTRAL) * 0.024
@@ -583,10 +569,11 @@ function buildProportionalCircle(box: Box, input: InfographicInput): VectorPrimi
 	const colors = pickSeriesColors(input.palette, 2)
 	// 값은 넓이에 비례한다 — 반지름을 값에 비례시키면 큰 쪽이 규정보다 훨씬 커 보인다.
 	const smallRatio = Math.sqrt(Math.max(small, 0) / big)
-	// 🔴 두 원은 **떨어져 선다**(정본 도판). 붙이면 두 덩어리가 한 도형으로 읽힌다.
-	//    작은 원은 큰 원의 왼쪽 아래에 놓인다.
-	const angle = Math.PI * (152 / 180)
-	const distance = (1 + smallRatio) * (1 + input.spacing * 0.5)
+	// 🔴 두 원은 **맞닿는다** — 떼어 놓으면 두 덩어리가 따로 읽힌다.
+	// 🔑 기준점이 없는 표현이라 작은 원이 어느 쪽에 붙을지는 회전 축이 정한다.
+	//    중립이 정본(왼쪽 아래)이다.
+	const angle = rotationAngle(input.rotation, 152)
+	const distance = 1 + smallRatio
 	const [bigCircle, smallCircle] = fitCircles(
 		[
 			{ x: 0, y: 0, r: 1 },
@@ -596,11 +583,10 @@ function buildProportionalCircle(box: Box, input: InfographicInput): VectorPrimi
 	)
 	const valueSizes = valueFontSizes(
 		[
-			{ text: valueText(big), width: bigCircle.r * 1.4, weight: big },
-			{ text: valueText(small), width: smallCircle.r * 1.4, weight: small },
+			{ text: valueText(big), width: bigCircle.r * 1.4 },
+			{ text: valueText(small), width: smallCircle.r * 1.4 },
 		],
 		bigCircle.r * 0.26 * input.textScale,
-		input.uniformValueSize,
 	)
 	const primitives: VectorPrimitive[] = [
 		{ kind: 'circle', cx: bigCircle.x, cy: bigCircle.y, radius: bigCircle.r, fill: colors[0] },
@@ -635,62 +621,52 @@ function buildProportionalCircle(box: Box, input: InfographicInput): VectorPrimi
 // ── ④ 버블 클러스터 ──────────────────────────────────────────────────────────
 
 /**
- * 원의 자리는 정본 도판의 배치를 그대로 옮긴 **고정 레이아웃**이다.
- * 물리 시뮬레이션으로 풀지 않는다 — 같은 입력에 같은 결과여야 미리보기와 내보내기가 갈리지 않는다.
+ * 🔴 원은 **모두 맞닿는다**(정본 도판) — 가장 큰 것이 가운데에 서고 나머지가 그 둘레를 두른다.
+ *    이웃끼리도 닿는 사이각을 코사인법칙으로 구하므로, 값이 어떻든 사이가 벌어지지 않는다.
+ * 🔑 물리 시뮬레이션으로 풀지 않는다 — 같은 입력에 같은 결과여야 미리보기와 내보내기가 갈리지 않는다.
  */
-const CLUSTER_LAYOUT = [
-	{ x: 0.5, y: 0.26 },
-	{ x: 0.76, y: 0.7 },
-	{ x: 0.4, y: 0.78 },
-	{ x: 0.13, y: 0.52 },
-	{ x: 0.9, y: 0.34 },
-] as const
+const CLUSTER_MAX_CIRCLES = 5
 
-/**
- * 단위 좌표에서 원을 얼마나 키울 수 있나. 🔴 자리가 고정이라 값 분포에 따라 이웃끼리 겹친다 —
- * 특례로 몇몇 경우를 막는 대신, 가장 빡빡한 이웃 쌍이 **닿는 선**을 상한으로 삼아 겹침이 생길
- * 자리를 없앤다. 입력이 같으면 결과도 같으므로 미리보기와 내보내기가 갈리지 않는다.
- */
-function clusterScale(
-	ratios: readonly number[],
-	layout: readonly { x: number; y: number }[],
-): number {
-	let scale = Number.POSITIVE_INFINITY
-	for (let a = 0; a < ratios.length; a += 1) {
-		for (let b = a + 1; b < ratios.length; b += 1) {
-			const dx = layout[a].x - layout[b].x
-			const dy = layout[a].y - layout[b].y
-			const sum = ratios[a] + ratios[b]
-			if (sum > 0) scale = Math.min(scale, Math.hypot(dx, dy) / sum)
-		}
-	}
-	return Number.isFinite(scale) ? scale : 0.3
+/** 정본은 위성이 가운데 원의 **아래쪽**을 두른다 — 띠의 한가운데가 여기(화면 아래)에 선다. */
+const CLUSTER_CANON_DEGREES = 90
+
+/** 반지름 1인 가운데 원에 둘 다 닿는 두 위성이 서로도 닿을 때, 가운데에서 본 사이각. */
+function tangentAngle(a: number, b: number): number {
+	const da = 1 + a
+	const db = 1 + b
+	const cosine = (da * da + db * db - (a + b) ** 2) / (2 * da * db)
+	return Math.acos(Math.min(1, Math.max(-1, cosine)))
 }
 
 function buildBubbleCluster(box: Box, input: InfographicInput): VectorPrimitive[] {
-	// 자리가 고정 레이아웃이라 그보다 많은 항목은 그릴 자리가 없다.
-	const rows = input.data.rows.slice(0, CLUSTER_LAYOUT.length)
+	// 둘레에 설 자리가 다섯을 넘으면 서로 닿은 채로는 한 바퀴에 못 담는다.
+	const rows = input.data.rows.slice(0, CLUSTER_MAX_CIRCLES)
 	const max = Math.max(...rows.map((row) => row.values[0] ?? 0))
 	if (max <= 0) return []
 	const colors = pickSeriesColors(input.palette, rows.length)
-	const ratios = rows.map((row) => Math.sqrt((row.values[0] ?? 0) / max))
-	// 자리는 단위 좌표로 관계만 정하고, 겹치지 않을 최대 크기를 구한 뒤 판에 맞춘다.
-	// 간격이 흩어짐을 정한다 — 자리를 판 가운데에서 밀고 당긴다. 겹치지 않을 상한은
-	// 그 뒤에 구하므로, 모을수록 원이 작아지고 벌릴수록 커진다.
-	const spread = 0.7 + input.spacing * 0.6
-	const layout = CLUSTER_LAYOUT.map((spot) => ({
-		x: 0.5 + (spot.x - 0.5) * spread,
-		y: 0.5 + (spot.y - 0.5) * spread,
-	}))
-	const scale = clusterScale(ratios, layout)
-	const circles = fitCircles(
-		ratios.map((ratio, index) => ({
-			x: layout[index].x,
-			y: layout[index].y,
-			r: ratio * scale,
-		})),
-		box,
+	// 값은 넓이에 비례한다 — 반지름을 값에 비례시키면 큰 쪽이 규정보다 훨씬 커 보인다.
+	// 가장 큰 것이 반지름 1이고, 그것이 가운데에 선다.
+	const ratios = rows.map((row) => Math.sqrt(Math.max(row.values[0] ?? 0, 0) / max))
+	const hub = ratios.indexOf(Math.max(...ratios))
+	const orbit = ratios.map((_, index) => index).filter((index) => index !== hub)
+	const steps = orbit.map((index, order) =>
+		order === 0 ? 0 : tangentAngle(ratios[orbit[order - 1]], ratios[index]),
 	)
+	const span = steps.reduce((total, step) => total + step, 0)
+	// ponytail: 한 바퀴를 넘을 때만 고르게 눌러 겹침을 막는다 — 그때는 이웃 사이가 조금 벌어진다.
+	const squeeze = span > Math.PI * 2 ? (Math.PI * 2) / span : 1
+	let angle = rotationAngle(input.rotation, CLUSTER_CANON_DEGREES) - (span * squeeze) / 2
+	const spots = ratios.map((ratio) => ({ x: 0, y: 0, r: ratio }))
+	orbit.forEach((index, order) => {
+		angle += steps[order] * squeeze
+		const distance = ratios[hub] + ratios[index]
+		spots[index] = {
+			x: Math.cos(angle) * distance,
+			y: Math.sin(angle) * distance,
+			r: ratios[index],
+		}
+	})
+	const circles = fitCircles(spots, box)
 	const nameSize = sharedFontSize(
 		rows.map((row, index) => ({ text: row.label, width: circles[index].r * 1.5 })),
 		Math.max(...circles.map((circle) => circle.r)) * 0.44 * input.textScale,
@@ -722,9 +698,19 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 	// 트랙형은 팔레트의 가장 연한 색이 트랙 자리를 가져간다 — 채움은 그 다음 색부터 뽑아야
 	// 첫 막대가 트랙과 같은 색이 되어 사라지지 않는다.
 	const colors = pickSeriesColors(input.palette, rows.length + 1).slice(withTrack ? 1 : 0)
-	// 간격 축이 막대 사이를 정한다.
-	const gap = box.width * (0.012 + input.spacing * 0.095)
-	const barWidth = (box.width - gap * (rows.length - 1)) / rows.length
+	/**
+	 * 🔴 그냥 막대는 **사이를 두지 않는다**(정본 도판) — 자리를 꽉 채워 한 덩어리로 읽힌다.
+	 *    트랙형만 폭과 사이를 갖는다: 트랙이 자리를 말해 주므로 막대가 그 안에서 좁아질 수 있다.
+	 * 🔑 두 축은 서로를 잠그지 않는다 — 합이 판을 넘으면 통째로 줄여 맞추므로 둘 다 언제나 산다.
+	 */
+	const unit = box.width / rows.length
+	const rawGap = withTrack ? unit * input.spacing * 0.32 : 0
+	const rawBar = withTrack ? unit * (0.3 + input.thickness * 1.1) : unit
+	const span = rawBar * rows.length + rawGap * Math.max(0, rows.length - 1)
+	const fit = Math.min(1, box.width / (span || 1))
+	const barWidth = rawBar * fit
+	const gap = rawGap * fit
+	const originX = box.x + (box.width - span * fit) / 2
 	// 트랙형은 100%가 판의 높이다. 그냥 막대는 최댓값이 판의 높이다.
 	const scaleMax = withTrack ? 100 : Math.max(...rows.map((row) => row.values[0] ?? 0))
 	if (scaleMax <= 0) return []
@@ -737,11 +723,9 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 				text: valueText(value),
 				width: barWidth * 0.9,
 				height: Math.max(0, Math.min(value / scaleMax, 1)) * box.height * 0.7,
-				weight: value,
 			}
 		}),
 		fontSize,
-		input.uniformValueSize,
 	)
 	// 이름은 길이가 달라 가장 긴 것이 크기를 정한다.
 	// 🔴 상한을 기준 크기의 0.3배로 박아 두면 폭이 남아도 글자가 안 커져 읽히지 않는다 —
@@ -753,7 +737,7 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 	const primitives: VectorPrimitive[] = []
 	rows.forEach((row, index) => {
 		const value = row.values[0] ?? 0
-		const x = box.x + (barWidth + gap) * index
+		const x = originX + (barWidth + gap) * index
 		const filled = Math.max(0, Math.min(value / scaleMax, 1)) * box.height
 		if (withTrack) {
 			primitives.push({
@@ -773,32 +757,38 @@ function buildBars(box: Box, input: InfographicInput, withTrack: boolean): Vecto
 			height: filled,
 			fill: colors[index],
 		})
+		/**
+		 * 🔴 글자 색은 **글자가 실제로 앉는 면**이 정한다. 채움 기준으로만 두면 채움이 낮을 때
+		 *    라벨이 채움 밖으로 올라서면서 흰 글자가 연한 트랙에 얹혀 사라진다 — 어두운 계열의
+		 *    짧은 막대에서 수치가 통째로 안 보였다.
+		 */
+		const behind = withTrack ? HD_INFOGRAPHIC_COLORS.lightGreen : HD_INFOGRAPHIC_COLORS.white
+		const fillTop = box.y + box.height - filled
+		// 글자 덩어리가 어디 있느냐로 가른다 — 윗변으로 가르면 경계에 걸친 이름이 채움 위에
+		// 그려지면서 트랙 기준 색을 쓴다(반대로 사라진다).
+		const textColorAt = (center: number) =>
+			readableTextColor(center >= fillTop ? colors[index] : behind)
 		if (!input.showValueLabels) return
 		// 🔴 값은 막대 **바닥**에 앉는다(정본 도판) — 위에 얹으면 막대가 낮을 때 판 위로 뜬다.
 		//    트랙형은 이름이 바닥을 쓰므로 그 위에 선다.
+		const valueY =
+			box.y +
+			box.height -
+			(withTrack ? nameSize * 2.1 : valueSizes[index] * 0.9) -
+			valueSizes[index] * 0.5
 		primitives.push(
 			label(
 				valueText(value),
 				x + barWidth / 2,
-				box.y +
-					box.height -
-					(withTrack ? nameSize * 2.1 : valueSizes[index] * 0.9) -
-					valueSizes[index] * 0.5,
+				valueY,
 				valueSizes[index],
-				readableTextColor(colors[index]),
+				textColorAt(valueY),
 			),
 		)
 		// 트랙형에만 이름을 적는다 — 채운 자리와 트랙이 갈려 이름이 설 바닥이 생긴다.
 		if (withTrack && input.showNameLabels && row.label) {
-			primitives.push(
-				label(
-					row.label,
-					x + barWidth / 2,
-					box.y + box.height - nameSize * 0.9,
-					nameSize,
-					readableTextColor(colors[index]),
-				),
-			)
+			const nameY = box.y + box.height - nameSize * 0.9
+			primitives.push(label(row.label, x + barWidth / 2, nameY, nameSize, textColorAt(nameY)))
 		}
 	})
 	return primitives
@@ -815,8 +805,15 @@ function buildHorizontalBars(
 ): VectorPrimitive[] {
 	const rows = input.data.rows
 	const colors = pickSeriesColors(input.palette, rows.length + 1).slice(withTrack ? 1 : 0)
-	const gap = box.height * (0.012 + input.spacing * 0.062)
-	const barHeight = (box.height - gap * (rows.length - 1)) / rows.length
+	// 세로 막대와 같은 규칙이다 — 그냥 막대는 사이가 없고, 트랙형만 폭과 사이를 갖는다.
+	const unit = box.height / rows.length
+	const rawGap = withTrack ? unit * input.spacing * 0.32 : 0
+	const rawBar = withTrack ? unit * (0.3 + input.thickness * 1.1) : unit
+	const span = rawBar * rows.length + rawGap * Math.max(0, rows.length - 1)
+	const fit = Math.min(1, box.height / (span || 1))
+	const barHeight = rawBar * fit
+	const gap = rawGap * fit
+	const originY = box.y + (box.height - span * fit) / 2
 	const scaleMax = withTrack ? 100 : Math.max(...rows.map((row) => row.values[0] ?? 0))
 	if (scaleMax <= 0) return []
 	const fontSize = barHeight * 0.4 * input.textScale
@@ -827,21 +824,15 @@ function buildHorizontalBars(
 		const value = row.values[0] ?? 0
 		return {
 			row,
-			value,
 			valueLabel: valueText(value),
-			y: box.y + (barHeight + gap) * index,
+			y: originY + (barHeight + gap) * index,
 			filled: Math.max(0, Math.min(value / scaleMax, 1)) * box.width,
 			color: colors[index],
 		}
 	})
 	const valueSizes = valueFontSizes(
-		bars.map((bar) => ({
-			text: bar.valueLabel,
-			width: bar.filled - padding * 2,
-			weight: bar.value,
-		})),
+		bars.map((bar) => ({ text: bar.valueLabel, width: bar.filled - padding * 2 })),
 		fontSize,
-		input.uniformValueSize,
 	)
 	const valueSizeOf = (bar: (typeof bars)[number]) => valueSizes[bars.indexOf(bar)]
 	// 🔴 값이 쓰고 남은 폭만 이름이 갖는다. 겹쳐서 둘 다 못 읽게 되느니 하나만 읽히는 쪽이 낫다.
@@ -926,10 +917,8 @@ function buildStackedColumn(box: Box, input: InfographicInput): VectorPrimitive[
 			text: valueText(value),
 			width: width * 0.9,
 			height: (value / sum) * box.height * 0.7,
-			weight: value,
 		})),
 		fontSize,
-		input.uniformValueSize,
 	)
 	const primitives: VectorPrimitive[] = []
 	let cursor = box.y
@@ -1173,14 +1162,19 @@ function buildNestedCircle(box: Box, input: InfographicInput): VectorPrimitive[]
 	const colors = pickSeriesColors(input.palette, rows.length)
 	const outer = Math.min(box.width, box.height) / 2
 	/**
-	 * 🔑 「겹친 원」과 「동심원」은 **같은 기하의 양 끝**이다 — 간격 0이면 중심이 하나(동심),
-	 *    1이면 아래 가장자리가 한 선에 놓인다(겹친 원). 그래서 빌더도 하나다.
+	 * 🔑 「겹친 원」과 「동심원」은 **같은 기하의 양 끝**이다 — 중심을 맞추면 동심원이고,
+	 *    아래로 몰아 세우면 겹친 원이다. 그래서 빌더도 하나다.
 	 */
 	/**
 	 * 🔴 정렬은 **축이 아니다** — 아래 가장자리를 맞추면 「겹친 원」이고 중심을 맞추면 「동심원」이라,
 	 *    그것이 두 표현을 가르는 정체성이다. 축으로 두면 중립에서 둘 중 하나는 자기 모양이 아니게 된다.
 	 */
 	const alignment = input.chartType === 'concentric-circle' ? 0 : 1
+	/**
+	 * 🔴 겹친 원의 아래 가장자리는 **붙지 않는다**(정본 도판) — 안쪽으로 갈수록 일정한 간격만큼
+	 *    올라선다. 한 선에 맞추면 고리가 아니라 한 덩어리가 잘린 것처럼 읽힌다.
+	 */
+	const bottomGap = outer * 0.1
 	/**
 	 * 두께 — 고리가 얼마나 고르게 나뉘나. 중립은 **넓이 비례**(정본)이고, 내리면 차이가 벌어져
 	 * 안쪽 고리가 얇아지며, 올리면 고리 두께가 고르게 된다. 값이 서로 가까울 때(100·99·98)
@@ -1191,7 +1185,11 @@ function buildNestedCircle(box: Box, input: InfographicInput): VectorPrimitive[]
 		(row) => outer * ((row.values[0] ?? 0) / max) ** Math.max(0.08, exponent),
 	)
 	const circles = fitCircles(
-		spaced.map((radius) => ({ x: 0, y: (outer - radius) * alignment, r: radius })),
+		spaced.map((radius, index) => ({
+			x: 0,
+			y: (outer - radius - bottomGap * index) * alignment,
+			r: radius,
+		})),
 		box,
 	)
 	// 🔴 이름이 서는 곳은 원이 아니라 **고리**다 — 폭만 보면 얇은 고리를 글자가 넘는다.
@@ -1236,58 +1234,52 @@ function buildNestedCircle(box: Box, input: InfographicInput): VectorPrimitive[]
 
 // ── ⑫ 겹친 사각형 ────────────────────────────────────────────────────────────
 
-/** 세 사각형이 면적으로 값을 말한다. 자리는 정본 도판처럼 계단으로 어긋나게 둔다. */
-const OVERLAP_ANCHORS = [
-	{ x: 0, y: 1 },
-	{ x: 0.42, y: 0 },
-	{ x: 1, y: 1 },
-] as const
+/**
+ * 🔴 셋은 **크기가 같다** — 폭도 높이도 같고 아랫변이 한 선에 놓인다. 값은 크기가 아니라
+ *    적힌 수치가 말한다. 자리가 셋뿐이라 그보다 많은 항목은 그릴 자리가 없다.
+ */
+const OVERLAP_SLOTS = 3
 
 function buildNestedSquare(box: Box, input: InfographicInput): VectorPrimitive[] {
-	// 자리가 고정이라 그보다 많은 항목은 그릴 자리가 없다.
-	const rows = input.data.rows.slice(0, OVERLAP_ANCHORS.length)
-	const max = Math.max(...rows.map((row) => row.values[0] ?? 0))
-	if (max <= 0) return []
+	const rows = input.data.rows.slice(0, OVERLAP_SLOTS)
+	if (rows.length === 0) return []
 	const colors = pickSeriesColors(input.palette, rows.length)
-	const base = Math.min(box.width, box.height)
-	const sideOf = (value: number) => base * 0.62 * Math.sqrt(value / max)
-	// 사각형 크기가 곧 값이라 맞춤을 끄면 수치도 사각형을 따라간다.
+	/**
+	 * 간격이 겹침을 정한다 — 0이면 완전히 포개지고 1이면 서로 닿기만 한다. 중립이 반 겹침(정본).
+	 * 🔑 크기가 같으니 판을 채우는 것은 겹침뿐이다 — 다 벌려도 판을 넘지 않을 변 길이를
+	 *    그 자리에서 거꾸로 구한다.
+	 */
+	const step = input.spacing
+	const side = Math.min(box.height, box.width / (1 + (rows.length - 1) * step))
+	const stride = side * step
+	const originX = box.x + (box.width - (side + stride * (rows.length - 1))) / 2
+	const top = box.y + (box.height - side) / 2
+	// 앞의 것은 뒤에 그려지는 사각형에 오른쪽이 덮인다 — 남는 왼쪽 띠가 수치가 설 자리다.
+	const exposed = (index: number) => (index === rows.length - 1 ? side : stride)
 	const valueSizes = valueFontSizes(
-		rows.map((row) => ({
+		rows.map((row, index) => ({
 			text: valueText(row.values[0] ?? 0),
-			width: sideOf(row.values[0] ?? 0) * 0.8,
-			weight: row.values[0] ?? 0,
+			// 이웃 수치와 붙어 한 줄로 읽히지 않을 만큼만 띠를 쓴다.
+			width: exposed(index) * 0.72,
 		})),
-		base * 0.11 * input.textScale,
-		input.uniformValueSize,
+		side * 0.3 * input.textScale,
 	)
 	const primitives: VectorPrimitive[] = []
-	// 큰 것부터 그린다 — 작은 사각형과 그 라벨이 큰 사각형에 덮이지 않게 하는 유일한 순서다.
-	// 자리는 데이터 순서가 정하므로(OVERLAP_ANCHORS) 원래 index를 들고 다닌다.
-	rows.map((row, index) => ({ row, index }))
-		.sort((a, b) => (b.row.values[0] ?? 0) - (a.row.values[0] ?? 0))
-		.forEach(({ row, index }) => {
-			const side = sideOf(row.values[0] ?? 0)
-			// 간격이 겹침을 정한다 — 0이면 한 점에 포개지고 1이면 모서리로 흩어진다.
-			const anchor = OVERLAP_ANCHORS[index]
-			const spread = input.spacing * 2
-			const x = box.x + (box.width - side) * (0.5 + (anchor.x - 0.5) * spread)
-			const y = box.y + (box.height - side) * (0.5 + (anchor.y - 0.5) * spread)
-			primitives.push({ kind: 'rect', x, y, width: side, height: side, fill: colors[index] })
-			if (!input.showValueLabels) return
-			// 겹치는 도형이라 라벨은 가운데가 아니라 **자기 쪽 모서리**에 붙인다 —
-			// 가운데에 두면 뒤에 그려지는 사각형이 그대로 덮는다.
-			primitives.push(
-				label(
-					valueText(row.values[0] ?? 0),
-					x + side * 0.1,
-					y + side * 0.2,
-					valueSizes[index],
-					readableTextColor(colors[index]),
-					'start',
-				),
-			)
-		})
+	// 데이터 순서대로 그린다 — 뒤의 것이 앞의 것을 덮으므로 순서가 곧 앞뒤다.
+	rows.forEach((row, index) => {
+		const x = originX + stride * index
+		primitives.push({ kind: 'rect', x, y: top, width: side, height: side, fill: colors[index] })
+		if (!input.showValueLabels) return
+		primitives.push(
+			label(
+				valueText(row.values[0] ?? 0),
+				x + exposed(index) / 2,
+				top + side / 2,
+				valueSizes[index],
+				readableTextColor(colors[index]),
+			),
+		)
+	})
 	return primitives
 }
 
@@ -1304,8 +1296,7 @@ const model = {
 	 */
 	/**
 	 * 🔴 표현 **선택지는 좁히지 않는다**. 데이터에 맞지 않는다고 숨기면 창작자는 왜 사라졌는지
-	 *    알 수 없고, 자리가 모자란 것은 앞에서부터 쓰면 그만이다. 대신 같은 성격끼리 묶어
-	 *    보여 준다(`shape`).
+	 *    알 수 없고, 자리가 모자란 것은 앞에서부터 쓰면 그만이다.
 	 */
 	getRestrictions: (values): StudioControllerRestrictions => {
 		const chartType = pick(values.chartType, CHART_TYPE_IDS, INFOGRAPHIC_DEFAULT_CHART_TYPE)
