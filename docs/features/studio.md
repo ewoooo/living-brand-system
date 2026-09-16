@@ -1,10 +1,10 @@
 # Studio
 
-이 문서는 Template·Graphic·Image Studio가 같은 계약으로 설정을 만들고, 화면을 조작하며, 파일을 내보내는 흐름을 설명합니다. 새 Runtime이나 출력 형식을 추가할 때 어느 레이어를 수정해야 하는지 판단하는 기준으로 사용합니다.
+이 문서는 Template·Graphic·Image·Graph Studio가 같은 계약으로 설정을 만들고, 화면을 조작하며, 파일을 내보내는 흐름을 설명합니다. 새 Runtime이나 출력 형식을 추가할 때 어느 레이어를 수정해야 하는지 판단하는 기준으로 사용합니다.
 
 ## 1. 목적
 
-세 Studio는 만드는 대상이 다르지만 아래 원칙을 공유합니다.
+네 Studio는 만드는 대상이 다르지만 아래 원칙을 공유합니다.
 
 - Runtime Manifest가 원본 capability를 정의합니다.
 - Admin은 capability를 추가하지 않고 제한합니다.
@@ -56,13 +56,25 @@ Manifest는 다음 두 가지를 정의합니다.
 
 Manifest는 파일 형식을 정의하지 않습니다. 같은 입력에서 항상 같은 결과를 내는 직렬화 가능한 값이어야 합니다.
 
-세 Studio는 서로 다른 원본에서 Manifest를 만듭니다.
+네 Studio는 서로 다른 원본에서 Manifest를 만듭니다.
 
 | Studio | Manifest 원본 | 파생 함수 |
 | --- | --- | --- |
 | Graphic | Drop-in Graphic Runtime definition | `defineGraphicRuntime()` |
+| Graph | Drop-in Graph Runtime definition | `defineGraphicRuntime()` |
 | Image | Generation Model capability | `getImageRuntimeManifest()` |
 | Template | published HTML과 `nodeConfigs` | `getTemplateRuntimeManifest()` |
+
+### 캔버스 스튜디오 둘 — Graphic과 Graph
+
+Graphic과 Graph는 **실행 계약이 한 벌입니다**(`CANVAS_STUDIO_KINDS`). Manifest·Controller·Artifact·Export가 같은 규칙을 타고, 파생 로직도 `canvas-studio-manifest.ts` 하나를 공유합니다. 갈리는 것은 둘뿐입니다.
+
+| 갈리는 것 | Graphic | Graph |
+| --- | --- | --- |
+| 런타임 카탈로그 | `graphic-generation/graphic-runtimes` | `graph-generation/graph-runtimes` |
+| 프로파일 컬렉션 | `graphic-profiles` | `graph-profiles` |
+
+🔴 카탈로그를 합치면 Graph 화면에서 Graphic 런타임이 열리고, 컬렉션을 합치면 admin 목록이 섞이며 한쪽 런타임을 더할 때 상대의 enum 마이그레이션이 따라옵니다. 그래서 이 둘만 가릅니다. 새 캔버스 스튜디오를 세울 때 필요한 것도 이 둘과 라우트·API뿐이고, 카탈로그는 `scripts/generate-graphic-runtime-catalogs.ts`의 `CATALOG_TARGETS`에 한 줄을 더하면 생성됩니다.
 
 ### Admin restrictions
 

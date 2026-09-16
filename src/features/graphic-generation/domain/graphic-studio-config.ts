@@ -8,8 +8,21 @@ import {
 	type StudioControllerConfig,
 } from '@/modules/studio-controller/controller-definition'
 
+/**
+ * 캔버스 runtime이 쓰는 스튜디오. Graphic과 Graph는 **실행 계약이 같다** — 만드는 대상이 다를 뿐
+ * Manifest·Controller·Artifact·Export가 한 벌이라, 두 벌로 복제하면 같은 규칙을 두 번 구현하게 된다.
+ * 🔴 갈리는 것은 둘뿐이다: 어떤 runtime이 있나(카탈로그)와 어떤 프로파일이 저장되나(컬렉션).
+ */
+export const CANVAS_STUDIO_KINDS = ['graphic', 'graph'] as const
+
+export type CanvasStudioKind = (typeof CANVAS_STUDIO_KINDS)[number]
+
+export function isCanvasStudioKind(value: unknown): value is CanvasStudioKind {
+	return CANVAS_STUDIO_KINDS.includes(value as CanvasStudioKind)
+}
+
 /** Admin 제한 전 P5·Shader runtime이 발행하는 서버 안전 원본 계약. */
-export type GraphicRuntimeManifest = StudioControllerConfig<'graphic', string> & {
+export type GraphicRuntimeManifest = StudioControllerConfig<CanvasStudioKind, string> & {
 	type: 'p5' | 'shader'
 }
 
@@ -43,8 +56,8 @@ export function parseGraphicRuntimeManifest(input: unknown): GraphicRuntimeManif
 		'controllerPresentation',
 		'type',
 	])
-	if (config.studio !== 'graphic') {
-		throw new Error('GraphicStudioConfig studio: graphic이어야 합니다.')
+	if (!isCanvasStudioKind(config.studio)) {
+		throw new Error('GraphicStudioConfig studio: graphic 또는 graph여야 합니다.')
 	}
 	if (typeof config.id !== 'string') {
 		throw new Error('GraphicStudioConfig id: 문자열이어야 합니다.')
@@ -84,9 +97,9 @@ export function parseGraphicStudioConfig(input: unknown): GraphicStudioConfig {
 function assertGraphicIdentity(
 	config: StudioControllerConfig,
 	input: unknown,
-): asserts config is StudioControllerConfig<'graphic', string> {
-	if (config.studio !== 'graphic') {
-		throw new Error('GraphicStudioConfig studio: graphic이어야 합니다.')
+): asserts config is StudioControllerConfig<CanvasStudioKind, string> {
+	if (!isCanvasStudioKind(config.studio)) {
+		throw new Error('GraphicStudioConfig studio: graphic 또는 graph여야 합니다.')
 	}
 	if (typeof config.id !== 'string') {
 		throw new Error('GraphicStudioConfig id: 문자열이어야 합니다.')
@@ -111,27 +124,4 @@ function assertOnlyKeys(value: Record<string, unknown>, allowed: readonly string
 			throw new Error(`GraphicStudioConfig에 알 수 없는 필드가 있습니다: ${key}`)
 		}
 	}
-}
-
-/**
- * 같은 Graphic 파이프라인을 쓰지만 창작자에게는 **다른 메뉴**로 서는 갈래.
- *
- * 🔑 컬렉션을 쪼개지 않은 이유: 계약(Manifest→Restriction→Config→Export)이 완전히 같고 다른 것은
- *    "어느 메뉴에 서는가"뿐이다. 컬렉션·repository·서비스를 복제하면 같은 규칙을 두 번 구현하게 된다.
- * 🔴 여기 없는 runtime은 전부 Graphic에 선다 — 새 runtime을 Graph에 세우려면 이 목록에 넣는다.
- */
-export const GRAPH_RUNTIME_IDS: readonly string[] = ['infographic']
-
-export type StudioGraphicKind = 'graphic' | 'graph'
-
-export function isGraphicKind(kind: unknown): kind is StudioGraphicKind {
-	return kind === 'graphic' || kind === 'graph'
-}
-
-/** runtime id로 두 메뉴의 목록을 가른다. 한 runtime은 한 메뉴에만 선다. */
-export function filterConfigsByStudioKind<Config extends { id: string }>(
-	configs: readonly Config[],
-	kind: StudioGraphicKind,
-): Config[] {
-	return configs.filter((config) => GRAPH_RUNTIME_IDS.includes(config.id) === (kind === 'graph'))
 }

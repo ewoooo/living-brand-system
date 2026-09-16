@@ -2,7 +2,6 @@
 
 import flutedGlassManifest from '../fluted-glass/definition'
 import forwardStraightManifest from '../forward-straight/definition'
-import infographicManifest from '../infographic/definition'
 import keyVisualFormationManifest from '../key-visual-formation/definition'
 import keyVisualLineManifest from '../key-visual-line/definition'
 import keyVisualPatternManifest from '../key-visual-pattern/definition'
@@ -10,7 +9,6 @@ import keyVisualPatternManifest from '../key-visual-pattern/definition'
 export const graphicRuntimeManifests = [
 	flutedGlassManifest, // fluted-glass
 	forwardStraightManifest, // forward-straight
-	infographicManifest, // infographic
 	keyVisualFormationManifest, // key-visual-formation
 	keyVisualLineManifest, // key-visual-line
 	keyVisualPatternManifest, // key-visual-pattern

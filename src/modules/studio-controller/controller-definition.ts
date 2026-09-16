@@ -27,7 +27,11 @@ export type ControllerRuntimeBinding = {
 
 export type ControllerRuntimeBindings = Readonly<Record<string, ControllerRuntimeBinding>>
 
-export type StudioKind = 'template' | 'image' | 'graphic'
+/**
+ * 창작자 화면에 나란히 서는 스튜디오들. 🔴 이 목록이 곧 메뉴이자 admin 컬렉션의 갈래다 —
+ * 늘리면 프로파일 컬렉션·런타임 카탈로그·라우트가 함께 생겨야 한다.
+ */
+export type StudioKind = 'template' | 'image' | 'graphic' | 'graph'
 
 /** Admin 제한을 적용하기 전 Studio runtime이 발행하는 결정적 원본 계약. */
 export type StudioRuntimeManifest = {
@@ -328,7 +332,7 @@ export type StudioControllerRestrictions = {
 
 export type ControllerValues = Record<string, ControllerControlValue>
 
-const STUDIO_KINDS: readonly StudioKind[] = ['template', 'image', 'graphic']
+const STUDIO_KINDS: readonly StudioKind[] = ['template', 'image', 'graphic', 'graph']
 const AVAILABILITIES: readonly ControllerAvailability[] = ['enabled', 'readonly', 'disabled']
 const COLOR_PATTERN = /^#[0-9a-f]{6}$/i
 const CONTROL_BASE_KEYS = ['id', 'kind', 'label', 'defaultValue', 'availability'] as const

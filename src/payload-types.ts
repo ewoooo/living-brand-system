@@ -79,6 +79,7 @@ export interface Config {
     'sample-images': SampleImage;
     'image-profiles': ImageProfile;
     'graphic-profiles': GraphicProfile;
+    'graph-profiles': GraphProfile;
     'generated-images': GeneratedImage;
     templates: Template;
     'template-categories': TemplateCategory;
@@ -118,6 +119,7 @@ export interface Config {
     'sample-images': SampleImagesSelect<false> | SampleImagesSelect<true>;
     'image-profiles': ImageProfilesSelect<false> | ImageProfilesSelect<true>;
     'graphic-profiles': GraphicProfilesSelect<false> | GraphicProfilesSelect<true>;
+    'graph-profiles': GraphProfilesSelect<false> | GraphProfilesSelect<true>;
     'generated-images': GeneratedImagesSelect<false> | GeneratedImagesSelect<true>;
     templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'template-categories': TemplateCategoriesSelect<false> | TemplateCategoriesSelect<true>;
@@ -1666,13 +1668,81 @@ export interface GraphicProfile {
   /**
    * 실행 구현은 코드 registry가 소유합니다. 프로파일은 해당 runtime의 편집 범위만 좁힙니다.
    */
-  runtime:
-    | 'fluted-glass'
-    | 'forward-straight'
-    | 'infographic'
-    | 'key-visual-formation'
-    | 'key-visual-line'
-    | 'key-visual-pattern';
+  runtime: 'fluted-glass' | 'forward-straight' | 'key-visual-formation' | 'key-visual-line' | 'key-visual-pattern';
+  /**
+   * 스튜디오에서 이 항목을 고를 때 카드에 표시할 이미지입니다.
+   */
+  previewImage: number | ApplicationImage;
+  displayOrder: number;
+  controllerRestrictions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  controllerPresentation?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * 비우면 Exporter가 지원하는 형식을 모두 허용합니다.
+   */
+  exportPolicy?: {
+    allowedFormats?: ('png' | 'jpeg' | 'tiff' | 'pdf' | 'svg' | 'mp4')[] | null;
+    print?: {
+      /**
+       * 전부 켜면 제한을 저장하지 않습니다.
+       */
+      allowedPpi?:
+        | {
+            [k: string]: unknown;
+          }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+    };
+    video?: {
+      allowedFps?:
+        | {
+            [k: string]: unknown;
+          }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+      maxDurationSeconds?: number | null;
+      maxWidth?: number | null;
+      maxHeight?: number | null;
+    };
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * 등록된 Graph runtime의 기본 Controller 계약을 좁혀 기본값·선택지·범위·사용 상태를 관리합니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "graph-profiles".
+ */
+export interface GraphProfile {
+  id: number;
+  name: string;
+  /**
+   * 실행 구현은 코드 registry가 소유합니다. 프로파일은 해당 runtime의 편집 범위만 좁힙니다.
+   */
+  runtime: 'infographic';
   /**
    * 스튜디오에서 이 항목을 고를 때 카드에 표시할 이미지입니다.
    */
@@ -2498,6 +2568,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'graphic-profiles';
         value: number | GraphicProfile;
+      } | null)
+    | ({
+        relationTo: 'graph-profiles';
+        value: number | GraphProfile;
       } | null)
     | ({
         relationTo: 'generated-images';
@@ -3369,6 +3443,39 @@ export interface GraphicProfilesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "graph-profiles_select".
+ */
+export interface GraphProfilesSelect<T extends boolean = true> {
+  name?: T;
+  runtime?: T;
+  previewImage?: T;
+  displayOrder?: T;
+  controllerRestrictions?: T;
+  controllerPresentation?: T;
+  exportPolicy?:
+    | T
+    | {
+        allowedFormats?: T;
+        print?:
+          | T
+          | {
+              allowedPpi?: T;
+            };
+        video?:
+          | T
+          | {
+              allowedFps?: T;
+              maxDurationSeconds?: T;
+              maxWidth?: T;
+              maxHeight?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "generated-images_select".
  */
 export interface GeneratedImagesSelect<T extends boolean = true> {
@@ -3991,6 +4098,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'graphic-profiles';
           value: number | GraphicProfile;
+        } | null)
+      | ({
+          relationTo: 'graph-profiles';
+          value: number | GraphProfile;
         } | null)
       | ({
           relationTo: 'generated-images';

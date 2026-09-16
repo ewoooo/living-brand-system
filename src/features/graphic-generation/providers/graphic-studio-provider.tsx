@@ -5,12 +5,9 @@ import {
 	GraphicStudioContext,
 	type GraphicStudioValue,
 } from '@/features/graphic-generation/contexts/graphic-studio-context'
-import type {
-	GraphicStudioConfig,
-	StudioGraphicKind,
-} from '@/features/graphic-generation/domain/graphic-studio-config'
+import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { getGraphicStudioRuntimeGroups } from '@/features/graphic-generation/runtime/graphic-studio-runtime'
-import { fetchGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.client'
+import { fetchCanvasStudioConfigs } from '@/features/graphic-generation/services/list-canvas-studio-configs.client'
 import { useLazyResource } from '@/hooks/use-lazy-resource'
 import {
 	acceptsControllerDraftValue,
@@ -28,16 +25,17 @@ import {
 export function GraphicStudioProvider({
 	config: initial,
 	children,
-	studioKind = 'graphic',
 }: {
 	config: GraphicStudioConfig
 	children: ReactNode
-	studioKind?: StudioGraphicKind
 }) {
-	// 교체 후보 전체는 자산 브라우저가 열릴 때 가져온다 — 페이지는 시작 계약 하나만 싣는다.
-	const browse = useLazyResource(
-		useCallback(() => fetchGraphicStudioConfigs(studioKind), [studioKind]),
-	)
+	/**
+	 * 교체 후보 전체는 자산 브라우저가 열릴 때 가져온다 — 페이지는 시작 계약 하나만 싣는다.
+	 * 🔴 어느 컬렉션을 보는지는 config가 이미 안다. 계약이 같다고 목록까지 같으면
+	 *    Graph에서 Graphic 런타임이 나온다.
+	 */
+	const studio = initial.studio
+	const browse = useLazyResource(useCallback(() => fetchCanvasStudioConfigs(studio), [studio]))
 	const [config, setConfig] = useState(initial)
 	const [values, setValues] = useState(() => createControllerValues(initial.controller.groups))
 	/**

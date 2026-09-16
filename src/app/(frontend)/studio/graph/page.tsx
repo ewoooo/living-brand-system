@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { GraphicGenerator } from '@/components/studio/graphic/graphic-generator'
 import { StudioWorkspacePage } from '@/components/studio/shared/studio-workspace'
-import { listGraphicStudioConfigs } from '@/features/graphic-generation/services/list-graphic-studio-configs.service'
+import { listGraphStudioConfigs } from '@/features/graph-generation/services/list-graph-studio-configs.service'
 import { requireUser } from '@/lib/request-auth'
 import { routes } from '@/lib/routes'
 
@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
  */
 export default async function GenerateGraphPage() {
 	const { user } = await requireUser(routes.studio.graph)
-	const [config] = await listGraphicStudioConfigs(user, 'graph')
+	const [config] = await listGraphStudioConfigs(user)
 	if (!config) notFound()
 
 	return (
@@ -23,7 +23,8 @@ export default async function GenerateGraphPage() {
 			description="인포그래픽 표현을 고르고 결과를 미리 봅니다."
 			hideHeading
 		>
-			<GraphicGenerator config={config} studioKind="graph" />
+			{/* 프로파일이 하나뿐이라 교체 카드를 세우지 않는다. */}
+			<GraphicGenerator config={config} profileSwitching={false} />
 		</StudioWorkspacePage>
 	)
 }

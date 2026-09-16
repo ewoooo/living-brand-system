@@ -13,7 +13,7 @@ import type { StudioPreviewImage } from '@/modules/studio-controller/controller-
  */
 const PREVIEW_MAX_DIM = 1024
 
-export type StudioPreviewKind = 'graphic' | 'image' | 'template'
+export type StudioPreviewKind = 'graphic' | 'graph' | 'image' | 'template'
 
 /**
  * 지금 화면의 Raster Artifact를 캡처해 프로파일 미리보기로 저장한다.

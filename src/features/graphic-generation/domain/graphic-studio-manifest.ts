@@ -1,78 +1,31 @@
 import {
-	type GraphicRuntimeManifest,
-	type GraphicStudioConfig,
-	parseGraphicStudioConfig,
+	deriveCanvasStudioConfig,
+	resolveCanvasStudioOutput,
+	toCanvasRuntimeOptions,
+} from '@/features/graphic-generation/domain/canvas-studio-manifest'
+import type {
+	GraphicRuntimeManifest,
+	GraphicStudioConfig,
+	PublishedGraphicProfileDefinition,
 } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { graphicRuntimeManifests } from '@/features/graphic-generation/graphic-runtimes/catalog/manifest.generated'
-import {
-	projectStudioOutputPolicy,
-	resolveStudioOutputCapability,
-	type StudioOutputCapability,
-} from '@/features/studio-export/studio-output'
-import {
-	applyControllerRestrictions,
-	projectPayloadControllerRestrictions,
-	resolveControllerPresentation,
-	toStudioPreviewImage,
-} from '@/modules/studio-controller/controller-definition'
-import type { PublishedGraphicProfileDefinition } from './graphic-studio-config'
 
 export { graphicRuntimeManifests }
 
 export type GraphicRuntimeId = (typeof graphicRuntimeManifests)[number]['id']
 
-export const GRAPHIC_RUNTIME_OPTIONS = graphicRuntimeManifests.map((manifest) => ({
-	value: manifest.id,
-	label: manifest.name,
-}))
+export const GRAPHIC_RUNTIME_OPTIONS = toCanvasRuntimeOptions(graphicRuntimeManifests)
 
 /** Admin과 published projector가 읽는 서버 안전 Graphic Manifest를 찾는다. */
 export function getGraphicRuntimeManifest(id: string): GraphicRuntimeManifest | null {
 	return graphicRuntimeManifests.find((manifest) => manifest.id === id) ?? null
 }
 
-/** Graphic Artifact와 Admin 정책을 Export Layer가 소비할 effective capability로 투영한다. */
-export function resolveGraphicStudioOutput(
-	manifest: GraphicRuntimeManifest,
-	policy?: unknown,
-): StudioOutputCapability {
-	return resolveStudioOutputCapability(manifest.artifacts, projectStudioOutputPolicy(policy))
-}
+export const resolveGraphicStudioOutput = resolveCanvasStudioOutput
 
 /** published Graphic Profile을 Manifest 기본 계약보다 좁은 Effective Config로 투영한다. */
 export function deriveGraphicStudioConfig(
 	profile: PublishedGraphicProfileDefinition,
 ): GraphicStudioConfig {
-	const manifest = getGraphicRuntimeManifest(profile.runtime)
-	if (!manifest) throw new Error(`등록되지 않은 Graphic runtime입니다: ${profile.runtime}`)
-	const restrictions = projectPayloadControllerRestrictions(profile.controllerRestrictions)
-	const groups = applyControllerRestrictions(manifest.controller.groups, restrictions)
-	const config: GraphicStudioConfig = {
-		...manifest,
-		name: profile.name,
-		output: resolveGraphicStudioOutput(manifest, profile.exportPolicy),
-		controller: {
-			groups,
-			/**
-			 * 🔴 재조립하면서 빠뜨리면 선언이 통째로 사라진다 — `left`를 빠뜨리면 오른쪽 컨트롤이
-			 *    전부 왼쪽 패널로 몰리고, `right`를 빠뜨리면 admin 전용으로 내린 축이 전부 오른쪽에
-			 *    되살아나고, `remountOn`을 빠뜨리면 모양을 바꿔도 캔버스가 옛
-			 *    프로그램으로 남는다. 미선언 런타임의 `undefined`를 그대로 실으면 JSON 직렬화
-			 *    검사가 프로파일을 거부하므로 키 자체를 빼야 한다.
-			 *
-			 * 제한과 함께 좁힐 필요는 없다 — `applyControllerRestrictions`는 컨트롤을 1:1로 옮기고
-			 * 없애지 않으므로(`availability`는 readonly·disabled뿐이다) 고아 id가 생기지 않는다.
-			 */
-			...(manifest.controller.left ? { left: manifest.controller.left } : {}),
-			...(manifest.controller.right ? { right: manifest.controller.right } : {}),
-			...(manifest.controller.remountOn ? { remountOn: manifest.controller.remountOn } : {}),
-		},
-		controllerPresentation: resolveControllerPresentation(
-			groups,
-			profile.controllerPresentation,
-		),
-		previewImage: toStudioPreviewImage(profile.previewImage),
-	}
-	parseGraphicStudioConfig(config)
-	return config
+	return deriveCanvasStudioConfig(profile, getGraphicRuntimeManifest, 'Graphic')
 }

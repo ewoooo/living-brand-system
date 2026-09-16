@@ -1,5 +1,5 @@
 /**
- * 가이드라인 B.11 INFOGRAPHIC runtime을 published 그래픽 프로파일로 upsert한다.
+ * 가이드라인 B.11 INFOGRAPHIC runtime을 published Graph 프로파일로 upsert한다.
  * Graph Studio(`/studio/graph`)는 이 행이 있어야 열린다 — 코드가 요구하는 레퍼런스 데이터다.
  *
  * 실행: pnpm payload run scripts/seed-infographic-profile.ts
@@ -13,7 +13,7 @@ const RUNTIME = 'infographic' as const
 const payload = await getPayload({ config })
 
 const existing = await payload.find({
-	collection: 'graphic-profiles',
+	collection: 'graph-profiles',
 	depth: 0,
 	where: { runtime: { equals: RUNTIME } },
 	limit: 1,
@@ -57,14 +57,14 @@ const data = {
 
 if (existing.docs[0]) {
 	await payload.update({
-		collection: 'graphic-profiles',
+		collection: 'graph-profiles',
 		id: existing.docs[0].id,
 		data,
 		draft: false,
 	})
 	console.log(`updated: ${data.name}`)
 } else {
-	await payload.create({ collection: 'graphic-profiles', data, draft: false })
+	await payload.create({ collection: 'graph-profiles', data, draft: false })
 	console.log(`created: ${data.name}`)
 }
 

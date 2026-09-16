@@ -24,7 +24,7 @@ import { HD_INFOGRAPHIC_PALETTES } from './palette'
  *    그 축을 **아예 만들지 않았다.** 규정을 값 검사가 아니라 선택지의 부재로 표현한다.
  */
 export default defineGraphicRuntime({
-	studio: 'graphic',
+	studio: 'graph',
 	id: 'infographic',
 	version: 1,
 	name: 'Infographic',

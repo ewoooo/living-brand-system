@@ -1,3 +1,4 @@
+import { graphStudioPlugins } from '@/features/graph-generation/graph-runtimes/catalog/model.generated'
 import type { GraphicRuntimeManifest } from '@/features/graphic-generation/domain/graphic-studio-config'
 import { graphicStudioPlugins } from '@/features/graphic-generation/graphic-runtimes/catalog/model.generated'
 import {
@@ -15,9 +16,14 @@ import {
 	applyControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
 
-const graphicStudioPluginCatalog = createGraphicStudioPluginCatalog(graphicStudioPlugins)
-
-type GraphicRuntimeId = keyof typeof graphicStudioPluginCatalog
+/**
+ * 🔴 캔버스 스튜디오마다 **자기 카탈로그**를 본다. 하나로 합치면 Graph 화면에서 Graphic
+ *    런타임이 열리고, 컬렉션을 가른 의미가 사라진다.
+ */
+const CANVAS_PLUGIN_CATALOGS = {
+	graphic: createGraphicStudioPluginCatalog(graphicStudioPlugins),
+	graph: createGraphicStudioPluginCatalog(graphStudioPlugins),
+} as const
 
 /** 등록된 Graphic model만 파일 형식과 무관한 Vector Artifact로 투영한다. */
 export function getGraphicStudioVectorArtifact(
@@ -61,12 +67,9 @@ export function getGraphicStudioRuntimeGroups(
 	return applyControllerRestrictions(config.controller.groups, restrictions)
 }
 
-function getGraphicStudioPluginById(id: string): GraphicStudioPlugin | null {
-	return graphicStudioPluginCatalog[id as GraphicRuntimeId] ?? null
-}
-
 function getGraphicStudioPlugin(config: GraphicRuntimeManifest): GraphicStudioPlugin | null {
-	if (config.studio !== 'graphic') return null
-	const plugin = getGraphicStudioPluginById(config.id)
+	const catalog = CANVAS_PLUGIN_CATALOGS[config.studio]
+	if (!catalog) return null
+	const plugin = (catalog as Record<string, GraphicStudioPlugin | undefined>)[config.id]
 	return plugin?.manifest.type === config.type ? plugin : null
 }

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { listPublishedGraphicProfileDefinitions } from '@/features/graphic-generation/repositories/graphic-profile.payload.repository'
+import { listPublishedGraphicProfileDefinitions } from '@/features/graphic-generation/repositories/canvas-profile.payload.repository'
 import { listGraphicStudioConfigs } from './list-graphic-studio-configs.service'
 
-vi.mock('@/features/graphic-generation/repositories/graphic-profile.payload.repository', () => ({
+vi.mock('@/features/graphic-generation/repositories/canvas-profile.payload.repository', () => ({
 	listPublishedGraphicProfileDefinitions: vi.fn(),
 }))
 
