@@ -8,10 +8,12 @@ export function GuidelineClearspaceDisplay({
 	logoSrc,
 	gridSrc,
 	alt,
+	dimBackground = false,
 }: {
 	logoSrc: string
 	gridSrc: string
 	alt: string
+	dimBackground?: boolean
 }) {
 	const { enabled, toggle } = useGuidelineOnOff(`${alt} 가이드`)
 	return (
@@ -23,6 +25,13 @@ export function GuidelineClearspaceDisplay({
 					alt={alt}
 					className="absolute inset-0 size-full object-contain"
 				/>
+				{enabled && dimBackground && (
+					<div
+						aria-hidden="true"
+						data-slot="clearspace-dimmer"
+						className="pointer-events-none absolute inset-0 bg-background/80"
+					/>
+				)}
 				{enabled && (
 					// biome-ignore lint/performance/noImgElement: 보호공간 원본 레이어입니다.
 					<img

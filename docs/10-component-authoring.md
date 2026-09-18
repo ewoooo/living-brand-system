@@ -616,3 +616,44 @@ PR을 올리기 전 자기 점검용입니다.
 
 - `/guideline/reference`의 Corporate Identity는 신규 DisplayHeading·Section·Grid·Sticky·CardDisplay·Caption·DisplayFooter를 조합합니다. 준비된 기존 콘텐츠·에셋을 사용하며 CMS 쓰기는 하지 않습니다. Brand Signature는 Grid, Safe Area는 하위 섹션과 Sticky로 표현합니다.
 - HD 심볼+워드마크의 정본 보호공간 SVG 두 레이어를 Off/On으로 표시하고 섹션별 등록 에셋만 다운로드합니다. 원본 도판이 없는 두 항목은 캡션만 유지합니다. 플레이그라운드는 `/guideline/mockup`으로 연결합니다. CMS 저장 모델 이관은 후속입니다.
+
+- `/guideline/reference/physical-publications`는 Figma `176:15107`의 Brochure·Banner·Poster·Related Resources를 공통 카드로 구성합니다. 대표 도판 5개는 16:9 Grid, 표지·내지·가로/세로 배너·포스터 24개는 5개 Carousel로 표시합니다. 표지는 3:4, 나머지 세부 예시는 1:1이며 contain 80%를 적용합니다. 하위 헤딩은 상위 섹션 안에 배치하고 원본의 임시 문구는 한국어 설명으로 정리합니다. 에셋은 제공된 `guideline_assets/web/applications`의 원본을 public으로 복사합니다. Brochure Create Studio는 목적지 미정으로 실행 링크를 만들지 않습니다. CMS 쓰기는 없습니다.
+
+- `/guideline/reference/digital-publications`는 Figma `176:16472`의 Media Wall·Presentation·Related Resources를 공통 카드로 구성합니다. 대표 도판 3개와 미디어월·표지·본문 캐러셀 3개(각 3장)는 16:9·contain 80%를 적용합니다. 중복된 Display Type Examples는 Cover Type Examples와 Body Type Examples로 구분하고 원본의 임시 설명은 한국어로 정리합니다. 제공된 media-wall·presentation 에셋을 사용하며 Related Resources는 원본의 Brochure Create Studio를 유지하되 미지정 링크를 만들지 않습니다. CMS 쓰기는 없습니다.
+
+### 이름으로 선택하는 캐러셀
+
+- `GuidelineCarouselContainer`의 `navigation`은 기본 `counter`이며 `labels`를 선택하면 카드별 `selectionLabel`이 필수입니다. 이름 선택 모드는 한 화면에 카드 한 장을 배치하고 도판 아래에 이름 선택 컨트롤을 표시합니다. 기존 카드 입력과 Grid·Carousel·Sticky 세 컨테이너 구분은 유지합니다.
+- 선택 상태는 Embla의 현재 카드가 소유합니다. 이름 클릭은 해당 카드로 이동하고 자동 재생을 멈추며, 드래그·재초기화 시 선택 컨트롤도 갱신됩니다. 좁은 화면에서는 선택지 영역만 가로 스크롤합니다.
+- `GuidelineSelection`은 기존 카드 토글에서 추출한 단일 선택 컨트롤입니다. 카드 CENTER와 캐러셀 탐색이 같은 Backplate 표현을 사용하며 배치와 상태는 각각 소비처가 소유합니다.
+- `/guideline/reference/extra-applications`는 Figma `176:17047`의 Vehicle Wrapping·Shopping Bag을 구성합니다. 차량은 Box Truck→Flatbed Truck→Bus→Van 순서로 실제 차종 에셋을 연결하고 쇼핑백 대표 예시 2개는 16:9 Grid를 사용합니다. CMS 저장 스키마·DB 쓰기는 없습니다.
+
+- `/guideline/reference/typography`는 Figma `160:3387`의 Bold Approach·HD Typeface·Weight·Micro Typography·Hierarchy를 공통 카드로 구성합니다. 굵기 비교는 Grid, 국문/영문 전환은 이름 선택 Carousel과 기존 굵기 토글, 위계는 3개 언어 표본과 명세 캡션을 가진 switch Sticky를 사용하며 스크롤에 따라 고정된 명세가 교체됩니다. 서체 수치와 본문은 `brand-typeface.ts` 계약을 재사용합니다. 원본의 Bold 600 및 반복된 영문 행간 표기는 실제 제공 굵기 700과 기존 Artboard 언어별 행간에 맞춥니다. TypeSpecimen 편집·동적 베이스라인 오버레이는 후속이며 CMS 쓰기는 없습니다.
+
+- Weight 디스플레이는 기존 단일 `language`와 함께 비어 있지 않은 `languages` 배열을 지원합니다. 배열이 있으면 순서대로 표본을 쌓고 하나의 DisplayFit으로 함께 축소하며 카드의 굵기를 공유합니다. Typography Weight는 국문·영문을 합친 2:3 카드와 기본 캡션(Bold 700 / Medium 500 / Light 300)을 사용합니다. 소비처의 `className`으로 프레임 배경·상속 글자색을 지정합니다.
+
+### 카드 도판 색상 계약 (합의, 공통 API 적용 예정)
+
+카드가 `backgroundColor`·`foregroundColor`를 선택적으로 소유합니다. Grid·Carousel·Sticky는 동일한 카드 입력을 전달하며 색상을 결정하지 않습니다. 이 계약은 Weight 전용 옵션이 아닙니다.
+
+| 입력 | 책임 | 생략 시 |
+| --- | --- | --- |
+| `backgroundColor` | DisplayFrame의 도판 바탕색 | 기존 도판 기본 배경 유지 |
+| `foregroundColor` | 도판 콘텐츠의 기본 전경색 | 기존 콘텐츠 기본 전경 유지 |
+
+- `foregroundColor`는 글자색에 한정하지 않습니다. 텍스트는 `color`를 상속하고, 전경색을 따르는 단색 아이콘·인라인 SVG·로고·도형은 `currentColor`로 선과 면을 그립니다. 해당 색상은 콘텐츠 레이어에만 적용하며 프레임 전체에 무조건 상속시키지 않습니다.
+- 사진·다색 이미지·고유 색상 규정이 있는 콘텐츠는 원본 색상을 유지합니다. 외부 SVG를 포함한 이미지 파일은 `color`를 자동 상속하지 않으며 필터나 강제 착색으로 대체하지 않습니다. 단색 로고도 전경색 지원 렌더러와 브랜드 사용 규정이 허용하는 경우에만 적용합니다.
+- 카드 액션·상태 배지·가이드라인 오버레이·캡션은 전경색 적용 범위에서 제외합니다. 각자의 UI·상태색·1px 녹색 가이드 규칙을 유지합니다.
+- CMS 연결 시 기존 팔레트 계약의 색상 식별자(`PaletteColor.id`)를 참조하고, 렌더링 전 해당 카탈로그에서 `value`로 해석합니다. 참조를 찾지 못하면 기본색으로 대체하며, 표본별로 별도 팔레트 분류를 만들지 않습니다. 저장 필드와 검증 구현은 CMS 마이그레이션에서 확정합니다.
+- 전경색을 생략했다고 배경색으로부터 자동 반전하거나 로고 변형을 추론하지 않습니다. 로고 배경 대비 선택·사용 허용 여부는 해당 디스플레이의 기존 계약을 따릅니다.
+- 현재 Typography의 페이지 스타일은 임시 소비처입니다. 이번 합의는 공통 계약을 문서화한 것이며, 공통 카드 타입·렌더러·CMS 저장 스키마의 이관은 아직 적용하지 않았습니다.
+
+- Typography의 HD Typeface는 제공 폴더의 기준 PDF 33쪽 국문·영문 표본, Micro Typography는 35쪽 혼용 조판 도판, Incorrect Usages는 40쪽 여섯 사례와 실제 규정 문구를 사용합니다. PDF 도판은 투명 PNG로 추출하며 원본 가이드선은 이미지의 일부입니다. 별도 글줄·자간·커닝 설명 도판은 제공되지 않아 생성하지 않습니다. Usecases는 제공된 X Banner·Poster·Presentation 에셋으로 구성합니다. 추출·복사 출처는 `public/guideline/reference/typography/README.md`에 기록합니다.
+
+- Typography의 Incorrect Usages도 Infographics와 동일한 외부 여백·`rounded-3xl bg-destructive/15` 패널·중앙 헤딩을 사용합니다. 그리드는 목표 720px·최소 320px·최대 2열이며 공통 Section·Grid 조합을 유지합니다.
+
+- `/guideline/reference/layouts`는 제공 에셋의 Overview·Type A/B/C를 공통 Grid·Carousel로 구성합니다. 전체 및 타입별 Overview는 한 장짜리 일반 카드(1열 Grid)이며 캡션은 도판 아래에 배치합니다. 적용 예시 16개(A 4·B 9·C 3)는 기존 `GuidelineClearspaceDisplay`와 카드별 Off/On을 재사용합니다. `cms-assets.json`의 관계를 따라 이미지와 제작 규칙 SVG를 연결하며, 사용자 승인에 따라 정합 여부와 무관하게 동일 contain 영역에 원본 SVG 전체를 겹칩니다. 신규 1px 가이드 생성이 아니라 제공된 문자가 포함된 도판 중첩이며 원본 에셋을 수정하지 않습니다. CMS 쓰기는 없습니다.
+
+- Layouts 적용 예시는 Type A가 최대 4열 Grid(목표 320px·최소 240px), Type B가 최대 2열 Grid(목표 720px·최소 320px)이며 Type C만 Carousel을 유지합니다. 카드별 Off/On 오버레이는 동일합니다.
+
+- Layouts의 On 오버레이는 선택 `dimBackground`를 사용해 이미지 → 80% background 테마색 디머 → SVG 순서로 표시합니다. 라이트에서는 흰색, 다크에서는 기존 background의 검정 계열이며 Off에서는 디머도 제거합니다. 액션은 디머 밖에 유지하고 다른 소비처의 기본값은 false입니다.

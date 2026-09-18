@@ -134,6 +134,33 @@ export default async function GuidelineMockupPage() {
 				<Link href="#action-vocabulary" className="underline underline-offset-4">
 					Action Vocabulary
 				</Link>
+				<Link
+					href="/guideline/reference/physical-publications"
+					className="underline underline-offset-4"
+				>
+					Physical Publications
+				</Link>
+				<Link
+					href="/guideline/reference/digital-publications"
+					className="underline underline-offset-4"
+				>
+					Digital Publications
+				</Link>
+				<Link
+					href="/guideline/reference/extra-applications"
+					className="underline underline-offset-4"
+				>
+					Extra Applications · 이름 선택 캐러셀
+				</Link>
+				<Link
+					href="/guideline/reference/typography"
+					className="underline underline-offset-4"
+				>
+					Typography
+				</Link>
+				<Link href="/guideline/reference/layouts" className="underline underline-offset-4">
+					Layouts
+				</Link>
 			</nav>
 			<GuidelineDisplayHeading title="Corporate Identity" subtitle="기업 로고" />
 			{groupSections(sections).map(({ section, subsections }) => (

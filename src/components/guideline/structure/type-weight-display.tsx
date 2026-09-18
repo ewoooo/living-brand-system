@@ -18,42 +18,57 @@ import { GuidelineDisplayFrame } from './grid'
 /** Artboard 43의 최소 460px 표본과 36/20px 조판을 유지하고 도판에 맞춰 함께 축소합니다. */
 export function GuidelineTypeWeightDisplay({
 	language = 'ko',
+	languages,
+	className,
 	weight = 'medium',
 	actions,
 }: {
 	language?: LanguageKey
+	languages?: readonly [LanguageKey, ...LanguageKey[]]
+	className?: string
 	weight?: WeightKey
 	actions?: ReactNode
 }) {
 	const selected = WEIGHTS.find((item) => item.key === weight) ?? WEIGHTS[1]
 	return (
-		<GuidelineDisplayFrame>
+		<GuidelineDisplayFrame className={className}>
 			<div className="absolute inset-0">
 				<DisplayFit>
-					<div
-						lang={language === 'ko' ? 'ko' : 'en'}
-						data-slot="type-weight-specimen"
-						className="flex w-max min-w-[460px] flex-col gap-6 px-6 py-8 text-foreground"
-						style={{ fontFamily: BRAND_FONT_STACK, fontWeight: selected.value }}
-					>
-						<p
-							className="whitespace-pre"
-							style={{ fontSize: 36, lineHeight: LEADING[language].head[0] / 100 }}
-						>
-							{WEIGHT_SAMPLE[language]}
-						</p>
-						<p
-							className="whitespace-pre"
-							style={{ fontSize: 20, lineHeight: LEADING[language].body[0] / 100 }}
-						>
-							{WEIGHT_SAMPLE_BODY[language]}
-						</p>
-						{!AVAILABLE_WEIGHTS.includes(selected.value) && (
-							<p role="status" className="text-xs text-destructive">
-								{selected.label}({selected.value})는 서체 파일이 없어 브라우저가
-								대신 그린 굵기입니다.
-							</p>
-						)}
+					<div className="flex flex-col gap-12">
+						{[...new Set(languages ?? [language])].map((language) => (
+							<div
+								key={language}
+								lang={language === 'ko' ? 'ko' : 'en'}
+								data-slot="type-weight-specimen"
+								className="flex w-max min-w-[460px] flex-col gap-6 px-6 py-8 text-inherit"
+								style={{ fontFamily: BRAND_FONT_STACK, fontWeight: selected.value }}
+							>
+								<p
+									className="whitespace-pre"
+									style={{
+										fontSize: 36,
+										lineHeight: LEADING[language].head[0] / 100,
+									}}
+								>
+									{WEIGHT_SAMPLE[language]}
+								</p>
+								<p
+									className="whitespace-pre"
+									style={{
+										fontSize: 20,
+										lineHeight: LEADING[language].body[0] / 100,
+									}}
+								>
+									{WEIGHT_SAMPLE_BODY[language]}
+								</p>
+								{!AVAILABLE_WEIGHTS.includes(selected.value) && (
+									<p role="status" className="text-xs text-destructive">
+										{selected.label}({selected.value})는 서체 파일이 없어
+										브라우저가 대신 그린 굵기입니다.
+									</p>
+								)}
+							</div>
+						))}
 					</div>
 				</DisplayFit>
 			</div>

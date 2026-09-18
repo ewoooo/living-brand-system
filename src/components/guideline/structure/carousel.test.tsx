@@ -1,8 +1,10 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
-import { expect, it, vi } from 'vitest'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, expect, it, vi } from 'vitest'
 import { GuidelineCarouselContainer } from './carousel'
 import { type GuidelineCardData, GuidelineGridContainer } from './grid'
 import { GuidelineStickyContainer } from './sticky'
+
+afterEach(cleanup)
 
 const embla = vi.hoisted(() => {
 	let selected = 0
@@ -27,6 +29,10 @@ const embla = vi.hoisted(() => {
 		plugins: () => ({ autoplay: player }),
 		on: (event: string, callback: () => void) => listeners.set(event, callback),
 		off: (event: string) => listeners.delete(event),
+		scrollTo: (index: number) => {
+			selected = index
+			listeners.get('select')?.()
+		},
 		scrollNext: () => {
 			selected += 1
 			listeners.get('select')?.()
@@ -44,7 +50,10 @@ const embla = vi.hoisted(() => {
 		},
 	}
 })
-vi.mock('motion/react', () => ({ useReducedMotion: () => false }))
+vi.mock('motion/react', async (importOriginal) => ({
+	...(await importOriginal<typeof import('motion/react')>()),
+	useReducedMotion: () => false,
+}))
 vi.mock('embla-carousel-react', () => ({ default: () => [vi.fn(), embla.api] }))
 
 it('카드마다 카운터가 증가하며 마지막·빈 목록·재초기화와 이벤트 해제를 처리한다', () => {
@@ -117,4 +126,33 @@ it('같은 카드 입력의 판형·도판·캡션을 세 컨테이너가 유지
 	verify()
 	rerender(<GuidelineStickyContainer cards={cards} />)
 	verify()
+})
+
+it('이름 선택과 드래그·재초기화가 같은 선택 상태를 공유하고 재생을 멈춘다', () => {
+	embla.api.scrollTo(0)
+	const cards = ['Box Truck', 'Flatbed Truck', 'Bus', 'Van'].map((selectionLabel) => ({
+		id: selectionLabel,
+		selectionLabel,
+		ratio: '16:9' as const,
+		display: selectionLabel,
+	}))
+	const { unmount, container } = render(
+		<GuidelineCarouselContainer label="차량" navigation="labels" cards={cards} autoplay />,
+	)
+	expect(screen.queryByRole('button', { name: '다음 카드' })).toBeNull()
+	expect(screen.getByRole('radio', { name: 'Box Truck' })).toHaveAttribute('aria-checked', 'true')
+	fireEvent.click(screen.getByRole('button', { name: '자동 재생 시작' }))
+	fireEvent.click(screen.getByRole('radio', { name: 'Bus' }))
+	expect(embla.api.selectedScrollSnap()).toBe(2)
+	expect(screen.getByRole('radio', { name: 'Bus' })).toHaveAttribute('aria-checked', 'true')
+	expect(embla.api.plugins().autoplay.isPlaying()).toBe(false)
+	act(() => embla.api.scrollNext())
+	expect(screen.getByRole('radio', { name: 'Van' })).toHaveAttribute('aria-checked', 'true')
+	act(() => {
+		embla.api.scrollTo(0)
+		embla.listeners.get('reInit')?.()
+	})
+	expect(screen.getByRole('radio', { name: 'Box Truck' })).toHaveAttribute('aria-checked', 'true')
+	expect(container.querySelector('[data-slot="guideline-card"]')).toHaveStyle({ width: '100%' })
+	unmount()
 })

@@ -12,6 +12,7 @@ export type GridColumns = 1 | 2 | 3 | 4 | 5
 
 export type GuidelineCardData = {
 	id: string
+	selectionLabel?: string
 	ratio: DisplayRatio
 	display: ReactNode
 	caption?: GuidelineCaption

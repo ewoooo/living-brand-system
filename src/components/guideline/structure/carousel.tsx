@@ -8,6 +8,7 @@ import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import styles from './carousel.module.css'
 import { GuidelineCard, GuidelineCardCaption, type GuidelineCardData } from './grid'
+import { GuidelineSelection } from './selection'
 
 /** 카드 비율은 항목이, 공통 높이·이동·카운터는 캐러셀이 소유합니다. */
 export function GuidelineCarouselContainer({
@@ -16,13 +17,16 @@ export function GuidelineCarouselContainer({
 	displayHeight = 320,
 	loop = true,
 	autoplay = false,
+	navigation = 'counter',
 }: {
 	label: string
-	cards: readonly GuidelineCardData[]
 	displayHeight?: 240 | 320 | 480 | 720
 	loop?: boolean
 	autoplay?: boolean
-}) {
+} & (
+	| { navigation?: 'counter'; cards: readonly GuidelineCardData[] }
+	| { navigation: 'labels'; cards: readonly (GuidelineCardData & { selectionLabel: string })[] }
+)) {
 	const reducedMotion = useReducedMotion()
 	const plugins = useMemo(
 		() => [
@@ -96,7 +100,10 @@ export function GuidelineCarouselContainer({
 							aria-label={`${index + 1} / ${cards.length}`}
 							style={
 								{
-									width: `calc(var(--carousel-height) * ${ratios[index]})`,
+									width:
+										navigation === 'labels'
+											? '100%'
+											: `calc(var(--carousel-height) * ${ratios[index]})`,
 									'--display-ratio': card.ratio.replace(':', ' / '),
 								} as CSSProperties
 							}
@@ -108,47 +115,81 @@ export function GuidelineCarouselContainer({
 				</div>
 			</div>
 			<div
-				className="mt-6 flex items-center justify-center gap-3"
+				className="mt-6 flex flex-wrap items-center justify-center gap-3"
 				data-slot="guideline-carousel-actions"
 			>
-				<Button
-					type="button"
-					variant="muted"
-					shape="pill"
-					size="icon-lg"
-					className="size-11"
-					aria-label="이전 카드"
-					disabled={cards.length <= 1 || !canPrev}
-					onClick={() => {
-						api?.plugins().autoplay?.stop()
-						api?.scrollPrev()
-					}}
-				>
-					<ArrowLeft className="size-6" />
-				</Button>
-				<output
-					aria-live={playing ? 'off' : 'polite'}
-					aria-atomic="true"
-					aria-label="현재 카드"
-					className="min-w-19 rounded-full bg-muted px-4 py-2.5 text-center text-base tabular-nums"
-				>
-					{current} / {cards.length}
-				</output>
-				<Button
-					type="button"
-					variant="muted"
-					shape="pill"
-					size="icon-lg"
-					className="size-11"
-					aria-label="다음 카드"
-					disabled={cards.length <= 1 || !canNext}
-					onClick={() => {
-						api?.plugins().autoplay?.stop()
-						api?.scrollNext()
-					}}
-				>
-					<ArrowRight className="size-6" />
-				</Button>
+				{navigation === 'labels' ? (
+					<div
+						className="max-w-full overflow-x-auto p-1"
+						data-slot="guideline-carousel-selection"
+					>
+						<div className="mx-auto w-max">
+							<GuidelineSelection
+								label={`${label} 카드 선택`}
+								value={cards[current - 1]?.id ?? ''}
+								options={cards.map((card) => ({
+									value: card.id,
+									label: card.selectionLabel ?? '',
+									disabled: !api,
+								}))}
+								onValueChange={(id) => {
+									const index = cards.findIndex((card) => card.id === id)
+									if (index < 0) return
+									api?.plugins().autoplay?.stop()
+									api?.scrollTo(index)
+								}}
+							/>
+						</div>
+						<output
+							className="sr-only"
+							aria-live={playing ? 'off' : 'polite'}
+							aria-atomic="true"
+						>
+							{cards[current - 1]?.selectionLabel ?? '카드 없음'}
+						</output>
+					</div>
+				) : (
+					<>
+						<Button
+							type="button"
+							variant="muted"
+							shape="pill"
+							size="icon-lg"
+							className="size-11"
+							aria-label="이전 카드"
+							disabled={cards.length <= 1 || !canPrev}
+							onClick={() => {
+								api?.plugins().autoplay?.stop()
+								api?.scrollPrev()
+							}}
+						>
+							<ArrowLeft className="size-6" />
+						</Button>
+						<output
+							aria-live={playing ? 'off' : 'polite'}
+							aria-atomic="true"
+							aria-label="현재 카드"
+							className="min-w-19 rounded-full bg-muted px-4 py-2.5 text-center text-base tabular-nums"
+						>
+							{current} / {cards.length}
+						</output>
+						<Button
+							type="button"
+							variant="muted"
+							shape="pill"
+							size="icon-lg"
+							className="size-11"
+							aria-label="다음 카드"
+							disabled={cards.length <= 1 || !canNext}
+							onClick={() => {
+								api?.plugins().autoplay?.stop()
+								api?.scrollNext()
+							}}
+						>
+							<ArrowRight className="size-6" />
+						</Button>
+					</>
+				)}
 				{autoplay && (
 					<Button
 						type="button"
