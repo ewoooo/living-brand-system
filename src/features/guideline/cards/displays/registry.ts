@@ -21,26 +21,15 @@ import { typeSpecimen } from './dynamics/type-specimen/definition'
 import { typeWeight } from './dynamics/type-weight/definition'
 import { staticDisplay } from './static/definition'
 
-/**
- * 디스플레이 레지스트리 — 카드 판에 무엇을 그릴 수 있는지의 목록(2026-09-08). 정의는 각 폴더의 `definition.ts`가
- * 소유하고(id·type·category·sizing·downloads·dbName·name·description·fields), 렌더는 같은 폴더 `component.tsx`의 기본 export다.
- * 여기는 순서만 정한다 — 배열 순서가 admin 선택기 순서다. 렌더 맵은 `registry.render.tsx`가 같은 id로 갖는다.
- *
- * 🔴 이 모듈은 payload.config가 Node에서 읽는다(`cards/schema.ts` 경유) — React를 넣지 말 것.
- *
- * 위젯은 **전부** 연다(사용자 결정 2026-09-07 "B"). 현재 제한: 컨트롤러 위젯(ci-lockup·
- * clearspace-viewer·layout-grid)은 하단 Floating Controller를 잃고 admin 고정값으로만 그려진다.
- * responsive는 카드 안에서 재배치하고 contain은 로고·보호 공간 등 콘텐츠만 비례 맞춤한다.
- * 컨트롤 전용 layout-grid-controls는 그릴 것이 없어 2026-09-08에 지웠고, Do/Don’t 위젯은 카드(프리셋 패널·정적
- * 디스플레이 + 카드 `mark`)로 대체됐다.
+/** 기존 CMS 콘텐츠의 렌더 호환 목록. 저장 블록 순서는 전체 마이그레이션까지 유지한다.
+ * payload.config가 읽으므로 React·조회 코드를 넣지 않는다.
  */
-export const DISPLAYS = [
+export const LEGACY_RENDERABLE_DISPLAYS = [
 	staticDisplay,
 	ciLockupHero,
 	clearspaceOverlay,
 	logoBgPicker,
 	logoDisplay,
-	typeScramble,
 	typeWeight,
 	typeSpecimen,
 	layoutGridOverlay,
@@ -51,20 +40,40 @@ export const DISPLAYS = [
 	hdColorPalette,
 	iconGrid,
 	stemClearSpace,
-	logoColorVariant,
 	logoOnBackground,
 	typeHierarchy,
 	typeLanguage,
 ] as const satisfies readonly DisplayDefinition[]
 
-export type DisplayId = (typeof DISPLAYS)[number]['id']
+/** 신규 독립 타입으로 제공하지 않는다. 기존 문서의 표현은 전체 이관까지 유지한다. */
+export const CONSOLIDATED_DISPLAY_IDS = [
+	'stemClearSpaceWidget',
+	'logoDisplayWidget',
+	'clearspaceViewerWidget',
+	'typeLanguageWidget',
+	'typeHierarchyWidget',
+	'iconGridWidget',
+	'presetPanelDisplay',
+] as const
+
+export type DisplayId = (typeof LEGACY_RENDERABLE_DISPLAYS)[number]['id']
+
+/** 신규 카드의 선택 목록. 구형 저장 데이터의 해석 목록과 분리한다. */
+export const DISPLAYS = LEGACY_RENDERABLE_DISPLAYS.filter(
+	(entry) => !CONSOLIDATED_DISPLAY_IDS.some((id) => id === entry.id),
+)
 
 /** 카드 `display` 필드가 받는 Payload Block 목록. */
-export const displayBlocks: Block[] = DISPLAYS.map(displaySchema)
+// 폐기된 위젯은 기존 문서·버전의 저장 호환에만 남긴다.
+export const displayBlocks: Block[] = [
+	...LEGACY_RENDERABLE_DISPLAYS,
+	typeScramble,
+	logoColorVariant,
+].map(displaySchema)
 
 /** 정적 메타데이터만 소비하고 Payload 필드나 렌더 함수를 클라이언트에 넘기지 않는다. */
 export function displayDefinition(id: DisplayId) {
-	const definition = DISPLAYS.find((entry) => entry.id === id)
+	const definition = LEGACY_RENDERABLE_DISPLAYS.find((entry) => entry.id === id)
 	if (!definition) throw new Error(`등록되지 않은 디스플레이: ${id}`)
 	return definition
 }

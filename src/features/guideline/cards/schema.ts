@@ -1,6 +1,6 @@
 import type { Field } from 'payload'
 import { CARD_RATIO_OPTIONS } from './displays/ratio'
-import { displayBlocks } from './displays/registry'
+import { DISPLAYS, displayBlocks } from './displays/registry'
 
 /** 카드 하나의 판정 표식. 생략하거나 none이면 표시하지 않는다. */
 export const CARD_MARKS = [
@@ -49,6 +49,18 @@ export function cardFields(): Field[] {
 			label: '디스플레이',
 			maxRows: 1,
 			blocks: displayBlocks,
+			// 기존 문서 저장은 허용하되 빈 카드의 선택기에서는 폐기 위젯을 제외한다.
+			filterOptions: ({ siblingData }) => {
+				const rows = (siblingData as { display?: { blockType?: string }[] })?.display
+				const existing = Array.isArray(rows) ? rows.map((row) => row?.blockType) : []
+				return displayBlocks
+					.filter(
+						(block) =>
+							DISPLAYS.some((display) => display.id === block.slug) ||
+							existing.includes(block.slug),
+					)
+					.map((block) => block.slug)
+			},
 			admin: { description: '판에 무엇을 그릴지입니다. 이미지 하나 또는 위젯 하나.' },
 		},
 		{

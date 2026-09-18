@@ -85,7 +85,7 @@ const WIDGET_CAPTION_USE = /\bWIDGET_CAPTION\b/
  * 🔴 이 목록은 늘리지 않는다 — 새 위젯이 여기 들어오려 하면 캡션을 지우는 것이 답이다.
  */
 const CAPTION_DEBT = ['layout-grid/component.tsx', 'stem-clear-space/view.tsx'].map((f) =>
-	path.join(WIDGETS, f),
+	path.join(GUIDELINE, 'cards/deprecated/displays/dynamics', f),
 )
 
 /** 어휘를 **정의**하는 자리. 검사 대상이 아니다(`surface.ts`가 팔레트에 대해 그런 것과 같다). */

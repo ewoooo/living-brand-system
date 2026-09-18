@@ -114,7 +114,7 @@ src/
       sections/
       typography/
       media/
-      widgets/
+      playground/
     shared/
       navigation/
     studio/
@@ -303,7 +303,7 @@ src/features/guideline/repositories/guideline.payload.repository.ts
 
 | 위치 | 소유 책임 |
 | --- | --- |
-| `src/components/guideline` | 페이지 조합·탐색·섹션·산문·미디어·위젯 갤러리와 컨트롤 표현 |
+| `src/components/guideline` | 페이지 조합·탐색·섹션·산문·미디어·플레이그라운드와 컨트롤 표현 |
 | `src/features/guideline/domain/contract` | 공유 조회 데이터·카드/디스플레이·컨트롤 매니페스트 타입. 생성된 Payload 타입은 `import type`으로만 참조 |
 | `src/features/guideline/domain/controller-values.ts` | 컨트롤 값의 타입 확인과 기본값 해석 |
 | `src/features/guideline/contexts` | Context와 Context 값 계약 |

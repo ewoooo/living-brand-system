@@ -1,22 +1,13 @@
 import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 
-// 서체 스크램블 뷰어 — 무작위 글자가 흐르다 표본 문구로 굳는다. 규정 설명이 아니라 서체 감상용이다.
-//
-// 🔴 여러 줄은 **한 덩어리**로 그린다(줄바꿈 보존). 예전에는 줄마다 다른 문자열로 보고 순환시켰는데,
-//    표본 문구(Artboard 45)가 국문·영문·숫자·기호를 여러 줄에 걸쳐 한 세트로 보여주는 것이라
-//    줄을 쪼개면 표본이 깨진다.
-// 글자 크기는 author가 정하고 판 크기는 카드가 결정한다.
-//
-// dbName 짧게(tsc)로 중첩 테이블명 63자 방어. enum은 전역 이름 공유라 enumName 명시.
-// 🔴 배열 필드를 두지 않는다 — 배열은 조회 SQL 별칭에 레벨을 하나 더 얹어 63자를 넘기면 조인이 조용히
-//    깨진다(alias-length.test.ts가 지킨다). 여러 문자열은 배열 대신 textarea 줄바꿈으로 받는다.
+// 폐기된 위젯. 기존 문서·버전을 읽기 위한 DB 스키마만 유지한다.
 export const typeScramble = defineDisplay({
 	id: 'typeScrambleWidget',
 	type: 'dynamic',
 	category: 'typography',
 	sizing: 'responsive',
 	dbName: 'tsw',
-	name: '서체 스크램블',
+	name: '서체 스크램블 (폐기)',
 	description: '글자가 흩어졌다 모이는 서체 표본.',
 	fields: [
 		{

@@ -43,6 +43,8 @@ const nextConfig: NextConfig = {
 	},
 	images: {
 		localPatterns: [
+			{ pathname: '/brand/hd/**', search: '' },
+			{ pathname: '/guideline/reference/**', search: '' },
 			{
 				pathname: '/api/media/file/**',
 			},

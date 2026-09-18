@@ -32,7 +32,12 @@ export function DisplayFit({ children }: { children: ReactNode }) {
 			data-slot="display-fit"
 			className="absolute inset-4 flex items-center justify-center"
 		>
-			<div ref={contentRef} data-display-fit-content className="w-max shrink-0 origin-center">
+			{/* transform 적용 전부터 자식의 offsetParent를 고정한다. */}
+			<div
+				ref={contentRef}
+				data-display-fit-content
+				className="relative w-max shrink-0 origin-center"
+			>
 				{children}
 			</div>
 		</div>

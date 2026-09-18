@@ -358,7 +358,6 @@ export interface SectionBlock {
               | ClearspaceOverlayWidget
               | LogoBgPickerWidget
               | LogoDisplayWidget
-              | TypeScrambleWidget
               | TypeWeightWidget
               | TypeSpecimenWidget
               | LayoutGridOverlayWidget
@@ -369,10 +368,11 @@ export interface SectionBlock {
               | HdColorPaletteWidget
               | IconGridWidget
               | StemClearSpaceWidget
-              | LogoColorVariantWidget
               | LogoOnBgWidget
               | TypeHierarchyWidget
               | TypeLanguageWidget
+              | TypeScrambleWidget
+              | LogoColorVariantWidget
             )[]
           | null;
         caption?: {
@@ -588,36 +588,6 @@ export interface LogoDisplayWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'logoDisplayWidget';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "TypeScrambleWidget".
- */
-export interface TypeScrambleWidget {
-  /**
-   * 표시할 문구입니다. 줄바꿈을 그대로 살려 한 덩어리로 보여줍니다. 비우면 기본 표본을 씁니다.
-   */
-  text?: string | null;
-  /**
-   * 글자 크기(px)입니다. 줄 수와 판 높이에 맞춰 정합니다.
-   */
-  fontSize?: number | null;
-  panelHeight?: number | null;
-  /**
-   * 글자 색입니다. 비우면 기본 전경색을 씁니다.
-   */
-  color?: (number | null) | BrandColor;
-  /**
-   * 판 배경색입니다. 비우면 배경 없이 글자만 보입니다.
-   */
-  background?: (number | null) | BrandColor;
-  /**
-   * 표시 굵기입니다. 배포된 서체 파일에 없는 굵기를 고르면 브라우저 합성이라는 안내가 함께 나옵니다.
-   */
-  weight?: ('light' | 'medium' | 'bold') | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'typeScrambleWidget';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -918,19 +888,6 @@ export interface StemClearSpaceWidget {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "LogoColorVariantWidget".
- */
-export interface LogoColorVariantWidget {
-  /**
-   * 기본형(풀컬러) 로고입니다. WHITE·단색은 여기서 파생됩니다.
-   */
-  logo: number | BrandLogo;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'logoColorVariantWidget';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "LogoOnBgWidget".
  */
 export interface LogoOnBgWidget {
@@ -979,6 +936,49 @@ export interface TypeLanguageWidget {
   id?: string | null;
   blockName?: string | null;
   blockType: 'typeLanguageWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScrambleWidget".
+ */
+export interface TypeScrambleWidget {
+  /**
+   * 표시할 문구입니다. 줄바꿈을 그대로 살려 한 덩어리로 보여줍니다. 비우면 기본 표본을 씁니다.
+   */
+  text?: string | null;
+  /**
+   * 글자 크기(px)입니다. 줄 수와 판 높이에 맞춰 정합니다.
+   */
+  fontSize?: number | null;
+  panelHeight?: number | null;
+  /**
+   * 글자 색입니다. 비우면 기본 전경색을 씁니다.
+   */
+  color?: (number | null) | BrandColor;
+  /**
+   * 판 배경색입니다. 비우면 배경 없이 글자만 보입니다.
+   */
+  background?: (number | null) | BrandColor;
+  /**
+   * 표시 굵기입니다. 배포된 서체 파일에 없는 굵기를 고르면 브라우저 합성이라는 안내가 함께 나옵니다.
+   */
+  weight?: ('light' | 'medium' | 'bold') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'typeScrambleWidget';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoColorVariantWidget".
+ */
+export interface LogoColorVariantWidget {
+  /**
+   * 기본형(풀컬러) 로고입니다. WHITE·단색은 여기서 파생됩니다.
+   */
+  logo: number | BrandLogo;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoColorVariantWidget';
 }
 /**
  * 문서와 블록이 참조해 적용하는 검수 규칙 정의입니다.
@@ -1133,7 +1133,6 @@ export interface BaseBlock {
               | ClearspaceOverlayWidget
               | LogoBgPickerWidget
               | LogoDisplayWidget
-              | TypeScrambleWidget
               | TypeWeightWidget
               | TypeSpecimenWidget
               | LayoutGridOverlayWidget
@@ -1144,10 +1143,11 @@ export interface BaseBlock {
               | HdColorPaletteWidget
               | IconGridWidget
               | StemClearSpaceWidget
-              | LogoColorVariantWidget
               | LogoOnBgWidget
               | TypeHierarchyWidget
               | TypeLanguageWidget
+              | TypeScrambleWidget
+              | LogoColorVariantWidget
             )[]
           | null;
         caption?: {
@@ -1243,7 +1243,6 @@ export interface OverviewBlock {
               | ClearspaceOverlayWidget
               | LogoBgPickerWidget
               | LogoDisplayWidget
-              | TypeScrambleWidget
               | TypeWeightWidget
               | TypeSpecimenWidget
               | LayoutGridOverlayWidget
@@ -1254,10 +1253,11 @@ export interface OverviewBlock {
               | HdColorPaletteWidget
               | IconGridWidget
               | StemClearSpaceWidget
-              | LogoColorVariantWidget
               | LogoOnBgWidget
               | TypeHierarchyWidget
               | TypeLanguageWidget
+              | TypeScrambleWidget
+              | LogoColorVariantWidget
             )[]
           | null;
         caption?: {
@@ -1353,7 +1353,6 @@ export interface ExamplesBlock {
               | ClearspaceOverlayWidget
               | LogoBgPickerWidget
               | LogoDisplayWidget
-              | TypeScrambleWidget
               | TypeWeightWidget
               | TypeSpecimenWidget
               | LayoutGridOverlayWidget
@@ -1364,10 +1363,11 @@ export interface ExamplesBlock {
               | HdColorPaletteWidget
               | IconGridWidget
               | StemClearSpaceWidget
-              | LogoColorVariantWidget
               | LogoOnBgWidget
               | TypeHierarchyWidget
               | TypeLanguageWidget
+              | TypeScrambleWidget
+              | LogoColorVariantWidget
             )[]
           | null;
         caption?: {
@@ -2658,7 +2658,6 @@ export interface SectionBlockSelect<T extends boolean = true> {
               clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
               logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
               logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
-              typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
               typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
               typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
               layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
@@ -2669,10 +2668,11 @@ export interface SectionBlockSelect<T extends boolean = true> {
               hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
-              logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
               logoOnBgWidget?: T | LogoOnBgWidgetSelect<T>;
               typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
               typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
+              typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
+              logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
             };
         caption?:
           | T
@@ -2737,20 +2737,6 @@ export interface LogoDisplayWidgetSelect<T extends boolean = true> {
   width?: T;
   height?: T;
   padding?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "TypeScrambleWidget_select".
- */
-export interface TypeScrambleWidgetSelect<T extends boolean = true> {
-  text?: T;
-  fontSize?: T;
-  panelHeight?: T;
-  color?: T;
-  background?: T;
-  weight?: T;
   id?: T;
   blockName?: T;
 }
@@ -2868,15 +2854,6 @@ export interface StemClearSpaceWidgetSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "LogoColorVariantWidget_select".
- */
-export interface LogoColorVariantWidgetSelect<T extends boolean = true> {
-  logo?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "LogoOnBgWidget_select".
  */
 export interface LogoOnBgWidgetSelect<T extends boolean = true> {
@@ -2907,6 +2884,29 @@ export interface TypeLanguageWidgetSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TypeScrambleWidget_select".
+ */
+export interface TypeScrambleWidgetSelect<T extends boolean = true> {
+  text?: T;
+  fontSize?: T;
+  panelHeight?: T;
+  color?: T;
+  background?: T;
+  weight?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoColorVariantWidget_select".
+ */
+export interface LogoColorVariantWidgetSelect<T extends boolean = true> {
+  logo?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "BaseBlock_select".
  */
 export interface BaseBlockSelect<T extends boolean = true> {
@@ -2928,7 +2928,6 @@ export interface BaseBlockSelect<T extends boolean = true> {
               clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
               logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
               logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
-              typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
               typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
               typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
               layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
@@ -2939,10 +2938,11 @@ export interface BaseBlockSelect<T extends boolean = true> {
               hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
-              logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
               logoOnBgWidget?: T | LogoOnBgWidgetSelect<T>;
               typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
               typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
+              typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
+              logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
             };
         caption?:
           | T
@@ -2981,7 +2981,6 @@ export interface OverviewBlockSelect<T extends boolean = true> {
               clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
               logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
               logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
-              typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
               typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
               typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
               layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
@@ -2992,10 +2991,11 @@ export interface OverviewBlockSelect<T extends boolean = true> {
               hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
-              logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
               logoOnBgWidget?: T | LogoOnBgWidgetSelect<T>;
               typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
               typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
+              typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
+              logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
             };
         caption?:
           | T
@@ -3034,7 +3034,6 @@ export interface ExamplesBlockSelect<T extends boolean = true> {
               clearspaceOverlayWidget?: T | ClearspaceOverlayWidgetSelect<T>;
               logoBgPickerWidget?: T | LogoBgPickerWidgetSelect<T>;
               logoDisplayWidget?: T | LogoDisplayWidgetSelect<T>;
-              typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
               typeWeightWidget?: T | TypeWeightWidgetSelect<T>;
               typeSpecimenWidget?: T | TypeSpecimenWidgetSelect<T>;
               layoutGridOverlayWidget?: T | LayoutGridOverlayWidgetSelect<T>;
@@ -3045,10 +3044,11 @@ export interface ExamplesBlockSelect<T extends boolean = true> {
               hdColorPaletteWidget?: T | HdColorPaletteWidgetSelect<T>;
               iconGridWidget?: T | IconGridWidgetSelect<T>;
               stemClearSpaceWidget?: T | StemClearSpaceWidgetSelect<T>;
-              logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
               logoOnBgWidget?: T | LogoOnBgWidgetSelect<T>;
               typeHierarchyWidget?: T | TypeHierarchyWidgetSelect<T>;
               typeLanguageWidget?: T | TypeLanguageWidgetSelect<T>;
+              typeScrambleWidget?: T | TypeScrambleWidgetSelect<T>;
+              logoColorVariantWidget?: T | LogoColorVariantWidgetSelect<T>;
             };
         caption?:
           | T
