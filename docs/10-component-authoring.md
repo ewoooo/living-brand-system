@@ -657,3 +657,12 @@ PR을 올리기 전 자기 점검용입니다.
 - Layouts 적용 예시는 Type A가 최대 4열 Grid(목표 320px·최소 240px), Type B가 최대 2열 Grid(목표 720px·최소 320px)이며 Type C만 Carousel을 유지합니다. 카드별 Off/On 오버레이는 동일합니다.
 
 - Layouts의 On 오버레이는 선택 `dimBackground`를 사용해 이미지 → 80% background 테마색 디머 → SVG 순서로 표시합니다. 라이트에서는 흰색, 다크에서는 기존 background의 검정 계열이며 Off에서는 디머도 제거합니다. 액션은 디머 밖에 유지하고 다른 소비처의 기본값은 false입니다.
+
+- `/guideline/reference/key-visuals`는 제공 PDF 59쪽의 Visual Concept & Motif는 한 장짜리 일반 카드로, Type A/B 모티프는 HD Direction, Type C/D 모티프는 HD Dimension의 Types 아래 각각 2열 3:4 카드로, 제공 적용 예시 21개를 타입별 Carousel로 표시합니다. Incorrect Usages 18개는 기존 적색 패널·중앙 헤딩·최대 2열 Grid·START 금지 배지를 재사용합니다. 문구는 PDF 63·66·69·73쪽을 따르되 Type B 03/04 파일의 실제 내용에 맞춰 순서를 연결합니다. 권장 예시가 함께 있는 도판은 캡션에 명시합니다. 제작 수치·구조 규칙 전체와 CMS 연결은 구현 범위에 포함하지 않습니다.
+
+- `/guideline/reference/iconography`는 제공 SVG의 디자인 콘셉트·Line/Solid 제작 규칙·각 10개 아이콘을 공통 Grid로 구성합니다. 48×48px·Padding 12px·Line 1px·Solid 5–6px 명세는 제공 PDF 79–80쪽을 따릅니다. `/guideline/reference/color`는 기존 `findPaletteCatalog`를 읽기 전용으로 사용하고 Primary·Supportive·Monotone 단독 스와치, Brand 스택, 네 팔레트의 로고 배경 비교를 조합합니다. 미등록 데이터는 안내로 표시하며 색상·허용 규정을 추론하거나 DB에 쓰지 않습니다.
+
+- Iconography의 도판 카드 23개는 END 다운로드 액션으로 표시 중인 원본 SVG를 받습니다. 섹션 전체 다운로드는 Line/Solid의 하위 Icons에만 제공하며 각각 아이콘 10개를 ZIP으로 묶습니다. Overview와 메인 섹션에는 전체 다운로드를 표시하지 않으며 하위 섹션을 재귀 수집하지 않습니다.
+
+- 섹션 전체 다운로드는 테두리 없는 muted 버튼·Medium(500)으로 표시하며 기본 배경은 카드 디스플레이와 같은 `muted`입니다. 기본 문구는 수량 없이 `전체 다운로드`입니다. 준비 중·실패 재시도·접근성 라벨은 유지합니다.
+- 전체 다운로드의 기본·눌림 전경색은 카드 액션과 같은 `foreground`, 호버·포커스는 `action-hover-foreground`를 사용합니다. 호버·포커스 배경은 카드 액션 배경과 같은 `border`이며 포커스 링·비활성 표시는 기존 Button 규칙을 따릅니다.

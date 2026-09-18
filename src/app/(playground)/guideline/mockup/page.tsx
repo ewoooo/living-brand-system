@@ -161,6 +161,21 @@ export default async function GuidelineMockupPage() {
 				<Link href="/guideline/reference/layouts" className="underline underline-offset-4">
 					Layouts
 				</Link>
+				<Link
+					href="/guideline/reference/key-visuals"
+					className="underline underline-offset-4"
+				>
+					Key Visuals
+				</Link>
+				<Link
+					href="/guideline/reference/iconography"
+					className="underline underline-offset-4"
+				>
+					Iconography
+				</Link>
+				<Link href="/guideline/reference/color" className="underline underline-offset-4">
+					Color
+				</Link>
 			</nav>
 			<GuidelineDisplayHeading title="Corporate Identity" subtitle="기업 로고" />
 			{groupSections(sections).map(({ section, subsections }) => (

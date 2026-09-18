@@ -129,6 +129,7 @@
 	--text-sm: 0.8125rem;
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
+	--color-action-hover-foreground: var(--action-hover-foreground);
 	--color-inverted: var(--inverted);
 	--color-inverted-foreground: var(--inverted-foreground);
 	--color-card: var(--card);
@@ -192,6 +193,7 @@
 	--floating-control-inset: 1rem;
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.145 0 0);
+	--action-hover-foreground: oklch(0.371 0 0);
 	--inverted: var(--foreground);
 	--inverted-foreground: var(--background);
 	--card: oklch(1 0 0);
@@ -243,6 +245,7 @@
 	--background: oklch(0.1822 0 0);
 	/* #121212 — pure black 대신 Material 다크 배경(순흑 이미지 구분) */
 	--foreground: oklch(0.985 0 0);
+	--action-hover-foreground: oklch(0.87 0 0);
 	--inverted: var(--foreground);
 	--inverted-foreground: var(--background);
 	--card: oklch(0.1822 0 0);

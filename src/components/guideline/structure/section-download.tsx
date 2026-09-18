@@ -33,7 +33,8 @@ export function SectionDownloadButton({
 	return (
 		<div data-slot="section-download" className="flex shrink-0 flex-col items-start gap-2">
 			<Button
-				variant="outline"
+				variant="muted"
+				className="border-0 font-medium text-foreground hover:bg-border hover:text-action-hover-foreground focus:bg-border focus:text-action-hover-foreground active:text-foreground"
 				disabled={state === 'pending'}
 				aria-busy={state === 'pending'}
 				aria-label={`${title} 에셋 전체 다운로드`}
@@ -43,7 +44,7 @@ export function SectionDownloadButton({
 					? 'ZIP 준비 중…'
 					: state === 'error'
 						? '다시 다운로드'
-						: `전체 다운로드 (${download.assets.length})`}
+						: '전체 다운로드'}
 			</Button>
 			{state === 'error' && (
 				<p role="alert" className="text-destructive text-sm">
