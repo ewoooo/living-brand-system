@@ -1,5 +1,6 @@
+import { Download } from '@carbon/icons-react'
 import Link from 'next/link'
-import { GuidelineCardCaption } from '@/components/guideline/structure/caption'
+import { GuidelineCardActions } from '@/components/guideline/structure/card-actions'
 import { GuidelineClearspaceDisplay } from '@/components/guideline/structure/clearspace-display'
 import {
 	GuidelineDisplayFooter,
@@ -13,6 +14,7 @@ import {
 	GuidelineGridContainer,
 } from '@/components/guideline/structure/grid'
 import { GuidelineStickyContainer } from '@/components/guideline/structure/sticky'
+import { GUIDELINE_DOCUMENT_SURFACE } from '@/features/guideline/cards/displays/dynamics/surface'
 import { identityCards, safeAreaCards } from './examples'
 
 const asset = (filename: string) => ({ url: `/brand/hd/${filename}`, filename })
@@ -50,7 +52,7 @@ const safeArea: GuidelineCardData[] = safeAreaCards.flatMap((card) =>
 
 export function CorporateIdentityReference() {
 	return (
-		<main data-slot="guideline-reference" className="bg-background text-foreground">
+		<main data-slot="guideline-reference" className={GUIDELINE_DOCUMENT_SURFACE}>
 			<nav
 				aria-label="가이드 섹션 탐색"
 				className="flex flex-wrap justify-center gap-6 px-8 py-4 text-sm"
@@ -100,7 +102,17 @@ export function CorporateIdentityReference() {
 									src="/brand/hd/hd-horizontal-default.svg"
 									alt="HD현대 Forward Mark와 HD 워드마크"
 									scale={50}
-								/>
+								>
+									<GuidelineCardActions
+										end={{
+											kind: 'link',
+											label: 'HD 로고 기본형 다운로드',
+											href: '/brand/hd/hd-horizontal-default.svg',
+											download: 'hd-horizontal-default.svg',
+											icon: <Download size={18} />,
+										}}
+									/>
+								</GuidelineCardDisplay>
 							),
 						},
 					]}
@@ -124,15 +136,6 @@ export function CorporateIdentityReference() {
 						}}
 					/>
 					<GuidelineStickyContainer cards={safeArea} />
-					<div className="flex flex-wrap justify-center gap-6">
-						{safeAreaCards
-							.filter((card) => !card.image)
-							.map((card) => (
-								<figure key={card.id}>
-									<GuidelineCardCaption {...card.caption} />
-								</figure>
-							))}
-					</div>
 				</GuidelineSection>
 			</GuidelineSection>
 			<GuidelineDisplayFooter

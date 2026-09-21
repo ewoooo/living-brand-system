@@ -15,4 +15,11 @@ it('목표 페이지가 새 구조와 보호공간 토글을 사용한다', () =
 	).toContain('hd-horizontal-default-clearSpace.svg')
 	expect(screen.getByRole('button', { name: 'Brand Signature 에셋 전체 다운로드' })).toBeTruthy()
 	expect(screen.getByRole('button', { name: 'Safe Area 에셋 전체 다운로드' })).toBeTruthy()
+	expect(container.querySelector('main')).toHaveClass('bg-neutral-50')
+	expect(screen.queryByText('Figma 원본의 도판이 비어 있습니다.')).toBeNull()
+	expect(screen.getAllByText(/디지털 응용매체에서 즐겨찾기 아이콘/)).toHaveLength(1)
+	expect(screen.getByRole('link', { name: 'HD 로고 기본형 다운로드' })).toHaveAttribute(
+		'download',
+		'hd-horizontal-default.svg',
+	)
 })

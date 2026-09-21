@@ -615,6 +615,7 @@ PR을 올리기 전 자기 점검용입니다.
 - `/guideline/reference/illustrations`는 Figma `176:13272`의 Overview·Charts(11개)·Usecase(3개)·Related Resources 순서를 재현합니다. 모든 섹션은 독립 main으로 상하 패딩을 유지하며 Grid·Carousel과 공통 카드/캡션을 조합합니다. Usecase는 표준 3:4 판형, 그리드는 1:1, Overview는 16:9입니다. 원본의 임시 문구와 녹색 Overview 도판을 유지합니다. Related Resources에는 원본과 저장소 모두 연결 주소가 없어 실행 액션을 생성하지 않습니다. 에셋은 `public/guideline/reference/illustrations`에서 제공하며 CMS 쓰기는 없습니다.
 
 - `/guideline/reference`의 Corporate Identity는 신규 DisplayHeading·Section·Grid·Sticky·CardDisplay·Caption·DisplayFooter를 조합합니다. 준비된 기존 콘텐츠·에셋을 사용하며 CMS 쓰기는 하지 않습니다. Brand Signature는 Grid, Safe Area는 하위 섹션과 Sticky로 표현합니다.
+- Corporate Identity는 공통 문서 배경을 사용하고 도판 없는 개발용 안내·중복 캡션은 표시하지 않습니다. 대표 로고의 END 액션으로 기본형 SVG를 다운로드하며, 기존 섹션 ZIP은 유지합니다. 최소 크기 표본과 보류 중인 CI Lockup은 변경하지 않습니다.
 - HD 심볼+워드마크의 정본 보호공간 SVG 두 레이어를 Off/On으로 표시하고 섹션별 등록 에셋만 다운로드합니다. 원본 도판이 없는 두 항목은 캡션만 유지합니다. 플레이그라운드는 `/guideline/mockup`으로 연결합니다. CMS 저장 모델 이관은 후속입니다.
 
 - `/guideline/reference/physical-publications`는 Figma `176:15107`의 Brochure·Banner·Poster·Related Resources를 공통 카드로 구성합니다. 대표 도판 5개는 16:9 Grid, 표지·내지·가로/세로 배너·포스터 24개는 5개 Carousel로 표시합니다. 표지는 3:4, 나머지 세부 예시는 1:1이며 contain 80%를 적용합니다. 하위 헤딩은 상위 섹션 안에 배치하고 원본의 임시 문구는 한국어 설명으로 정리합니다. 에셋은 제공된 `guideline_assets/web/applications`의 원본을 public으로 복사합니다. Brochure Create Studio는 목적지 미정으로 실행 링크를 만들지 않습니다. CMS 쓰기는 없습니다.
