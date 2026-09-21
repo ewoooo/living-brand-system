@@ -26,9 +26,23 @@ export { KEY_VISUAL_PATTERN_DEFAULT_INPUT, KEY_VISUAL_PATTERN_REFERENCE_BASE } f
  * 미리보기는 뷰포트 크기로 씬을 만들고, export는 `getGraphicStudioVectorArtifact`가 요청 크기로 씬을
  * 처음부터 다시 계산한다. 즉 크기는 이미 export 경계가 소유한다.
  *
- * 그래서 여기서는 **viewport를 곧 실제 크기로 간주하고** 축별 스케일(width/720, height/720)을 그대로
- * 적용한다. previewScale류를 되살리면 export가 소유한 것을 두 곳에서 정하게 된다.
+ * 그래서 여기서는 **viewport를 곧 실제 크기로 간주한다.** 스케일은 축별이 아니라 짧은 변 하나에서
+ * 나오고(width/720·height/720을 따로 쓰면 여백비가 그대로 화면비가 된다), 여백은 그 변의
+ * `MARGIN_RATIO`다. previewScale류를 되살리면 export가 소유한 것을 두 곳에서 정하게 된다.
  */
+
+/** 여백은 짧은 변의 비율이다 — 사방이 절대 같고, 판이 길어져도 따라 커지지 않는다. */
+const MARGIN_RATIO = 0.06
+/** 기준점이 이 칸 수 이내로 끝에 붙으면 끝으로 스냅한다 — 두 줄짜리 사분면을 만들지 않는다. */
+const EDGE_SNAP_CELLS = 2
+/**
+ * 꼭짓점 예외 칸을 기준 자리에서 꼭짓점 쪽으로 얼마나 더 붙일지 — 대각선 축으로 두께의 몇 배인가.
+ * 기준 자리는 square cap의 바깥 꼭지가 같은 행·열의 바깥 모서리(칸에서 두께의 절반)에 닿는 곳이다.
+ * 1이면 선의 바깥 끝점 자체가 그 모서리에 놓인다(축마다 두께/√2). 눈으로 보고 고른 값이다.
+ *
+ * 🔴 취향값이라 바뀐다 — 테스트는 이 숫자를 박지 말고 여기서 가져다 관계를 검사한다.
+ */
+export const CORNER_OUTWARD_NUDGE = 0.75
 
 const directionIds = KEY_VISUAL_PATTERN_DIRECTIONS.map((option) => option.value)
 const viewpointIds = KEY_VISUAL_PATTERN_VIEWPOINTS.map((option) => option.value)
@@ -49,8 +63,6 @@ export const keyVisualPatternInputSchema = z.strictObject({
 		y: z.number().min(0).max(1),
 	}),
 	lineLength: z.number().min(1).max(200),
-	horizontalMargin: z.number().min(0).max(200),
-	verticalMargin: z.number().min(0).max(200),
 	minCellGap: z.number().min(0).max(100),
 	lengthFillRatio: z.number().min(0).max(1),
 	depthGamma: z.number().min(1).max(6),
@@ -72,7 +84,7 @@ function resolveOption<Id extends string>(
 
 /**
  * Controller 값을 Key Visual Pattern 입력으로 바꾸고 검증한다.
- * 컨트롤이 없는 7개 값은 기본값 스프레드에서 그대로 온다 — 사용자가 못 바꾸지만 계산에는 쓰인다.
+ * 컨트롤이 없는 5개 값은 기본값 스프레드에서 그대로 온다 — 사용자가 못 바꾸지만 계산에는 쓰인다.
  */
 export function toKeyVisualPatternInput(values: ControllerValues): KeyVisualPatternInput {
 	const base = KEY_VISUAL_PATTERN_DEFAULT_INPUT
@@ -124,9 +136,11 @@ export type KeyVisualPatternScene = {
 }
 
 /**
- * 기준 px control을 현재 캔버스 px로 환산한 값. 🔴 스케일이 축별로 셋이다 — 가로 간격은 폭 비율,
- * 세로 간격은 높이 비율, 축과 무관한 값(선 길이·최소 간격·두께)은 평균 비율을 쓴다.
- * 비정방 캔버스에서 x·y 압축 하한이 비대칭이 되는 것은 원본 동작이므로 보정하지 않는다.
+ * 기준 px control을 현재 캔버스 px로 환산한 값. 🔴 스케일은 **짧은 변 하나**뿐이고 여백·선 길이·
+ * 최소 간격·두께가 전부 그것을 쓴다 — 축마다 다른 비율을 쓰면 비정방 캔버스에서 여백과 압축 하한이
+ * 비대칭이 된다.
+ * 🔴 `columnGap`·`rowGap`만은 환산값이 아니라 **역산값**이다 — 여백을 먼저 고정하고 정수 칸에
+ * 맞추므로 `available / (칸 수 - 1)`로 나온다. 지정 간격과 반 칸 안쪽으로 어긋난다.
  */
 type KeyVisualPatternMetrics = {
 	columns: number
@@ -186,7 +200,14 @@ export function createKeyVisualPatternScene(
 	for (let row = 0; row < metrics.rows; row++) {
 		for (let column = 0; column < metrics.columns; column++) {
 			const position = getGridPosition(metrics, layout, row, column)
-			const angle = getLineAngle(input, metrics, position, origin, row, column)
+			const { angle, anchorInward } = getLineOrientation(
+				input,
+				metrics,
+				position,
+				origin,
+				row,
+				column,
+			)
 			const weight = input.variableWeight
 				? getLineWeight(metrics, position, origin, spanX, spanY)
 				: metrics.minLineWeight
@@ -200,15 +221,24 @@ export function createKeyVisualPatternScene(
 					: 0
 			const finalScale = Math.min(position.depthScale, safetyScale)
 			const length = metrics.lineLength * finalScale
+			const strokeWeight = weight * finalScale
 			const halfX = Math.cos(angle) * length * 0.5
 			const halfY = Math.sin(angle) * length * 0.5
+			// 꼭짓점 예외 칸만 가운데가 아니라 바깥쪽으로 밀어 앉힌다 — 가운데를 칸에 맞추면
+			// 대각선이라 혼자 격자 밖으로 나간다. 기준 자리(cap 바깥 꼭지가 모서리에 닿는 곳)에서
+			// 꼭짓점 쪽으로 CORNER_OUTWARD_NUDGE만큼 더 붙인다.
+			const inset = anchorInward
+				? length * 0.5 + (1 - Math.SQRT1_2 - CORNER_OUTWARD_NUDGE) * strokeWeight
+				: 0
+			const centerX = position.x + Math.cos(angle) * inset
+			const centerY = position.y + Math.sin(angle) * inset
 
 			dashes.push({
-				x1: position.x + halfX,
-				y1: position.y + halfY,
-				x2: position.x - halfX,
-				y2: position.y - halfY,
-				weight: weight * finalScale,
+				x1: centerX + halfX,
+				y1: centerY + halfY,
+				x2: centerX - halfX,
+				y2: centerY - halfY,
+				weight: strokeWeight,
 			})
 		}
 	}
@@ -227,39 +257,42 @@ function createMetrics(
 	input: KeyVisualPatternInput,
 	viewport: { width: number; height: number },
 ): KeyVisualPatternMetrics {
-	const widthScale = viewport.width / KEY_VISUAL_PATTERN_REFERENCE_BASE
-	const heightScale = viewport.height / KEY_VISUAL_PATTERN_REFERENCE_BASE
-	const averageScale = (widthScale + heightScale) / 2
-	const columnGap = input.columnGap * widthScale
-	const rowGap = input.rowGap * heightScale
-	const columns = getAxisCount(input.horizontalMargin, input.columnGap)
-	const rows = getAxisCount(input.verticalMargin, input.rowGap)
+	// 🔴 스케일도 여백도 **짧은 변 하나**에서 나온다. 축마다 폭·높이 비율을 따로 쓰면 여백비가 그대로
+	//    화면비가 되고(5:1 판에서 여백이 5배), 같은 간격 값이 축마다 다른 간격으로 그려진다.
+	const shortSide = Math.min(viewport.width, viewport.height)
+	const scale = shortSide / KEY_VISUAL_PATTERN_REFERENCE_BASE
+	const margin = shortSide * MARGIN_RATIO
+	const availableWidth = viewport.width - margin * 2
+	const availableHeight = viewport.height - margin * 2
+	const columns = getAxisCount(availableWidth, input.columnGap * scale)
+	const rows = getAxisCount(availableHeight, input.rowGap * scale)
 
 	return {
 		columns,
 		rows,
-		columnGap,
-		rowGap,
-		// 칸을 다 채우고 남는 공간을 반씩 나눠 여백을 대칭으로 만든다 — 입력 여백과 다른 값이 될 수 있다.
-		horizontalMargin: (viewport.width - (columns - 1) * columnGap) / 2,
-		verticalMargin: (viewport.height - (rows - 1) * rowGap) / 2,
-		lineLength: input.lineLength * averageScale,
-		minCellGap: input.minCellGap * averageScale,
-		minLineWeight: input.minWeight * averageScale,
-		maxLineWeight: input.maxWeight * averageScale,
+		// 여백을 먼저 고정했으므로 맞춰지는 쪽은 간격이다 — 격자가 양 끝 여백선에 정확히 착지한다.
+		// 지정 간격과는 반 칸 안쪽으로 어긋나고, 긴 변에서는 칸이 늘어 간격이 그 값에 수렴한다.
+		columnGap: columns > 1 ? availableWidth / (columns - 1) : 0,
+		rowGap: rows > 1 ? availableHeight / (rows - 1) : 0,
+		horizontalMargin: margin,
+		verticalMargin: margin,
+		lineLength: input.lineLength * scale,
+		minCellGap: input.minCellGap * scale,
+		minLineWeight: input.minWeight * scale,
+		maxLineWeight: input.maxWeight * scale,
 	}
 }
 
 /**
- * 칸 개수는 기준 공간(720)에서 센다. 스케일된 간격으로 나누면 대수적으로 같은 식인데도 부동소수
- * 오차가 floor를 하나 떨어뜨리고 홀수 강제가 또 하나를 깎아서, 뷰포트 폭에 따라 개수가 2씩 튄다.
+ * 여백 안쪽에 지정 간격으로 들어가는 칸 수. 긴 변일수록 칸이 늘어난다 — 칸 크기를 판형에 맡기지
+ * 않는 것이 「변이 길면 간격도 커진다」를 없애는 자리다.
  *
  * 짝수면 정중앙 칸이 없으므로 항상 홀수로 만든다(넘치지 않게 하나 줄인다).
- * 🔴 하한 1은 여백이 기준 공간을 다 먹었을 때 대응이다 — 원본은 그 경계에서 -1을 만들어 루프가 아예
- *    돌지 않는다. 1도 홀수라 정중앙 칸은 남는다.
+ * 🔴 뷰포트가 0이면 간격도 0이라 나눗셈이 NaN이다 — 그 경계에서 한 칸으로 떨어뜨린다.
  */
-function getAxisCount(referenceMargin: number, gap: number) {
-	const raw = Math.floor((KEY_VISUAL_PATTERN_REFERENCE_BASE - referenceMargin * 2) / gap) + 1
+function getAxisCount(available: number, gap: number) {
+	if (!(gap > 0) || !(available > 0)) return 1
+	const raw = Math.floor(available / gap) + 1
 	return Math.max(1, raw % 2 === 0 ? raw - 1 : raw)
 }
 
@@ -297,7 +330,18 @@ function snapOrigin(
 function snapIndex(value: number, gap: number, offset: number, count: number) {
 	// 🔴 뷰포트가 0이면 간격도 0이 된다. 0으로 나눈 NaN은 clamp를 통과해 씬 전체를 NaN으로 만든다.
 	if (gap <= 0) return 0
-	return clamp(Math.round((value - offset) / gap), 0, count - 1)
+	return snapToEdge(clamp(Math.round((value - offset) / gap), 0, count - 1), count)
+}
+
+/**
+ * 기준점이 끝에서 EDGE_SNAP_CELLS칸 안쪽에 서면 그쪽 사분면이 두 줄 이하로 납작해져 어색해진다.
+ * 그 자리에 아예 못 서게 끝으로 붙인다 — 드래그하면 마지막 두 칸이 건너뛰어진다.
+ */
+function snapToEdge(index: number, count: number) {
+	const last = count - 1
+	if (index > EDGE_SNAP_CELLS && index < last - EDGE_SNAP_CELLS) return index
+	// 칸이 적어 양쪽 구간이 겹치면 가까운 끝으로 보낸다.
+	return index * 2 <= last ? 0 : last
 }
 
 /**
@@ -415,32 +459,39 @@ function getGridPosition(
 	}
 }
 
-function getLineAngle(
+/** 각도와 함께 「그 칸을 가운데가 아니라 바깥 끝으로 앉힐지」를 돌려준다 — 꼭짓점 예외에만 쓴다. */
+function getLineOrientation(
 	input: KeyVisualPatternInput,
 	metrics: KeyVisualPatternMetrics,
 	position: Point,
 	origin: Point,
 	row: number,
 	column: number,
-) {
-	if (input.direction === 'vertical') return Math.PI / 2
-	if (input.direction === 'horizontal') return 0
+): { angle: number; anchorInward: boolean } {
+	if (input.direction === 'vertical') return { angle: Math.PI / 2, anchorInward: false }
+	if (input.direction === 'horizontal') return { angle: 0, anchorInward: false }
 
 	let directionX = origin.x - position.x
 	let directionY = origin.y - position.y
+	let anchorInward = false
 
 	// 기준점이 칸에 스냅되므로 거리가 정확히 0인 칸이 매 렌더에 하나 생기고, 그 칸만 각도를 못 구한다.
 	// 🔴 원본(HD_PATTERN.js L719~723)의 설명 주석이 코드와 정반대다("위/아래 끝 줄이면 세로 / 좌우 끝
 	//    줄이면 가로"). 화면을 만든 것은 코드이므로 코드를 정본으로 옮겼다 — 끝 행은 가로, 끝 열은 세로다.
-	// 네 모서리도 대각선이 아니라 안쪽 칸과 같은 규칙(더 좁은 축 방향)을 쓴다.
 	if (directionX === 0 && directionY === 0) {
 		const isRowEdge = row === 0 || row === metrics.rows - 1
 		const isColumnEdge = column === 0 || column === metrics.columns - 1
-		const preferVertical = metrics.columnGap > metrics.rowGap
+		// 🔴 파생 간격(metrics)이 아니라 **지정 간격**으로 가른다. 파생 쪽은 정수 칸에 맞추느라 두 축이
+		//    1~6% 안으로 붙어서, 어느 쪽이 큰지를 칸 수 반올림이 정한다 — 슬라이더 한 칸에 이 칸만
+		//    90° 돌고, 하필 기준 칸이라 화면에서 가장 두꺼운 선이다.
+		const preferVertical = input.columnGap > input.rowGap
 
 		if (isRowEdge && isColumnEdge) {
-			directionX = preferVertical ? 0 : 1
-			directionY = preferVertical ? 1 : 0
+			// 🔴 판의 꼭짓점에서만 끝 행(가로)과 끝 열(세로)이 같은 칸에서 만난다. 둘 중 하나를 고르면
+			//    그 줄이 한 칸 끊겨 보이므로 여기만 안쪽 대각선으로 둔다.
+			directionX = column === 0 ? 1 : -1
+			directionY = row === 0 ? 1 : -1
+			anchorInward = true
 		} else if (isColumnEdge) {
 			directionX = 0
 			directionY = 1
@@ -456,7 +507,7 @@ function getLineAngle(
 		}
 	}
 
-	return Math.atan2(directionY, directionX)
+	return { angle: Math.atan2(directionY, directionX), anchorInward }
 }
 
 /**

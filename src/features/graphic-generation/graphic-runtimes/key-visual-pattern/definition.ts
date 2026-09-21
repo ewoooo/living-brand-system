@@ -44,7 +44,7 @@ export const KEY_VISUAL_PATTERN_COLORWAYS = {
 export type KeyVisualPatternColorwayId = keyof typeof KEY_VISUAL_PATTERN_COLORWAYS
 
 /**
- * 컨트롤이 있는 값과 없는 값을 함께 둔다. 뒤쪽 7개는 브랜드팀이 UI에서 뺀 값이라 사용자가 못 바꾸지만,
+ * 컨트롤이 있는 값과 없는 값을 함께 둔다. 뒤쪽 5개는 브랜드팀이 UI에서 뺀 값이라 사용자가 못 바꾸지만,
  * 계산에는 그대로 쓰이므로 입력의 일부다.
  *
  * `depthGamma`·`depthScaleMin`은 원본이 감춘 원근 강도 3단(약함/보통/강함) 중 「보통」이다.
@@ -60,8 +60,6 @@ export const KEY_VISUAL_PATTERN_DEFAULT_INPUT = {
 	maxWeight: 10,
 	origin: { x: 0.5, y: 0.5 },
 	lineLength: 35,
-	horizontalMargin: 30,
-	verticalMargin: 30,
 	minCellGap: 8,
 	lengthFillRatio: 0.6,
 	depthGamma: 2.5,
@@ -206,7 +204,7 @@ export default defineGraphicRuntime({
 						'가장 두꺼운 라인',
 						KEY_VISUAL_PATTERN_DEFAULT_INPUT.maxWeight,
 						1,
-						20,
+						15,
 					),
 				],
 			},
