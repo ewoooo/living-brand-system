@@ -2,13 +2,13 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import { FALLBACK_LOCALE, DEFAULT_LOCALE as LOCALE } from '@/lib/locale'
 import type { GuidelineDocument } from '@/payload-types'
-
 import type {
 	GuidelineChapterData,
 	GuidelineMetadataData,
 	GuidelineNavigationTopicData,
 	GuidelineTopicData,
 } from '../domain/contract/guideline'
+import { sectionTitle } from '../sections/model'
 
 /**
  * Creator UI 렌더링용 published guideline 조회 repository.
@@ -86,18 +86,27 @@ export async function listPublishedGuidelineNavigationTopics(): Promise<
 			//    테이블(blk·img·위젯 20종)은 조인 자체가 일어나지 않는다
 			//    (`@payloadcms/drizzle` find/traverseFields.js — 목록에 없는 블록은 빈 select로 접힌다).
 			blocks: { section: { anchor: true, title: true } },
+			contentModel: true,
+			sections: { type: true, anchor: true, title: true },
 		},
 	})
 
 	return documents.docs.map((document) => ({
 		chapterId: relationshipId(document.chapter),
 		id: document.id,
-		sections: (document.blocks ?? []).flatMap((block) =>
-			// 제목 없는 섹션(히어로)은 앵커도 목차 항목도 없다.
-			block.blockType === 'section' && block.anchor && block.title
-				? [{ anchor: block.anchor, title: block.title }]
-				: [],
-		),
+		sections:
+			document.contentModel === 'sections'
+				? (document.sections ?? []).flatMap((section) =>
+						section.anchor
+							? [{ anchor: section.anchor, title: sectionTitle(section) }]
+							: [],
+					)
+				: (document.blocks ?? []).flatMap((block) =>
+						// 제목 없는 섹션(히어로)은 앵커도 목차 항목도 없다.
+						block.blockType === 'section' && block.anchor && block.title
+							? [{ anchor: block.anchor, title: block.title }]
+							: [],
+					),
 		slug: document.slug,
 		title: document.title,
 	}))
@@ -148,6 +157,8 @@ export async function findPublishedTopicBySlug(
 			slug: true,
 			headerImage: true,
 			blocks: true,
+			contentModel: true,
+			sections: true,
 		},
 	})
 
@@ -155,6 +166,8 @@ export async function findPublishedTopicBySlug(
 	return topic
 		? {
 				blocks: topic.blocks ?? [],
+				contentModel: topic.contentModel,
+				sections: topic.sections,
 				headerImage: topic.headerImage ?? null,
 				id: topic.id,
 				title: topic.title,

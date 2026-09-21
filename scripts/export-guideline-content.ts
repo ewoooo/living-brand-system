@@ -54,6 +54,8 @@ const content = {
 		headerImage: toPortable(doc.headerImage ?? null),
 		rules: toPortable(doc.rules ?? []),
 		blocks: toPortable(doc.blocks ?? []),
+		contentModel: doc.contentModel ?? 'legacy',
+		sections: toPortable(doc.sections ?? []),
 	})),
 }
 

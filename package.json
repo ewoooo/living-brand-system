@@ -64,6 +64,7 @@
 		"culori": "^4.0.2",
 		"dialkit": "1.4.3",
 		"dotenv": "16.4.7",
+		"embla-carousel-autoplay": "8.6.0",
 		"embla-carousel-react": "^8.6.0",
 		"fflate": "0.8.3",
 		"fontkit": "^2.0.4",

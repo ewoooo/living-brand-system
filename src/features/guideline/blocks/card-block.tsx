@@ -1,6 +1,6 @@
-import { GuidelineSection } from '@/components/guideline/sections/guideline-section'
-import { SectionContents } from '@/components/guideline/sections/section-contents'
-import { SectionHeadings } from '@/components/guideline/sections/section-headings'
+import { GuidelineSection } from '@/components/guideline/deprecated/sections/guideline-section'
+import { SectionContents } from '@/components/guideline/deprecated/sections/section-contents'
+import { SectionHeadings } from '@/components/guideline/deprecated/sections/section-headings'
 import type { BaseBlock } from '@/payload-types'
 import { prepareCards } from './prepare-cards'
 

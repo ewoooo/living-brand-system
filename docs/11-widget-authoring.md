@@ -4,6 +4,16 @@
 
 시각 토큰·프런트엔드 스택은 [09 디자인 시스템](09-design-system.md), 컴포넌트 저작 계약은 [10 컴포넌트 저작](10-component-authoring.md)을 먼저 읽습니다.
 
+## 독립 디스플레이 통합 결정 (2026-09-15)
+
+신규 카드에서는 LogoDisplay·ClearspaceViewer·TypeLanguage·TypeHierarchy·IconGrid·PresetPanel을 독립 타입으로 제공하지 않습니다. 각각 이미지 카드, 공통 가이드 On/Off, 언어별 타이포 카드, 타이포 도판+명세 캡션, 아이콘 카드+Grid, 오용 도판+상태 배지+캡션으로 조합합니다. 콘텐츠와 규정은 폐기하지 않습니다.
+
+`cards/displays/registry.ts`의 `CONSOLIDATED_DISPLAY_IDS`가 대상 목록입니다. `DISPLAYS`는 신규 선택 목록이고 `LEGACY_RENDERABLE_DISPLAYS`는 기존 저장 콘텐츠를 해석하는 호환 목록입니다. 기존 카드에는 자신이 이미 사용 중인 타입만 추가 허용하며, 다른 폐기 타입을 다시 선택 가능하게 열지 않습니다.
+
+이번 단계는 신규 독립 타입의 사용 중단입니다. 기존 DB 필드·블록 순서·렌더러·컨트롤러는 보존합니다. 전체 CMS 마이그레이션에서 콘텐츠를 공통 카드 구성으로 이전한 뒤 호환 정의와 렌더러를 제거합니다. PresetPanel의 생성 도판은 에셋 확보가 선행되어야 합니다. 신규 카드 구성에서 구형 타입을 다시 등록하지 않습니다.
+
+StemClearSpace도 신규 선택에서 제외하고 검토 예제를 제거했습니다. 기존 저장 콘텐츠는 호환 경로에 남습니다. TypeSpecimen의 편집, CiLockupHero의 자동 순환, LogoOnBackground의 배경별 사용 규정은 이번 대상이 아닙니다. 아래 기존 위젯 저작 절차는 호환 경로 설명이며 신규 카드 경계는 10장의 정규화 계약을 따릅니다.
+
 ## 1. 새 위젯 만드는 순서
 
 ```
@@ -11,7 +21,7 @@
 2. definition.ts 작성 — `defineDisplay({ id, type, category, sizing, dbName, name, description, fields })`. 짧은 dbName 필수
 3. component.tsx 작성 (서버). 기본 export는 `({ display })`를 받는 진입점. 인터랙션이 있으면 view.tsx 추가 (클라이언트)
 4. 등록 2곳을 손으로 고친다 (§3)
-5. /guideline/widgets 에서 렌더 확인
+5. /guideline/playground 에서 렌더 확인
 6. admin에서 섹션 안에 넣어 실제 페이지로 확인
 ```
 
@@ -61,10 +71,10 @@
 |---|---|
 `cards/displays/registry.ts` | `DISPLAYS` 배열에 폴더의 `definition` 추가(순서 = admin 선택기 순서). 여기 없으면 admin 카드에서 고를 수 없다 |
 `cards/displays/registry.render.tsx` | `DISPLAY_COMPONENTS`에 같은 id로 폴더의 기본 export 컴포넌트 추가. 빠지면 typecheck가 잡는다 |
-`src/components/guideline/widgets/gallery.tsx` | `/guideline/widgets` 미리보기 목록 |
+`src/components/guideline/playground/examples.ts` | `/guideline/playground` 미리보기 목록 |
 `controllers/registry.ts` | (컨트롤러를 여는 위젯만) `blockType` → 매니페스트 (§4.1) |
 
-레지스트리 항목만 넣고 렌더를 빠뜨리면 typecheck가 잡습니다. 갤러리(`src/components/guideline/widgets/gallery.tsx`)는 dev 미리보기용이라 별도이고, 여기만 등록하면 미리보기에서만 보입니다.
+레지스트리 항목만 넣고 렌더를 빠뜨리면 typecheck가 잡습니다. 갤러리(`src/components/guideline/playground/examples.ts`)는 dev 미리보기용이라 별도이고, 여기만 등록하면 미리보기에서만 보입니다.
 
 🔴 **`dbName`은 필수입니다.** 중첩 블록의 이름이 길어지면 Postgres 식별자 63자 한계에 닿습니다. 예: `clearspaceViewerWidget` → `dbName: 'cvw'`. enum은 `enumName`으로 전역 이름을 공유합니다.
 
@@ -96,11 +106,11 @@
 
 ### 조작값은 해당 카드가 소유합니다
 
-카드로 이관한 `type-language`·`type-hierarchy`·`layout-grid-overlay`·`type-specimen`·`type-weight`의 조작형은 `GuidelineCard`가 기존 `GuidelineControllerScope`를 열고, 같은 스코프 안에서 표본·파생 명세·컨트롤을 연결합니다. 카드별 초기값과 편집값은 독립적입니다. CMS 초기값이 바뀌면 해당 카드의 값만 초기화됩니다. 새 콘텐츠 계층이나 저장 필드를 추가하지 않습니다.
+카드로 이관한 `ci-lockup`·`type-language`·`type-hierarchy`·`layout-grid-overlay`·`type-specimen`·`type-weight`의 조작형은 `GuidelineCard`가 기존 `GuidelineControllerScope`를 열고, 같은 스코프 안에서 표본·파생 명세·컨트롤을 연결합니다. 카드별 초기값과 편집값은 독립적입니다. CMS 초기값이 바뀌면 해당 카드의 값만 초기화됩니다. 새 콘텐츠 계층이나 저장 필드를 추가하지 않습니다.
 
 `CardDisplay`는 정적·동적 디스플레이와 조작 영역을 연결하고, `DisplayCaption`은 저작 캡션과 파생 명세를 선택합니다. 섹션 배치는 `SectionContents` 아래 `GridContainer`·`CarouselContainer`가 소유합니다. 위젯은 이 배치나 캡션을 직접 만들지 않습니다.
 
-기존 `ci-lockup`·`clearspace-viewer`·`layout-grid`의 블록 공유 컨트롤러 등록은 유지하지만 본문 연결은 아직 이관하지 않았습니다. 새 카드의 조작을 기존 블록 공유 스코프에 넣지 않습니다. 모듈 스코프 스토어는 금지합니다.
+기존 `clearspace-viewer`·`layout-grid`의 블록 공유 컨트롤러 등록은 유지하지만 본문 연결은 아직 이관하지 않았습니다. 새 카드의 조작을 기존 블록 공유 스코프에 넣지 않습니다. 모듈 스코프 스토어는 금지합니다.
 
 ### 4.1 컨트롤은 매니페스트가 정하고 하단 Floating Controller에 뜹니다
 
@@ -320,7 +330,7 @@ Layout Grid Overlay는 카드가 상하에 높이의 10%, 좌우에 너비의 10
 | `downloads` | definition | 지원 형식. 현재 CI Lockup·Hero의 SVG만 제공 |
 | `DisplayDownload` | 클라이언트 위젯 | label·format·download 콜백 제공. 콜백은 파일명과 Blob 반환 |
 
-카드는 `Display → Mark → Actions → Caption`을 조합합니다. `CardActionsProvider`는 카드별 액션 자리를 연결하고, `CardActions`는 프레임 안쪽 우상단 위치, 공용 버튼은 실행 중 비활성·오류 알림·재시도를 소유합니다. 실행 콜백을 서버 props로 넘기지 않고 위젯의 클라이언트 트리에 두며 버튼 DOM만 해당 카드의 자리로 보냅니다. 미지원 형식과 다운로드 없는 위젯에는 버튼을 만들지 않습니다. 하단 컨트롤러와 Actions는 별도입니다.
+카드는 `Display → Mark → Actions → Caption`을 조합합니다. `CardActionsProvider`는 카드별 액션 자리를 연결하고, `CardActions`는 프레임 위·오른쪽 24px 안쪽 위치, 공용 버튼은 실행 중 비활성·오류 알림·재시도를 소유합니다. 실행 콜백을 서버 props로 넘기지 않고 위젯의 클라이언트 트리에 두며 버튼 DOM만 해당 카드의 자리로 보냅니다. 미지원 형식과 다운로드 없는 위젯에는 버튼을 만들지 않습니다. 다운로드 버튼은 테두리 없는 36×36px 원형이며 내부 아이콘은 24×24px로 고정합니다. Figma `152:2` 기준 배경 `#E0E0E0`·아이콘 Black/60을 테마와 무관하게 사용합니다. 아이콘은 `public/icons/guideline/download.svg`의 Figma 24px 원본을 사용합니다. 하단 컨트롤러와 Actions는 별도입니다.
 
 CI Lockup·Hero는 내부 버튼을 제거하고 공통 Actions를 사용합니다. 배경은 카드 영역 전체를 채우며 `DisplayFit`은 사방 16px 안쪽에서 로고·보호 공간 또는 치수 콘텐츠만 맞춥니다. 이 여백은 화면 표시용이며 로고 보호 공간 규정에 합산하거나 SVG로 내보내지 않습니다. H와 규정 비례는 그대로 유지하며 SVG 내보내기는 화면 맞춤 배율을 걷어낸 좌표를 사용합니다. 나머지 위젯은 responsive 계약으로 기존 배치를 유지합니다.
 
@@ -343,14 +353,26 @@ CI의 `export-svg.ts`는 위젯 안에 둡니다. CI DOM·베이스라인·서�
 | layoutGridOverlayWidget | dynamic | layout | responsive | 없음 |
 | layoutGridWidget | dynamic | layout | responsive | 없음 |
 | logoBgPickerWidget | dynamic | identity | responsive | 없음 |
-| logoColorVariantWidget | dynamic | identity | responsive | 없음 |
 | logoDisplayWidget | dynamic | identity | responsive | 없음 |
 | logoOnBgWidget | dynamic | identity | responsive | 없음 |
 | presetPanelDisplay | dynamic | media | responsive | 없음 |
 | stemClearSpaceWidget | dynamic | identity | responsive | 없음 |
 | typeHierarchyWidget | dynamic | typography | responsive | 없음 |
 | typeLanguageWidget | dynamic | typography | responsive | 없음 |
-| typeScrambleWidget | dynamic | typography | responsive | 없음 |
 | typeSpecimenWidget | dynamic | typography | responsive | 없음 |
 | typeWeightWidget | dynamic | typography | responsive | 없음 |
 | staticDisplay | static | media | responsive | 없음 |
+
+### 개발용 플레이그라운드
+
+`/guideline/playground`는 development에서만 열립니다. 기존 `/guideline/widgets`는 새 경로로 이동합니다. `src/components/guideline/playground/examples.ts`는 기존 업로드 관계를 읽기 전용으로 연결하고, 모든 예시는 서비스의 `CardBlock`을 통해 렌더합니다. 위젯 자체 컨트롤·다운로드·캡션 경로를 따로 구현하지 않습니다.
+
+화면 너비(365·768·1440px), Grid/Carousel, 최대 1~4열, 카드 수(1~5), 비율을 바꿀 수 있습니다. 별도 앱 셸 없는 iframe이 실제 viewport 브레이크포인트를 재현합니다. 위젯이 고정 비율을 정의했다면 서비스와 동일하게 그 비율이 우선합니다. 변경은 미리보기 URL에만 전달하며 DB에 저장하지 않습니다.
+
+### 폐기한 위젯
+
+`typeScrambleWidget`은 선택 목록·플레이그라운드·서비스 렌더에서 제외했습니다. 애니메이션 구현과 전용 기본 표본은 삭제했습니다. 기존 문서와 버전 저장을 위해 `type-scramble/definition.ts`의 필드만 유지합니다. 기존 스크램블 카드가 있는 문서는 저장 가능하며 화면에서는 카드 자리까지 제외합니다. DB 데이터와 콘텐츠 스냅샷은 변경하지 않습니다.
+
+화면·Admin에서 `ciLockupWidget`의 명칭은 **CI 조합형**, `ciLockupHeroWidget`은 **CI 조합형 히어로**입니다. 기존 저장 식별자와 코드 경로는 유지합니다.
+
+`logoColorVariantWidget`도 동일한 방식으로 폐기했습니다. 새 옵션이나 대체 위젯은 추가하지 않으며 저장 필드만 호환용으로 유지합니다.

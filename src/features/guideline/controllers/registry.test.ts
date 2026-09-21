@@ -205,3 +205,16 @@ describe('CI 락업 계층별 선택지 좁히기', () => {
 		expect(ciEffective({ form: 'horizontalA' }).get('form')?.defaultValue).toBe('horizontal')
 	})
 })
+
+it('CI 카드가 기존 초기값과 숨김 제한을 가진 컨트롤러에 연결된다', async () => {
+	const { cardControllerFor } = await import('./registry')
+	const display = {
+		blockType: 'ciLockupWidget' as const,
+		language: 'en' as const,
+		hiddenControls: ['language' as const],
+	}
+	const controller = cardControllerFor(display)
+	expect(controller?.manifest).toBe(ciEntry?.manifest)
+	expect(controller?.restrictions).toEqual(ciEntry?.toRestrictions(display))
+	expect(cardControllerFor({ blockType: 'ciLockupHeroWidget' })).toBeNull()
+})

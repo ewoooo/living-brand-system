@@ -1,7 +1,7 @@
 import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 import { HEIGHT } from '../ci-lockup/manifest'
 
-// CI 락업 히어로 — 락업 하나를 크게 놓고 **이름만 끊임없이 갈아 끼우는** 판.
+// CI 조합형 히어로 — 락업 하나를 크게 놓고 **이름만 끊임없이 갈아 끼우는** 판.
 //
 // 🔑 락업을 다시 그리지 않는다. `ci-lockup`의 뷰에 축을 전부 고정해 넘기고 이름 하나만 시간에
 //    따라 바꾼다 — 그러면 조판·색·간격 규정이 한 곳(`ci-lockup/rules.ts`)에만 남는다.
@@ -23,8 +23,8 @@ export const ciLockupHero = defineDisplay({
 	sizing: 'contain',
 	downloads: ['svg'],
 	dbName: 'cih',
-	name: 'CI 락업 히어로',
-	description: '자회사명·해외지사명이 도는 CI 락업. 판 높이가 심볼 크기를 정한다.',
+	name: 'CI 조합형 히어로',
+	description: '자회사명·해외지사명이 도는 CI 조합형. 판 높이가 심볼 크기를 정한다.',
 	fields: [
 		{
 			name: 'source',

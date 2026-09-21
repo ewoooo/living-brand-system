@@ -2,6 +2,7 @@ import { type CollectionConfig, slugField } from 'payload'
 import { guidelineRulesField } from '@/features/guideline/blocks/fields'
 import { guidelineBlocks } from '@/features/guideline/blocks/registry'
 import { validateGuidelineDocumentSlug } from '@/features/guideline/checks/validate-guideline-document-slug'
+import { sectionsField } from '@/features/guideline/sections/schema'
 import { managerManagedAccess } from '@/lib/auth'
 import { guidelineDraftVersions } from './shared'
 
@@ -94,10 +95,26 @@ export const GuidelineDocuments: CollectionConfig = {
 			},
 		},
 		{
+			name: 'contentModel',
+			type: 'select',
+			label: '본문 형식',
+			defaultValue: 'legacy',
+			options: [
+				{ label: '기존 본문', value: 'legacy' },
+				{ label: '신규 섹션', value: 'sections' },
+			],
+			admin: {
+				description:
+					'신규 계약으로 작성할 문서는 신규 섹션을 선택합니다. 기존 본문은 삭제하지 않습니다.',
+			},
+		},
+		sectionsField,
+		{
 			name: 'blocks',
 			type: 'blocks',
 			label: '본문',
 			blocks: guidelineBlocks,
+			admin: { condition: (data) => data.contentModel !== 'sections' },
 		},
 		guidelineRulesField(),
 		{

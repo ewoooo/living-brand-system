@@ -5,7 +5,12 @@ import { LANGUAGES } from '../cards/displays/dynamics/brand-typeface'
 export function prepareCards(cards: CardData[]) {
 	return cards.flatMap<CardData>((card, index) => {
 		const display = card.display?.[0]
-		if (!display) return []
+		if (
+			!display ||
+			display.blockType === 'typeScrambleWidget' ||
+			display.blockType === 'logoColorVariantWidget'
+		)
+			return []
 		if (display.blockType !== 'typeLanguageWidget' || display.layout !== 'compare')
 			return [card]
 		return LANGUAGES.map(({ key }) => ({

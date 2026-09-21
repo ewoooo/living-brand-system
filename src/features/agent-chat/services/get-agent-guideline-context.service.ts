@@ -1,5 +1,6 @@
 import { formatBlockForAgent } from '@/features/guideline/blocks/projection'
 import { collectGuidelineCheckSources } from '@/features/guideline/checks/collect-guideline-check-sources'
+import { projectSection } from '@/features/guideline/sections/model'
 import { compact } from '@/features/guideline/utils/block-text'
 import {
 	type AgentGuidelineDocument,
@@ -111,7 +112,9 @@ function formatGuidelineDocument(
 	return compact([
 		document.chapterTitle ? `Chapter: ${document.chapterTitle}` : null,
 		`Topic: ${document.title}`,
-		...(document.blocks?.map(formatBlockForAgent).filter(Boolean) ?? []),
+		...(document.contentModel === 'sections'
+			? (document.sections ?? []).map((section) => projectSection(section).text)
+			: (document.blocks?.map(formatBlockForAgent).filter(Boolean) ?? [])),
 		formattedChecks.length ? `Checks:\n${formattedChecks.join('\n')}` : null,
 	]).join('\n\n')
 }
