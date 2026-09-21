@@ -1,6 +1,6 @@
 import { CiLockupHeroView } from '@/features/guideline/cards/deprecated/displays/dynamics/ci-lockup-hero/view'
 import { PALETTES, resolvePalette } from '@/features/guideline/domain/contract/palette'
-import { findPaletteCatalog } from '@/features/guideline/repositories/palette.payload.repository'
+import { getGuidelinePalette } from '@/features/guideline/services/get-guideline-colors.service'
 import { GuidelineSection, GuidelineSectionHeading } from './components'
 import { TypeSpecimenReview } from './display-review-controls'
 import { type GuidelineCardData, GuidelineDisplayFrame, GuidelineGridContainer } from './grid'
@@ -12,7 +12,7 @@ export async function GuidelineDisplayReviewPlayground({
 }: {
 	colors: Record<string, string>
 }) {
-	const catalog = await findPaletteCatalog()
+	const catalog = await getGuidelinePalette()
 	const logos = {
 		default: '/brand/hd/hd-horizontal-default.svg',
 		white: '/brand/hd/hd-horizontal-white.svg',

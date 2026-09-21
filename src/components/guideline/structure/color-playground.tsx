@@ -1,5 +1,5 @@
 import { PALETTES, resolvePalette } from '@/features/guideline/domain/contract/palette'
-import { findPaletteCatalog } from '@/features/guideline/repositories/palette.payload.repository'
+import { getGuidelinePalette } from '@/features/guideline/services/get-guideline-colors.service'
 import { hexToRgb } from '@/lib/color'
 import { GuidelineColorSwatch, GuidelineLogoBackgroundDisplay } from './color-displays'
 import { GuidelineSection, GuidelineSectionHeading } from './components'
@@ -7,7 +7,7 @@ import { type GuidelineCardData, GuidelineDisplayFrame, GuidelineGridContainer }
 import { GuidelinePaletteDisplay } from './palette-display'
 
 export async function GuidelineColorPlayground() {
-	const catalog = await findPaletteCatalog()
+	const catalog = await getGuidelinePalette()
 	const logos = {
 		black: '/brand/hd/ko-horizontal-default-blk@2x.png',
 		white: '/brand/hd/ko-horizontal-default-wht@2x.png',

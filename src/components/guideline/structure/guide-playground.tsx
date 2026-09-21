@@ -1,6 +1,6 @@
 import imageA from '@/features/guideline/cards/displays/dynamics/layout-grid-overlay/images/layout_base_image_1.webp'
 import imageB from '@/features/guideline/cards/displays/dynamics/layout-grid-overlay/images/layout_base_image_2.webp'
-import { findCiLockupColors } from '@/features/guideline/repositories/ci-lockup-colors.payload.repository'
+import { getGuidelineLockupColors } from '@/features/guideline/services/get-guideline-colors.service'
 import { GuidelineCarouselContainer } from './carousel'
 import { GuidelineSection, GuidelineSectionHeading } from './components'
 import { type GuidelineCardData, GuidelineGridContainer } from './grid'
@@ -12,7 +12,7 @@ import {
 import { GuidelineStickyContainer } from './sticky'
 
 export async function GuidelineGuidePlayground() {
-	const colors = await findCiLockupColors()
+	const colors = await getGuidelineLockupColors()
 	const cards: GuidelineCardData[] = [
 		{
 			id: 'layout-overlay',

@@ -17,8 +17,8 @@ import { GuidelineGuidePlayground } from '@/components/guideline/structure/guide
 import { GuidelineStickyPlayground } from '@/components/guideline/structure/sticky-playground'
 import { GuidelineTypeWeightPlayground } from '@/components/guideline/structure/type-weight-playground'
 import { groupSections } from '@/features/guideline/domain/group-sections'
-import { findCiLockupColors } from '@/features/guideline/repositories/ci-lockup-colors.payload.repository'
 import type { SectionDownload } from '@/features/guideline/services/download-section-assets.client'
+import { getGuidelineLockupColors } from '@/features/guideline/services/get-guideline-colors.service'
 
 const base = '/brand/hd/'
 const logo = {
@@ -85,7 +85,7 @@ const sections: MockSection[] = [
 ]
 
 export default async function GuidelineMockupPage() {
-	const colors = await findCiLockupColors()
+	const colors = await getGuidelineLockupColors()
 	return (
 		<main data-slot="guideline-mockup" className="bg-background text-foreground">
 			<nav
