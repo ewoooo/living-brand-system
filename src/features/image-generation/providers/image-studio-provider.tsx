@@ -188,18 +188,21 @@ export function ImageStudioProvider({
 		[browse.data, configs, clearReference],
 	)
 
-	// 고른 항목의 프로파일이 아직 안 실렸으면 목록을 불러 온 뒤 이어서 얹는다.
+	// 캔버스가 보여주는 과거 묶음과, 그 안에서 크게 볼 장.
+	const [historyStack, setHistoryStack] = useState<readonly GeneratedImageHistoryItem[]>([])
+	const [historySelectedId, setHistorySelectedId] = useState<number | null>(null)
+	// 프로파일이 아직 안 실린 항목은 목록을 불러 온 뒤 이어서 얹는다.
 	// 🔴 ref로 들고 있는다 — state로 두면 이 값이 컨텍스트를 다시 만들어 캔버스가 remount된다.
 	const pendingHistory = useRef<GeneratedImageHistoryItem | null>(null)
 
 	/**
-	 * 갤러리에서 고른 과거 결과를 편집 세션에 얹는다 — 확인 없이 통째로 덮는다(사용자 지시, 2026-09-21).
+	 * 고른 장의 값으로 편집 세션을 덮는다 — 확인 없이 통째로(사용자 지시, 2026-09-21).
 	 *
 	 * 🔑 저장된 것은 프롬프트·비율·해상도·프로파일뿐이다. 나머지 축(색·카메라·참조)은 그 결과를
 	 *    만든 값을 복원할 방법이 없으므로 **프로파일 기본값으로 되돌린다.** 직전 값을 남겨 두면
 	 *    화면의 컨트롤러가 어느 결과에도 속하지 않는 뒤섞인 상태가 된다.
 	 */
-	const applyHistoryItem = useCallback(
+	const restoreFromHistory = useCallback(
 		(item: GeneratedImageHistoryItem) => {
 			if (!acceptsHistoryRestore(item)) return
 			const next =
@@ -225,12 +228,27 @@ export function ImageStudioProvider({
 		[browse, clearReference, configs],
 	)
 
+	/**
+	 * 묶음을 고른다 — **첫 장이 자동으로 선택된다**(사용자 지시, 2026-09-21).
+	 * 🔑 고르기와 덮기는 별개다. 복원 값이 없어도 캔버스에는 올라간다.
+	 */
+	const selectHistoryStack = useCallback(
+		(items: readonly GeneratedImageHistoryItem[]) => {
+			const [top] = items
+			if (!top) return
+			setHistoryStack(items)
+			setHistorySelectedId(top.id)
+			restoreFromHistory(top)
+		},
+		[restoreFromHistory],
+	)
+
 	useEffect(() => {
 		const pending = pendingHistory.current
 		if (!pending || !browse.data) return
 		pendingHistory.current = null
-		applyHistoryItem(pending)
-	}, [applyHistoryItem, browse.data])
+		restoreFromHistory(pending)
+	}, [browse.data, restoreFromHistory])
 
 	// 참조는 한 번 정해지면 고정된다 — 조정본을 다시 참조로 삼지 않아 세대 누적 열화가 없다.
 	// 고정된 참조도 프로파일 일치는 지켜야 한다 — 서버가 시드를 scenario로 조회하므로
@@ -248,7 +266,12 @@ export function ImageStudioProvider({
 	const value = useMemo<ImageStudioValue>(
 		() => ({
 			profiles: { options, browse, select: selectProfile },
-			applyHistoryItem,
+			history: {
+				selectedId: historySelectedId,
+				selectItem: setHistorySelectedId,
+				selectStack: selectHistoryStack,
+				stack: historyStack,
+			},
 			config,
 			controls: { values, bindings, update },
 			prompt: {
@@ -340,7 +363,6 @@ export function ImageStudioProvider({
 		}),
 		[
 			angles,
-			applyHistoryItem,
 			attachReference,
 			attachment,
 			attachmentError,
@@ -356,6 +378,8 @@ export function ImageStudioProvider({
 			definitions,
 			error,
 			generate,
+			historySelectedId,
+			historyStack,
 			items,
 			loading,
 			options,
@@ -367,6 +391,7 @@ export function ImageStudioProvider({
 			resolutionValue,
 			resultColor,
 			selected,
+			selectHistoryStack,
 			selectProfile,
 			session,
 			setSelected,

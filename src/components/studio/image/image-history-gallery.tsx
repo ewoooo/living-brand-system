@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Typography } from '@/components/ui/typography'
 import {
-	acceptsHistoryRestore,
 	type GeneratedImageHistoryItem,
 	type GeneratedImageHistoryStack,
 	groupHistoryByDate,
@@ -24,7 +23,7 @@ import { cn } from '@/lib/utils'
  *    권한 경계는 컬렉션이 선언하고, 이 화면은 그 결과를 그대로 반영한다.
  */
 export function ImageHistoryGallery() {
-	const { applyHistoryItem } = useImageStudio()
+	const { history } = useImageStudio()
 	const [items, setItems] = useState<GeneratedImageHistoryItem[]>([])
 	const [hasMore, setHasMore] = useState(false)
 	const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
@@ -68,6 +67,17 @@ export function ImageHistoryGallery() {
 
 	// 목록이 늘 때만 다시 묶는다 — 렌더마다 묶으면 스크롤 중에 격자가 통째로 새 객체가 된다.
 	const groups = useMemo(() => groupHistoryByDate(items), [items])
+
+	// 아무것도 안 골랐으면 가장 최근 묶음이 자동으로 선택된다(사용자 지시, 2026-09-21).
+	// 🔴 한 번만 한다 — 매번 하면 사용자가 고른 묶음을 목록이 늘 때마다 되돌려 버린다.
+	const autoSelected = useRef(false)
+	const { selectStack } = history
+	const firstStack = groups[0]?.stacks[0]
+	useEffect(() => {
+		if (autoSelected.current || !firstStack) return
+		autoSelected.current = true
+		selectStack(firstStack.items)
+	}, [firstStack, selectStack])
 
 	/**
 	 * 격자 끝의 감지선 — 보이면 다음 장을 당긴다.
@@ -137,7 +147,10 @@ export function ImageHistoryGallery() {
 						{group.stacks.map((stack) => (
 							<HistoryStackTile
 								key={stack.key}
-								onSelect={applyHistoryItem}
+								onSelect={history.selectStack}
+								selected={stack.items.some(
+									(item) => item.id === history.selectedId,
+								)}
 								stack={stack}
 							/>
 						))}
@@ -166,15 +179,16 @@ export function ImageHistoryGallery() {
  */
 function HistoryStackTile({
 	onSelect,
+	selected,
 	stack,
 }: {
-	onSelect: (item: GeneratedImageHistoryItem) => void
+	onSelect: (items: readonly GeneratedImageHistoryItem[]) => void
+	selected: boolean
 	stack: GeneratedImageHistoryStack
 }) {
 	const [top] = stack.items
 	if (!top) return null
 	const count = stack.items.length
-	const restorable = acceptsHistoryRestore(top)
 	const label = top.prompt ?? top.profileName ?? '생성 이미지'
 
 	return (
@@ -194,15 +208,15 @@ function HistoryStackTile({
 			)}
 			<button
 				type="button"
-				disabled={!restorable}
-				onClick={() => onSelect(top)}
+				onClick={() => onSelect(stack.items)}
 				title={top.prompt ?? undefined}
+				// 지금 캔버스에 올라와 있는 묶음임을 색만이 아니라 상태로도 알린다.
+				aria-current={selected || undefined}
 				aria-label={count > 1 ? `${label} 외 ${count - 1}장` : label}
 				className={cn(
-					'relative block w-full overflow-hidden rounded-md border border-border bg-muted outline-none',
-					restorable
-						? 'hover:border-ring focus-visible:ring-2 focus-visible:ring-ring'
-						: 'cursor-default opacity-60',
+					'relative block w-full overflow-hidden rounded-md border bg-muted outline-none',
+					'focus-visible:ring-2 focus-visible:ring-ring',
+					selected ? 'border-2 border-ring' : 'border-border hover:border-ring',
 				)}
 			>
 				{/* 비율이 섞여 있어 정사각 칸에 채워 자른다 — 격자가 흔들리면 훑을 수 없다. */}

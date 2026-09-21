@@ -178,20 +178,6 @@ describe('ImageGenerator', () => {
 		expect(screen.getByText('그라디언트')).toBeInTheDocument()
 	})
 
-	it('빈 캔버스의 예시를 프롬프트에 반영한다', () => {
-		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
-
-		fireEvent.click(
-			screen.getByRole('button', {
-				name: '신제품을 위한 깨끗한 스튜디오 제품 이미지',
-			}),
-		)
-
-		expect(screen.getByRole('textbox', { name: 'Prompt' })).toHaveValue(
-			'신제품을 위한 깨끗한 스튜디오 제품 이미지',
-		)
-	})
-
 	it('첨부를 열지 않은 프로파일에는 Reference Image 섹션이 없다', () => {
 		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
 
@@ -536,15 +522,75 @@ describe('ImageHistoryGallery', () => {
 		)
 	})
 
-	// 권한이 없으면 Payload가 메타 필드를 빼고 내려준다 — 그림만 남고 복원은 열리지 않는다.
-	it('복원 값이 없는 항목은 눌리지 않는다', async () => {
+	// 권한이 없으면 Payload가 메타 필드를 빼고 내려준다 — 고를 수는 있고 덮이지만 않는다.
+	it('복원 값이 없는 묶음은 골라도 컨트롤러를 안 바꾼다', async () => {
 		historyMocks.fetchGeneratedImageHistory.mockResolvedValue({
 			hasMore: false,
-			items: [historyItem({ prompt: null, profileId: null, profileName: null })],
+			items: [historyItem({ profileId: null, profileName: null, prompt: null })],
 		})
 		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
 
-		expect(await screen.findByRole('button', { name: '생성 이미지' })).toBeDisabled()
+		const tile = await screen.findByRole('button', { name: '생성 이미지' })
+		expect(tile).toBeEnabled()
+		fireEvent.click(tile)
+
+		expect(screen.getByRole('textbox', { name: 'Prompt' })).toHaveValue('')
+	})
+
+	// 🔴 열자마자 캔버스가 비어 있으면 안 된다 — 안내 문구를 지운 자리를 이게 메운다.
+	it('아무것도 안 골랐으면 가장 최근 묶음이 자동으로 선택된다', async () => {
+		historyMocks.fetchGeneratedImageHistory.mockResolvedValue({
+			hasMore: false,
+			items: [
+				historyItem({ batchKey: 'b1', id: 1, prompt: '최근 것' }),
+				historyItem({ batchKey: 'b2', id: 2, prompt: '옛날 것' }),
+			],
+		})
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
+
+		// 자동 선택은 첫 응답이 그려진 뒤 effect에서 일어난다 — 값이 올 때까지 기다린다.
+		expect(await screen.findByDisplayValue('최근 것')).toBeInTheDocument()
+	})
+
+	it('묶음을 고르면 첫 장이 선택되고 묶음 전체가 리스트로 선다', async () => {
+		historyMocks.fetchGeneratedImageHistory.mockResolvedValue({
+			hasMore: false,
+			items: [
+				historyItem({ batchKey: 'b1', id: 1, prompt: '세 장짜리' }),
+				historyItem({ batchKey: 'b1', id: 2, prompt: '세 장짜리' }),
+				historyItem({ batchKey: 'b1', id: 3, prompt: '세 장짜리' }),
+			],
+		})
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
+
+		// 겹침 타일 하나 + 캔버스 리스트 세 장.
+		const tile = await screen.findByRole('button', { name: '세 장짜리 외 2장' })
+		expect(tile).toHaveAttribute('aria-current', 'true')
+		expect(screen.getAllByRole('button', { name: '세 장짜리' })).toHaveLength(3)
+		// 첫 장이 자동 선택된다.
+		expect(screen.getAllByRole('button', { name: '세 장짜리' })[0]).toHaveAttribute(
+			'aria-current',
+			'true',
+		)
+	})
+
+	it('묶음 안의 다른 장을 고르면 크게 보는 장만 바뀐다', async () => {
+		historyMocks.fetchGeneratedImageHistory.mockResolvedValue({
+			hasMore: false,
+			items: [
+				historyItem({ batchKey: 'b1', id: 1, prompt: '두 장짜리' }),
+				historyItem({ batchKey: 'b1', id: 2, prompt: '두 장짜리' }),
+			],
+		})
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
+
+		await screen.findByRole('button', { name: '두 장짜리 외 1장' })
+		fireEvent.click(screen.getAllByRole('button', { name: '두 장짜리' })[1] as HTMLElement)
+
+		// 클릭 뒤 다시 찾는다 — 리렌더로 앞서 잡은 노드가 낡는다.
+		const strip = screen.getAllByRole('button', { name: '두 장짜리' })
+		expect(strip[1]).toHaveAttribute('aria-current', 'true')
+		expect(strip[0]).not.toHaveAttribute('aria-current')
 	})
 
 	// 감지선이 보이면 다음 장이 이어 붙는다. 페이지 경계가 밀려 겹쳐 내려온 항목은 걸러야 한다.
