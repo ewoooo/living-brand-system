@@ -129,6 +129,8 @@ export async function storeGeneratedImages(input: {
 }): Promise<StoredGeneratedImage[]> {
 	const payload = await getPayload({ config })
 	const createdIds: number[] = []
+	// 이 호출이 곧 한 번의 생성 요청이다 — 여기서 만든 키를 이번 장 전체가 나눠 갖는다.
+	const batchKey = randomUUID()
 
 	try {
 		const stored: StoredGeneratedImage[] = []
@@ -139,6 +141,7 @@ export async function storeGeneratedImages(input: {
 				data: {
 					_status: 'published',
 					aspectRatio: input.profile.aspectRatio,
+					batchKey,
 					createdBy: input.createdBy,
 					effectivePrompt: input.effectivePrompt,
 					imageSize: input.profile.imageSize,
@@ -202,6 +205,7 @@ export async function listGeneratedImageHistory(input: {
 		page: input.page,
 		select: {
 			aspectRatio: true,
+			batchKey: true,
 			createdAt: true,
 			// 🔴 filename이 없으면 url이 null로 온다 — Payload가 url을 filename에서 파생하므로
 			//    select에서 빼면 파생이 통째로 꺼진다. url만 적으면 조용히 전부 버려진다.
@@ -224,6 +228,7 @@ export async function listGeneratedImageHistory(input: {
 			return [
 				{
 					aspectRatio: (document.aspectRatio as ImageAspectRatio | undefined) ?? null,
+					batchKey: document.batchKey ?? null,
 					createdAt: document.createdAt,
 					id: document.id,
 					imageSize: (document.imageSize as ImageOutputSize | undefined) ?? null,

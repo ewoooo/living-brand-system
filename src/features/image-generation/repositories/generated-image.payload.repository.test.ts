@@ -144,6 +144,9 @@ describe('GeneratedImage repository', () => {
 			data: {
 				_status: 'published',
 				aspectRatio: '3:2',
+				// 요청마다 새로 만드는 키라 값 자체는 못박지 않는다 — 한 호출이 같은 키를
+				// 나눠 갖는지는 아래 테스트가 본다.
+				batchKey: expect.any(String),
 				createdBy: 1,
 				effectivePrompt: '{"subject":"파란 세럼병"}',
 				imageSize: '2K',
@@ -212,6 +215,29 @@ describe('GeneratedImage repository', () => {
 		).rejects.toThrow()
 		expect(create).not.toHaveBeenCalled()
 	})
+	// 🔑 한 번의 생성 요청이 곧 한 묶음이다 — 장마다 키가 다르면 갤러리에서 겹침이 안 생긴다.
+	it('한 호출로 만든 장들은 같은 batchKey를 나눠 갖는다', async () => {
+		create.mockResolvedValue({
+			createdAt: '2026-07-31T03:00:00.000Z',
+			id: 8,
+			url: '/api/generated-images/file/generated.png',
+		})
+
+		await storeGeneratedImages({
+			createdBy: 1,
+			effectivePrompt: '{"subject":"파란 세럼병"}',
+			images: [ONE_PIXEL_PNG, ONE_PIXEL_PNG, ONE_PIXEL_PNG],
+			inputPrompt: '파란 세럼병',
+			model: 'gpt-image-2',
+			profile: { aspectRatio: '3:2', id: 5, imageSize: '2K', name: '제품 이미지' },
+		})
+
+		const keys = create.mock.calls.map(([args]) => args.data.batchKey)
+		expect(keys).toHaveLength(3)
+		expect(new Set(keys).size).toBe(1)
+		expect(keys[0]).toEqual(expect.any(String))
+	})
+
 	describe('생성 이미지 목록', () => {
 		// isPayloadUser는 role·email로 판정한다.
 		const user = { email: 'a@b.c', id: 1, role: 'admin' }
@@ -219,6 +245,7 @@ describe('GeneratedImage repository', () => {
 		function row(overrides: Record<string, unknown> = {}) {
 			return {
 				aspectRatio: '16:9',
+				batchKey: 'batch-1',
 				createdAt: '2026-09-20T00:00:00.000Z',
 				filename: 'generated-1.jpg',
 				id: 7,

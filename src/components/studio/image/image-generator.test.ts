@@ -494,6 +494,7 @@ describe('ImageHistoryGallery', () => {
 	): GeneratedImageHistoryItem {
 		return {
 			aspectRatio: '16:9',
+			batchKey: null,
 			createdAt: '2026-09-20T00:00:00.000Z',
 			id: 42,
 			imageSize: '2K',

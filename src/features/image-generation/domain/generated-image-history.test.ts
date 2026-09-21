@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { type GeneratedImageHistoryItem, groupHistoryByDate } from './generated-image-history'
 
-function item(id: number, createdAt: string): GeneratedImageHistoryItem {
+function item(
+	id: number,
+	createdAt: string,
+	batchKey: string | null = null,
+): GeneratedImageHistoryItem {
 	return {
 		aspectRatio: '1:1',
+		batchKey,
 		createdAt,
 		id,
 		imageSize: '1K',
@@ -35,7 +40,7 @@ describe('groupHistoryByDate', () => {
 			'9월 11일',
 			'2025년 12월 24일',
 		])
-		expect(groups.map((group) => group.items.length)).toEqual([1, 1, 1, 1])
+		expect(groups.map((group) => group.stacks.length)).toEqual([1, 1, 1, 1])
 	})
 
 	it('같은 날이 이어지면 한 묶음이 된다', () => {
@@ -49,7 +54,7 @@ describe('groupHistoryByDate', () => {
 		)
 
 		expect(groups).toHaveLength(2)
-		expect(groups[0]?.items.map(({ id }) => id)).toEqual([1, 2])
+		expect(groups[0]?.stacks.map((stack) => stack.items[0]?.id)).toEqual([1, 2])
 	})
 
 	// 🔴 날짜별로 다시 모으지 않는다 — 최신순이 깨진 목록이 와도 순서를 그대로 둔다.
@@ -69,5 +74,47 @@ describe('groupHistoryByDate', () => {
 
 	it('빈 목록은 그룹도 없다', () => {
 		expect(groupHistoryByDate([], today)).toEqual([])
+	})
+})
+
+describe('한 번에 생성한 것 묶기', () => {
+	const today = new Date('2026-09-21T12:00:00+09:00')
+
+	it('같은 batchKey가 이어지면 한 겹침이 된다', () => {
+		const [group] = groupHistoryByDate(
+			[
+				item(1, '2026-09-21T15:00:00+09:00', 'b1'),
+				item(2, '2026-09-21T15:00:00+09:00', 'b1'),
+				item(3, '2026-09-21T14:00:00+09:00', 'b2'),
+			],
+			today,
+		)
+
+		expect(group?.stacks).toHaveLength(2)
+		expect(group?.stacks[0]?.items.map(({ id }) => id)).toEqual([1, 2])
+		expect(group?.stacks[1]?.items).toHaveLength(1)
+	})
+
+	// 🔴 batchKey가 없는 항목을 서로 묶으면 남남인 이미지가 한 묶음으로 보인다.
+	it('batchKey가 없으면 서로 묶지 않는다', () => {
+		const [group] = groupHistoryByDate(
+			[item(1, '2026-09-21T15:00:00+09:00'), item(2, '2026-09-21T14:00:00+09:00')],
+			today,
+		)
+
+		expect(group?.stacks).toHaveLength(2)
+	})
+
+	it('날짜가 갈리면 같은 batchKey여도 겹침이 갈린다', () => {
+		const groups = groupHistoryByDate(
+			[
+				item(1, '2026-09-21T00:30:00+09:00', 'b1'),
+				item(2, '2026-09-20T23:30:00+09:00', 'b1'),
+			],
+			today,
+		)
+
+		expect(groups.map((group) => group.label)).toEqual(['오늘', '어제'])
+		expect(groups.every((group) => group.stacks.length === 1)).toBe(true)
 	})
 })

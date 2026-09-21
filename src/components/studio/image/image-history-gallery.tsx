@@ -7,6 +7,7 @@ import { Typography } from '@/components/ui/typography'
 import {
 	acceptsHistoryRestore,
 	type GeneratedImageHistoryItem,
+	type GeneratedImageHistoryStack,
 	groupHistoryByDate,
 } from '@/features/image-generation/domain/generated-image-history'
 import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
@@ -132,34 +133,14 @@ export function ImageHistoryGallery() {
 					>
 						{group.label}
 					</Typography>
-					<div className="grid grid-cols-2 gap-2">
-						{group.items.map((item) => {
-							const restorable = acceptsHistoryRestore(item)
-							return (
-								<button
-									key={item.id}
-									type="button"
-									disabled={!restorable}
-									onClick={() => applyHistoryItem(item)}
-									title={item.prompt ?? undefined}
-									className={cn(
-										'overflow-hidden rounded-md border border-border bg-muted outline-none',
-										restorable
-											? 'hover:border-ring focus-visible:ring-2 focus-visible:ring-ring'
-											: 'cursor-default opacity-60',
-									)}
-								>
-									{/* 비율이 섞여 있어 정사각 칸에 채워 자른다 — 격자가 흔들리면 훑을 수 없다. */}
-									{/* biome-ignore lint/performance/noImgElement: 썸네일, 최적화 불필요 */}
-									<img
-										src={item.url}
-										alt={item.prompt ?? item.profileName ?? '생성 이미지'}
-										loading="lazy"
-										className="aspect-square w-full object-cover"
-									/>
-								</button>
-							)
-						})}
+					<div className="grid grid-cols-2 gap-3 pr-1 pb-1">
+						{group.stacks.map((stack) => (
+							<HistoryStackTile
+								key={stack.key}
+								onSelect={applyHistoryItem}
+								stack={stack}
+							/>
+						))}
 					</div>
 				</section>
 			))}
@@ -172,6 +153,72 @@ export function ImageHistoryGallery() {
 					더 불러오지 못했습니다. 다시 시도
 				</Button>
 			)}
+		</div>
+	)
+}
+
+/**
+ * 한 묶음을 겹친 한 장으로 그린다 — 뒤에 깔린 판은 장식이라 `aria-hidden`이고, 누를 수 있는
+ * 것은 맨 위 한 장뿐이다(사용자 지시, 2026-09-21).
+ *
+ * 🔑 묶음 안의 장들은 프롬프트·비율·해상도·프로파일이 모두 같으므로, 어느 장을 복원하든
+ *    컨트롤러 결과가 같다. 그래서 「어느 장을 고를까」를 묻지 않고 맨 앞 장으로 되돌린다.
+ */
+function HistoryStackTile({
+	onSelect,
+	stack,
+}: {
+	onSelect: (item: GeneratedImageHistoryItem) => void
+	stack: GeneratedImageHistoryStack
+}) {
+	const [top] = stack.items
+	if (!top) return null
+	const count = stack.items.length
+	const restorable = acceptsHistoryRestore(top)
+	const label = top.prompt ?? top.profileName ?? '생성 이미지'
+
+	return (
+		<div className="relative">
+			{/* 뒤로 깔리는 판. 장수만큼이 아니라 최대 두 겹까지만 — 그 이상은 두께가 안 읽힌다. */}
+			{count > 2 && (
+				<div
+					aria-hidden
+					className="absolute inset-0 translate-x-1 translate-y-1 rounded-md border border-border bg-muted"
+				/>
+			)}
+			{count > 1 && (
+				<div
+					aria-hidden
+					className="absolute inset-0 translate-x-0.5 translate-y-0.5 rounded-md border border-border bg-muted"
+				/>
+			)}
+			<button
+				type="button"
+				disabled={!restorable}
+				onClick={() => onSelect(top)}
+				title={top.prompt ?? undefined}
+				aria-label={count > 1 ? `${label} 외 ${count - 1}장` : label}
+				className={cn(
+					'relative block w-full overflow-hidden rounded-md border border-border bg-muted outline-none',
+					restorable
+						? 'hover:border-ring focus-visible:ring-2 focus-visible:ring-ring'
+						: 'cursor-default opacity-60',
+				)}
+			>
+				{/* 비율이 섞여 있어 정사각 칸에 채워 자른다 — 격자가 흔들리면 훑을 수 없다. */}
+				{/* biome-ignore lint/performance/noImgElement: 썸네일, 최적화 불필요 */}
+				<img
+					src={top.url}
+					alt={label}
+					loading="lazy"
+					className="aspect-square w-full object-cover"
+				/>
+				{count > 1 && (
+					<span className="absolute top-1 right-1 rounded-sm bg-background/80 px-1 font-medium text-foreground text-xs">
+						{count}
+					</span>
+				)}
+			</button>
 		</div>
 	)
 }

@@ -15,6 +15,8 @@ export interface GeneratedImageHistoryItem {
 	id: number
 	url: string
 	createdAt: string
+	/** 한 번의 생성 요청으로 함께 만들어진 이미지를 묶는 키. 권한이 없으면 null이다. */
+	batchKey: string | null
 	profileId: number | null
 	profileName: string | null
 	prompt: string | null
@@ -29,11 +31,20 @@ export function acceptsHistoryRestore(
 	return typeof item.profileId === 'number' && typeof item.prompt === 'string'
 }
 
+/**
+ * 한 번의 생성 요청으로 함께 나온 이미지들 — 화면에서는 겹친 한 장으로 그린다.
+ * 🔑 `batchKey`가 없는 항목(권한이 닫혔거나 도입 이전 잔여)은 혼자 선다. 억지로 묶지 않는다.
+ */
+export type GeneratedImageHistoryStack = {
+	key: string
+	items: GeneratedImageHistoryItem[]
+}
+
 export type GeneratedImageHistoryGroup = {
 	/** 로컬 시간 기준 날짜 키(YYYY-MM-DD). 라벨과 달리 날마다 유일하다. */
 	key: string
 	label: string
-	items: GeneratedImageHistoryItem[]
+	stacks: GeneratedImageHistoryStack[]
 }
 
 function dayKey(date: Date): string {
@@ -64,16 +75,38 @@ export function groupHistoryByDate(
 		const key = Number.isNaN(date.getTime()) ? (groups.at(-1)?.key ?? todayKey) : dayKey(date)
 		const last = groups.at(-1)
 		if (last?.key === key) {
-			last.items.push(item)
+			pushIntoStack(last.stacks, item)
 			continue
 		}
 		groups.push({
-			items: [item],
+			stacks: [{ items: [item], key: stackKey(item) }],
 			key,
 			label: dateLabel(key, date, today, todayKey, yesterdayKey),
 		})
 	}
 	return groups
+}
+
+function stackKey(item: GeneratedImageHistoryItem): string {
+	// batchKey가 없으면 혼자 서야 하므로 절대 안 겹치는 키를 준다.
+	return item.batchKey ?? `solo-${item.id}`
+}
+
+/**
+ * 🔑 **이어진 것만** 묶는다. batchKey로 다시 모으면 페이지가 이어 붙을 때 이미 그린 겹침에
+ *    항목이 끼어들어 격자가 흔들린다 — 날짜 묶기와 같은 이유다.
+ */
+function pushIntoStack(
+	stacks: GeneratedImageHistoryStack[],
+	item: GeneratedImageHistoryItem,
+): void {
+	const key = stackKey(item)
+	const last = stacks.at(-1)
+	if (item.batchKey !== null && last?.key === key) {
+		last.items.push(item)
+		return
+	}
+	stacks.push({ items: [item], key })
 }
 
 function dateLabel(

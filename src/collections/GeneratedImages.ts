@@ -91,6 +91,20 @@ export const GeneratedImages: CollectionConfig = {
 			access: { read: managerFieldRead },
 		},
 		{
+			// 한 번의 생성 요청으로 함께 만들어진 이미지를 묶는 키 — 요청마다 새로 만든다.
+			// 🔴 2026-09-21 이전 행에는 이 값이 없어서, 도입 마이그레이션이 같은 사용자·같은
+			//    프롬프트·같은 프로파일이 30초 안에 이어진 묶음(최대 4장)으로 채워 넣었다.
+			//    추론이므로 그 행들의 묶음은 실제 요청 단위와 다를 수 있다.
+			name: 'batchKey',
+			type: 'text',
+			index: true,
+			access: { read: managerFieldRead },
+			admin: {
+				position: 'sidebar',
+				description: '한 번의 생성 요청으로 함께 만들어진 이미지를 묶는 키입니다.',
+			},
+		},
+		{
 			name: 'createdBy',
 			type: 'relationship',
 			relationTo: 'users',

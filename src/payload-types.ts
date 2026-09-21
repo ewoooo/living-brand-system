@@ -1829,6 +1829,10 @@ export interface GeneratedImage {
   aspectRatio: '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '4:5' | '5:4' | '9:16' | '16:9' | '21:9';
   imageSize: '1K' | '2K' | '4K';
   /**
+   * 한 번의 생성 요청으로 함께 만들어진 이미지를 묶는 키입니다.
+   */
+  batchKey?: string | null;
+  /**
    * 생성 요청 당시 인증된 사용자 ID입니다.
    */
   createdBy: number | User;
@@ -3486,6 +3490,7 @@ export interface GeneratedImagesSelect<T extends boolean = true> {
   model?: T;
   aspectRatio?: T;
   imageSize?: T;
+  batchKey?: T;
   createdBy?: T;
   sourceImage?: T;
   updatedAt?: T;
