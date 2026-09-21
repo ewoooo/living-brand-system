@@ -1,11 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { Typography } from '@/components/ui/typography'
 import {
 	acceptsHistoryRestore,
 	type GeneratedImageHistoryItem,
+	groupHistoryByDate,
 } from '@/features/image-generation/domain/generated-image-history'
 import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
 import { fetchGeneratedImageHistory } from '@/features/image-generation/services/list-generated-image-history.client'
@@ -63,6 +65,9 @@ export function ImageHistoryGallery() {
 		if (requested.current === 0) loadNext()
 	}, [loadNext])
 
+	// 목록이 늘 때만 다시 묶는다 — 렌더마다 묶으면 스크롤 중에 격자가 통째로 새 객체가 된다.
+	const groups = useMemo(() => groupHistoryByDate(items), [items])
+
 	/**
 	 * 격자 끝의 감지선 — 보이면 다음 장을 당긴다.
 	 *
@@ -115,36 +120,49 @@ export function ImageHistoryGallery() {
 	}
 
 	return (
-		<div data-slot="image-history-gallery" className="flex flex-col gap-3 px-3 py-2">
-			<div className="grid grid-cols-2 gap-2">
-				{items.map((item) => {
-					const restorable = acceptsHistoryRestore(item)
-					return (
-						<button
-							key={item.id}
-							type="button"
-							disabled={!restorable}
-							onClick={() => applyHistoryItem(item)}
-							title={item.prompt ?? undefined}
-							className={cn(
-								'overflow-hidden rounded-md border border-border bg-muted outline-none',
-								restorable
-									? 'hover:border-ring focus-visible:ring-2 focus-visible:ring-ring'
-									: 'cursor-default opacity-60',
-							)}
-						>
-							{/* 비율이 섞여 있어 정사각 칸에 채워 자른다 — 격자가 흔들리면 훑을 수 없다. */}
-							{/* biome-ignore lint/performance/noImgElement: 썸네일, 최적화 불필요 */}
-							<img
-								src={item.url}
-								alt={item.prompt ?? item.profileName ?? '생성 이미지'}
-								loading="lazy"
-								className="aspect-square w-full object-cover"
-							/>
-						</button>
-					)
-				})}
-			</div>
+		<div data-slot="image-history-gallery" className="flex flex-col gap-4 px-3 py-2">
+			{groups.map((group) => (
+				<section key={group.key} className="flex flex-col gap-2">
+					{/* 날짜는 훑는 좌표다 — 스크롤을 따라 머리에 남아 있어야 지금 어디인지 안다. */}
+					<Typography
+						as="h3"
+						size="xs"
+						weight="medium"
+						className="sticky top-0 z-10 bg-background py-1 text-muted-foreground"
+					>
+						{group.label}
+					</Typography>
+					<div className="grid grid-cols-2 gap-2">
+						{group.items.map((item) => {
+							const restorable = acceptsHistoryRestore(item)
+							return (
+								<button
+									key={item.id}
+									type="button"
+									disabled={!restorable}
+									onClick={() => applyHistoryItem(item)}
+									title={item.prompt ?? undefined}
+									className={cn(
+										'overflow-hidden rounded-md border border-border bg-muted outline-none',
+										restorable
+											? 'hover:border-ring focus-visible:ring-2 focus-visible:ring-ring'
+											: 'cursor-default opacity-60',
+									)}
+								>
+									{/* 비율이 섞여 있어 정사각 칸에 채워 자른다 — 격자가 흔들리면 훑을 수 없다. */}
+									{/* biome-ignore lint/performance/noImgElement: 썸네일, 최적화 불필요 */}
+									<img
+										src={item.url}
+										alt={item.prompt ?? item.profileName ?? '생성 이미지'}
+										loading="lazy"
+										className="aspect-square w-full object-cover"
+									/>
+								</button>
+							)
+						})}
+					</div>
+				</section>
+			))}
 			{/* 감지선. 실패했을 때만 사람이 누른다 — 자동 재시도는 같은 실패를 반복한다. */}
 			{hasMore && status !== 'error' && (
 				<div ref={sentinel} aria-hidden className="h-8 shrink-0" />
