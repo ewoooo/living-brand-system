@@ -6,14 +6,18 @@ import {
 	type ControllerRuntimeBindings,
 	type ControllerValues,
 	isControllerPadValue,
+	type StudioControllerRestrictions,
 } from '@/modules/studio-controller/controller-definition'
 import {
 	KEY_VISUAL_PATTERN_COLORWAYS,
 	KEY_VISUAL_PATTERN_DEFAULT_INPUT,
+	KEY_VISUAL_PATTERN_DEFAULT_PRESET,
 	KEY_VISUAL_PATTERN_DIRECTIONS,
+	KEY_VISUAL_PATTERN_PRESETS,
 	KEY_VISUAL_PATTERN_REFERENCE_BASE,
 	KEY_VISUAL_PATTERN_VIEWPOINTS,
 	type KeyVisualPatternColorwayId,
+	toControllerPadValue,
 } from './definition'
 
 export { KEY_VISUAL_PATTERN_DEFAULT_INPUT, KEY_VISUAL_PATTERN_REFERENCE_BASE } from './definition'
@@ -48,6 +52,7 @@ const directionIds = KEY_VISUAL_PATTERN_DIRECTIONS.map((option) => option.value)
 const viewpointIds = KEY_VISUAL_PATTERN_VIEWPOINTS.map((option) => option.value)
 /** Object.keys는 키 타입을 좁혀 주지 않는다 — 조합의 정본은 definition의 표 하나다. */
 const colorwayIds = Object.keys(KEY_VISUAL_PATTERN_COLORWAYS) as KeyVisualPatternColorwayId[]
+const presetIds = KEY_VISUAL_PATTERN_PRESETS.map((preset) => preset.key)
 
 export const keyVisualPatternInputSchema = z.strictObject({
 	direction: z.enum(directionIds),
@@ -567,6 +572,28 @@ const model = {
 		createKeyVisualPatternVectorArtifact(
 			createKeyVisualPatternScene(toKeyVisualPatternInput(values), viewport),
 		),
+	/**
+	 * 프리셋을 고르면 그 묶음이 다른 컨트롤의 **기본값**이 된다. 🔴 색만 건드리지 않는다 — 창작자가
+	 * 고른 색이 프리셋 하나에 사라지면 안 된다. 값을 직접 덮지 않는 이유는 공용 provider가
+	 * 「손대지 않은 값만 새 기본값을 따라가고 손댄 값은 지킨다」를 이미 갖고 있어서다.
+	 * 🔴 그래서 창작자가 이미 만진 컨트롤은 프리셋을 골라도 안 움직인다 — 의도된 동작이다.
+	 */
+	getRestrictions: (values): StudioControllerRestrictions => {
+		const id = resolveOption(values.preset, presetIds, KEY_VISUAL_PATTERN_DEFAULT_PRESET)
+		const preset =
+			KEY_VISUAL_PATTERN_PRESETS.find((candidate) => candidate.key === id) ??
+			KEY_VISUAL_PATTERN_PRESETS[0]
+		const { origin, ...axes } = preset.values
+		return {
+			controls: [
+				...Object.entries(axes).map(([controlId, defaultValue]) => ({
+					controlId,
+					defaultValue,
+				})),
+				{ controlId: 'origin', defaultValue: toControllerPadValue(origin) },
+			],
+		}
+	},
 	getBindings: (viewport): ControllerRuntimeBindings =>
 		viewport.width > 0 && viewport.height > 0
 			? { origin: { padAspectRatio: viewport.width / viewport.height } }

@@ -10,10 +10,14 @@ import {
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import flutedGlassRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/fluted-glass/definition'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
-import { createControllerValues } from '@/modules/studio-controller/controller-definition'
+import {
+	type ControllerValues,
+	createControllerValues,
+} from '@/modules/studio-controller/controller-definition'
 import { createGraphicStudioPluginCatalog } from './graphic-plugin'
 import {
 	getGraphicStudioRuntimeBindings,
+	getGraphicStudioRuntimeGroups,
 	getGraphicStudioVectorArtifact,
 	hasGraphicStudioVectorArtifact,
 } from './graphic-studio-runtime'
@@ -210,5 +214,80 @@ describe('graphicStudioRuntime', () => {
 		expect(() => createGraphicStudioPluginCatalog([plugin, plugin])).toThrow(
 			'중복된 Graphic plugin',
 		)
+	})
+})
+
+/**
+ * 프로파일이 좁힌 계약 위에 런타임 기본값이 얹히는 자리. 🔴 클램프가 없으면 렌더 중에 던져
+ * 창작자 화면이 통째로 죽는다 — manager는 admin 저장에서 아무 경고를 못 받으므로 아무도 못 잡는다.
+ */
+describe('런타임 기본값과 프로파일 좁힘이 부딪힐 때', () => {
+	const runtime = 'key-visual-pattern'
+	const maxWeightOf = (values: ControllerValues, narrowed: unknown) => {
+		const config = deriveGraphicStudioConfig({
+			id: 1,
+			name: 'KVP',
+			runtime,
+			controllerRestrictions: narrowed,
+		})
+		const groups = getGraphicStudioRuntimeGroups(config, values)
+		return groups
+			.flatMap((group) => group.controls)
+			.find((control) => control.id === 'maxWeight')?.defaultValue
+	}
+
+	it('좁힌 범위 밖 기본값을 던지지 않고 범위 안으로 끌어당긴다', () => {
+		const narrowed = { controls: [{ controlId: 'maxWeight', max: 10 }] }
+
+		// 프리셋이 원한 값은 14지만 프로파일이 10까지만 허용한다 — 프로파일이 이긴다.
+		expect(maxWeightOf({ preset: 'cornerVanishing' }, narrowed)).toBe(10)
+		// 범위 안쪽 값은 그대로 지나간다.
+		expect(maxWeightOf({ preset: 'flatDiagonal' }, narrowed)).toBe(4)
+	})
+
+	// 기본 프리셋까지 범위 밖이면 창작자가 아무것도 누르지 않아도 첫 렌더에서 죽었다.
+	it('기본 프리셋이 범위 밖이어도 첫 렌더가 살아 있다', () => {
+		const narrowed = { controls: [{ controlId: 'maxWeight', max: 8, defaultValue: 8 }] }
+
+		expect(() => maxWeightOf({}, narrowed)).not.toThrow()
+		expect(maxWeightOf({}, narrowed)).toBe(8)
+	})
+
+	// 잠근 control이 프리셋을 따라 움직이면 실행 경계가 값을 거부해 내보내기만 조용히 막힌다.
+	it('프로파일이 잠근 control은 프리셋을 따라가지 않고 내보내기가 살아 있다', () => {
+		for (const availability of ['readonly', 'disabled'] as const) {
+			const config = deriveGraphicStudioConfig({
+				id: 1,
+				name: 'KVP',
+				runtime,
+				controllerRestrictions: { controls: [{ controlId: 'origin', availability }] },
+			})
+			const locked = config.controller.groups
+				.flatMap((group) => group.controls)
+				.find((control) => control.id === 'origin')
+			const afterPreset = getGraphicStudioRuntimeGroups(config, {
+				preset: 'cornerVanishing',
+			})
+				.flatMap((group) => group.controls)
+				.find((control) => control.id === 'origin')
+
+			expect(afterPreset?.defaultValue, availability).toEqual(locked?.defaultValue)
+			expect(
+				getGraphicStudioVectorArtifact(
+					config,
+					{
+						...createControllerValues(config.controller.groups),
+						preset: 'cornerVanishing',
+					},
+					{ width: 800, height: 600 },
+				),
+				availability,
+			).toMatchObject({ kind: 'vector' })
+		}
+	})
+
+	it('좁히지 않은 프로파일에서는 프리셋 값이 그대로 선다', () => {
+		expect(maxWeightOf({ preset: 'cornerVanishing' }, null)).toBe(14)
+		expect(maxWeightOf({ preset: 'verticalDrift' }, null)).toBe(15)
 	})
 })

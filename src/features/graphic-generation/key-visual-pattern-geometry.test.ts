@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { KEY_VISUAL_PATTERN_DEFAULT_INPUT } from './graphic-runtimes/key-visual-pattern/definition'
 import {
+	applyControllerRestrictions,
+	type ControllerGroupDefinition,
+} from '@/modules/studio-controller/controller-definition'
+import runtime, {
+	KEY_VISUAL_PATTERN_DEFAULT_INPUT,
+	KEY_VISUAL_PATTERN_PRESETS,
+} from './graphic-runtimes/key-visual-pattern/definition'
+import model, {
 	CORNER_OUTWARD_NUDGE,
 	createKeyVisualPatternScene,
 	createKeyVisualPatternVectorArtifact,
@@ -406,3 +413,96 @@ function dashLength(dash: KeyVisualPatternDash) {
 function isFiniteDash(dash: KeyVisualPatternDash) {
 	return [dash.x1, dash.y1, dash.x2, dash.y2, dash.weight].every(Number.isFinite)
 }
+
+// 프리셋은 컬러와 같은 위계로 definition에 선언되고, 고르면 **우측 컨트롤의 기본값**이 바뀐다.
+// 🔴 기본값이 계약을 벗어나면 `applyControllerRestrictions`가 던지는데, 그 호출이 `/studio/graphic`
+//    렌더 경로라 프로파일 하나가 스튜디오 전체를 500으로 만든다. 여섯 개를 전부 통과시켜 둔다.
+describe('프리셋', () => {
+	// 매니페스트의 groups는 리터럴 튜플로 좁혀져 있어 계약 타입으로 한 번 넓혀 쓴다.
+	const groups = runtime.controller.groups as readonly ControllerGroupDefinition[]
+	const controls = groups.flatMap((group) => group.controls)
+
+	it('모든 프리셋이 계약 안쪽 기본값만 만든다', () => {
+		for (const preset of KEY_VISUAL_PATTERN_PRESETS) {
+			const restrictions = model.getRestrictions?.({ preset: preset.key }) ?? null
+			const applied = applyControllerRestrictions(groups, restrictions)
+			const byId = new Map(
+				applied.flatMap((group) => group.controls.map((c) => [c.id, c] as const)),
+			)
+
+			for (const [key, value] of Object.entries(preset.values)) {
+				if (key === 'origin') continue
+				expect(byId.get(key)?.defaultValue, `${preset.key}.${key}`).toEqual(value)
+			}
+		}
+	})
+
+	// 🔴 프리셋이 건드리지 않는 축은 색 하나다 — 창작자가 고른 색이 프리셋 하나에 사라지면 안 된다.
+	//    자기 자신(preset)도 건드리지 않는다. 그 둘을 뺀 나머지는 전부 정한다.
+	it('색과 자기 자신을 뺀 모든 컨트롤을 정한다', () => {
+		const all = new Set<string>([...runtime.controller.left, ...runtime.controller.right])
+		const expected = new Set([...all].filter((id) => id !== 'colorway' && id !== 'preset'))
+
+		for (const preset of KEY_VISUAL_PATTERN_PRESETS) {
+			const touched = (model.getRestrictions?.({ preset: preset.key })?.controls ?? []).map(
+				(control) => control.controlId,
+			)
+			expect(new Set(touched), preset.key).toEqual(expected)
+		}
+	})
+
+	// 사용자가 정한 구성이다 — 「입체 × 사선형」은 둘뿐이고 나머지는 방향·시점을 섞는다.
+	it('입체 사선형은 둘뿐이고 방향·시점이 섞여 있다', () => {
+		const combos = KEY_VISUAL_PATTERN_PRESETS.map(
+			(preset) => `${preset.values.viewpoint}/${preset.values.direction}`,
+		)
+
+		expect(combos.filter((combo) => combo === 'perspective/diagonal')).toHaveLength(2)
+		expect(new Set(KEY_VISUAL_PATTERN_PRESETS.map((p) => p.values.viewpoint)).size).toBe(2)
+		expect(new Set(KEY_VISUAL_PATTERN_PRESETS.map((p) => p.values.direction)).size).toBe(3)
+	})
+
+	// 기준점이 중앙·꼭짓점에만 몰리지 않는다. 🔴 끝에서 두 칸 이내는 끝으로 스냅되므로 그 띠에
+	//    올려 두면 지정한 자리에 안 선다 — 실제로 스냅된 자리까지 확인한다.
+	it('기준점이 중앙과 끝에만 몰려 있지 않다', () => {
+		const positions = KEY_VISUAL_PATTERN_PRESETS.map((preset) => preset.values.origin)
+		const isCenter = (o: { x: number; y: number }) => o.x === 0.5 && o.y === 0.5
+		const isCorner = (o: { x: number; y: number }) =>
+			(o.x === 0 || o.x === 1) && (o.y === 0 || o.y === 1)
+
+		expect(positions.filter((o) => !isCenter(o) && !isCorner(o)).length).toBeGreaterThanOrEqual(
+			3,
+		)
+
+		const grid = axisPositions(createKeyVisualPatternScene(FLAT, BASE), 'x')
+		const forbidden = new Set([1, 2, grid.length - 3, grid.length - 2])
+		for (const origin of positions) {
+			const scene = createKeyVisualPatternScene({ ...FLAT, origin }, BASE)
+			const index = grid.findIndex((p) => Math.abs(p - scene.origin.x) < 1e-6)
+			expect(forbidden.has(index), `origin.x=${origin.x} → 칸 ${index}`).toBe(false)
+		}
+	})
+
+	// 시작 화면에서 보이는 프리셋과 실제 값이 어긋나면 안 된다.
+	it('base 프리셋은 런타임 기본 입력과 같다', () => {
+		const base = KEY_VISUAL_PATTERN_PRESETS[0]
+		expect(base.key).toBe('base')
+		for (const [key, value] of Object.entries(base.values)) {
+			expect(
+				KEY_VISUAL_PATTERN_DEFAULT_INPUT[
+					key as keyof typeof KEY_VISUAL_PATTERN_DEFAULT_INPUT
+				],
+				key,
+			).toEqual(value)
+		}
+	})
+
+	it('선택지는 색도 썸네일도 없이 번호만 보여 준다', () => {
+		const preset = controls.find((control) => control.id === 'preset')
+		expect(runtime.controller.left).toContain('preset')
+		expect(preset?.kind).toBe('select')
+		const options = preset?.kind === 'select' ? preset.options : []
+		expect(options.map((option) => option.label)).toEqual(['1', '2', '3', '4', '5', '6'])
+		expect(options.every((option) => !option.colors && !option.preview)).toBe(true)
+	})
+})
