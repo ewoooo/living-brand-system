@@ -203,6 +203,9 @@ export async function listGeneratedImageHistory(input: {
 		select: {
 			aspectRatio: true,
 			createdAt: true,
+			// 🔴 filename이 없으면 url이 null로 온다 — Payload가 url을 filename에서 파생하므로
+			//    select에서 빼면 파생이 통째로 꺼진다. url만 적으면 조용히 전부 버려진다.
+			filename: true,
 			imageSize: true,
 			inputPrompt: true,
 			scenario: true,
