@@ -1,10 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import config from '@payload-config'
 import { getPayload } from 'payload'
+import type { GeneratedImageHistoryItem } from '@/features/image-generation/domain/generated-image-history'
 import type {
 	ImageAspectRatio,
 	ImageOutputSize,
 } from '@/features/image-generation/domain/image-size'
+import { isPayloadUser } from '@/lib/auth'
 import type { ImageProfile } from '@/payload-types'
 import { decodeImageDataUri, MAX_IMAGE_BYTES, validateRasterImage } from '../image-data-uri'
 
@@ -176,5 +178,58 @@ export async function storeGeneratedImages(input: {
 			),
 		)
 		throw error
+	}
+}
+
+/** 사용자 권한으로 published 생성 이미지를 최신순으로 조회한다. */
+export async function listGeneratedImageHistory(input: {
+	limit: number
+	page: number
+	user: unknown
+}): Promise<{ items: GeneratedImageHistoryItem[]; hasMore: boolean }> {
+	if (!isPayloadUser(input.user)) {
+		throw new Error('Authenticated generated image consumer is required.')
+	}
+	const payload = await getPayload({ config })
+	const found = await payload.find({
+		collection: 'generated-images',
+		// scenario는 id만 필요하다 — 이름은 생성 당시 값을 박아 둔 scenarioName이 갖는다.
+		depth: 0,
+		draft: false,
+		limit: input.limit,
+		// 🔴 field access를 그대로 태운다. 우회하면 컬렉션이 선언한 권한 경계가 무의미해진다.
+		overrideAccess: false,
+		page: input.page,
+		select: {
+			aspectRatio: true,
+			createdAt: true,
+			imageSize: true,
+			inputPrompt: true,
+			scenario: true,
+			scenarioName: true,
+			url: true,
+		},
+		sort: '-createdAt',
+		user: input.user as never,
+		where: { _status: { equals: 'published' } },
+	})
+
+	return {
+		hasMore: found.hasNextPage ?? false,
+		items: found.docs.flatMap((document) => {
+			if (!document.url) return []
+			return [
+				{
+					aspectRatio: (document.aspectRatio as ImageAspectRatio | undefined) ?? null,
+					createdAt: document.createdAt,
+					id: document.id,
+					imageSize: (document.imageSize as ImageOutputSize | undefined) ?? null,
+					profileId: typeof document.scenario === 'number' ? document.scenario : null,
+					profileName: document.scenarioName ?? null,
+					prompt: document.inputPrompt ?? null,
+					url: document.url,
+				},
+			]
+		}),
 	}
 }

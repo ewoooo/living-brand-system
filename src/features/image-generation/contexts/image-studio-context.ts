@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext } from 'react'
+import type { GeneratedImageHistoryItem } from '@/features/image-generation/domain/generated-image-history'
 import type {
 	ImageAspectRatio,
 	ImageOutputSize,
@@ -36,6 +37,11 @@ export type ImageStudioValue = {
 		browse: LazyResource<readonly ImageStudioConfig[]>
 		select: (profileId: number) => void
 	}
+	/**
+	 * 좌측 갤러리에서 고른 과거 결과를 편집 세션에 얹는다 — 확인 없이 통째로 덮는다.
+	 * 프로파일까지 함께 바뀌고, 저장이 없는 축은 프로파일 기본값으로 되돌아간다.
+	 */
+	applyHistoryItem: (item: GeneratedImageHistoryItem) => void
 	/** 현재 프로파일의 편집 계약 — 컨트롤러는 이 객체만 보고 컨트롤을 그린다. */
 	config: ImageStudioConfig
 	controls: {

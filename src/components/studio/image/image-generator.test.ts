@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { GeneratedImageHistoryItem } from '@/features/image-generation/domain/generated-image-history'
 import type { ImageModelPreset } from '@/features/image-generation/domain/image-model'
 import {
 	deriveImageStudioConfig,
@@ -22,6 +23,19 @@ const browseMocks = vi.hoisted(() => ({
 	fetchImageStudioConfigs: vi.fn(async () => [] as unknown[]),
 }))
 vi.mock('@/features/image-generation/services/list-image-studio-configs.client', () => browseMocks)
+
+const historyMocks = vi.hoisted(() => ({
+	fetchGeneratedImageHistory: vi.fn(
+		async (): Promise<{ hasMore: boolean; items: GeneratedImageHistoryItem[] }> => ({
+			hasMore: false,
+			items: [],
+		}),
+	),
+}))
+vi.mock(
+	'@/features/image-generation/services/list-generated-image-history.client',
+	() => historyMocks,
+)
 
 const SESSION = {
 	images: [
@@ -373,7 +387,8 @@ describe('ImageProfilePicker', () => {
 		const initial = configs.find(({ id }) => id === initialProfileId) ?? configs[0]
 		render(createElement(ImageGenerator, { config: initial ?? null }))
 		const trigger = screen.getByRole('button', { name: '프로파일 변경' })
-		expect(trigger.closest('[data-slot="controller-header"]')).not.toBeNull()
+		// 프로파일 교체는 좌측 패널이 갖는다 — 「무엇을 캔버스에 올릴지」를 고르는 자리다.
+		expect(trigger.closest('[data-slot="studio-left-panel"]')).not.toBeNull()
 		fireEvent.click(trigger)
 		const panel = screen.getByRole('dialog', { name: 'Image Profiles' })
 		await within(panel).findByRole('button', { name: new RegExp(configs[0]?.name ?? '') })
@@ -470,5 +485,70 @@ describe('ImageProfilePicker', () => {
 		expect(
 			within(panel).getByText('교체할 다른 이미지 프로파일이 없습니다.'),
 		).toBeInTheDocument()
+	})
+})
+
+describe('ImageHistoryGallery', () => {
+	function historyItem(
+		overrides: Partial<GeneratedImageHistoryItem> = {},
+	): GeneratedImageHistoryItem {
+		return {
+			aspectRatio: '16:9',
+			createdAt: '2026-09-20T00:00:00.000Z',
+			id: 42,
+			imageSize: '2K',
+			profileId: 5,
+			profileName: '제품컷',
+			prompt: '파란 세럼병',
+			url: '/api/generated-images/file/past.png',
+			...overrides,
+		}
+	}
+
+	beforeEach(() => {
+		vi.clearAllMocks()
+		mocks.state = { session: null, selected: null }
+		historyMocks.fetchGeneratedImageHistory.mockResolvedValue({ hasMore: false, items: [] })
+	})
+	afterEach(cleanup)
+
+	// 저장된 네 축이 한꺼번에 편집 세션으로 들어와야 「같은 설정으로 되돌아왔다」가 성립한다.
+	it('고른 이미지의 프롬프트·비율·해상도로 컨트롤러를 덮는다', async () => {
+		historyMocks.fetchGeneratedImageHistory.mockResolvedValue({
+			hasMore: false,
+			items: [historyItem()],
+		})
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
+
+		fireEvent.click(await screen.findByRole('button', { name: '파란 세럼병' }))
+
+		expect(screen.getByRole('textbox', { name: 'Prompt' })).toHaveValue('파란 세럼병')
+		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
+		expect(mocks.generate).toHaveBeenCalledWith(
+			expect.objectContaining({
+				aspectRatio: '16:9',
+				imageSize: '2K',
+				profileId: 5,
+				prompt: '파란 세럼병',
+			}),
+			null,
+		)
+	})
+
+	// 권한이 없으면 Payload가 메타 필드를 빼고 내려준다 — 그림만 남고 복원은 열리지 않는다.
+	it('복원 값이 없는 항목은 눌리지 않는다', async () => {
+		historyMocks.fetchGeneratedImageHistory.mockResolvedValue({
+			hasMore: false,
+			items: [historyItem({ prompt: null, profileId: null, profileName: null })],
+		})
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
+
+		expect(await screen.findByRole('button', { name: '생성 이미지' })).toBeDisabled()
+	})
+
+	it('아직 만든 이미지가 없으면 그 사실을 적는다', async () => {
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
+
+		expect(await screen.findByText('아직 만들어진 이미지가 없습니다')).toBeInTheDocument()
 	})
 })
