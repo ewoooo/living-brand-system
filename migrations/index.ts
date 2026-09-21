@@ -113,6 +113,7 @@ import * as migration_20260911_084010_add_key_visual_formation_runtime from './2
 import * as migration_20260914_062423_add_infographic_runtime from './20260914_062423_add_infographic_runtime';
 import * as migration_20260916_005825_add_graph_profiles from './20260916_005825_add_graph_profiles';
 import * as migration_20260921_084010_add_generated_image_batch_key from './20260921_084010_add_generated_image_batch_key';
+import * as migration_20260921_085920_add_generated_image_best_sample from './20260921_085920_add_generated_image_best_sample';
 
 export const migrations = [
   {
@@ -688,6 +689,11 @@ export const migrations = [
   {
     up: migration_20260921_084010_add_generated_image_batch_key.up,
     down: migration_20260921_084010_add_generated_image_batch_key.down,
-    name: '20260921_084010_add_generated_image_batch_key'
+    name: '20260921_084010_add_generated_image_batch_key',
+  },
+  {
+    up: migration_20260921_085920_add_generated_image_best_sample.up,
+    down: migration_20260921_085920_add_generated_image_best_sample.down,
+    name: '20260921_085920_add_generated_image_best_sample'
   },
 ];

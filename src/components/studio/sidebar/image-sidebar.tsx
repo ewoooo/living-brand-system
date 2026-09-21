@@ -8,7 +8,6 @@ import {
 	ControllerGroupRenderer,
 } from '@/components/shared/controller-renderer'
 import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
-import { PrintControls, VideoControls } from '@/components/studio/shared/output-controls'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
@@ -23,7 +22,6 @@ import {
 	IMAGE_STUDIO_CONTROL_IDS,
 } from '@/features/image-generation/domain/image-studio-config'
 import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
-import type { ImageExportView } from '@/features/studio-export/hooks/use-image-export'
 import {
 	type ControllerControlDefinition,
 	type ControllerRuntimeBinding,
@@ -36,7 +34,7 @@ import {
  * 세션 값은 컨텍스트의 prompt/generation/camera 그룹으로만 읽고 쓴다.
  * 디자인 SSOT: Figma HD_LBS_UI section 16:9137 "Image Usecase".
  */
-export function ImageSidebar({ download }: { download: ImageExportView }) {
+export function ImageSidebar() {
 	const { config, controls, generation, camera, reference } = useImageStudio()
 	const { batch, ratio, resolution } = getImageStudioControls(config)
 	const generationControlIds = new Set<string>([
@@ -52,7 +50,6 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 		)
 		return controls.length > 0 ? [{ ...group, controls }] : []
 	})
-	const video = download.format === 'mp4' ? config.output.video?.mp4 : undefined
 
 	return (
 		<StudioSidebar
@@ -90,60 +87,7 @@ export function ImageSidebar({ download }: { download: ImageExportView }) {
 								}
 							/>
 						</div>
-						<Controller.Row label="Format">
-							<Controller.Select
-								options={download.formats.map((format) => ({
-									value: format,
-									label: format.toUpperCase(),
-								}))}
-								value={download.format ?? ''}
-								onChange={(value) =>
-									download.setFormat(value as (typeof download.formats)[number])
-								}
-							/>
-						</Controller.Row>
-						{(download.format === 'tiff' || download.format === 'pdf') &&
-							download.ppi &&
-							config.output.print && (
-								<PrintControls
-									ppi={download.ppi}
-									options={config.output.print.ppi}
-									onChange={download.setPpi}
-								/>
-							)}
-						{video && download.fps && (
-							<VideoControls
-								fps={download.fps}
-								fpsOptions={video.fps}
-								durationSeconds={download.durationSeconds}
-								maxDurationSeconds={video.maxDurationSeconds}
-								onFpsChange={download.setFps}
-								onDurationChange={download.setDuration}
-							/>
-						)}
 					</div>
-					<div className="flex gap-2">
-						<Button
-							className="h-11 flex-1"
-							onClick={download.selected.run}
-							disabled={download.busy || !download.selected.canExport}
-						>
-							선택한 이미지 저장
-						</Button>
-						<Button
-							variant="muted"
-							className="h-11 flex-1"
-							onClick={download.all.run}
-							disabled={download.busy || !download.all.canExport}
-						>
-							전부 저장
-						</Button>
-					</div>
-					{download.error && (
-						<Typography role="alert" size="sm" className="text-destructive">
-							{download.error}
-						</Typography>
-					)}
 				</>
 			}
 		>

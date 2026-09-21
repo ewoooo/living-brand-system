@@ -1,13 +1,15 @@
 'use client'
 
 import { Controller } from '@/components/shared/controller'
-import { ImageHistoryGallery } from '@/components/studio/image/image-history-gallery'
+import { ImageBestSamplePanel } from '@/components/studio/image/image-best-sample-panel'
+import { ImageExportPanel } from '@/components/studio/image/image-export-panel'
 import { ImageProfilePicker } from '@/components/studio/image/image-profile-picker'
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import { PreviewRefreshSlot } from '@/components/studio/shared/preview-refresh-slot'
 import type { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
 import { StudioLeftPanel } from '@/components/studio/sidebar/studio-left-panel'
 import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
+import type { ImageExportView } from '@/features/studio-export/hooks/use-image-export'
 
 /**
  * Image 스튜디오의 왼쪽 패널 — **무엇을 캔버스에 올릴지 고르는 자리**다(사용자 지시, 2026-09-21).
@@ -19,8 +21,11 @@ import { useImageStudio } from '@/features/image-generation/hooks/use-image-stud
  *    마」로 되돌렸던 것이 2026-09-21에 다시 뒤집혔다. Graphic 스튜디오는 그대로 둔다.
  */
 export function ImageLeftPanel({
+	download,
 	preview,
 }: {
+	/** 내보내기 — 맨 아래 상자가 소유한다. */
+	download: ImageExportView
 	/** 프로파일 미리보기 갱신 — 페이지 선택 카드가 자기 그림을 다시 굽는다. */
 	preview: ReturnType<typeof useProfilePreview>
 }) {
@@ -52,8 +57,9 @@ export function ImageLeftPanel({
 					</Controller.AssetCard>
 				</PreviewRefreshSlot>
 			}
+			footer={<ImageExportPanel download={download} />}
 		>
-			<ImageHistoryGallery />
+			<ImageBestSamplePanel />
 		</StudioLeftPanel>
 	)
 }

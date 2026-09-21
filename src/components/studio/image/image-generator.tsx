@@ -80,8 +80,8 @@ function ImageWorkspace() {
 
 	return (
 		<StudioWorkspace
-			leftPanel={<ImageLeftPanel preview={preview} />}
-			sidebar={<ImageSidebar download={download} />}
+			leftPanel={<ImageLeftPanel download={download} preview={preview} />}
+			sidebar={<ImageSidebar />}
 		>
 			<ImageCanvas />
 		</StudioWorkspace>

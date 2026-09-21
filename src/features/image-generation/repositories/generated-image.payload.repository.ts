@@ -186,6 +186,8 @@ export async function storeGeneratedImages(input: {
 
 /** 사용자 권한으로 published 생성 이미지를 최신순으로 조회한다. */
 export async function listGeneratedImageHistory(input: {
+	/** true면 manager가 admin에서 켜 둔 본보기만 본다. */
+	bestOnly?: boolean
 	limit: number
 	page: number
 	user: unknown
@@ -218,7 +220,9 @@ export async function listGeneratedImageHistory(input: {
 		},
 		sort: '-createdAt',
 		user: input.user as never,
-		where: { _status: { equals: 'published' } },
+		where: input.bestOnly
+			? { and: [{ _status: { equals: 'published' } }, { bestSample: { equals: true } }] }
+			: { _status: { equals: 'published' } },
 	})
 
 	return {

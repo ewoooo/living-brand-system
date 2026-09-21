@@ -20,8 +20,15 @@ export async function GET(request: Request) {
 	}
 
 	try {
-		const page = Number(new URL(request.url).searchParams.get('page') ?? '1')
-		return Response.json(await listGeneratedImageHistoryPage({ page, user }))
+		const params = new URL(request.url).searchParams
+		const page = Number(params.get('page') ?? '1')
+		return Response.json(
+			await listGeneratedImageHistoryPage({
+				bestOnly: params.get('best') === '1',
+				page,
+				user,
+			}),
+		)
 	} catch (error) {
 		payload.logger.error({ err: error }, 'studio-image-history.failed')
 		return Response.json({ message: 'Failed to load generated images.' }, { status: 500 })

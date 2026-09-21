@@ -1833,6 +1833,10 @@ export interface GeneratedImage {
    */
   batchKey?: string | null;
   /**
+   * 이미지 스튜디오 좌측 패널에 본보기로 노출합니다.
+   */
+  bestSample?: boolean | null;
+  /**
    * 생성 요청 당시 인증된 사용자 ID입니다.
    */
   createdBy: number | User;
@@ -3491,6 +3495,7 @@ export interface GeneratedImagesSelect<T extends boolean = true> {
   aspectRatio?: T;
   imageSize?: T;
   batchKey?: T;
+  bestSample?: T;
   createdBy?: T;
   sourceImage?: T;
   updatedAt?: T;
