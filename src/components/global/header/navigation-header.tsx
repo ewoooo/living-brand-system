@@ -357,18 +357,20 @@ function NavigationHeaderSymbolLink({
 		<Link
 			data-slot="navigation-header-symbol-link"
 			aria-label="메인으로 이동"
+			// 마크만 있던 자리에 HD 락업이 들어간다 — 2.3:1이라 정사각형에 넣으면 찌그러진다.
 			className={cn(
-				'flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/30',
+				'flex h-8 shrink-0 items-center justify-center rounded-full bg-foreground px-2.5 outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/30',
 				className,
 			)}
 			{...props}
 		>
 			<Image
 				alt=""
-				className="size-3.5 dark:brightness-0"
-				height={14}
-				src="/symbols/symbol_wht.svg"
-				width={14}
+				// 🔴 높이 16px이 규정 최소 크기다(docs/12 「색과 최소 크기」). 더 줄이지 말 것.
+				className="h-4 w-auto dark:brightness-0"
+				height={16}
+				src="/logos/logo_wht.svg"
+				width={37}
 			/>
 		</Link>
 	)

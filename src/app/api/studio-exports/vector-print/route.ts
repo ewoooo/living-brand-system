@@ -24,7 +24,9 @@ const requestSchema = z.object({
 	scene: z.object({
 		width: z.number().positive(),
 		height: z.number().positive(),
-		background: z.string(),
+		// 🔴 없어도 된다 — 판 바닥색은 **선언한 씬만** 갖는다(템플릿은 루트 프레임이 갖는다).
+		//    필수로 두면 바닥색 없는 씬이 전부 400이 되어 PDF 내보내기가 통째로 막힌다.
+		background: z.string().optional(),
 		primitives: z.array(z.unknown()),
 	}),
 })

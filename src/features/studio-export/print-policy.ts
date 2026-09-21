@@ -33,13 +33,37 @@ export const MAX_PRINT_PPI = 1200
 export type PrintPpi = number
 export type PrintExportFormat = 'pdf' | 'tiff'
 
+/**
+ * 🔴 **정수가 아니어도 된다**(2026-09-10). 정수만 받으면 **표준 판형을 정확히 선언할 수 없다** —
+ *    630×891px 판은 A4(210×297mm)인데 그 ppi가 `630 × 25.4 ÷ 210 = 76.2`다. 76으로 내리면 판이
+ *    0.26% 커져 **210.55 × 297.78mm**가 되고, 그 소수가 아트보드 치수로 그대로 나갔다
+ *    (사용자 지적: 「artboard가 mm 기준인데 값이 소수점 단위임」).
+ * 🔑 DB 컬럼은 이미 `numeric`이라 마이그레이션이 필요 없다.
+ */
 export function isPrintPpi(value: unknown): value is PrintPpi {
 	return (
 		typeof value === 'number' &&
-		Number.isInteger(value) &&
+		Number.isFinite(value) &&
 		value >= MIN_PRINT_PPI &&
 		value <= MAX_PRINT_PPI
 	)
+}
+
+/**
+ * 물리 크기 표기의 단일 소유자.
+ *
+ * 🔴 **반올림으로 거짓말하지 않는다.** 사이드바만 `Math.round`를 걸어 210.55를 **211**로 올리고
+ *    있었는데, 그것이 「이 판은 A4가 아니다」를 가려 주면서 실제 파일 치수와도 어긋났다
+ *    (사용자 지적: 「실제 수치랑 Settings에 보이는 수치랑 완전 동일한 게 나은 듯」).
+ * 🔑 **판형 해상도가 정확하면 파일과 완전히 같은 수가 된다** — `poster`를 76.2로 선언한 뒤
+ *    화면 `210 × 297mm` · MediaBox `595.2756 × 841.8898pt`(= A4 정본)로 일치했다(실측).
+ * 🔴 해상도가 어긋난 판은 `210.6`으로 보인다. 그때는 화면과 파일이 **소수 아래에서 여전히 다르다**
+ *    (Illustrator는 24.1부터 소수 4자리를 보여 준다) — 이 함수가 약속하는 것은 「같은 수」가 아니라
+ *    「어긋남을 가리지 않는 것」이고, 완전히 같게 만드는 길은 ppi를 맞추는 것이다.
+ */
+export function formatMillimeters(millimeters: number): string {
+	const rounded = Math.round(millimeters * 10) / 10
+	return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
 }
 
 export function parsePrintPpi(value: unknown): PrintPpi | undefined {

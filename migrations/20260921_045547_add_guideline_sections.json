@@ -2010,7 +2010,7 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
-          "default": "'현대중공업'"
+          "default": "'\ud604\ub300\uc911\uacf5\uc5c5'"
         },
         "branch_on": {
           "name": "branch_on",
@@ -4941,7 +4941,7 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'한 눈에 보기'"
+          "default": "'\ud55c \ub208\uc5d0 \ubcf4\uae30'"
         },
         "description": {
           "name": "description",
@@ -5336,7 +5336,7 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'예제'"
+          "default": "'\uc608\uc81c'"
         },
         "description": {
           "name": "description",
@@ -7855,7 +7855,7 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
-          "default": "'현대중공업'"
+          "default": "'\ud604\ub300\uc911\uacf5\uc5c5'"
         },
         "branch_on": {
           "name": "branch_on",
@@ -10894,7 +10894,7 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'한 눈에 보기'"
+          "default": "'\ud55c \ub208\uc5d0 \ubcf4\uae30'"
         },
         "description": {
           "name": "description",
@@ -11301,7 +11301,7 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'예제'"
+          "default": "'\uc608\uc81c'"
         },
         "description": {
           "name": "description",
@@ -26073,6 +26073,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "graph_profiles_id": {
+          "name": "graph_profiles_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "generated_images_id": {
           "name": "generated_images_id",
           "type": "integer",
@@ -26353,6 +26359,21 @@
           "columns": [
             {
               "expression": "graphic_profiles_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "payload_locked_documents_rels_graph_profiles_id_idx": {
+          "name": "payload_locked_documents_rels_graph_profiles_id_idx",
+          "columns": [
+            {
+              "expression": "graph_profiles_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -26709,6 +26730,19 @@
           "tableTo": "graphic_profiles",
           "columnsFrom": [
             "graphic_profiles_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_graph_profiles_fk": {
+          "name": "payload_locked_documents_rels_graph_profiles_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "graph_profiles",
+          "columnsFrom": [
+            "graph_profiles_id"
           ],
           "columnsTo": [
             "id"
@@ -27988,6 +28022,710 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.graph_profiles_export_policy_allowed_formats": {
+      "name": "graph_profiles_export_policy_allowed_formats",
+      "schema": "",
+      "columns": {
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "enum_graph_profiles_export_policy_allowed_formats",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "graph_profiles_export_policy_allowed_formats_order_idx": {
+          "name": "graph_profiles_export_policy_allowed_formats_order_idx",
+          "columns": [
+            {
+              "expression": "order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "graph_profiles_export_policy_allowed_formats_parent_idx": {
+          "name": "graph_profiles_export_policy_allowed_formats_parent_idx",
+          "columns": [
+            {
+              "expression": "parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "graph_profiles_export_policy_allowed_formats_parent_fk": {
+          "name": "graph_profiles_export_policy_allowed_formats_parent_fk",
+          "tableFrom": "graph_profiles_export_policy_allowed_formats",
+          "tableTo": "graph_profiles",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.graph_profiles": {
+      "name": "graph_profiles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "runtime": {
+          "name": "runtime",
+          "type": "enum_graph_profiles_runtime",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preview_image_id": {
+          "name": "preview_image_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_order": {
+          "name": "display_order",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "controller_restrictions": {
+          "name": "controller_restrictions",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "controller_presentation": {
+          "name": "controller_presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_print_allowed_ppi": {
+          "name": "export_policy_print_allowed_ppi",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_allowed_fps": {
+          "name": "export_policy_video_allowed_fps",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_duration_seconds": {
+          "name": "export_policy_video_max_duration_seconds",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_width": {
+          "name": "export_policy_video_max_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "export_policy_video_max_height": {
+          "name": "export_policy_video_max_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "_status": {
+          "name": "_status",
+          "type": "enum_graph_profiles_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'draft'"
+        }
+      },
+      "indexes": {
+        "graph_profiles_runtime_idx": {
+          "name": "graph_profiles_runtime_idx",
+          "columns": [
+            {
+              "expression": "runtime",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "graph_profiles_preview_image_idx": {
+          "name": "graph_profiles_preview_image_idx",
+          "columns": [
+            {
+              "expression": "preview_image_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "graph_profiles_updated_at_idx": {
+          "name": "graph_profiles_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "graph_profiles_created_at_idx": {
+          "name": "graph_profiles_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "graph_profiles__status_idx": {
+          "name": "graph_profiles__status_idx",
+          "columns": [
+            {
+              "expression": "_status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "graph_profiles_preview_image_id_application_images_id_fk": {
+          "name": "graph_profiles_preview_image_id_application_images_id_fk",
+          "tableFrom": "graph_profiles",
+          "tableTo": "application_images",
+          "columnsFrom": [
+            "preview_image_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public._graph_profiles_v_version_export_policy_allowed_formats": {
+      "name": "_graph_profiles_v_version_export_policy_allowed_formats",
+      "schema": "",
+      "columns": {
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "enum__graph_profiles_v_version_export_policy_allowed_formats",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "_graph_profiles_v_version_export_policy_allowed_formats_order_idx": {
+          "name": "_graph_profiles_v_version_export_policy_allowed_formats_order_idx",
+          "columns": [
+            {
+              "expression": "order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_graph_profiles_v_version_export_policy_allowed_formats_parent_idx": {
+          "name": "_graph_profiles_v_version_export_policy_allowed_formats_parent_idx",
+          "columns": [
+            {
+              "expression": "parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "_graph_profiles_v_version_export_policy_allowed_formats_parent_fk": {
+          "name": "_graph_profiles_v_version_export_policy_allowed_formats_parent_fk",
+          "tableFrom": "_graph_profiles_v_version_export_policy_allowed_formats",
+          "tableTo": "_graph_profiles_v",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public._graph_profiles_v": {
+      "name": "_graph_profiles_v",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_name": {
+          "name": "version_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_runtime": {
+          "name": "version_runtime",
+          "type": "enum__graph_profiles_v_version_runtime",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_preview_image_id": {
+          "name": "version_preview_image_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_display_order": {
+          "name": "version_display_order",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "version_controller_restrictions": {
+          "name": "version_controller_restrictions",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_controller_presentation": {
+          "name": "version_controller_presentation",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_print_allowed_ppi": {
+          "name": "version_export_policy_print_allowed_ppi",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_allowed_fps": {
+          "name": "version_export_policy_video_allowed_fps",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_duration_seconds": {
+          "name": "version_export_policy_video_max_duration_seconds",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_width": {
+          "name": "version_export_policy_video_max_width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_export_policy_video_max_height": {
+          "name": "version_export_policy_video_max_height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_updated_at": {
+          "name": "version_updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_created_at": {
+          "name": "version_created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version__status": {
+          "name": "version__status",
+          "type": "enum__graph_profiles_v_version_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'draft'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "snapshot": {
+          "name": "snapshot",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "published_locale": {
+          "name": "published_locale",
+          "type": "enum__graph_profiles_v_published_locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latest": {
+          "name": "latest",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "_graph_profiles_v_parent_idx": {
+          "name": "_graph_profiles_v_parent_idx",
+          "columns": [
+            {
+              "expression": "parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_graph_profiles_v_version_version_runtime_idx": {
+          "name": "_graph_profiles_v_version_version_runtime_idx",
+          "columns": [
+            {
+              "expression": "version_runtime",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_graph_profiles_v_version_version_preview_image_idx": {
+          "name": "_graph_profiles_v_version_version_preview_image_idx",
+          "columns": [
+            {
+              "expression": "version_preview_image_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_graph_profiles_v_version_version_updated_at_idx": {
+          "name": "_graph_profiles_v_version_version_updated_at_idx",
+          "columns": [
+            {
+              "expression": "version_updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_graph_profiles_v_version_version_created_at_idx": {
+          "name": "_graph_profiles_v_version_version_created_at_idx",
+          "columns": [
+            {
+              "expression": "version_created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_graph_profiles_v_version_version__status_idx": {
+          "name": "_graph_profiles_v_version_version__status_idx",
+          "columns": [
+            {
+              "expression": "version__status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_graph_profiles_v_created_at_idx": {
+          "name": "_graph_profiles_v_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_graph_profiles_v_updated_at_idx": {
+          "name": "_graph_profiles_v_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_graph_profiles_v_snapshot_idx": {
+          "name": "_graph_profiles_v_snapshot_idx",
+          "columns": [
+            {
+              "expression": "snapshot",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_graph_profiles_v_published_locale_idx": {
+          "name": "_graph_profiles_v_published_locale_idx",
+          "columns": [
+            {
+              "expression": "published_locale",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_graph_profiles_v_latest_idx": {
+          "name": "_graph_profiles_v_latest_idx",
+          "columns": [
+            {
+              "expression": "latest",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "_graph_profiles_v_parent_id_graph_profiles_id_fk": {
+          "name": "_graph_profiles_v_parent_id_graph_profiles_id_fk",
+          "tableFrom": "_graph_profiles_v",
+          "tableTo": "graph_profiles",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "_graph_profiles_v_version_preview_image_id_application_images_id_fk": {
+          "name": "_graph_profiles_v_version_preview_image_id_application_images_id_fk",
+          "tableFrom": "_graph_profiles_v",
+          "tableTo": "application_images",
+          "columnsFrom": [
+            "version_preview_image_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -28168,25 +28906,25 @@
       "name": "enum_cil_subsidiary",
       "schema": "public",
       "values": [
-        "현대중공업",
-        "현대삼호",
-        "현대마린솔루션",
-        "현대마린엔진",
-        "현대이엔티",
-        "현대오일뱅크",
-        "현대케미칼",
-        "현대쉘베이스오일",
-        "현대오씨아이",
-        "현대이앤에프",
-        "현대일렉트릭",
-        "현대에너지솔루션",
-        "현대사이트솔루션",
-        "현대로보틱스",
-        "현대스포츠",
-        "하이드로젠",
-        "건설기계",
-        "한국조선해양",
-        "현대테크놀로지"
+        "\ud604\ub300\uc911\uacf5\uc5c5",
+        "\ud604\ub300\uc0bc\ud638",
+        "\ud604\ub300\ub9c8\ub9b0\uc194\ub8e8\uc158",
+        "\ud604\ub300\ub9c8\ub9b0\uc5d4\uc9c4",
+        "\ud604\ub300\uc774\uc5d4\ud2f0",
+        "\ud604\ub300\uc624\uc77c\ubc45\ud06c",
+        "\ud604\ub300\ucf00\ubbf8\uce7c",
+        "\ud604\ub300\uc258\ubca0\uc774\uc2a4\uc624\uc77c",
+        "\ud604\ub300\uc624\uc528\uc544\uc774",
+        "\ud604\ub300\uc774\uc564\uc5d0\ud504",
+        "\ud604\ub300\uc77c\ub809\ud2b8\ub9ad",
+        "\ud604\ub300\uc5d0\ub108\uc9c0\uc194\ub8e8\uc158",
+        "\ud604\ub300\uc0ac\uc774\ud2b8\uc194\ub8e8\uc158",
+        "\ud604\ub300\ub85c\ubcf4\ud2f1\uc2a4",
+        "\ud604\ub300\uc2a4\ud3ec\uce20",
+        "\ud558\uc774\ub4dc\ub85c\uc820",
+        "\uac74\uc124\uae30\uacc4",
+        "\ud55c\uad6d\uc870\uc120\ud574\uc591",
+        "\ud604\ub300\ud14c\ud06c\ub180\ub85c\uc9c0"
       ]
     },
     "public.enum_cil_branch": {
@@ -28607,25 +29345,25 @@
       "name": "enum__cil_v_subsidiary",
       "schema": "public",
       "values": [
-        "현대중공업",
-        "현대삼호",
-        "현대마린솔루션",
-        "현대마린엔진",
-        "현대이엔티",
-        "현대오일뱅크",
-        "현대케미칼",
-        "현대쉘베이스오일",
-        "현대오씨아이",
-        "현대이앤에프",
-        "현대일렉트릭",
-        "현대에너지솔루션",
-        "현대사이트솔루션",
-        "현대로보틱스",
-        "현대스포츠",
-        "하이드로젠",
-        "건설기계",
-        "한국조선해양",
-        "현대테크놀로지"
+        "\ud604\ub300\uc911\uacf5\uc5c5",
+        "\ud604\ub300\uc0bc\ud638",
+        "\ud604\ub300\ub9c8\ub9b0\uc194\ub8e8\uc158",
+        "\ud604\ub300\ub9c8\ub9b0\uc5d4\uc9c4",
+        "\ud604\ub300\uc774\uc5d4\ud2f0",
+        "\ud604\ub300\uc624\uc77c\ubc45\ud06c",
+        "\ud604\ub300\ucf00\ubbf8\uce7c",
+        "\ud604\ub300\uc258\ubca0\uc774\uc2a4\uc624\uc77c",
+        "\ud604\ub300\uc624\uc528\uc544\uc774",
+        "\ud604\ub300\uc774\uc564\uc5d0\ud504",
+        "\ud604\ub300\uc77c\ub809\ud2b8\ub9ad",
+        "\ud604\ub300\uc5d0\ub108\uc9c0\uc194\ub8e8\uc158",
+        "\ud604\ub300\uc0ac\uc774\ud2b8\uc194\ub8e8\uc158",
+        "\ud604\ub300\ub85c\ubcf4\ud2f1\uc2a4",
+        "\ud604\ub300\uc2a4\ud3ec\uce20",
+        "\ud558\uc774\ub4dc\ub85c\uc820",
+        "\uac74\uc124\uae30\uacc4",
+        "\ud55c\uad6d\uc870\uc120\ud574\uc591",
+        "\ud604\ub300\ud14c\ud06c\ub180\ub85c\uc9c0"
       ]
     },
     "public.enum__cil_v_branch": {
@@ -29031,6 +29769,8 @@
       "values": [
         "fluted-glass",
         "forward-straight",
+        "key-visual-formation",
+        "key-visual-line",
         "key-visual-pattern"
       ]
     },
@@ -29060,6 +29800,8 @@
       "values": [
         "fluted-glass",
         "forward-straight",
+        "key-visual-formation",
+        "key-visual-line",
         "key-visual-pattern"
       ]
     },
@@ -29501,6 +30243,68 @@
         "top-left",
         "bottom-right",
         "bottom-left"
+      ]
+    },
+    "public.enum_graph_profiles_export_policy_allowed_formats": {
+      "name": "enum_graph_profiles_export_policy_allowed_formats",
+      "schema": "public",
+      "values": [
+        "png",
+        "jpeg",
+        "tiff",
+        "pdf",
+        "svg",
+        "mp4"
+      ]
+    },
+    "public.enum_graph_profiles_runtime": {
+      "name": "enum_graph_profiles_runtime",
+      "schema": "public",
+      "values": [
+        "infographic"
+      ]
+    },
+    "public.enum_graph_profiles_status": {
+      "name": "enum_graph_profiles_status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "published"
+      ]
+    },
+    "public.enum__graph_profiles_v_version_export_policy_allowed_formats": {
+      "name": "enum__graph_profiles_v_version_export_policy_allowed_formats",
+      "schema": "public",
+      "values": [
+        "png",
+        "jpeg",
+        "tiff",
+        "pdf",
+        "svg",
+        "mp4"
+      ]
+    },
+    "public.enum__graph_profiles_v_version_runtime": {
+      "name": "enum__graph_profiles_v_version_runtime",
+      "schema": "public",
+      "values": [
+        "infographic"
+      ]
+    },
+    "public.enum__graph_profiles_v_version_status": {
+      "name": "enum__graph_profiles_v_version_status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "published"
+      ]
+    },
+    "public.enum__graph_profiles_v_published_locale": {
+      "name": "enum__graph_profiles_v_published_locale",
+      "schema": "public",
+      "values": [
+        "ko",
+        "en"
       ]
     }
   },

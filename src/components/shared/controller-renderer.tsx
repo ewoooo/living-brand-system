@@ -1,5 +1,6 @@
 'use client'
 
+import { Reset } from '@carbon/icons-react'
 import type { ReactNode } from 'react'
 import { Controller } from '@/components/shared/controller'
 import type { ControllerGroupSectionProps } from '@/components/shared/controller/group'
@@ -14,6 +15,7 @@ import type {
 	ControllerValues,
 } from '@/modules/studio-controller/controller-definition'
 import {
+	isControllerPadPairValue,
 	isControllerPadValue,
 	resolveControllerAvailability,
 } from '@/modules/studio-controller/controller-definition'
@@ -27,12 +29,29 @@ export const CONTROLLER_TOGGLE_OPTIONS = [
 	{ value: 'off', label: 'Off' },
 ] as const
 
+/**
+ * `asset` control의 출처별 화면. 🔴 킷은 목록을 모른다 — 도메인을 아는 쪽이 이 맵으로 주입한다.
+ * 주지 않으면 그 control은 읽기 전용 행으로 떨어진다(화면이 비어 죽지 않게).
+ */
+export type ControllerAssetSources = Partial<
+	Record<
+		Extract<ControllerControlDefinition, { kind: 'asset' }>['source'],
+		(props: {
+			label: string
+			value: string | null
+			disabled?: boolean
+			onChange: (value: string | null) => void
+		}) => ReactNode
+	>
+>
+
 type ControllerRendererProps = {
 	groups: readonly ControllerGroupDefinition[]
 	presentation?: { groups: readonly ControllerGroupPresentation[] }
 	values: ControllerValues
 	bindings?: ControllerRuntimeBindings
 	onChange: (controlId: string, value: ControllerControlValue) => void
+	assetSources?: ControllerAssetSources
 	/** 첫 그룹의 위 구분선을 걷는다. 이 목록 앞에 다른 그룹이 서면 `false`를 준다. */
 	first?: boolean
 }
@@ -44,6 +63,7 @@ export function ControllerRenderer({
 	values,
 	bindings,
 	onChange,
+	assetSources,
 	first = true,
 }: ControllerRendererProps) {
 	return (
@@ -66,6 +86,7 @@ export function ControllerRenderer({
 							definition={control}
 							value={control.id in values ? values[control.id] : control.defaultValue}
 							binding={bindings?.[control.id]}
+							assetSources={assetSources}
 							onChange={(value) => onChange(control.id, value)}
 						/>
 					))
@@ -270,6 +291,7 @@ type ControllerControlRendererProps = {
 	definition: ControllerControlDefinition
 	value: ControllerControlValue
 	binding?: ControllerRuntimeBinding
+	assetSources?: ControllerAssetSources
 	onChange: (value: ControllerControlValue) => void
 }
 
@@ -278,6 +300,7 @@ export function ControllerControlRenderer({
 	definition,
 	value,
 	binding,
+	assetSources,
 	onChange,
 }: ControllerControlRendererProps) {
 	return (
@@ -290,6 +313,7 @@ export function ControllerControlRenderer({
 					binding?.availability,
 				)}
 				padAspectRatio={binding?.padAspectRatio}
+				assetSources={assetSources}
 				onChange={onChange}
 			/>
 			{binding?.error && <FieldError>{binding.error}</FieldError>}
@@ -302,6 +326,7 @@ type ControllerControlProps = {
 	value: ControllerControlValue
 	availability: ReturnType<typeof resolveControllerAvailability>
 	padAspectRatio?: number
+	assetSources?: ControllerAssetSources
 	onChange: (value: ControllerControlValue) => void
 }
 
@@ -310,6 +335,7 @@ function ControllerControl({
 	value,
 	availability,
 	padAspectRatio,
+	assetSources,
 	onChange,
 }: ControllerControlProps) {
 	const disabled = availability === 'disabled'
@@ -320,6 +346,8 @@ function ControllerControl({
 			const text = typeof value === 'string' ? value : ''
 			if (readonly) return <ReadonlyRow label={definition.label} value={text || '—'} />
 			if (definition.multiline) {
+				// 되돌릴 것이 없으면 버튼도 없다 — 눌러도 아무 일이 없는 조작 요소를 두지 않는다.
+				const resettable = definition.resettable && text !== (definition.defaultValue ?? '')
 				return (
 					<Controller.Field
 						label={definition.label}
@@ -328,10 +356,29 @@ function ControllerControl({
 								? `${text.length}/${definition.maxLength}`
 								: undefined
 						}
+						action={
+							resettable ? (
+								<Controller.Action
+									aria-label={`${definition.label} 초기화`}
+									title="기본값으로 되돌리기"
+									onClick={() => onChange(definition.defaultValue ?? '')}
+								>
+									<Reset aria-hidden />
+								</Controller.Action>
+							) : undefined
+						}
 						disabled={disabled}
 					>
+						{definition.grid && (
+							<Controller.DataGrid
+								value={text}
+								columnLabels={definition.grid}
+								onChange={onChange}
+							/>
+						)}
+						{/* 격자가 있어도 입력창은 남는다 — 붙여넣기와 통째로 고쳐 쓰기는 격자가 대신하지 못한다. */}
 						<Controller.Textarea
-							rows={3}
+							rows={definition.rows ?? 3}
 							className="field-sizing-fixed min-h-0 overflow-y-auto scrollbar-none"
 							value={text}
 							maxLength={definition.maxLength}
@@ -482,7 +529,47 @@ function ControllerControl({
 				/>
 			)
 		}
+		case 'asset': {
+			const asset = typeof value === 'string' ? value : null
+			const Source = assetSources?.[definition.source]
+			// 출처 화면이 없으면 읽기 전용이다 — 킷이 목록을 모르므로 대신 그릴 수 있는 것이 없다.
+			if (readonly || !Source) {
+				return <ReadonlyRow label={definition.label} value={asset ? '선택됨' : '없음'} />
+			}
+			return (
+				<Source
+					label={definition.label}
+					value={asset}
+					disabled={disabled}
+					onChange={onChange}
+				/>
+			)
+		}
+		case 'pad-pair': {
+			const pair = isControllerPadPairValue(value) ? value : definition.defaultValue
+			if (readonly) {
+				return (
+					<ReadonlyRow
+						label={definition.label}
+						value={`${formatPoint(pair.a)} / ${formatPoint(pair.b)}`}
+					/>
+				)
+			}
+			return (
+				<Controller.PadPair
+					aria-label={definition.label}
+					value={pair}
+					aspectRatio={padAspectRatio ?? definition.aspectRatio}
+					disabled={disabled}
+					onChange={onChange}
+				/>
+			)
+		}
 	}
+}
+
+function formatPoint(point: { x: number; y: number }) {
+	return `${Math.round(point.x * 100)}, ${Math.round(point.y * 100)}`
 }
 
 function ReadonlyRow({ label, value }: { label: string; value: string }) {

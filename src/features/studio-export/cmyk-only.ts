@@ -9,6 +9,8 @@ import { PDFArray, PDFDocument, PDFName, PDFRawStream } from 'pdf-lib'
  *    (2026-09-09 실측). 상류 분기 하나하나를 믿는 대신 출구에서 한 번 본다.
  * 🔑 색이 들어오는 길이 둘이라 둘 다 본다 — 도형은 content stream의 연산자(`rg`·`g`)로,
  *    사진은 XObject의 `/ColorSpace`로 들어간다. 하나만 보면 나머지가 조용히 통과한다.
+ * 🔴 도형은 페이지에만 있지 않다. 묶음은 **Form XObject** 안에서 그려지므로 그 스트림도 같은
+ *    규칙으로 본다 — 페이지만 보면 판의 도형 대부분이 검사 밖에 남는다.
  */
 export async function findNonCmykColors(pdf: Buffer): Promise<string[]> {
 	// 🔴 Buffer를 그대로 넘기지 않는다. pdf-lib은 `instanceof Uint8Array`로 입력을 검사하는데,
@@ -26,16 +28,17 @@ export async function findNonCmykColors(pdf: Buffer): Promise<string[]> {
 			const stream = doc.context.lookup(ref)
 			if (stream instanceof PDFRawStream) content += `${decode(stream)}\n`
 		}
-		// 연산자는 공백으로 끊긴 토큰이다 — `gs`·`RG`가 서로 섞이지 않게 경계를 함께 본다.
-		const rgb = (content.match(/(?:^|\s)(?:rg|RG)(?:\s|$)/g) ?? []).length
-		const gray = (content.match(/(?:^|\s)(?:g|G)(?:\s|$)/g) ?? []).length
-		if (rgb > 0) problems.push(`${index + 1}쪽: RGB 도형 ${rgb}개`)
-		if (gray > 0) problems.push(`${index + 1}쪽: 회색조 도형 ${gray}개`)
+		problems.push(...nonCmykShapes(content, `${index + 1}쪽`))
 	}
 
-	for (const [, object] of doc.context.enumerateIndirectObjects()) {
+	for (const [ref, object] of doc.context.enumerateIndirectObjects()) {
 		if (!(object instanceof PDFRawStream)) continue
-		if (String(object.dict.get(PDFName.of('Subtype'))) !== '/Image') continue
+		const subtype = String(object.dict.get(PDFName.of('Subtype')))
+		if (subtype === '/Form') {
+			problems.push(...nonCmykShapes(decode(object), `form ${ref.objectNumber}번`))
+			continue
+		}
+		if (subtype !== '/Image') continue
 		const colorSpace = object.dict.get(PDFName.of('ColorSpace'))
 		const space = String(colorSpace)
 		if (/DeviceRGB|Indexed|CalRGB|CalGray/.test(space))
@@ -60,6 +63,19 @@ export async function findNonCmykColors(pdf: Buffer): Promise<string[]> {
 	}
 
 	return problems
+}
+
+/**
+ * content stream에 남은 RGB·회색조 도형. 페이지든 form이든 같은 규칙으로 본다.
+ * 연산자는 공백으로 끊긴 토큰이다 — `gs`·`RG`가 서로 섞이지 않게 경계를 함께 본다.
+ */
+function nonCmykShapes(content: string, where: string): string[] {
+	const rgb = (content.match(/(?:^|\s)(?:rg|RG)(?:\s|$)/g) ?? []).length
+	const gray = (content.match(/(?:^|\s)(?:g|G)(?:\s|$)/g) ?? []).length
+	return [
+		...(rgb > 0 ? [`${where}: RGB 도형 ${rgb}개`] : []),
+		...(gray > 0 ? [`${where}: 회색조 도형 ${gray}개`] : []),
+	]
 }
 
 /** 이 스트림이 다른 이미지의 알파 마스크인가. 마스크는 DeviceGray가 정상이다. */

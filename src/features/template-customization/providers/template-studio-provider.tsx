@@ -33,6 +33,7 @@ import {
 import {
 	findTemplateControl,
 	listCompatibleTemplateImageConfigs,
+	mapTemplateNodeLayers,
 	type PublishedTemplateView,
 	partitionTemplateSlots,
 	type ResolvedTemplateImageConfig,
@@ -40,6 +41,7 @@ import {
 	type TemplateBackgroundType,
 	type TemplateImageConfigSlot,
 	type TemplateStudioConfig,
+	type TemplateStudioConfigSlot,
 	type TemplateTextSlot,
 	type TemplateVectorSlot,
 } from '@/features/template-customization/domain/template-studio-config'
@@ -285,23 +287,35 @@ function useTemplateVectorSession(
 	)
 }
 
+/**
+ * 🔴 목록이 둘인 이유: 표시/숨김은 **편집 가능한 레이어만** 갖고(배경은 정책이 없다), 선택은
+ *    배경까지 포함한 **묶음**을 대상으로 한다 — 배경도 레이어 패널의 한 줄이다(사용자 지시, 2026-09-10).
+ */
 function useTemplateLayerSession(
-	slots: readonly (TemplateTextSlot | TemplateImageConfigSlot | TemplateVectorSlot)[],
+	editable: readonly (TemplateTextSlot | TemplateImageConfigSlot | TemplateVectorSlot)[],
+	all: readonly TemplateStudioConfigSlot[],
 ): TemplateStudioValue['layers'] {
 	const [visibility, setVisibility] = useState<Record<string, boolean>>(() =>
-		Object.fromEntries(slots.map((slot) => [slot.id, slot.visibility.defaultVisible])),
+		Object.fromEntries(editable.map((slot) => [slot.id, slot.visibility.defaultVisible])),
 	)
 	const setVisible = useCallback(
 		(slotId: string, visible: boolean) =>
 			setVisibility((current) => {
-				const slot = slots.find((candidate) => candidate.id === slotId)
+				const slot = editable.find((candidate) => candidate.id === slotId)
 				return slot?.access === 'editable' && slot.visibility.allowToggle
 					? { ...current, [slotId]: visible }
 					: current
 			}),
-		[slots],
+		[editable],
 	)
-	return useMemo(() => ({ visibility, setVisible }), [setVisible, visibility])
+	const [selected, setSelected] = useState<string | null>(null)
+	// 🔴 읽을 때 걸러 낸다 — 템플릿을 바꾸면 슬롯 id가 통째로 달라지고, 그때 남은 선택은
+	//    아무 컨트롤도 못 내면서 「고른 상태」로 보인다. 초기화 effect를 두는 대신 유도한다.
+	const selectedId = selected && all.some((slot) => slot.id === selected) ? selected : null
+	return useMemo(
+		() => ({ visibility, setVisible, selectedId, select: setSelected }),
+		[selectedId, setVisible, visibility],
+	)
 }
 
 function useTemplateBackgroundSession(
@@ -512,7 +526,7 @@ export function TemplateStudioProvider({
 	const text = useTemplateTextSession(config, textSlots, html, previewRef)
 	const images = useTemplateImageSession(config, imageSlots)
 	const vectors = useTemplateVectorSession(vectorSlots)
-	const layers = useTemplateLayerSession(editableSlots)
+	const layers = useTemplateLayerSession(editableSlots, slots)
 	const background = useTemplateBackgroundSession(config, backgroundSlot)
 	const deferredTextColor = useDeferredValue(text.color)
 	const deferredImageStates = useDeferredValue(images.states)
@@ -599,8 +613,15 @@ export function TemplateStudioProvider({
 		[exportHtml, height, width],
 	)
 	const vectorArtifact = useCallback(
-		() => createTemplateVectorArtifact({ height, html: exportHtml(), width }),
-		[exportHtml, height, width],
+		() =>
+			createTemplateVectorArtifact({
+				height,
+				html: exportHtml(),
+				// 레이어 패널과 같은 정본을 읽는다 — 화면의 묶음과 PDF의 그룹이 갈라지지 않는다.
+				nodeLayers: mapTemplateNodeLayers(config.template.slots),
+				width,
+			}),
+		[config.template.slots, exportHtml, height, width],
 	)
 	// 배경이 graphic이어도 video artifact를 내지 않는 runtime이 있다(forward-straight는 vector·raster뿐).
 	// 타입만 보고 MP4를 Video 경로로 돌리면 producer가 던진다 — 선언을 보고 정적 MP4로 떨어뜨린다.

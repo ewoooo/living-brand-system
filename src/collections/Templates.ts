@@ -153,13 +153,13 @@ export const Templates: CollectionConfig = {
 			admin: {
 				position: 'sidebar',
 				description:
-					'이 판을 인쇄물로 선언합니다. 물리 크기 = 위 px ÷ ppi × 25.4mm (예: 2480×3508px에 300 → A4). 비우면 디지털판이라 mm를 쓰지 않고, 창작자가 인쇄 해상도를 직접 고릅니다.',
+					'이 판을 인쇄물로 선언합니다. 물리 크기 = 위 px ÷ ppi × 25.4mm (예: 2480×3508px에 300 → A4). 소수도 됩니다 — 630×891px 판을 정확히 A4로 선언하려면 76.2입니다. 비우면 디지털판이라 mm를 쓰지 않고, 창작자가 인쇄 해상도를 직접 고릅니다.',
 			},
 			// 커스텀 validate는 기본 min/max 검증을 대체한다 — isPrintPpi 하나가 정수·범위를 모두 본다.
 			validate: (value: unknown) =>
 				value === null || value === undefined || isPrintPpi(value)
 					? true
-					: `판형 해상도는 ${MIN_PRINT_PPI}~${MAX_PRINT_PPI} 사이 정수여야 합니다.`,
+					: `판형 해상도는 ${MIN_PRINT_PPI}~${MAX_PRINT_PPI} 사이 숫자여야 합니다.`,
 		},
 		{
 			name: 'category',

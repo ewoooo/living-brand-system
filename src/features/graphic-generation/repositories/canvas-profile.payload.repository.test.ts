@@ -1,6 +1,6 @@
 import { getPayload } from 'payload'
 import { describe, expect, it, vi } from 'vitest'
-import { listPublishedGraphicProfileDefinitions } from './graphic-profile.payload.repository'
+import { listPublishedGraphicProfileDefinitions } from './canvas-profile.payload.repository'
 
 vi.mock('@payload-config', () => ({ default: {} }))
 vi.mock('payload', () => ({ getPayload: vi.fn() }))
@@ -39,7 +39,7 @@ describe('listPublishedGraphicProfileDefinitions', () => {
 		vi.mocked(getPayload).mockResolvedValue({ find } as never)
 
 		await expect(listPublishedGraphicProfileDefinitions({ id: 1 })).rejects.toThrow(
-			'Authenticated graphic profile consumer is required.',
+			'Authenticated canvas profile consumer is required.',
 		)
 		expect(find).not.toHaveBeenCalled()
 	})

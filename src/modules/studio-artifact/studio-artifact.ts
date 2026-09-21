@@ -130,6 +130,12 @@ export type VectorPrimitive =
 			stroke: string
 			strokeWidth: number
 			lineCap?: 'butt' | 'round' | 'square'
+			/**
+			 * 점선 패턴 — `[칠, 빈]` 길이 목록. 좌표와 같은 단위다.
+			 * 🔑 보조선을 데이터 선과 **층위로** 가르는 자리다. 색만 연하게 하면 흰 판에서
+			 * 사라지고(오남용 ①), 같은 실선이면 데이터와 같은 층위로 읽힌다.
+			 */
+			dash?: readonly number[]
 	  }
 	| { kind: 'circle'; cx: number; cy: number; radius: number; fill: string }
 	| {
@@ -203,6 +209,12 @@ export type VectorPrimitive =
 			kind: 'group'
 			/** Figma·Illustrator가 레이어 이름으로 읽는다. */
 			label?: string
+			/**
+			 * 이 subtree가 속한 **묶음**. 인쇄 PDF가 묶음 하나를 Form XObject 하나로 싣고
+			 * Illustrator가 그것을 그룹 하나로 연다(2026-09-11 실측).
+			 * 🔴 `label`과 다르다 — label은 노드 하나의 이름이고 이것은 여러 노드가 함께 드는 이름이다.
+			 */
+			layer?: string
 			transform?: string
 			opacity?: number
 			/** 상자 밖을 잘라낸다. 그래픽 배경을 판 안에 가두는 데 쓴다. */
@@ -213,7 +225,22 @@ export type VectorPrimitive =
 export type VectorScene = {
 	width: number
 	height: number
-	background: string
+	/**
+	 * 판 자신의 바닥색. 🔴 **없으면 아무것도 칠하지 않는다** — 인쇄에서 칠하지 않은 자리는 종이다.
+	 *
+	 * 🔴 예전에는 이 값이 없을 때 직렬화기가 흰색을 발명했다. 그러면 템플릿 판이 **판 전체 크기
+	 *    흰 사각형 두 장**으로 나갔다 — 하나는 이 발명이고 하나는 루트 프레임 자신의 rect다.
+	 *    실측(2026-09-10, PDF 바이트): 어떤 OCG에도 안 들어간 동일 좌표 흰 path가 2개.
+	 *    Illustrator 레이어 패널에서 판이 두 장 겹쳐 열린다.
+	 * 🔴 **그것이 「아트보드 2개」의 원인이라는 근거는 없다.** 아트보드는 **페이지에서만** 온다
+	 *    (아트보드 ↔ 페이지 1:1). 우리 파일은 페이지 1장이고 페이지 상자도 `/MediaBox` 하나뿐이며,
+	 *    나머지 네 상자는 명세상 그것으로 기본값이 잡힌다 — 그래서 `setCropBox`·`setTrimBox`를
+	 *    더해도 Illustrator에서 달라지는 것이 **0**이다. 상자를 만지지 말 것.
+	 * 🔑 템플릿은 이 값을 갖지 않는다 — 판의 바닥은 루트 프레임이 소유하고 걷기가 이미 집는다.
+	 *    실측(2026-09-10): 발행된 12개 전부 판 사각형이 정확히 **1장**이다.
+	 *    그래픽 런타임은 자기 `backgroundColor`를 여기 싣는다(그쪽은 루트 프레임이 없다).
+	 */
+	background?: string
 	primitives: readonly VectorPrimitive[]
 }
 

@@ -44,7 +44,104 @@ export const KEY_VISUAL_PATTERN_COLORWAYS = {
 export type KeyVisualPatternColorwayId = keyof typeof KEY_VISUAL_PATTERN_COLORWAYS
 
 /**
- * 컨트롤이 있는 값과 없는 값을 함께 둔다. 뒤쪽 7개는 브랜드팀이 UI에서 뺀 값이라 사용자가 못 바꾸지만,
+ * 창작자가 고르는 우측 축 묶음. 컬러와 같은 위계로 여기 한 곳이 정본이고, 고르면 **우측 컨트롤의
+ * 기본값**이 그 묶음으로 바뀐다(model의 `getRestrictions`). 값 자체는 model이 읽지 않는다.
+ *
+ * 🔴 담지 않는 축은 **색 하나**다 — 창작자가 고른 색이 프리셋 하나에 사라지면 안 된다.
+ *    방향·시점은 담는다(왼쪽 축이지만 프리셋이 정하는 것이 곧 그 조합이다).
+ *    「입체 × 사선형」은 둘뿐이고 나머지는 방향·시점을 섞는다 — 테스트가 지킨다.
+ * 🔴 식별자가 `id`가 아니라 `key`인 이유: 카탈로그 생성기가 **파일의 첫 `id:`** 를 런타임 id로
+ *    읽는다. 여기에 `id:`를 쓰면 런타임 등록이 조용히 깨진다.
+ * 🔴 `base`의 값은 `KEY_VISUAL_PATTERN_DEFAULT_INPUT`과 같아야 한다 — 시작 화면에서 보이는
+ *    프리셋과 실제 값이 어긋나지 않게 하는 유일한 장치다.
+ */
+export const KEY_VISUAL_PATTERN_PRESETS = [
+	{
+		key: 'base',
+		values: {
+			direction: 'diagonal',
+			viewpoint: 'perspective',
+			columnGap: 30,
+			rowGap: 30,
+			variableWeight: true,
+			minWeight: 1,
+			maxWeight: 10,
+			origin: { x: 0.5, y: 0.5 },
+		},
+	},
+	{
+		key: 'cornerVanishing',
+		values: {
+			direction: 'diagonal',
+			viewpoint: 'perspective',
+			columnGap: 30,
+			rowGap: 30,
+			variableWeight: true,
+			minWeight: 1,
+			maxWeight: 14,
+			origin: { x: 1, y: 1 },
+		},
+	},
+	{
+		key: 'flatDiagonal',
+		values: {
+			direction: 'diagonal',
+			viewpoint: 'flat',
+			columnGap: 12,
+			rowGap: 12,
+			variableWeight: true,
+			minWeight: 1,
+			maxWeight: 4,
+			origin: { x: 0.42, y: 0.62 },
+		},
+	},
+	{
+		key: 'verticalEdgeThird',
+		values: {
+			direction: 'vertical',
+			viewpoint: 'perspective',
+			columnGap: 16,
+			rowGap: 28,
+			variableWeight: true,
+			minWeight: 2,
+			maxWeight: 12,
+			origin: { x: 0, y: 0.33 },
+		},
+	},
+	{
+		key: 'horizontalFlat',
+		values: {
+			direction: 'horizontal',
+			viewpoint: 'flat',
+			columnGap: 20,
+			rowGap: 20,
+			variableWeight: false,
+			minWeight: 5,
+			maxWeight: 10,
+			origin: { x: 0.68, y: 1 },
+		},
+	},
+	{
+		key: 'verticalDrift',
+		values: {
+			direction: 'vertical',
+			viewpoint: 'flat',
+			columnGap: 14,
+			rowGap: 14,
+			variableWeight: true,
+			minWeight: 1,
+			maxWeight: 15,
+			origin: { x: 0.28, y: 0.44 },
+		},
+	},
+] as const
+
+export type KeyVisualPatternPresetId = (typeof KEY_VISUAL_PATTERN_PRESETS)[number]['key']
+
+export const KEY_VISUAL_PATTERN_DEFAULT_PRESET: KeyVisualPatternPresetId = 'base'
+
+/**
+ * 컨트롤이 있는 값과 없는 값을 함께 둔다. 뒤쪽 5개는 브랜드팀이 UI에서 뺀 값이라 사용자가 못 바꾸지만,
  * 계산에는 그대로 쓰이므로 입력의 일부다.
  *
  * `depthGamma`·`depthScaleMin`은 원본이 감춘 원근 강도 3단(약함/보통/강함) 중 「보통」이다.
@@ -60,8 +157,6 @@ export const KEY_VISUAL_PATTERN_DEFAULT_INPUT = {
 	maxWeight: 10,
 	origin: { x: 0.5, y: 0.5 },
 	lineLength: 35,
-	horizontalMargin: 30,
-	verticalMargin: 30,
 	minCellGap: 8,
 	lengthFillRatio: 0.6,
 	depthGamma: 2.5,
@@ -111,10 +206,29 @@ export default defineGraphicRuntime({
 		 *    manager는 Payload에서 그 값을 조정할 수 있어야 한다.
 		 */
 		// 왼쪽은 색 조합과 형태 — 방향과 시점이 그림을 통째로 바꾼다.
-		left: ['direction', 'viewpoint', 'colorway'],
+		left: ['preset', 'direction', 'viewpoint', 'colorway'],
 		// 오른쪽은 공용 4축 — 이 런타임은 정지 그래픽이라 속도가 없다.
 		right: ['columnGap', 'rowGap', 'variableWeight', 'minWeight', 'maxWeight', 'origin'],
 		groups: [
+			{
+				id: 'preset',
+				title: 'Preset',
+				controls: [
+					{
+						id: 'preset',
+						kind: 'select' as const,
+						label: '프리셋',
+						variant: 'segmented' as const,
+						defaultValue: KEY_VISUAL_PATTERN_DEFAULT_PRESET,
+						// 🔴 색도 썸네일도 주지 않는다 — 프리셋은 색을 담지 않으므로 색 칩은 거짓이 되고,
+						//    형태 썸네일은 우측 축을 그려야 해서 번호로 둔다.
+						options: KEY_VISUAL_PATTERN_PRESETS.map((preset, index) => ({
+							value: preset.key,
+							label: String(index + 1),
+						})),
+					},
+				],
+			},
 			{
 				id: 'direction',
 				title: 'Direction',
@@ -206,7 +320,7 @@ export default defineGraphicRuntime({
 						'가장 두꺼운 라인',
 						KEY_VISUAL_PATTERN_DEFAULT_INPUT.maxWeight,
 						1,
-						20,
+						15,
 					),
 				],
 			},

@@ -2,6 +2,7 @@
 
 import { Controller } from '@/components/shared/controller'
 import { ControllerRenderer } from '@/components/shared/controller-renderer'
+import { GRAPHIC_ASSET_SOURCES } from '@/components/studio/graphic/graphic-asset-sources'
 import { GraphicProfilePicker } from '@/components/studio/graphic/graphic-profile-picker'
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import {
@@ -21,18 +22,24 @@ import { splitControllerGroups } from '@/modules/studio-controller/controller-de
 export function GraphicSidebar({
 	output,
 	preview,
+	profileSwitching = true,
 }: {
 	output: GraphicExportView
 	preview: ReturnType<typeof useProfilePreview>
+	/**
+	 * 프로파일 카드를 세울지. 🔴 프로파일이 하나뿐인 스튜디오(Graph)에서는 이 카드가 보여줄 것이
+	 * 자기 이름밖에 없고 「Change」가 빈 목록을 연다 — 고를 것이 없으면 고르는 자리도 없다.
+	 */
+	profileSwitching?: boolean
 }) {
-	const { config, profiles, controls } = useGraphicStudio()
+	const { config, groups, profiles, controls } = useGraphicStudio()
 	/**
 	 * 🔑 이 패널은 **왼쪽에 서지 않은 축 전부**를 그린다 — 세기·속도처럼 세밀하고 잡다한 값들이다.
 	 *    감추지 않는다: 창작자가 다룰 수는 있어야 하고, 다만 다루리라 기대하지 않는 자리다.
 	 *    큰 축(색 조합·형태)은 `GraphicLeftPanel`이 캔버스 왼쪽에서 갖는다.
 	 */
 	const { right: rightGroups } = splitControllerGroups(
-		config.controller.groups,
+		groups,
 		config.controller.left,
 		config.controller.right,
 	)
@@ -94,26 +101,28 @@ export function GraphicSidebar({
 		<Controller.Browser.Root>
 			<StudioSidebar
 				header={
-					<PreviewRefreshSlot error={preview.error}>
-						<Controller.AssetCard
-							title={config.name}
-							subtitle={`${config.type.toUpperCase()} Graphic`}
-							buttonLabel="Change"
-							aria-label="그래픽 변경"
-							tabs={['Graphic Profiles']}
-							previewImage={preview.image ?? config.previewImage}
-							onRefreshPreview={preview.canRefresh ? preview.refresh : undefined}
-							refreshingPreview={preview.refreshing}
-							empty={browseEmptyMessage(
-								profiles.browse.status,
-								(profiles.browse.data?.length ?? 0) > 1,
-								'교체할 다른 그래픽 프로파일이 없습니다.',
-							)}
-							className="min-h-32 items-start"
-						>
-							<GraphicProfilePicker />
-						</Controller.AssetCard>
-					</PreviewRefreshSlot>
+					profileSwitching ? (
+						<PreviewRefreshSlot error={preview.error}>
+							<Controller.AssetCard
+								title={config.name}
+								subtitle={`${config.type.toUpperCase()} Graphic`}
+								buttonLabel="Change"
+								aria-label="그래픽 변경"
+								tabs={['Graphic Profiles']}
+								previewImage={preview.image ?? config.previewImage}
+								onRefreshPreview={preview.canRefresh ? preview.refresh : undefined}
+								refreshingPreview={preview.refreshing}
+								empty={browseEmptyMessage(
+									profiles.browse.status,
+									(profiles.browse.data?.length ?? 0) > 1,
+									'교체할 다른 그래픽 프로파일이 없습니다.',
+								)}
+								className="min-h-32 items-start"
+							>
+								<GraphicProfilePicker />
+							</Controller.AssetCard>
+						</PreviewRefreshSlot>
+					) : undefined
 				}
 				footer={footer}
 			>
@@ -122,6 +131,7 @@ export function GraphicSidebar({
 					presentation={config.controllerPresentation}
 					values={controls.values}
 					bindings={controls.bindings}
+					assetSources={GRAPHIC_ASSET_SOURCES}
 					onChange={controls.update}
 				/>
 			</StudioSidebar>

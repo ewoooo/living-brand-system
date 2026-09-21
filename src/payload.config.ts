@@ -30,6 +30,7 @@ import { CheckScenarios } from './collections/CheckScenarios'
 import { CheckSessions } from './collections/CheckSessions'
 import { GeneratedImages } from './collections/GeneratedImages'
 import { GraphicProfiles } from './collections/GraphicProfiles'
+import { GraphProfiles } from './collections/GraphProfiles'
 import { GuidelineChapters } from './collections/GuidelineChapters'
 import { GuidelineDocuments } from './collections/GuidelineDocuments'
 import { ImageProfiles } from './collections/ImageProfiles'
@@ -86,6 +87,7 @@ const collections = [
 	SampleImages,
 	ImageProfiles,
 	GraphicProfiles,
+	GraphProfiles,
 	GeneratedImages,
 	Templates,
 	TemplateCategories,

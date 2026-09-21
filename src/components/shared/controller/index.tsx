@@ -8,6 +8,7 @@ import { ControllerChips } from './chips'
 import { ControllerColorChips } from './color-chips'
 import { ControllerColorRow } from './color-row'
 import { ControllerColorStrip } from './color-strip'
+import { ControllerDataGrid } from './data-grid'
 import { ControllerField } from './field'
 import { ControllerGroup } from './group'
 import { ControllerInput, ControllerTextarea } from './input'
@@ -15,6 +16,7 @@ import { ControllerItem } from './item'
 import { ControllerContent, ControllerFooter, ControllerHeader, ControllerRoot } from './layout'
 import { ControllerListRow } from './list-row'
 import { ControllerPad } from './pad'
+import { ControllerPadPair } from './pad-pair'
 import { ControllerPagination } from './pagination'
 import { ControllerPreviewChips } from './preview-chips'
 import { ControllerRange } from './range'
@@ -63,8 +65,10 @@ export const Controller = {
 	Textarea: ControllerTextarea,
 	Range: ControllerRange,
 	Pad: ControllerPad,
+	PadPair: ControllerPadPair,
 	Pagination: ControllerPagination,
 	Action: ControllerAction,
+	DataGrid: ControllerDataGrid,
 	Status: ControllerStatus,
 	Bar: ControllerBar,
 	CameraControl: ControllerCameraControl,
@@ -85,6 +89,7 @@ export {
 	ControllerColorRow,
 	ControllerColorStrip,
 	ControllerContent,
+	ControllerDataGrid,
 	ControllerField,
 	ControllerFooter,
 	ControllerGroup,
@@ -93,6 +98,7 @@ export {
 	ControllerItem,
 	ControllerListRow,
 	ControllerPad,
+	ControllerPadPair,
 	ControllerPagination,
 	ControllerPreviewChips,
 	ControllerRange,

@@ -14,18 +14,20 @@ import { useGraphicExport } from '@/features/studio-export/hooks/use-graphic-exp
 
 type GraphicGeneratorProps = {
 	config: GraphicStudioConfig
+	/** 프로파일이 하나뿐인 스튜디오는 교체 카드를 세우지 않는다. */
+	profileSwitching?: boolean
 }
 
 /** 가변 그래픽 Definition을 하나의 편집 세션·Controller·Canvas에 배선한다. */
-export function GraphicGenerator({ config }: GraphicGeneratorProps) {
+export function GraphicGenerator({ config, profileSwitching = true }: GraphicGeneratorProps) {
 	return (
 		<GraphicStudioProvider config={config}>
-			<GraphicWorkspace />
+			<GraphicWorkspace profileSwitching={profileSwitching} />
 		</GraphicStudioProvider>
 	)
 }
 
-function GraphicWorkspace() {
+function GraphicWorkspace({ profileSwitching }: { profileSwitching: boolean }) {
 	const { config, controls, profiles } = useGraphicStudio()
 	const [browserState, setBrowserState] = useState<{
 		profileId: string
@@ -52,7 +54,7 @@ function GraphicWorkspace() {
 	})
 	// 캔버스가 mount된 뒤에야 Artifact가 생기므로 상태는 Artifact를 쥔 이 자리가 소유한다.
 	const preview = useProfilePreview({
-		studio: 'graphic',
+		studio: config.studio,
 		profileId: config.id,
 		artifact: browser?.artifacts.raster ?? null,
 		viewport: browser?.viewport ?? null,
@@ -62,7 +64,13 @@ function GraphicWorkspace() {
 	return (
 		<StudioWorkspace
 			leftPanel={<GraphicLeftPanel />}
-			sidebar={<GraphicSidebar output={output} preview={preview} />}
+			sidebar={
+				<GraphicSidebar
+					output={output}
+					preview={preview}
+					profileSwitching={profileSwitching}
+				/>
+			}
 		>
 			<GraphicCanvas output={output} registerArtifacts={registerArtifacts} />
 		</StudioWorkspace>
