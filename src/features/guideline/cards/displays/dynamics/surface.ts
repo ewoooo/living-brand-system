@@ -56,6 +56,6 @@ export const CI_STAGE_CONTROL_DARK =
 /** 디스플레이 다운로드 버튼: 테마·판 색과 무관한 고정 배경과 아이콘 색. */
 export const DISPLAY_DOWNLOAD_BUTTON = 'bg-[#e0e0e0] text-black/60 hover:bg-[#e0e0e0]'
 
-/** 가이드 문서의 고정 밝은 배경과 색상 비교 셀 구분선. */
-export const GUIDELINE_DOCUMENT_SURFACE = 'bg-neutral-50 text-foreground'
+/** 가이드 문서의 앱 테마 배경과 색상 비교 셀 구분선. */
+export const GUIDELINE_DOCUMENT_SURFACE = 'bg-background text-foreground'
 export const LOGO_BACKGROUND_DIVIDER = 'divide-white/30'
