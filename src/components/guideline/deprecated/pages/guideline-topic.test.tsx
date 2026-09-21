@@ -56,3 +56,33 @@ it('콘텐츠 없는 페이지도 빈 섹션을 만들지 않고 푸터 자리�
 	expect(container.querySelector('[data-slot="guideline-sections"]')).toBeNull()
 	expect(container.querySelector('[data-slot="guideline-footer"]')).toBeEmptyDOMElement()
 })
+
+it('신규 본문을 비워도 기존 블록이 다시 나타나지 않는다', () => {
+	const { container } = render(
+		<GuidelineTopic
+			topic={{
+				title: 'New document',
+				headerImage: null,
+				contentModel: 'sections',
+				sections: [],
+				blocks: [
+					{
+						blockType: 'section',
+						title: 'Legacy content',
+						anchor: 'legacy',
+						layout: 'grid',
+						rowHeight: 'medium',
+						cards: [],
+					},
+				],
+			}}
+		/>,
+	)
+	expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('New document')
+	expect(screen.queryByText('Legacy content')).not.toBeInTheDocument()
+	expect(container.querySelector('[data-slot="guideline-footer"]')).toBeNull()
+	expect(container.querySelector('[data-slot="guideline-display-footer"] img')).toHaveAttribute(
+		'alt',
+		'HD현대',
+	)
+})

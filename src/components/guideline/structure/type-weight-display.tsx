@@ -12,8 +12,8 @@ import {
 	WEIGHTS,
 	type WeightKey,
 } from '@/features/guideline/cards/displays/dynamics/brand-typeface'
-import { GuidelineCardActions } from './card-actions'
-import { GuidelineDisplayFrame } from './grid'
+import { GuidelineCardActions, type GuidelineDisplayActions } from './card-actions'
+import { GuidelineDisplayContent, GuidelineDisplayFrame } from './grid'
 
 /** Artboard 43의 최소 460px 표본과 36/20px 조판을 유지하고 도판에 맞춰 함께 축소합니다. */
 export function GuidelineTypeWeightDisplay({
@@ -32,7 +32,7 @@ export function GuidelineTypeWeightDisplay({
 	const selected = WEIGHTS.find((item) => item.key === weight) ?? WEIGHTS[1]
 	return (
 		<GuidelineDisplayFrame className={className}>
-			<div className="absolute inset-0">
+			<GuidelineDisplayContent className="absolute inset-0">
 				<DisplayFit>
 					<div className="flex flex-col gap-12">
 						{[...new Set(languages ?? [language])].map((language) => (
@@ -71,7 +71,7 @@ export function GuidelineTypeWeightDisplay({
 						))}
 					</div>
 				</DisplayFit>
-			</div>
+			</GuidelineDisplayContent>
 			{actions}
 		</GuidelineDisplayFrame>
 	)
@@ -80,16 +80,24 @@ export function GuidelineTypeWeightDisplay({
 /** 실제 제공되는 세 굵기를 비교합니다. 조작 영역은 도판 축소 대상에서 제외합니다. */
 export function GuidelineTypeWeightAdjustableDisplay({
 	language = 'ko',
+	languages,
+	weight: initialWeight = 'medium',
+	actions,
 }: {
 	language?: LanguageKey
+	languages?: readonly [LanguageKey, ...LanguageKey[]]
+	weight?: WeightKey
+	actions?: GuidelineDisplayActions
 }) {
-	const [weight, setWeight] = useState<WeightKey>('medium')
+	const [weight, setWeight] = useState<WeightKey>(initialWeight)
 	return (
 		<GuidelineTypeWeightDisplay
 			language={language}
+			languages={languages}
 			weight={weight}
 			actions={
 				<GuidelineCardActions
+					{...actions}
 					center={{
 						kind: 'toggle',
 						label: '서체 굵기',

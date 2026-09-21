@@ -1,5 +1,7 @@
 import type { User } from '@/payload-types'
 import { findDraftGuidelineDocumentById } from '../repositories/guideline-preview.payload.repository'
+import { findPaletteCatalog } from '../repositories/palette.payload.repository'
+import { needsPaletteCatalog } from '../sections/model'
 import type { GetGuidelineTopicOutput } from './get-guideline-topic.service'
 
 interface GuidelineDocumentPreviewTarget {
@@ -45,6 +47,9 @@ export async function getGuidelineTopicPreview(
 
 	return {
 		title: document.title,
+		contentModel: document.contentModel,
+		sections: document.sections,
+		paletteCatalog: needsPaletteCatalog(document) ? await findPaletteCatalog() : undefined,
 		headerImage: document.headerImage,
 		blocks: document.blocks,
 	}

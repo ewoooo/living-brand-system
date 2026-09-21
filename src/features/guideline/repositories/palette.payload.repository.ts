@@ -4,23 +4,37 @@ import { isValidHex } from '@/lib/color'
 import type { BrandColor } from '@/payload-types'
 import type { PaletteCatalog, PaletteGroup } from '../domain/contract/palette'
 
-/** 전체 CMS 이식 전 기존 그룹명을 새 팔레트 계약으로 변환하는 읽기 전용 어댑터. */
+/** 신규 family 키를 우선하며, 아직 분류하지 않은 기존 그룹명만 호환합니다. */
 export async function findPaletteCatalog(): Promise<PaletteCatalog> {
 	const payload = await getPayload({ config })
 	const { docs } = await payload.find({
 		collection: 'brand-color-groups',
-		where: { name: { in: ['Primary Color', 'Secondary Color', 'Mono Color'] } },
+		where: {
+			and: [
+				{ _status: { equals: 'published' } },
+				{
+					or: [
+						{ family: { exists: true } },
+						{ name: { in: ['Primary Color', 'Secondary Color', 'Mono Color'] } },
+					],
+				},
+			],
+		},
 		depth: 1,
 		pagination: false,
 	})
-	const groups: PaletteGroup[] = docs
+	const groups: (PaletteGroup & { family?: string | null })[] = docs
 		.map((group) => ({
 			id: String(group.id),
+			family: group.family,
 			name: group.name,
 			colors: (group.colors ?? [])
 				.filter(
 					(color): color is BrandColor =>
-						typeof color === 'object' && color !== null && isValidHex(color.hex),
+						typeof color === 'object' &&
+						color !== null &&
+						color._status === 'published' &&
+						isValidHex(color.hex),
 				)
 				.map((color) => ({
 					id: String(color.id),
@@ -43,7 +57,9 @@ export async function findPaletteCatalog(): Promise<PaletteCatalog> {
 		['supportive', 'Secondary Color', 'Supportive'],
 		['monotone', 'Mono Color', 'Monotone'],
 	] as const) {
-		const group = groups.find((group) => group.name === legacyName)
+		const group =
+			groups.find((group) => group.family === family) ??
+			groups.find((group) => !group.family && group.name === legacyName)
 		if (group) {
 			// Figma 167:11710: 밝은 초록·밝은 파랑 다음에 어두운 초록·어두운 파랑.
 			const order = ['HD LIGHT GREEN', 'HD LIGHT BLUE', 'HD DEEP GREEN', 'HD DEEP BLUE']
@@ -55,7 +71,7 @@ export async function findPaletteCatalog(): Promise<PaletteCatalog> {
 				...group,
 				name,
 				colors:
-					family === 'supportive'
+					family === 'supportive' && !group.family
 						? [...group.colors].sort((a, b) => rank(a.label) - rank(b.label))
 						: group.colors,
 			}

@@ -51,7 +51,10 @@
 	aspect-ratio: var(--display-ratio, 1);
 	overflow: hidden;
 	border-radius: var(--radius-lg);
-	background: var(--guideline-display-background);
+	background: var(--guideline-card-background, var(--guideline-display-background));
+}
+.content {
+	color: var(--guideline-card-foreground, inherit);
 }
 .image {
 	object-position: center;

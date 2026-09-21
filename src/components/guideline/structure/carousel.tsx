@@ -32,7 +32,7 @@ export function GuidelineCarouselContainer({
 		() => [
 			Autoplay({
 				active: autoplay && !reducedMotion,
-				delay: 1000,
+				delay: 3000,
 				stopOnInteraction: true,
 				stopOnMouseEnter: true,
 				stopOnLastSnap: !loop,
@@ -73,9 +73,9 @@ export function GuidelineCarouselContainer({
 			api.off('autoplay:stop', sync)
 		}
 	}, [api])
-	const ratios = cards.map(({ ratio }) => {
+	const ratios = cards.map(({ ratio, displayAspectRatio }) => {
 		const [width, height] = ratio.split(':').map(Number)
-		return width / height
+		return displayAspectRatio ?? width / height
 	})
 	const current = cards.length ? Math.min(selected + 1, cards.length) : 0
 	return (
@@ -96,6 +96,8 @@ export function GuidelineCarouselContainer({
 					{cards.map((card, index) => (
 						<GuidelineCard
 							key={card.id}
+							backgroundColor={card.backgroundColor}
+							foregroundColor={card.foregroundColor}
 							className={styles.slide}
 							aria-label={`${index + 1} / ${cards.length}`}
 							style={
@@ -104,7 +106,8 @@ export function GuidelineCarouselContainer({
 										navigation === 'labels'
 											? '100%'
 											: `calc(var(--carousel-height) * ${ratios[index]})`,
-									'--display-ratio': card.ratio.replace(':', ' / '),
+									'--display-ratio':
+										card.displayAspectRatio ?? card.ratio.replace(':', ' / '),
 								} as CSSProperties
 							}
 						>

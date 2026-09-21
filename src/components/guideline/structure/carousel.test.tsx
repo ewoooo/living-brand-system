@@ -124,7 +124,7 @@ it('같은 카드 입력의 판형·도판·캡션을 세 컨테이너가 유지
 	verify()
 	rerender(<GuidelineCarouselContainer label="공통 입력" cards={cards} />)
 	verify()
-	rerender(<GuidelineStickyContainer cards={cards} />)
+	rerender(<GuidelineStickyContainer cards={cards} mode="individual" />)
 	verify()
 })
 

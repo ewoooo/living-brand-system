@@ -2,13 +2,16 @@ import Image from 'next/image'
 import { LOGO_BACKGROUND_DIVIDER } from '@/features/guideline/cards/displays/dynamics/surface'
 import type { PaletteGroup } from '@/features/guideline/domain/contract/palette'
 import { getContrastingForeground } from '@/lib/color'
+import { GuidelineCardActions, type GuidelineDisplayActions } from './card-actions'
 import { GuidelineDisplayFrame } from './grid'
 
 export function GuidelineLogoOnBackgroundDisplay({
 	groups,
 	logos,
+	actions,
 }: {
 	groups: readonly PaletteGroup[]
+	actions?: GuidelineDisplayActions
 	logos: { default: string | null; white: string | null; mono: string | null }
 }) {
 	const rows = groups.reduce((sum, group) => sum + group.colors.length, 0)
@@ -95,6 +98,7 @@ export function GuidelineLogoOnBackgroundDisplay({
 					}),
 				)}
 			</div>
+			<GuidelineCardActions {...actions} />
 		</GuidelineDisplayFrame>
 	)
 }

@@ -5,6 +5,7 @@ import {
 	type GuidelineBlock,
 	snapshotBlock,
 } from '../blocks/projection'
+import { projectSection, sectionTitle } from '../sections/model'
 import { relationshipId } from '../utils/block-text'
 import {
 	buildCheckSourceSnapshot,
@@ -43,7 +44,9 @@ export function collectGuidelineCheckSources(
 		documentSnapshot,
 		assets,
 	)
-	const blockSources = flattenBlocks(document.blocks).flatMap(({ block, section }) =>
+	const blockSources = flattenBlocks(
+		document.contentModel === 'sections' ? [] : document.blocks,
+	).flatMap(({ block, section }) =>
 		toSources(
 			block.rules,
 			document.id,
@@ -54,7 +57,20 @@ export function collectGuidelineCheckSources(
 		),
 	)
 
-	return [...documentSources, ...blockSources]
+	const sectionSources =
+		document.contentModel === 'sections'
+			? (document.sections ?? []).flatMap((section, order) =>
+					toSources(
+						section.rules,
+						document.id,
+						{ anchor: section.anchor ?? '', title: sectionTitle(section), order },
+						sectionTitle(section),
+						projectSection(section),
+						assets,
+					),
+				)
+			: []
+	return [...documentSources, ...blockSources, ...sectionSources]
 }
 
 function toSources(

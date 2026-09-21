@@ -1,6 +1,10 @@
 'use client'
 
-import { GuidelineCardActions, useGuidelineOnOff } from './card-actions'
+import {
+	GuidelineCardActions,
+	type GuidelineDisplayActions,
+	useGuidelineOnOff,
+} from './card-actions'
 import { GuidelineDisplayFrame } from './grid'
 
 /** 두 레이어는 동일한 캔버스 비율을 사용해야 정합됩니다. CMS 관계 대신 URL을 받습니다. */
@@ -9,11 +13,13 @@ export function GuidelineClearspaceDisplay({
 	gridSrc,
 	alt,
 	dimBackground = false,
+	actions,
 }: {
 	logoSrc: string
 	gridSrc: string
 	alt: string
 	dimBackground?: boolean
+	actions?: GuidelineDisplayActions
 }) {
 	const { enabled, toggle } = useGuidelineOnOff(`${alt} 가이드`)
 	return (
@@ -43,7 +49,7 @@ export function GuidelineClearspaceDisplay({
 					/>
 				)}
 			</div>
-			<GuidelineCardActions center={toggle} />
+			<GuidelineCardActions {...actions} center={toggle} />
 		</GuidelineDisplayFrame>
 	)
 }

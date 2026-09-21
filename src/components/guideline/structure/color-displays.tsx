@@ -5,7 +5,12 @@ import { type CSSProperties, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { PaletteGroup } from '@/features/guideline/domain/contract/palette'
 import { getContrastingForeground, hexToRgb } from '@/lib/color'
-import { GuidelineCardActions, useGuidelineCopy } from './card-actions'
+import {
+	combineEndActions,
+	GuidelineCardActions,
+	type GuidelineDisplayActions,
+	useGuidelineCopy,
+} from './card-actions'
 import { GuidelineDisplayFrame } from './grid'
 
 export type Color = { label: string; value: string }
@@ -72,11 +77,13 @@ export function GuidelineLogoBackgroundDisplay({
 	logos,
 	opacity = 1,
 	underlay = '#FFFFFF',
+	actions,
 }: {
 	colors: Color[]
 	logos: { black: string; white: string }
 	opacity?: number
 	underlay?: string
+	actions?: GuidelineDisplayActions
 }) {
 	const [value, setValue] = useState(colors[0]?.value ?? '#FFFFFF')
 	const base = hexToRgb(underlay)
@@ -104,27 +111,31 @@ export function GuidelineLogoBackgroundDisplay({
 				/>
 			</div>
 			<GuidelineCardActions
-				end={{
-					kind: 'group',
-					label: '배경색 액션',
-					actions: [
-						{
-							id: 'color',
-							kind: 'color',
-							label: '배경색',
-							value,
-							presets: colors,
-							onValueChange: setValue,
-						},
-						{
-							id: 'reset',
-							kind: 'button',
-							label: '배경색 초기화',
-							icon: <Renew size={17} />,
-							onClick: () => setValue(colors[0].value),
-						},
-					],
-				}}
+				start={actions?.start}
+				end={combineEndActions(
+					{
+						kind: 'group',
+						label: '배경색 액션',
+						actions: [
+							{
+								id: 'color',
+								kind: 'color',
+								label: '배경색',
+								value,
+								presets: colors,
+								onValueChange: setValue,
+							},
+							{
+								id: 'reset',
+								kind: 'button',
+								label: '배경색 초기화',
+								icon: <Renew size={17} />,
+								onClick: () => setValue(colors[0].value),
+							},
+						],
+					},
+					actions?.end,
+				)}
 			/>
 		</GuidelineDisplayFrame>
 	)
@@ -135,9 +146,11 @@ export type GuidelineColorGroup = PaletteGroup
 export function GuidelineColorPaletteDisplay({
 	groups,
 	layout = 'uniform',
+	actions,
 }: {
 	groups: readonly GuidelineColorGroup[]
 	layout?: 'uniform' | 'ranked'
+	actions?: GuidelineDisplayActions
 }) {
 	const rows = groups.filter((group) => group.colors.length)
 	if (!rows.length) return null
@@ -162,16 +175,20 @@ export function GuidelineColorPaletteDisplay({
 				))}
 			</div>
 			<GuidelineCardActions
-				end={{
-					kind: 'copy',
-					label: '팔레트 전체 복사',
-					value: rows
-						.map(
-							(group) =>
-								`${group.name}\n${group.colors.map((color) => `${color.label}: ${color.value}`).join('\n')}`,
-						)
-						.join('\n\n'),
-				}}
+				start={actions?.start}
+				end={combineEndActions(
+					{
+						kind: 'copy',
+						label: '팔레트 전체 복사',
+						value: rows
+							.map(
+								(group) =>
+									`${group.name}\n${group.colors.map((color) => `${color.label}: ${color.value}`).join('\n')}`,
+							)
+							.join('\n\n'),
+					},
+					actions?.end,
+				)}
 			/>
 		</GuidelineDisplayFrame>
 	)

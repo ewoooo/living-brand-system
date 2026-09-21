@@ -473,11 +473,11 @@ PR을 올리기 전 자기 점검용입니다.
 - 목표 높이는 240·320·480·720px(기본 320)이며 각 Card의 비율을 허용합니다. 공통 높이는 `min(목표 높이, 가용 너비 / 그룹 최대 비율)`입니다. 화면이 좁아지면 모든 Display를 함께 줄여 가장 넓은 카드도 전체가 보이게 합니다. 카드 너비는 공통 높이×개별 비율입니다.
 - 가로 간격은 현재 Card 정규값인 12px, 카드 목록과 하단 컨트롤 간격은 24px입니다. 캡션은 카드와 함께 이동하고 컨트롤은 가장 긴 카드 아래에 놓입니다.
 - 한 번에 한 카드의 시작점으로 이동합니다. 카운터는 현재 카드 순번 / 전체 카드 수입니다. 마지막 카드까지 독립된 이동점을 유지하므로 마지막 카드 오른쪽에는 빈 공간이 생길 수 있습니다. 루프는 기본 ON, 자동 재생은 기본 OFF이며, 루프가 꺼져 있으면 양끝 버튼을 비활성화합니다. 드래그·터치와 키보드로 접근 가능한 이전·다음 버튼을 제공합니다.
-- 빈 목록은 0 / 0과 비활성 버튼, 한 장은 1 / 1과 비활성 버튼입니다. `/guideline/mockup#carousel-playground`에서 높이·카드 수·혼합/동일 비율을 바꿔 확인합니다. 이름 선택형 캐러셀은 아직 구현 범위에 포함하지 않습니다.
+- 빈 목록은 0 / 0과 비활성 버튼, 한 장은 1 / 1과 비활성 버튼입니다. `/guideline/mockup#carousel-playground`에서 높이·카드 수·혼합/동일 비율을 바꿔 확인합니다. 이름 선택형 캐러셀도 지원하며 CMS에서는 카드별 선택 이름을 필수로 받습니다.
 
 #### 캐러셀 재생 옵션 (2026-09-15)
 
-- `loop` 기본값은 `true`, `autoplay` 기본값은 `false`, 재생 간격은 1000ms(1초)로 고정합니다. 공식 `embla-carousel-autoplay` 플러그인을 사용합니다.
+- `loop` 기본값은 `true`, `autoplay` 기본값은 `false`, 재생 간격은 3000ms(3초)로 고정합니다(2026-09-21 CMS 계약 반영). 공식 `embla-carousel-autoplay` 플러그인을 사용합니다.
 - 무한 반복은 Embla가 카드 수·폭에 따라 지원 가능한 경우에만 적용합니다. 화살표는 실제 이동 가능 여부를 따릅니다.
 - 반복 OFF의 자동 재생은 마지막 카드에서 정지합니다. 마우스 진입·드래그·포커스·화살표 조작도 재생을 정지합니다. 재생 시작/정지 버튼을 제공합니다.
 - 자동 재생 중 카운터의 live announcement는 끄고, 모션 감소 설정에서는 자동 재생을 비활성화합니다.
@@ -485,7 +485,7 @@ PR을 올리기 전 자기 점검용입니다.
 
 ### Sticky 비교 목업 (2026-09-15)
 
-- `GuidelineStickyContainer`는 `cards`, `mode: individual | switch`(기본 individual), `top`(기본 32px)을 받습니다. CMS 연결 전 플레이그라운드에서 비교합니다.
+- `GuidelineStickyContainer`는 `cards`, `mode: individual | switch`(기본 switch), `top`(기본 32px)을 받습니다. CMS와 플레이그라운드에서 두 모드를 선택할 수 있습니다(2026-09-21 CMS 계약 반영).
 - 카드 하나가 공통 캡션과 도판을 소유합니다. 일반형은 각 카드의 설명을 자기 카드 범위 안에서 고정하고, 전환형은 컨테이너 전체에서 설명 영역을 공유합니다.
 - 전환형은 도판 상단이 `top` 기준선을 통과할 때 해당 카드로 교체하며 역스크롤도 반영합니다. 시각 복제 영역은 보조기술에서 숨기고 원본 설명은 각 카드의 읽기 순서에 유지합니다.
 - 가용 폭 788px 이상에서 설명 기준 폭 370px + 간격 48px + 도판 최소 370px을 사용합니다. 미만에서는 고정을 해제하고 캡션 전체 → 도판으로 배치합니다. 370px보다 좁으면 가용 폭을 사용합니다.
@@ -505,6 +505,7 @@ PR을 올리기 전 자기 점검용입니다.
 - Grid의 선택 `minDisplayWidth`는 카드 축소 하한입니다. 지정 시 최대 columns 안에서 가용 폭을 나누고, 하한을 지키지 못할 때 열을 줄입니다. displayWidth는 카드 최대·목표 너비로 유지합니다. 생략하면 기존 고정 너비 배치를 유지합니다. Incorrect Usages는 목표 720px·최소 320px·최대 2열입니다.
 
 - Grid·Carousel·Sticky는 모두 `cards: readonly GuidelineCardData[]`를 받습니다. 각 카드는 고유 `id`, 도판 판형 `ratio`, 도판 노드 `display`, 선택 캡션 `caption`을 가집니다.
+- 로고 배경 비교처럼 내부 셀 비율을 보존하는 도판은 어댑터가 계산한 `displayAspectRatio`를 사용합니다. 세 컨테이너가 같은 계산값을 따르며 CMS에서 임의 수치를 입력하는 필드는 제공하지 않습니다.
 - Grid의 children 입력과 컨테이너 ratio는 카드 목록으로 대체합니다. 같은 판형을 사용하려면 각 카드에 같은 ratio를 지정합니다. Carousel·Sticky 전용 카드 타입은 사용하지 않습니다.
 - 컨테이너는 배치·크기·동작만 결정합니다. Grid는 목표 너비·최대 열 수, Carousel은 목표 높이·반복·재생, Sticky는 고정 모드·위치를 소유합니다.
 - Display의 fit·scale·액션 조합은 기존 도판 컴포넌트가 소유합니다. 이 입력은 렌더링용이며 CMS 저장 스키마가 아닙니다. CMS 연결 시 도판 데이터를 노드로 변환하는 경계는 별도로 연결합니다.
@@ -579,8 +580,8 @@ PR을 올리기 전 자기 점검용입니다.
 
 - `features/guideline/domain/contract/palette.ts`가 기본군(primary·supportive·monotone), 표시 조합(primary·supportive·monotone·brand), 색상 그룹 입력을 소유합니다. Brand는 Primary→Supportive 순서의 파생 조합이며 별도 저장군이 아닙니다.
 - `resolvePalette`로 조합하고 필요한 군이 없거나 비어 있으면 null을 반환합니다. 알 수 없는 조합은 거부하며 임의의 대체군·부분 Brand를 만들지 않습니다.
-- `repositories/palette.payload.repository.ts`는 기존 Primary Color·Secondary Color·Mono Color를 새 계약으로 읽어 변환합니다. UI는 기존 DB 이름을 해석하지 않습니다.
-- 전체 마이그레이션은 후속 작업입니다. 새 CMS의 안정적인 family 키·기존 데이터 매핑·CMS 렌더 연결을 이 계약에 맞춰 이식해야 합니다. 현재 DB 스키마·데이터·deprecated 렌더 맵은 변경하지 않습니다. 디스플레이는 분류를 판단하지 않고 이미 조합된 그룹을 표현합니다.
+- `repositories/palette.payload.repository.ts`는 `brand-color-groups.family`의 primary·supportive·monotone 키를 우선하며, 키가 없는 기존 Primary Color·Secondary Color·Mono Color는 호환 매핑으로 읽습니다. UI는 기존 DB 이름을 해석하지 않습니다.
+- 새 CMS는 안정적인 family 키와 공통 팔레트 렌더러에 연결됩니다(2026-09-21). 키는 중복 등록할 수 없으며 게시된 그룹·색상만 조회합니다. 기존 데이터의 전체 이관과 deprecated 렌더 맵 제거는 후속입니다. 디스플레이는 분류를 판단하지 않고 이미 조합된 그룹을 표현합니다.
 
 
 ### 조건부 디스플레이 검토
@@ -589,7 +590,7 @@ PR을 올리기 전 자기 점검용입니다.
 - LogoOnBackground는 드래그·방향키 이동 없이 모든 색상과 해당 로고를 세로 행으로 동시에 표시합니다. Primary·Supportive·Monotone·Brand 네 조합을 `resolvePalette`로 구성하고 기본형·단색형을 나란히 비교합니다.
 - `PaletteColor.logoUsage`는 기본형·화이트 워드마크 허용 여부와 단색형 색상을 소유합니다. 기존 CMS 값은 팔레트 저장소에서 변환하며 미등록은 null입니다. 대비 계산으로 규정을 추론하지 않습니다. 사용 금지·규정 미등록·로고 파일 미등록은 구분합니다. DB 쓰기나 스키마 변경은 없습니다.
 
-- Supportive의 표시 순서는 Figma `167:11710`에 맞춰 Light Green → Light Blue → Deep Green → Deep Blue입니다. 팔레트 저장소에서 정렬하여 Brand 조합·스와치·배경 비교가 같은 순서를 사용합니다. White·Black은 Monotone 소속을 유지하며 색상값과 DB 순서는 변경하지 않습니다.
+- 레거시 Supportive의 표시 순서는 Figma `167:11710`에 맞춰 Light Green → Light Blue → Deep Green → Deep Blue입니다. family 키가 있는 새 그룹은 CMS에 등록한 순서를 따릅니다. Brand 조합·스와치·배경 비교가 같은 순서를 사용합니다. White·Black은 Monotone 소속을 유지합니다.
 
 - LogoOnBackground의 로고는 각 색상 행의 중앙에 배치합니다. 왼쪽 색상명은 absolute 레이어로 흐름에서 제외하며 로고 위치에 영향을 주지 않습니다. 사용 금지 행은 로고와 금지 라벨 없이 색상만 표시합니다.
 
@@ -633,7 +634,7 @@ PR을 올리기 전 자기 점검용입니다.
 
 - Weight 디스플레이는 기존 단일 `language`와 함께 비어 있지 않은 `languages` 배열을 지원합니다. 배열이 있으면 순서대로 표본을 쌓고 하나의 DisplayFit으로 함께 축소하며 카드의 굵기를 공유합니다. Typography Weight는 국문·영문을 합친 2:3 카드와 기본 캡션(Bold 700 / Medium 500 / Light 300)을 사용합니다. 소비처의 `className`으로 프레임 배경·상속 글자색을 지정합니다.
 
-### 카드 도판 색상 계약 (합의, 공통 API 적용 예정)
+### 카드 도판 색상 계약
 
 카드가 `backgroundColor`·`foregroundColor`를 선택적으로 소유합니다. Grid·Carousel·Sticky는 동일한 카드 입력을 전달하며 색상을 결정하지 않습니다. 이 계약은 Weight 전용 옵션이 아닙니다.
 
@@ -645,9 +646,9 @@ PR을 올리기 전 자기 점검용입니다.
 - `foregroundColor`는 글자색에 한정하지 않습니다. 텍스트는 `color`를 상속하고, 전경색을 따르는 단색 아이콘·인라인 SVG·로고·도형은 `currentColor`로 선과 면을 그립니다. 해당 색상은 콘텐츠 레이어에만 적용하며 프레임 전체에 무조건 상속시키지 않습니다.
 - 사진·다색 이미지·고유 색상 규정이 있는 콘텐츠는 원본 색상을 유지합니다. 외부 SVG를 포함한 이미지 파일은 `color`를 자동 상속하지 않으며 필터나 강제 착색으로 대체하지 않습니다. 단색 로고도 전경색 지원 렌더러와 브랜드 사용 규정이 허용하는 경우에만 적용합니다.
 - 카드 액션·상태 배지·가이드라인 오버레이·캡션은 전경색 적용 범위에서 제외합니다. 각자의 UI·상태색·1px 녹색 가이드 규칙을 유지합니다.
-- CMS 연결 시 기존 팔레트 계약의 색상 식별자(`PaletteColor.id`)를 참조하고, 렌더링 전 해당 카탈로그에서 `value`로 해석합니다. 참조를 찾지 못하면 기본색으로 대체하며, 표본별로 별도 팔레트 분류를 만들지 않습니다. 저장 필드와 검증 구현은 CMS 마이그레이션에서 확정합니다.
+- CMS는 기존 팔레트와 같은 `brand-colors` 관계를 저장하고, 렌더링 전 게시된 색상의 HEX로 해석합니다. 참조를 읽을 수 없거나 HEX가 유효하지 않으면 기본색을 유지합니다. 별도 팔레트 분류는 만들지 않습니다.
 - 전경색을 생략했다고 배경색으로부터 자동 반전하거나 로고 변형을 추론하지 않습니다. 로고 배경 대비 선택·사용 허용 여부는 해당 디스플레이의 기존 계약을 따릅니다.
-- 현재 Typography의 페이지 스타일은 임시 소비처입니다. 이번 합의는 공통 계약을 문서화한 것이며, 공통 카드 타입·렌더러·CMS 저장 스키마의 이관은 아직 적용하지 않았습니다.
+- 공통 카드가 색상 변수를 소유하고 세 컨테이너가 같은 입력을 전달합니다. `GuidelineDisplayFrame`은 배경색, `GuidelineDisplayContent`는 상속 가능한 전경색을 적용합니다. 서체 굵기 디스플레이가 콘텐츠 레이어를 사용합니다. 기존 레퍼런스 페이지의 개별 스타일 이관은 별도 작업입니다.
 
 - Typography의 HD Typeface는 제공 폴더의 기준 PDF 33쪽 국문·영문 표본, Micro Typography는 35쪽 혼용 조판 도판, Incorrect Usages는 40쪽 여섯 사례와 실제 규정 문구를 사용합니다. PDF 도판은 투명 PNG로 추출하며 원본 가이드선은 이미지의 일부입니다. 별도 글줄·자간·커닝 설명 도판은 제공되지 않아 생성하지 않습니다. Usecases는 제공된 X Banner·Poster·Presentation 에셋으로 구성합니다. 추출·복사 출처는 `public/guideline/reference/typography/README.md`에 기록합니다.
 

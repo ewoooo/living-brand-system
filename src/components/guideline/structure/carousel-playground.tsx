@@ -86,7 +86,7 @@ export function GuidelineCarouselPlayground() {
 				</label>
 			</div>
 			<p className="text-sm text-muted-foreground">
-				재생 간격은 1초입니다. 카드가 부족하면 무한 반복이 해제됩니다. 자동 재생은 마우스
+				재생 간격은 3초입니다. 카드가 부족하면 무한 반복이 해제됩니다. 자동 재생은 마우스
 				진입·드래그·포커스·화살표 조작 시 정지하며, 시작 버튼으로 다시 재생할 수 있습니다.
 				모션 감소 설정에서는 자동 재생하지 않습니다.
 			</p>

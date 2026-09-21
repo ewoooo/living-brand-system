@@ -12,7 +12,7 @@ type StickyProps = {
 }
 
 /** 카드가 설명·도판을 소유하고, 컨테이너가 고정 위치와 활성 카드를 결정합니다. */
-export function GuidelineStickyContainer({ cards, mode = 'individual', top = 32 }: StickyProps) {
+export function GuidelineStickyContainer({ cards, mode = 'switch', top = 32 }: StickyProps) {
 	const rootRef = useRef<HTMLDivElement>(null)
 	const [active, setActive] = useState(0)
 	const offset = Number.isFinite(top) ? Math.max(0, top) : 32
@@ -69,11 +69,14 @@ export function GuidelineStickyContainer({ cards, mode = 'individual', top = 32 
 					{cards.map((card) => (
 						<GuidelineCard
 							key={card.id}
+							backgroundColor={card.backgroundColor}
+							foregroundColor={card.foregroundColor}
 							className={styles.card}
 							aria-label={card.caption?.title}
 							style={
 								{
-									'--display-ratio': card.ratio.replace(':', ' / '),
+									'--display-ratio':
+										card.displayAspectRatio ?? card.ratio.replace(':', ' / '),
 								} as CSSProperties
 							}
 						>

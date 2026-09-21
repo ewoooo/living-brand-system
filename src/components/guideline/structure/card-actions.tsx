@@ -74,6 +74,23 @@ type Props = {
 	end?: GuidelineEndAction | EndGroup
 }
 
+/** CMS 카드의 상태·다운로드와 디스플레이 고유 조작을 한 액션 레이어에 합칩니다. */
+export type GuidelineDisplayActions = Pick<Props, 'start' | 'end'>
+
+export function combineEndActions(base: Props['end'], extra: Props['end']): Props['end'] {
+	if (!base) return extra
+	if (!extra) return base
+	return {
+		kind: 'group',
+		label: '카드 액션',
+		actions: [base, extra].flatMap((action, index) =>
+			action.kind === 'group'
+				? action.actions.map((item) => ({ ...item, id: `${index}-${item.id}` }))
+				: [{ ...action, id: String(index) }],
+		),
+	}
+}
+
 /** 카드 전체와 개별 항목의 복사 결과를 같은 어휘로 전달합니다. */
 export function useGuidelineCopy() {
 	const [status, setStatus] = useState<'idle' | 'pending' | 'copied' | 'failed'>('idle')

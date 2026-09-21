@@ -13,7 +13,7 @@ vi.mock('payload', () => ({
 						'HD DEEP GREEN',
 						'HD LIGHT BLUE',
 						'HD DEEP BLUE',
-					].map((name, id) => ({ id, name, hex: '#123456' })),
+					].map((name, id) => ({ id, name, hex: '#123456', _status: 'published' })),
 				},
 			],
 		}),

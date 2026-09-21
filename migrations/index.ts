@@ -108,6 +108,9 @@ import * as migration_20260908_025709_add_card_caption_placement from './2026090
 import * as migration_20260908_051127_move_mark_to_cards from './20260908_051127_move_mark_to_cards';
 import * as migration_20260909_023814_add_guideline_grid_columns from './20260909_023814_add_guideline_grid_columns';
 import * as migration_20260910_021805_add_nano_banana_2 from './20260910_021805_add_nano_banana_2';
+import * as migration_20260921_045547_add_guideline_sections from './20260921_045547_add_guideline_sections';
+import * as migration_20260921_060904_add_guideline_dynamic_sections from './20260921_060904_add_guideline_dynamic_sections';
+import * as migration_20260921_065214_add_guideline_card_colors_actions from './20260921_065214_add_guideline_card_colors_actions';
 
 export const migrations = [
   {
@@ -658,6 +661,21 @@ export const migrations = [
   {
     up: migration_20260910_021805_add_nano_banana_2.up,
     down: migration_20260910_021805_add_nano_banana_2.down,
-    name: '20260910_021805_add_nano_banana_2'
+    name: '20260910_021805_add_nano_banana_2',
+  },
+  {
+    up: migration_20260921_045547_add_guideline_sections.up,
+    down: migration_20260921_045547_add_guideline_sections.down,
+    name: '20260921_045547_add_guideline_sections',
+  },
+  {
+    up: migration_20260921_060904_add_guideline_dynamic_sections.up,
+    down: migration_20260921_060904_add_guideline_dynamic_sections.down,
+    name: '20260921_060904_add_guideline_dynamic_sections',
+  },
+  {
+    up: migration_20260921_065214_add_guideline_card_colors_actions.up,
+    down: migration_20260921_065214_add_guideline_card_colors_actions.down,
+    name: '20260921_065214_add_guideline_card_colors_actions'
   },
 ];

@@ -1,6 +1,6 @@
 # Guideline
 
-가이드라인의 설정과 스타일을 어느 계층에서 정의할지 판단하는 명세입니다. **블록은 카드 목록의 배치, 카드는 개별 사례, 디스플레이는 판 안의 표현**을 소유합니다. 문서 생명주기는 [03](../03-data-lifecycle.md), 도메인 경계는 [04](../04-domain-model.md), 디자인 토큰은 [09](../09-design-system.md)가 소유합니다.
+가이드라인의 설정과 스타일을 어느 계층에서 정의할지 판단하는 명세입니다. 신규 CMS 계약과 첫 연결 범위는 §2.6이 소유합니다. §2.1~2.5의 블록 모델은 기존 콘텐츠를 위한 호환 계약입니다. 문서 생명주기는 [03](../03-data-lifecycle.md), 도메인 경계는 [04](../04-domain-model.md), 디자인 토큰은 [09](../09-design-system.md)가 소유합니다.
 
 ## 1. 목적
 
@@ -119,6 +119,52 @@ Mark는 **저작자가 붙이는 사례 표식**입니다. 검수 Rule·검수 �
 이 단계는 모든 입력·카드 비율에서 내부 배치가 완성됐다는 뜻이 아닙니다. 작은 카드의 타입 입력·긴 문단·많은 아이콘·CI 치수 배치는 후속 조정 대상입니다. 크기 관련 기존 저장 필드(`logo-display.width/height`, `clearspace-overlay.scalePercent`, `type-scramble.panelHeight`)는 admin에서 숨기고 렌더에서 무시합니다. 저장 데이터·DB 스키마는 유지하며 정적 이미지의 크롭 정책과 카드 캡션·Mark 스타일도 유지합니다.
 
 일반 카드와 동적 카드는 공통 Card 안에서 규격 정책을 구분합니다. 이번 세 위젯은 각 디스플레이 정의의 `ratio`이 공통 저작 비율보다 우선합니다(Type Language·Type Hierarchy 5:7, Layout Grid Overlay 3:2). 그리드는 열 수로 배정한 너비, 캐러셀은 줄 높이로 크기를 계산하며 모바일에서는 한 카드가 가용 폭을 채웁니다. DB의 기존 비율 값은 보존하며, 나머지 위젯의 규격 정책은 후속 작업입니다.
+
+### 2.6 신규 CMS 계약 — 2026-09-21
+
+```text
+Document
+├─ 제목·slug·챕터·게시 상태·문서 rules
+├─ contentModel: legacy | sections
+└─ sections[] — 평면 목록, 순서가 문서 위계
+   ├─ type: Section | Subsection | Incorrect Usages
+   ├─ 제목·설명·anchor·정렬·rules·섹션 다운로드
+   └─ containers[]
+      ├─ type: Grid | Carousel | Sticky
+      ├─ 컨테이너별 배치 설정
+      └─ cards[] — 컨테이너 아이템 = 카드
+         ├─ ratio·display·도판 색상
+         ├─ START 상태 / CENTER 전환 / END 실행
+         └─ caption: 기본 | 목록 | 명세
+```
+
+Section은 H2, Subsection은 앞선 메인 섹션에 속하는 H3입니다. CMS에서는 같은 배열에서 편집하고 서브섹션을 재귀 중첩하지 않습니다. Incorrect Usages는 고정 제목·중앙 정렬·기존 적색 패널을 사용합니다. 첫 항목이 Subsection이거나 문서 안의 앵커가 중복되면 저장을 거부합니다.
+
+| 대상 | 합의한 기본값과 범위 |
+| --- | --- |
+| 컨테이너 | 섹션에 기본 Grid 하나. 여러 컨테이너를 순서대로 추가 가능 |
+| Grid | 최대 1~5열, 기본 3열. Size는 X Small / Small / Medium / Large / X Large, 기본 Medium |
+| Grid Size | 목표 카드 너비 240 / 320 / 480 / 720 / 1440px. 최소 너비 240 / 240 / 320 / 320 / 320px. 공통 반응형 규칙, 좌우 12px·상하 24px 간격 |
+| Carousel | 기본 일반형, 이름 선택형도 지원. 높이 Medium, 무한 반복 On, 자동 재생 Off, 재생 간격 3초 |
+| Sticky | 스크롤 전환형 기본. 개별 고정형도 지원. 좁은 화면에서는 고정 해제 |
+| 카드 판형 | 기본 4:3. 공통 `CARD_RATIO_OPTIONS`의 11개 비율을 사용하고 원본 비율 선택은 제외 |
+| 이미지 | contain 기본, scale 80%. contain에서만 30~100% 조절, cover는 전체 영역 사용 |
+| 캡션 | 기본 / 목록 / 명세 중 하나. 공통 제목·설명 선택, 목록은 제목·설명 행, 명세는 라벨·값 행. 비어 있으면 표시하지 않음 |
+| START | 상태만 표시. 일반 섹션은 없음, Incorrect Usages는 금지가 기본. 카드에서 없음·허용·금지로 재정의 |
+| CENTER | 해당 디스플레이가 지원하는 전환만 표시. On/Off는 Off 기본, 일시적 조작 상태는 CMS에 저장하지 않음 |
+| END | 다운로드·링크 이동·복사 등 실행 액션. 기본 없음 |
+| 다운로드 | 없음 기본 / 카드 에셋 / 별도 등록. 섹션은 자기 컨테이너의 카드만 수집하며 뒤따르는 Subsection을 재귀 수집하지 않음 |
+| 도판 색상 | 팔레트 색상 식별자 참조. `backgroundColor`·`foregroundColor`의 범위는 [10장의 색상 계약](../10-component-authoring.md#카드-도판-색상-계약)을 따름 |
+
+**연결 범위**는 세 섹션 타입·Grid/Carousel/Sticky·세 캡션 타입·상태·개별/섹션 다운로드입니다. 디스플레이는 이미지, 이미지+가이드 Off/On, 레이아웃 그리드, 레이아웃 이미지 오버레이, 서체 굵기, 팔레트(스와치/로고 배경 비교), 단독 스와치, 로고 배경색 선택의 8종입니다. 이름 선택형 Carousel은 카드마다 선택 이름이 필요합니다. 서체 언어는 순서가 있는 목록이며 기본 국문·Medium, 굵기 전환을 끄면 고정 표본으로 표시합니다. 카드 배경색·전경색은 게시된 `brand-colors`를 선택합니다. 추가 END 액션은 순서가 있는 링크·복사 목록이며 다운로드 뒤에 표시합니다. 각 액션에 라벨과 링크 주소 또는 복사 내용을 입력합니다. 링크는 내부 경로·앵커·HTTP(S)만 허용합니다. CI 선택기·TypeSpecimen 편집은 후속입니다. 이미지와 별도 다운로드 파일은 기존 `application-images`·`brand-icons`·`brand-logos`를 참조합니다. 일반 첨부 파일·ZIP 업로드는 이번 범위에 없습니다.
+
+팔레트는 `brand-color-groups.family`의 Primary·Supportive·Monotone 키로 게시된 그룹과 색상을 읽습니다. 키는 중복 등록할 수 없으며 Brand는 Primary+Supportive를 조합합니다. 기존 이름 매핑은 family가 없는 데이터의 호환 경로로만 남깁니다. 신규 그룹은 저장된 색상 순서를 따르고, 레거시 Supportive만 기존 정렬을 유지합니다. 디스플레이의 복사·색상 선택·초기화와 CMS 다운로드는 같은 END 액션 레이어에 합칩니다. 로고 배경색 선택에는 블랙·화이트 파일이 모두 필요합니다. 신규 본문은 `GuidelineDisplayFooter`와 제공된 public HD현대 로고를 사용합니다. 높이는 100dvh, 모바일 로고 너비는 80%입니다. 기존 본문은 기존 푸터를 유지합니다.
+
+기존 문서는 `contentModel=legacy`를 기본으로 기존 `blocks`를 읽습니다. 편집자가 `sections`를 선택하면 신규 본문만 읽으며 빈 배열이어도 기존 본문으로 되돌아가지 않습니다. 기존 테이블·콘텐츠를 삭제하거나 자동 전환하지 않습니다. 게시 조회·목차·초안 미리보기·검색·Agent·MCP·검수 투영·읽기 전용 콘텐츠 스냅샷은 모두 선택한 본문을 따릅니다. 신규 배열은 기본 Admin 편집과 저장 후 미리보기를 사용하며 Better Editor의 블록 직접 선택은 이 단계에 포함하지 않습니다.
+
+`sections/schema.ts`와 `display-schema.ts`는 저장·검증을, `sections/model.ts`는 파일 해석·자기 섹션 다운로드·텍스트 투영을, `sections/render.tsx`와 `display-render.tsx`는 공통 표현 API 연결을 소유합니다. 공통 표현 컴포넌트에는 CMS 관계를 넘기지 않습니다. 다운로드는 현재 선택한 디스플레이의 에셋만 수집하고 URL이 같은 파일은 한 번만 포함합니다. 캡션 행은 배열 전체를 번역 단위로 삼습니다. 셀별 번역 테이블을 추가하면 깊은 버전 조회에서 PostgreSQL 별칭 길이 제한에 걸립니다.
+
+검증은 `tests/int/guideline-sections-storage.int.spec.ts`에서 명시적으로 지정한 일회용 로컬 DB만 사용합니다. 저장·버전 조회·기본값·관계 해석·게시/초안 분리·편집 권한·잘못된 위계·필수 에셋·팔레트 연결을 검사합니다. 콘텐츠는 admin에서 작성하며 코드로 reference 페이지를 DB에 심지 않습니다.
 
 ## 3. 표면
 

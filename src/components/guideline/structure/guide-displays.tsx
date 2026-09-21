@@ -21,6 +21,7 @@ import { guideColorOf } from '@/features/guideline/cards/displays/guide-style'
 import {
 	GuidelineCardActions,
 	type GuidelineCardBreadcrumb,
+	type GuidelineDisplayActions,
 	useGuidelineOnOff,
 } from './card-actions'
 import { GuidelineDisplayFrame } from './grid'
@@ -29,10 +30,12 @@ export function GuidelineLayoutOverlayDisplay({
 	images,
 	params,
 	colors = {},
+	actions,
 }: {
 	images: ImageSpec[]
 	params?: Partial<LayoutParams>
 	colors?: Record<string, string>
+	actions?: GuidelineDisplayActions
 }) {
 	const { enabled, toggle } = useGuidelineOnOff('레이아웃 오버레이')
 	return (
@@ -45,13 +48,14 @@ export function GuidelineLayoutOverlayDisplay({
 					guidesOn={enabled}
 				/>
 			</div>
-			<GuidelineCardActions center={toggle} />
+			<GuidelineCardActions {...actions} center={toggle} />
 		</GuidelineDisplayFrame>
 	)
 }
 
 export function GuidelineLayoutGridDisplay({
 	colors = {},
+	actions,
 	sample = 'a',
 	margin = MARGIN.defaultValue,
 	gutterX = GUTTER_X.defaultValue,
@@ -59,6 +63,7 @@ export function GuidelineLayoutGridDisplay({
 }: {
 	sample?: LayoutGridSample
 	colors?: Record<string, string>
+	actions?: GuidelineDisplayActions
 	margin?: number
 	gutterX?: number
 	gutterY?: number
@@ -76,7 +81,7 @@ export function GuidelineLayoutGridDisplay({
 					gutterY={gutterY}
 				/>
 			</div>
-			<GuidelineCardActions center={toggle} />
+			<GuidelineCardActions {...actions} center={toggle} />
 		</GuidelineDisplayFrame>
 	)
 }

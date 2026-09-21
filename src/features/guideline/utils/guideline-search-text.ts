@@ -1,5 +1,6 @@
 import type { GuidelineDocument } from '@/payload-types'
 import { formatBlockForAgent } from '../blocks/projection'
+import { projectSection } from '../sections/model'
 import { compact } from './block-text'
 
 export interface GuidelineSearchRuleSummary {
@@ -16,7 +17,9 @@ export function buildGuidelineSearchText(
 		document.title,
 		document.slug,
 		typeof document.chapter === 'object' && document.chapter ? document.chapter.title : null,
-		...(document.blocks?.map(formatBlockForAgent) ?? []),
+		...(document.contentModel === 'sections'
+			? (document.sections ?? []).map((section) => projectSection(section).text)
+			: (document.blocks?.map(formatBlockForAgent) ?? [])),
 		...rules.map(({ key, title }) => `${key} ${title}`),
 	]).join('\n')
 }
