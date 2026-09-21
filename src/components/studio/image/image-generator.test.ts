@@ -546,6 +546,37 @@ describe('ImageHistoryGallery', () => {
 		expect(await screen.findByRole('button', { name: '생성 이미지' })).toBeDisabled()
 	})
 
+	// 감지선이 보이면 다음 장이 이어 붙는다. 페이지 경계가 밀려 겹쳐 내려온 항목은 걸러야 한다.
+	it('감지선이 보이면 다음 장을 이어 붙이고 겹친 항목은 거른다', async () => {
+		const observed: Array<() => void> = []
+		vi.stubGlobal(
+			'IntersectionObserver',
+			class {
+				constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
+					observed.push(() => callback([{ isIntersecting: true }]))
+				}
+				observe() {}
+				disconnect() {}
+			},
+		)
+		historyMocks.fetchGeneratedImageHistory
+			.mockResolvedValueOnce({ hasMore: true, items: [historyItem({ id: 1 })] })
+			// 2장에 1번이 다시 섞여 내려온다 — 중복은 걸러지고 2번만 늘어야 한다.
+			.mockResolvedValueOnce({
+				hasMore: false,
+				items: [historyItem({ id: 1 }), historyItem({ id: 2, prompt: '노란 배경' })],
+			})
+		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
+
+		await screen.findByRole('button', { name: '파란 세럼병' })
+		for (const trigger of observed) trigger()
+
+		expect(await screen.findByRole('button', { name: '노란 배경' })).toBeInTheDocument()
+		expect(screen.getAllByRole('button', { name: '파란 세럼병' })).toHaveLength(1)
+		expect(historyMocks.fetchGeneratedImageHistory).toHaveBeenCalledTimes(2)
+		vi.unstubAllGlobals()
+	})
+
 	it('아직 만든 이미지가 없으면 그 사실을 적는다', async () => {
 		render(createElement(ImageGenerator, { config: config(5, '제품컷') }))
 

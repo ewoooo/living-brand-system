@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import { Typography } from '@/components/ui/typography'
 import {
 	acceptsHistoryRestore,
 	type GeneratedImageHistoryItem,
@@ -24,14 +23,19 @@ import { cn } from '@/lib/utils'
 export function ImageHistoryGallery() {
 	const { applyHistoryItem } = useImageStudio()
 	const [items, setItems] = useState<GeneratedImageHistoryItem[]>([])
-	const [page, setPage] = useState(1)
 	const [hasMore, setHasMore] = useState(false)
 	const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-	// StrictMode의 이중 호출과 연타를 함께 막는다 — state로 막으면 둘 다 새는 창이 있다.
+	// 여기까지 요청했다 — StrictMode의 이중 호출과 감지선의 연속 교차를 함께 막는다.
+	// 🔴 state로 막으면 둘 다 새는 창이 있다(교차는 리렌더를 기다려 주지 않는다).
 	const requested = useRef(0)
+	const inFlight = useRef(false)
+	const observer = useRef<IntersectionObserver | null>(null)
 
-	const loadPage = useCallback((next: number) => {
-		if (requested.current >= next) return
+	/** 다음 장을 당긴다. 앞선 요청이 돌아오기 전에는 무시하므로 연속 교차가 안전하다. */
+	const loadNext = useCallback(() => {
+		if (inFlight.current) return
+		inFlight.current = true
+		const next = requested.current + 1
 		requested.current = next
 		setStatus('loading')
 		fetchGeneratedImageHistory(next).then(
@@ -43,19 +47,44 @@ export function ImageHistoryGallery() {
 					return [...current, ...result.items.filter((item) => !seen.has(item.id))]
 				})
 				setHasMore(result.hasMore)
-				setPage(next)
 				setStatus('ready')
+				inFlight.current = false
 			},
 			() => {
+				// 되돌려 놓아야 재시도가 같은 장을 다시 받는다.
 				requested.current = next - 1
+				inFlight.current = false
 				setStatus('error')
 			},
 		)
 	}, [])
 
 	useEffect(() => {
-		loadPage(1)
-	}, [loadPage])
+		if (requested.current === 0) loadNext()
+	}, [loadNext])
+
+	/**
+	 * 격자 끝의 감지선 — 보이면 다음 장을 당긴다.
+	 *
+	 * 🔴 effect가 아니라 **콜백 ref**다. 감지선은 첫 응답이 온 뒤에야 DOM에 붙으므로 마운트
+	 *    시점에 한 번만 관찰하면 영영 걸리지 않는데, 콜백 ref는 그 붙고 떨어지는 순간에 정확히
+	 *    불린다. IntersectionObserver가 없는 환경(jsdom)에서는 조용히 넘어가고 목록만 그린다.
+	 * ponytail: 한 장(48칸)이 2열 패널을 항상 넘겨서 감지선이 첫 화면에 안 들어온다는 전제다.
+	 *    칸을 크게 키우거나 페이지를 줄이면 교차가 안 풀려 다음 장이 안 당겨진다.
+	 */
+	const sentinel = useCallback(
+		(node: HTMLDivElement | null) => {
+			observer.current?.disconnect()
+			observer.current = null
+			if (!node || typeof IntersectionObserver === 'undefined') return
+			const next = new IntersectionObserver((entries) => {
+				if (entries.some((entry) => entry.isIntersecting)) loadNext()
+			})
+			next.observe(node)
+			observer.current = next
+		},
+		[loadNext],
+	)
 
 	if (status === 'error' && items.length === 0) {
 		return (
@@ -63,7 +92,7 @@ export function ImageHistoryGallery() {
 				<EmptyHeader>
 					<EmptyTitle>생성한 이미지를 불러오지 못했습니다</EmptyTitle>
 					<EmptyDescription>
-						<Button type="button" variant="outline" onClick={() => loadPage(1)}>
+						<Button type="button" variant="outline" onClick={loadNext}>
 							다시 시도
 						</Button>
 					</EmptyDescription>
@@ -116,20 +145,14 @@ export function ImageHistoryGallery() {
 					)
 				})}
 			</div>
-			{hasMore && (
-				<Button
-					type="button"
-					variant="outline"
-					disabled={status === 'loading'}
-					onClick={() => loadPage(page + 1)}
-				>
-					{status === 'loading' ? '불러오는 중…' : '더 보기'}
-				</Button>
+			{/* 감지선. 실패했을 때만 사람이 누른다 — 자동 재시도는 같은 실패를 반복한다. */}
+			{hasMore && status !== 'error' && (
+				<div ref={sentinel} aria-hidden className="h-8 shrink-0" />
 			)}
 			{status === 'error' && items.length > 0 && (
-				<Typography as="p" size="xs" className="text-muted-foreground">
-					더 불러오지 못했습니다. 다시 눌러 주세요.
-				</Typography>
+				<Button type="button" variant="outline" onClick={loadNext}>
+					더 불러오지 못했습니다. 다시 시도
+				</Button>
 			)}
 		</div>
 	)
