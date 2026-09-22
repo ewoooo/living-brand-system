@@ -27,7 +27,7 @@ export interface GuidelineNavigationTopicData {
 	title: string
 }
 
-export interface GuidelineTopicData {
+export interface GuidelineTopicData extends Pick<GuidelineDocument, 'contentModel' | 'sections'> {
 	blocks: GuidelineBlocks
 	headerImage: GuidelineHeaderImage
 	id: number

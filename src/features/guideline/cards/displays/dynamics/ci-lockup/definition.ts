@@ -2,7 +2,7 @@ import type { Field } from 'payload'
 import { defineDisplay } from '@/features/guideline/cards/displays/definition'
 import { CI_LOCKUP_CONTROL_IDS, CI_LOCKUP_CONTROLS } from './manifest'
 
-// CI 락업 조립 위젯 — Block children에 등록되는 인터랙티브 leaf.
+// CI 조합형 조립 위젯 — Block children에 등록되는 인터랙티브 leaf.
 //
 // 단계(본사→자회사→해외지사)를 고르면 그 계층의 락업이 파생돼 나온다. 미리 정한 목록을 나열하는 것이
 // 아니라 심볼 + 폰트 조판으로 조립하므로, 계열사·지부가 늘어도 배리언트가 곱셈으로 터지지 않는다.
@@ -54,9 +54,9 @@ export const ciLockup = defineDisplay({
 	sizing: 'contain',
 	downloads: ['svg'],
 	dbName: 'cil',
-	name: 'CI 락업',
+	name: 'CI 조합형',
 	description:
-		'꼴·언어·표현을 admin 고정값으로 정한 CI 락업 판. 컨트롤러 연결은 카드에서 끊겼다.',
+		'심볼과 워드마크를 규정에 따라 조합하고, 카드별 컨트롤로 꼴·언어·색상 표현을 확인합니다.',
 	fields: [
 		...CI_LOCKUP_CONTROLS.map(initialValueField),
 		{

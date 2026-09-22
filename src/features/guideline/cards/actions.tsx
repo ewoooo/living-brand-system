@@ -1,11 +1,12 @@
 'use client'
 
-import { Download } from '@carbon/icons-react'
+import Image from 'next/image'
 import { createContext, type ReactNode, useContext, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { downloadBlob } from '@/lib/object-url'
 import type { DownloadFormat } from './displays/definition'
+import { DISPLAY_DOWNLOAD_BUTTON } from './displays/dynamics/surface'
 
 type DisplayDownloadAction = {
 	format: DownloadFormat
@@ -40,7 +41,7 @@ export function CardActions() {
 		<div
 			ref={context.setSlot}
 			data-slot="card-actions"
-			className="absolute top-4 right-4 z-10 flex max-w-[calc(100%-2rem)] flex-col items-end gap-2"
+			className="absolute top-6 right-6 z-10 flex max-w-[calc(100%-3rem)] flex-col items-end gap-2"
 		/>
 	)
 }
@@ -76,15 +77,22 @@ function DownloadAction({ label, download }: DisplayDownloadAction) {
 			<Button
 				type="button"
 				variant="outline"
-				className="bg-background"
-				size="icon-sm"
+				className={`border-0 ${DISPLAY_DOWNLOAD_BUTTON}`}
+				size="icon-lg"
+				shape="pill"
 				aria-label={pending ? '파일 준비 중' : label}
 				title={label}
 				disabled={pending}
 				aria-busy={pending}
 				onClick={() => void run()}
 			>
-				<Download />
+				<Image
+					src="/icons/guideline/download.svg"
+					alt=""
+					width={24}
+					height={24}
+					className="size-6 shrink-0"
+				/>
 			</Button>
 			{failed && (
 				<p role="alert" className="rounded-md bg-background p-2 text-destructive text-sm">

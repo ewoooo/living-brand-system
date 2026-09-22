@@ -6,9 +6,14 @@ import {
 	findChapterBySlug,
 	findPublishedTopicBySlug,
 } from '@/features/guideline/repositories/guideline-view.payload.repository'
+import type { PaletteCatalog } from '../domain/contract/palette'
+import { findPaletteCatalog } from '../repositories/palette.payload.repository'
+import type { CmsBody } from '../sections/model'
+import { needsPaletteCatalog } from '../sections/model'
 
-export interface GetGuidelineTopicOutput {
+export interface GetGuidelineTopicOutput extends CmsBody {
 	title: string
+	paletteCatalog?: PaletteCatalog
 	headerImage: GuidelineHeaderImage
 	blocks: GuidelineBlocks
 }
@@ -36,6 +41,9 @@ export async function getGuidelineTopic(
 
 	return {
 		title: topic.title,
+		contentModel: topic.contentModel,
+		sections: topic.sections,
+		paletteCatalog: needsPaletteCatalog(topic) ? await findPaletteCatalog() : undefined,
 		headerImage: topic.headerImage ?? null,
 		blocks: topic.blocks ?? [],
 	}

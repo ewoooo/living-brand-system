@@ -112,8 +112,9 @@ import * as migration_20260911_075556_add_key_visual_line_runtime from './202609
 import * as migration_20260911_084010_add_key_visual_formation_runtime from './20260911_084010_add_key_visual_formation_runtime';
 import * as migration_20260914_062423_add_infographic_runtime from './20260914_062423_add_infographic_runtime';
 import * as migration_20260916_005825_add_graph_profiles from './20260916_005825_add_graph_profiles';
-import * as migration_20260921_084010_add_generated_image_batch_key from './20260921_084010_add_generated_image_batch_key';
-import * as migration_20260921_085920_add_generated_image_best_sample from './20260921_085920_add_generated_image_best_sample';
+import * as migration_20260921_045547_add_guideline_sections from './20260921_045547_add_guideline_sections';
+import * as migration_20260921_060904_add_guideline_dynamic_sections from './20260921_060904_add_guideline_dynamic_sections';
+import * as migration_20260921_065214_add_guideline_card_colors_actions from './20260921_065214_add_guideline_card_colors_actions';
 
 export const migrations = [
   {
@@ -687,13 +688,18 @@ export const migrations = [
     name: '20260916_005825_add_graph_profiles',
   },
   {
-    up: migration_20260921_084010_add_generated_image_batch_key.up,
-    down: migration_20260921_084010_add_generated_image_batch_key.down,
-    name: '20260921_084010_add_generated_image_batch_key',
+    up: migration_20260921_045547_add_guideline_sections.up,
+    down: migration_20260921_045547_add_guideline_sections.down,
+    name: '20260921_045547_add_guideline_sections',
   },
   {
-    up: migration_20260921_085920_add_generated_image_best_sample.up,
-    down: migration_20260921_085920_add_generated_image_best_sample.down,
-    name: '20260921_085920_add_generated_image_best_sample'
+    up: migration_20260921_060904_add_guideline_dynamic_sections.up,
+    down: migration_20260921_060904_add_guideline_dynamic_sections.down,
+    name: '20260921_060904_add_guideline_dynamic_sections',
+  },
+  {
+    up: migration_20260921_065214_add_guideline_card_colors_actions.up,
+    down: migration_20260921_065214_add_guideline_card_colors_actions.down,
+    name: '20260921_065214_add_guideline_card_colors_actions',
   },
 ];

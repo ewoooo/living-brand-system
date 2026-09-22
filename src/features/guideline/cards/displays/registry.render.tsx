@@ -1,26 +1,24 @@
 import type { ReactNode } from 'react'
 import type { DisplayData } from '@/features/guideline/domain/contract/display'
-import CiLockupDisplay from './dynamics/ci-lockup/component'
-import CiLockupHeroDisplay from './dynamics/ci-lockup-hero/component'
-import ClearspaceOverlayDisplay from './dynamics/clearspace-overlay/component'
-import ClearspaceViewerDisplay from './dynamics/clearspace-viewer/component'
-import HdColorPaletteDisplay from './dynamics/hd-color-palette/component'
-import IconGridDisplay from './dynamics/icon-grid/component'
-import LayoutGridDisplay from './dynamics/layout-grid/component'
-import LayoutGridOverlayDisplay from './dynamics/layout-grid-overlay/component'
-import LogoBgPickerDisplay from './dynamics/logo-bg-picker/component'
-import LogoColorVariantDisplay from './dynamics/logo-color-variant/component'
-import LogoDisplayDisplay from './dynamics/logo-display/component'
-import LogoOnBackgroundDisplay from './dynamics/logo-on-background/component'
-import PresetPanelDisplay from './dynamics/preset-panel/component'
-import StemClearSpaceDisplay from './dynamics/stem-clear-space/component'
-import TypeHierarchyDisplay from './dynamics/type-hierarchy/component'
-import TypeLanguageDisplay from './dynamics/type-language/component'
-import TypeScrambleDisplay from './dynamics/type-scramble/component'
-import TypeSpecimenDisplay from './dynamics/type-specimen/component'
-import TypeWeightDisplay from './dynamics/type-weight/component'
+import CiLockupDisplay from '../deprecated/displays/dynamics/ci-lockup/component'
+import CiLockupHeroDisplay from '../deprecated/displays/dynamics/ci-lockup-hero/component'
+import ClearspaceOverlayDisplay from '../deprecated/displays/dynamics/clearspace-overlay/component'
+import ClearspaceViewerDisplay from '../deprecated/displays/dynamics/clearspace-viewer/component'
+import HdColorPaletteDisplay from '../deprecated/displays/dynamics/hd-color-palette/component'
+import IconGridDisplay from '../deprecated/displays/dynamics/icon-grid/component'
+import LayoutGridDisplay from '../deprecated/displays/dynamics/layout-grid/component'
+import LayoutGridOverlayDisplay from '../deprecated/displays/dynamics/layout-grid-overlay/component'
+import LogoBgPickerDisplay from '../deprecated/displays/dynamics/logo-bg-picker/component'
+import LogoDisplayDisplay from '../deprecated/displays/dynamics/logo-display/component'
+import LogoOnBackgroundDisplay from '../deprecated/displays/dynamics/logo-on-background/component'
+import PresetPanelDisplay from '../deprecated/displays/dynamics/preset-panel/component'
+import StemClearSpaceDisplay from '../deprecated/displays/dynamics/stem-clear-space/component'
+import TypeHierarchyDisplay from '../deprecated/displays/dynamics/type-hierarchy/component'
+import TypeLanguageDisplay from '../deprecated/displays/dynamics/type-language/component'
+import TypeSpecimenDisplay from '../deprecated/displays/dynamics/type-specimen/component'
+import TypeWeightDisplay from '../deprecated/displays/dynamics/type-weight/component'
+import StaticDisplayDisplay from '../deprecated/displays/static/component'
 import type { DisplayId } from './registry'
-import StaticDisplayDisplay from './static/component'
 
 type Row<K extends DisplayId> = Extract<DisplayData, { blockType: K }>
 type DisplayComponent<K extends DisplayId> = (props: {
@@ -39,7 +37,6 @@ export const DISPLAY_COMPONENTS = {
 	clearspaceOverlayWidget: ClearspaceOverlayDisplay,
 	logoBgPickerWidget: LogoBgPickerDisplay,
 	logoDisplayWidget: LogoDisplayDisplay,
-	typeScrambleWidget: TypeScrambleDisplay,
 	typeWeightWidget: TypeWeightDisplay,
 	typeSpecimenWidget: TypeSpecimenDisplay,
 	layoutGridOverlayWidget: LayoutGridOverlayDisplay,
@@ -50,13 +47,17 @@ export const DISPLAY_COMPONENTS = {
 	hdColorPaletteWidget: HdColorPaletteDisplay,
 	iconGridWidget: IconGridDisplay,
 	stemClearSpaceWidget: StemClearSpaceDisplay,
-	logoColorVariantWidget: LogoColorVariantDisplay,
 	logoOnBgWidget: LogoOnBackgroundDisplay,
 	typeHierarchyWidget: TypeHierarchyDisplay,
 	typeLanguageWidget: TypeLanguageDisplay,
 } satisfies { [K in DisplayId]: DisplayComponent<K> }
 
 export function renderDisplay(display: DisplayData, context: { alt?: string } = {}): ReactNode {
+	if (
+		display.blockType === 'typeScrambleWidget' ||
+		display.blockType === 'logoColorVariantWidget'
+	)
+		return null
 	const Component = DISPLAY_COMPONENTS[display.blockType] as DisplayComponent<DisplayId>
 	return <Component display={display as never} alt={context.alt} />
 }

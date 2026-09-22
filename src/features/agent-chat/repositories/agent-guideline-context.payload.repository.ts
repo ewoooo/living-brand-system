@@ -4,7 +4,7 @@ import type { GuidelineDocument } from '@/payload-types'
 
 type AgentGuidelineDocumentData = Pick<
 	GuidelineDocument,
-	'id' | 'title' | 'slug' | 'headerImage' | 'blocks' | 'rules'
+	'id' | 'title' | 'slug' | 'headerImage' | 'blocks' | 'rules' | 'contentModel' | 'sections'
 > & {
 	chapterSlug: string | null
 	chapterTitle: string | null
@@ -135,6 +135,8 @@ export async function findAgentGuidelineDocument(
 			slug: true,
 			headerImage: true,
 			blocks: true,
+			contentModel: true,
+			sections: true,
 			rules: true,
 			chapter: true,
 			_status: true,
@@ -150,6 +152,8 @@ export async function findAgentGuidelineDocument(
 			slug: document.slug,
 			headerImage: document.headerImage,
 			blocks: document.blocks,
+			contentModel: document.contentModel,
+			sections: document.sections,
 			rules: document.rules,
 			chapterSlug:
 				typeof document.chapter === 'object' && document.chapter

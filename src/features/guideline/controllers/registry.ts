@@ -49,6 +49,11 @@ export function controllerEntryFor(blockType: string): ControllerEntry | undefin
 /** 카드별 컨트롤 연결. 도메인 초기값과 제한은 위젯에서 받는다. */
 export function cardControllerFor(display: DisplayData): CardController | null {
 	switch (display.blockType) {
+		case 'ciLockupWidget':
+			return {
+				manifest: CI_LOCKUP_MANIFEST,
+				restrictions: { controls: ciLockupRestrictions({ ...display }) },
+			}
 		case 'layoutGridOverlayWidget':
 			return { manifest: LAYOUT_OVERLAY_MANIFEST }
 		case 'typeLanguageWidget':
