@@ -1,12 +1,13 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import { AI_USAGE_STUDIOS, type AiUsageStudioRow } from '@/modules/ai-usage/ai-usage'
+import type { AiUsageStudioRow } from '@/modules/ai-usage/ai-usage'
+import { AI_USAGE_STUDIOS, type AiUsageStudio } from '@/modules/ai-usage/ai-usage-catalog'
 import { AiUsageStudioTable } from './ai-usage-studio-table'
 
 afterEach(cleanup)
 
-function rowsWith(used: Partial<Record<AiUsageStudioRow['studio'], number>>): AiUsageStudioRow[] {
-	return AI_USAGE_STUDIOS.map((studio) => {
+function rowsWith(used: Partial<Record<AiUsageStudio, number>>): AiUsageStudioRow[] {
+	return AI_USAGE_STUDIOS.map(({ value: studio }) => {
 		const total = used[studio] ?? 0
 		return {
 			studio,

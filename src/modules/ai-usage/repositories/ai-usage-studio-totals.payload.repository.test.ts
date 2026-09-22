@@ -1,7 +1,7 @@
 import { getPayload } from 'payload'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { User } from '@/payload-types'
-import { AI_USAGE_STUDIOS } from '../ai-usage'
+import { AI_USAGE_STUDIOS } from '../ai-usage-catalog'
 import { findAiUsageStudioTotals } from './ai-usage-studio-totals.payload.repository'
 
 vi.mock('@payload-config', () => ({ default: {} }))
@@ -37,7 +37,7 @@ describe('findAiUsageStudioTotals', () => {
 
 		const rows = await findAiUsageStudioTotals(manager)
 
-		expect(rows.map((row) => row.studio)).toEqual([...AI_USAGE_STUDIOS])
+		expect(rows.map((row) => row.studio)).toEqual(AI_USAGE_STUDIOS.map((o) => o.value))
 		expect(rows.every((row) => row.totalTokens === 0 && row.callCount === 0)).toBe(true)
 	})
 
@@ -59,6 +59,43 @@ describe('findAiUsageStudioTotals', () => {
 		// SUM이 문자열로 오는 것을 숫자로 바꿔야 화면이 자릿수를 찍을 수 있다.
 		expect(image).toMatchObject({ callCount: 2, inputTokens: 30, totalTokens: 4030 })
 		expect(graph).toMatchObject({ callCount: 0, totalTokens: 0 })
+	})
+
+	// 🔴 버리면 이 표의 합과 전체 누계가 어긋나 토큰이 증발한 것처럼 보인다.
+	it('스튜디오 밖 호출도 행으로 세운다', async () => {
+		mockRows([
+			{
+				callCount: '3',
+				inputTokens: '10',
+				outputTokens: '20',
+				studio: null,
+				totalTokens: '30',
+			},
+		])
+
+		const rows = await findAiUsageStudioTotals(manager)
+		const outside = rows.find((row) => row.studio === null)
+
+		expect(outside).toMatchObject({ callCount: 3, totalTokens: 30 })
+		expect(rows).toHaveLength(AI_USAGE_STUDIOS.length + 1)
+	})
+
+	it('쓴 스튜디오를 먼저 세우고 0인 것을 뒤로 민다', async () => {
+		mockRows([
+			{
+				callCount: '1',
+				inputTokens: '1',
+				outputTokens: '1',
+				studio: 'mcp',
+				totalTokens: '2',
+			},
+		])
+
+		const rows = await findAiUsageStudioTotals(manager)
+
+		// mcp는 카탈로그에서 마지막이지만 유일하게 쓴 스튜디오라 맨 앞에 온다.
+		expect(rows[0]?.studio).toBe('mcp')
+		expect(rows.slice(1).every((row) => row.callCount === 0)).toBe(true)
 	})
 
 	// 🔴 drizzle 직통 쿼리는 컬렉션 access를 안 탄다 — 범위 제한이 사라지면 남의 사용량이 샌다.

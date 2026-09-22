@@ -7,17 +7,8 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import type { AiUsageStudio, AiUsageStudioRow } from '@/modules/ai-usage/ai-usage'
-
-const STUDIO_LABEL: Record<AiUsageStudio, string> = {
-	image: '이미지',
-	graphic: '그래픽',
-	graph: '그래프',
-	template: '템플릿',
-	review: '검수',
-	assets: '자산',
-	mcp: 'MCP',
-}
+import type { AiUsageStudioRow } from '@/modules/ai-usage/ai-usage'
+import { aiUsageStudioLabel } from '@/modules/ai-usage/ai-usage-catalog'
 
 const HEAD_CLASS = 'text-sm font-semibold text-muted-foreground'
 const NUMBER_CLASS = 'text-right tabular-nums'
@@ -60,9 +51,9 @@ export function AiUsageStudioTable({ rows }: { rows: AiUsageStudioRow[] }) {
 					// 안 쓴 줄은 숫자를 죽여 둔다 — 0이 보이되 쓴 줄을 가리지 않는다.
 					const unused = row.totalTokens === 0 && row.callCount === 0
 					return (
-						<TableRow key={row.studio}>
+						<TableRow key={row.studio ?? 'outside'}>
 							<TableCell className={cn(unused && 'text-muted-foreground')}>
-								{STUDIO_LABEL[row.studio]}
+								{aiUsageStudioLabel(row.studio)}
 							</TableCell>
 							<TableCell
 								className={cn(NUMBER_CLASS, unused && 'text-muted-foreground')}
