@@ -1,4 +1,5 @@
 import type { AiUsageEvent } from '@/payload-types'
+import type { AiUsageFeature, AiUsageStudio } from './ai-usage-catalog'
 
 /**
  * AI 호출 1회의 토큰 사용량 — `ai-usage-events` 컬렉션에 그대로 들어가는 계약.
@@ -16,25 +17,11 @@ export interface AiUsageTokens {
 	reasoningTokens?: number | undefined
 }
 
-/** 컬렉션 enum이 정본 — 여기서 다시 선언하지 않는다. */
-export type AiUsageFeature = AiUsageEvent['feature']
+// 분류 축의 정본은 ai-usage-catalog다 — 컬렉션도 화면도 거기서 읽는다.
+export type { AiUsageFeature, AiUsageStudio } from './ai-usage-catalog'
 
 /** 이 호출이 남긴 작업 기록. 남기지 않는 호출(관리자 미리보기 등)은 없어도 된다. */
 export type AiUsageSource = NonNullable<AiUsageEvent['source']>
-
-/** 컬렉션 enum이 정본. null = 스튜디오 밖(admin 미리보기 등). */
-export type AiUsageStudio = NonNullable<AiUsageEvent['studio']>
-
-/** 사용량 화면이 행으로 세우는 스튜디오 — 안 쓴 것도 0으로 서야 하므로 목록이 고정이다. */
-export const AI_USAGE_STUDIOS = [
-	'image',
-	'graphic',
-	'graph',
-	'template',
-	'review',
-	'assets',
-	'mcp',
-] as const satisfies readonly AiUsageStudio[]
 
 export interface AiUsageRecord extends AiUsageTokens {
 	createdBy: number
@@ -90,7 +77,8 @@ export function sumAiUsageTokens(list: readonly (AiUsageTokens | undefined)[]): 
  * 보는 사람에게 같은 말이 아니다(사용자 지시, 2026-09-22).
  */
 export interface AiUsageStudioRow {
-	studio: AiUsageStudio
+	/** null = 스튜디오 밖에서 온 호출(admin 미리보기·전역 헤더 챗). */
+	studio: AiUsageStudio | null
 	callCount: number
 	inputTokens: number
 	outputTokens: number

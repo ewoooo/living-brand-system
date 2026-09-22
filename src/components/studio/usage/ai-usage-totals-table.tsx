@@ -7,13 +7,8 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import type { AiUsageFeature, AiUsageTotalsRow } from '@/modules/ai-usage/ai-usage'
-
-const FEATURE_LABEL: Record<AiUsageFeature, string> = {
-	'image-generation': '이미지 생성',
-	'asset-check': '이미지 검수',
-	'agent-chat': '에이전트 대화',
-}
+import type { AiUsageTotalsRow } from '@/modules/ai-usage/ai-usage'
+import { aiUsageFeatureLabel } from '@/modules/ai-usage/ai-usage-catalog'
 
 const HEAD_CLASS = 'text-sm font-semibold text-muted-foreground'
 const NUMBER_CLASS = 'text-right tabular-nums'
@@ -86,7 +81,7 @@ export function AiUsageTotalsTable({
 					{rows.map((row) => (
 						<TableRow key={`${row.userId}-${row.feature}-${row.model}`}>
 							{showUser && <TableCell>{row.userEmail}</TableCell>}
-							<TableCell>{FEATURE_LABEL[row.feature]}</TableCell>
+							<TableCell>{aiUsageFeatureLabel(row.feature)}</TableCell>
 							<TableCell className="font-mono text-xs">{row.model}</TableCell>
 							<TableCell className={NUMBER_CLASS}>
 								{formatTokens(row.callCount)}

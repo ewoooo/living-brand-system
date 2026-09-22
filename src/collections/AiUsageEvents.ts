@@ -1,5 +1,6 @@
 import type { Access, CollectionConfig } from 'payload'
 import { isManager, managerOrAdmin } from '@/lib/auth'
+import { AI_USAGE_FEATURES, AI_USAGE_STUDIOS } from '@/modules/ai-usage/ai-usage-catalog'
 
 /**
  * 본인 기록만 보이게 하는 행 단위 read.
@@ -58,11 +59,8 @@ export const AiUsageEvents: CollectionConfig = {
 			type: 'select',
 			required: true,
 			index: true,
-			options: [
-				{ label: '이미지 생성', value: 'image-generation' },
-				{ label: '이미지 검수', value: 'asset-check' },
-				{ label: '에이전트 대화', value: 'agent-chat' },
-			],
+			// 🔴 목록의 정본은 ai-usage-catalog다 — 여기에 베껴 적으면 화면과 갈라진다.
+			options: [...AI_USAGE_FEATURES],
 			admin: {
 				description: 'AI를 호출한 기능입니다.',
 			},
@@ -75,15 +73,7 @@ export const AiUsageEvents: CollectionConfig = {
 			name: 'studio',
 			type: 'select',
 			index: true,
-			options: [
-				{ label: '이미지', value: 'image' },
-				{ label: '그래픽', value: 'graphic' },
-				{ label: '그래프', value: 'graph' },
-				{ label: '템플릿', value: 'template' },
-				{ label: '검수', value: 'review' },
-				{ label: '자산', value: 'assets' },
-				{ label: 'MCP', value: 'mcp' },
-			],
+			options: [...AI_USAGE_STUDIOS],
 			admin: {
 				description:
 					'AI를 호출한 스튜디오 화면입니다. 비어 있으면 스튜디오 밖에서 온 호출입니다.',
