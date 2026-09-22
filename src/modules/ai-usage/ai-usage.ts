@@ -71,28 +71,3 @@ export function sumAiUsageTokens(list: readonly (AiUsageTokens | undefined)[]): 
 		reasoningTokens: total((t) => t.reasoningTokens),
 	}
 }
-
-/**
- * 스튜디오 한 곳의 누적량. 🔴 **안 쓴 스튜디오도 0으로 선다** — 행이 없는 것과 0을 쓴 것은
- * 보는 사람에게 같은 말이 아니다(사용자 지시, 2026-09-22).
- */
-export interface AiUsageStudioRow {
-	/** null = 스튜디오 밖에서 온 호출(admin 미리보기·전역 헤더 챗). */
-	studio: AiUsageStudio | null
-	callCount: number
-	inputTokens: number
-	outputTokens: number
-	totalTokens: number
-}
-
-/** 한 사람이 한 기능의 한 모델에 쓴 누적량 — 사용량 화면이 그리는 최소 단위. */
-export interface AiUsageTotalsRow {
-	userId: number
-	userEmail: string
-	feature: AiUsageFeature
-	model: string
-	callCount: number
-	inputTokens: number
-	outputTokens: number
-	totalTokens: number
-}
