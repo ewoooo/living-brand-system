@@ -89,6 +89,7 @@ export interface Config {
     'rule-checkers': RuleChecker;
     'check-sessions': CheckSession;
     'agent-chat-sessions': AgentChatSession;
+    'ai-usage-events': AiUsageEvent;
     'agent-skills': AgentSkill;
     users: User;
     search: Search;
@@ -129,6 +130,7 @@ export interface Config {
     'rule-checkers': RuleCheckersSelect<false> | RuleCheckersSelect<true>;
     'check-sessions': CheckSessionsSelect<false> | CheckSessionsSelect<true>;
     'agent-chat-sessions': AgentChatSessionsSelect<false> | AgentChatSessionsSelect<true>;
+    'ai-usage-events': AiUsageEventsSelect<false> | AiUsageEventsSelect<true>;
     'agent-skills': AgentSkillsSelect<false> | AgentSkillsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
@@ -2527,6 +2529,69 @@ export interface AgentChatSession {
   createdAt: string;
 }
 /**
+ * AI 호출 1회의 모델과 토큰 사용량입니다. 계정별 집계의 유일한 출처입니다.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-usage-events".
+ */
+export interface AiUsageEvent {
+  id: number;
+  /**
+   * 호출 당시 인증된 사용자입니다.
+   */
+  createdBy: number | User;
+  /**
+   * AI를 호출한 기능입니다.
+   */
+  feature: 'image-generation' | 'asset-check' | 'agent-chat';
+  /**
+   * 호출한 모델 식별자입니다.
+   */
+  model: string;
+  /**
+   * 입력(프롬프트) 토큰 수입니다.
+   */
+  inputTokens?: number | null;
+  /**
+   * 출력 토큰 수입니다.
+   */
+  outputTokens?: number | null;
+  /**
+   * provider가 보고한 합계 토큰 수입니다.
+   */
+  totalTokens?: number | null;
+  /**
+   * 캐시에서 읽은 입력 토큰 수입니다.
+   */
+  cacheReadInputTokens?: number | null;
+  /**
+   * 캐시에 쓴 입력 토큰 수입니다.
+   */
+  cacheWriteInputTokens?: number | null;
+  /**
+   * 추론에 쓴 출력 토큰 수입니다.
+   */
+  reasoningTokens?: number | null;
+  /**
+   * 이 호출이 남긴 작업 기록입니다.
+   */
+  source?:
+    | ({
+        relationTo: 'generated-images';
+        value: number | GeneratedImage;
+      } | null)
+    | ({
+        relationTo: 'check-sessions';
+        value: number | CheckSession;
+      } | null)
+    | ({
+        relationTo: 'agent-chat-sessions';
+        value: number | AgentChatSession;
+      } | null);
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Agent가 선택해 실행할 SKILL.md 형태의 지시문입니다.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2872,6 +2937,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'agent-chat-sessions';
         value: number | AgentChatSession;
+      } | null)
+    | ({
+        relationTo: 'ai-usage-events';
+        value: number | AiUsageEvent;
       } | null)
     | ({
         relationTo: 'agent-skills';
@@ -4113,6 +4182,24 @@ export interface AgentChatSessionsSelect<T extends boolean = true> {
   errorMessage?: T;
   completedAt?: T;
   createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-usage-events_select".
+ */
+export interface AiUsageEventsSelect<T extends boolean = true> {
+  createdBy?: T;
+  feature?: T;
+  model?: T;
+  inputTokens?: T;
+  outputTokens?: T;
+  totalTokens?: T;
+  cacheReadInputTokens?: T;
+  cacheWriteInputTokens?: T;
+  reasoningTokens?: T;
+  source?: T;
   updatedAt?: T;
   createdAt?: T;
 }

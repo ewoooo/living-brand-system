@@ -116,6 +116,7 @@ import * as migration_20260921_045547_add_guideline_sections from './20260921_04
 import * as migration_20260921_060904_add_guideline_dynamic_sections from './20260921_060904_add_guideline_dynamic_sections';
 import * as migration_20260921_065214_add_guideline_card_colors_actions from './20260921_065214_add_guideline_card_colors_actions';
 import * as migration_20260922_005918_add_generated_image_batch_and_best_sample from './20260922_005918_add_generated_image_batch_and_best_sample';
+import * as migration_20260922_030641_add_ai_usage_events from './20260922_030641_add_ai_usage_events';
 
 export const migrations = [
   {
@@ -706,6 +707,11 @@ export const migrations = [
   {
     up: migration_20260922_005918_add_generated_image_batch_and_best_sample.up,
     down: migration_20260922_005918_add_generated_image_batch_and_best_sample.down,
-    name: '20260922_005918_add_generated_image_batch_and_best_sample'
+    name: '20260922_005918_add_generated_image_batch_and_best_sample',
+  },
+  {
+    up: migration_20260922_030641_add_ai_usage_events.up,
+    down: migration_20260922_030641_add_ai_usage_events.down,
+    name: '20260922_030641_add_ai_usage_events'
   },
 ];

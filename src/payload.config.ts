@@ -20,6 +20,7 @@ import sharp from 'sharp'
 import { migrations } from '../migrations'
 import { AgentChatSessions } from './collections/AgentChatSessions'
 import { AgentSkills } from './collections/AgentSkills'
+import { AiUsageEvents } from './collections/AiUsageEvents'
 import { ApplicationImages } from './collections/ApplicationImages'
 import { BrandColorGroups } from './collections/BrandColorGroups'
 import { BrandColors } from './collections/BrandColors'
@@ -97,6 +98,7 @@ const collections = [
 	RuleCheckers,
 	CheckSessions,
 	AgentChatSessions,
+	AiUsageEvents,
 	AgentSkills,
 	Users,
 ]
