@@ -29,9 +29,23 @@ export interface AiUsageRecord extends AiUsageTokens {
 	source?: AiUsageSource
 }
 
-/** provider가 한 필드도 안 채웠으면 기록할 것이 없다 — 빈 행을 쌓지 않기 위한 판정. */
+/** 토큰 필드의 유일한 목록 — 판정과 합산이 같은 것을 본다. */
+const TOKEN_KEYS = [
+	'inputTokens',
+	'outputTokens',
+	'totalTokens',
+	'cacheReadInputTokens',
+	'cacheWriteInputTokens',
+	'reasoningTokens',
+] as const satisfies readonly (keyof AiUsageTokens)[]
+
+/**
+ * provider가 한 필드도 안 채웠으면 기록할 것이 없다 — 빈 행을 쌓지 않기 위한 판정.
+ * 🔴 키를 명시한다. `Object.values`로 훑으면 같이 넘어온 `createdBy` 같은 값을 토큰으로 세어
+ *    판정이 항상 참이 된다(실제로 그랬다).
+ */
 export function hasAnyTokenCount(tokens: AiUsageTokens): boolean {
-	return Object.values(tokens).some((value) => typeof value === 'number' && value > 0)
+	return TOKEN_KEYS.some((key) => typeof tokens[key] === 'number' && (tokens[key] ?? 0) > 0)
 }
 
 /**
@@ -53,4 +67,16 @@ export function sumAiUsageTokens(list: readonly (AiUsageTokens | undefined)[]): 
 		cacheWriteInputTokens: total((t) => t.cacheWriteInputTokens),
 		reasoningTokens: total((t) => t.reasoningTokens),
 	}
+}
+
+/** 한 사람이 한 기능의 한 모델에 쓴 누적량 — 사용량 화면이 그리는 최소 단위. */
+export interface AiUsageTotalsRow {
+	userId: number
+	userEmail: string
+	feature: AiUsageFeature
+	model: string
+	callCount: number
+	inputTokens: number
+	outputTokens: number
+	totalTokens: number
 }

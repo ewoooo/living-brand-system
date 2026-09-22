@@ -26,6 +26,7 @@ type NavigationHeaderUpdateKey =
 	| 'mcp'
 	| 'review'
 	| 'template'
+	| 'usage'
 
 type NavigationHeaderUpdates = Partial<Record<NavigationHeaderUpdateKey, boolean>>
 
@@ -150,6 +151,12 @@ export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderPr
 			hasUpdate: updates.assets,
 			href: routes.studio.assets,
 			label: 'Assets',
+		},
+		{
+			current: isCurrentPath(pathname, routes.studio.usage),
+			hasUpdate: updates.usage,
+			href: routes.studio.usage,
+			label: 'Usage',
 		},
 	] as const
 	const closeCompact = () => setCompactOpen(false)
