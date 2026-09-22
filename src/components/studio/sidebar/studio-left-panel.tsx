@@ -22,6 +22,7 @@ export function StudioLeftPanel({
 	page,
 	empty,
 	children,
+	footer,
 }: {
 	/** 페이지(템플릿·프로파일) 선택 — 위 상자를 그대로 채운다(여백 래퍼 없음). */
 	page?: ReactNode
@@ -29,7 +30,21 @@ export function StudioLeftPanel({
 	empty?: { title: string; description?: string }
 	/** 공통된 것 — 판 전체에 걸리는 컨트롤. */
 	children?: ReactNode
+	/**
+	 * 맨 아래 상자. 🔴 **넘길 때만 상자가 셋이 된다** — 넘기지 않으면 지금까지처럼 둘이고
+	 *    `children`이 늘어나는 상자를 차지한다(graphic·template이 그렇게 쓴다).
+	 */
+	footer?: ReactNode
 }) {
+	const body = children ?? (
+		<Empty>
+			<EmptyHeader>
+				<EmptyTitle>{empty?.title ?? '이 화면에는 공통 컨트롤이 없습니다'}</EmptyTitle>
+				{empty?.description && <EmptyDescription>{empty.description}</EmptyDescription>}
+			</EmptyHeader>
+		</Empty>
+	)
+
 	return (
 		// 🔴 자산 브라우저(Change)의 프레임이다. **상자 밖**에 있어야 한다 — 상자는
 		//    `overflow-hidden`이라 그 안에 두면 패널이 잘려 열려도 아무것도 안 보인다.
@@ -37,24 +52,10 @@ export function StudioLeftPanel({
 		<Controller.Browser.Root>
 			<StudioPanel
 				slot="studio-left-panel"
-				grow="bottom"
+				grow={footer ? 'middle' : 'bottom'}
 				top={page}
-				bottom={
-					<StudioPanelScroll>
-						{children ?? (
-							<Empty>
-								<EmptyHeader>
-									<EmptyTitle>
-										{empty?.title ?? '이 화면에는 공통 컨트롤이 없습니다'}
-									</EmptyTitle>
-									{empty?.description && (
-										<EmptyDescription>{empty.description}</EmptyDescription>
-									)}
-								</EmptyHeader>
-							</Empty>
-						)}
-					</StudioPanelScroll>
-				}
+				middle={footer ? <StudioPanelScroll>{body}</StudioPanelScroll> : undefined}
+				bottom={footer ?? <StudioPanelScroll>{body}</StudioPanelScroll>}
 			/>
 		</Controller.Browser.Root>
 	)

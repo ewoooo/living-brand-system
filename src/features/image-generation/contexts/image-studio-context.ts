@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext } from 'react'
+import type { GeneratedImageHistoryItem } from '@/features/image-generation/domain/generated-image-history'
 import type {
 	ImageAspectRatio,
 	ImageOutputSize,
@@ -35,6 +36,25 @@ export type ImageStudioValue = {
 		/** 교체 후보 — 자산 브라우저가 열릴 때 가져온다. 열기 전에는 data가 null이다. */
 		browse: LazyResource<readonly ImageStudioConfig[]>
 		select: (profileId: number) => void
+	}
+	/**
+	 * 좌측 갤러리에서 고른 과거 묶음 — 캔버스가 이걸 크게 그린다.
+	 *
+	 * 🔑 「고르는 것」과 「컨트롤러를 덮는 것」은 다르다. 고르기는 누구나 되고, 덮기는 복원 값이
+	 *    있을 때만 일어난다(권한이 닫힌 사용자에게는 메타 필드가 안 내려온다).
+	 */
+	history: {
+		/** 지금 고른 묶음. 비어 있으면 아직 아무것도 안 골랐다. */
+		stack: readonly GeneratedImageHistoryItem[]
+		/** 그 묶음에서 크게 볼 장. */
+		selectedId: number | null
+		/**
+		 * 묶음을 고른다 — `itemId`를 안 주면 **첫 장이 자동으로 선택된다**(사용자 지시).
+		 * 가능하면 컨트롤러도 고른 장의 값으로 덮인다.
+		 */
+		selectStack: (items: readonly GeneratedImageHistoryItem[], itemId?: number) => void
+		/** 묶음 안에서 크게 볼 장만 바꾼다 — 같은 요청에서 나온 장들이라 컨트롤러는 그대로다. */
+		selectItem: (id: number) => void
 	}
 	/** 현재 프로파일의 편집 계약 — 컨트롤러는 이 객체만 보고 컨트롤을 그린다. */
 	config: ImageStudioConfig

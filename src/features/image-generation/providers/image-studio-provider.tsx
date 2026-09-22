@@ -5,6 +5,10 @@ import {
 	ImageStudioContext,
 	type ImageStudioValue,
 } from '@/features/image-generation/contexts/image-studio-context'
+import {
+	acceptsHistoryRestore,
+	type GeneratedImageHistoryItem,
+} from '@/features/image-generation/domain/generated-image-history'
 import type {
 	ImageAspectRatio,
 	ImageOutputSize,
@@ -184,6 +188,68 @@ export function ImageStudioProvider({
 		[browse.data, configs, clearReference],
 	)
 
+	// 캔버스가 보여주는 과거 묶음과, 그 안에서 크게 볼 장.
+	const [historyStack, setHistoryStack] = useState<readonly GeneratedImageHistoryItem[]>([])
+	const [historySelectedId, setHistorySelectedId] = useState<number | null>(null)
+	// 프로파일이 아직 안 실린 항목은 목록을 불러 온 뒤 이어서 얹는다.
+	// 🔴 ref로 들고 있는다 — state로 두면 이 값이 컨텍스트를 다시 만들어 캔버스가 remount된다.
+	const pendingHistory = useRef<GeneratedImageHistoryItem | null>(null)
+
+	/**
+	 * 고른 장의 값으로 편집 세션을 덮는다 — 확인 없이 통째로(사용자 지시, 2026-09-21).
+	 *
+	 * 🔑 저장된 것은 프롬프트·비율·해상도·프로파일뿐이다. 나머지 축(색·카메라·참조)은 그 결과를
+	 *    만든 값을 복원할 방법이 없으므로 **프로파일 기본값으로 되돌린다.** 직전 값을 남겨 두면
+	 *    화면의 컨트롤러가 어느 결과에도 속하지 않는 뒤섞인 상태가 된다.
+	 */
+	const restoreFromHistory = useCallback(
+		(item: GeneratedImageHistoryItem) => {
+			if (!acceptsHistoryRestore(item)) return
+			const next =
+				configs.find((candidate) => candidate.id === item.profileId) ??
+				browse.data?.find((candidate) => candidate.id === item.profileId)
+			if (!next) {
+				// 목록이 오면 effect가 이어서 처리한다. load는 1회 가드가 있어 반복 호출이 안전하다.
+				pendingHistory.current = item
+				browse.load()
+				return
+			}
+			pendingHistory.current = null
+			clearReference()
+			setAngles({ azimuthDeg: 0, elevationDeg: 0 })
+			setConfigs((current) =>
+				current.some((candidate) => candidate.id === next.id)
+					? current
+					: [...current, next],
+			)
+			setProfileId(next.id)
+			setValues(restoreHistoryValues(next, item))
+		},
+		[browse, clearReference, configs],
+	)
+
+	/**
+	 * 묶음을 고른다 — **첫 장이 자동으로 선택된다**(사용자 지시, 2026-09-21).
+	 * 🔑 고르기와 덮기는 별개다. 복원 값이 없어도 캔버스에는 올라간다.
+	 */
+	const selectHistoryStack = useCallback(
+		(items: readonly GeneratedImageHistoryItem[], itemId?: number) => {
+			const picked = items.find((item) => item.id === itemId) ?? items[0]
+			if (!picked) return
+			setHistoryStack(items)
+			setHistorySelectedId(picked.id)
+			restoreFromHistory(picked)
+		},
+		[restoreFromHistory],
+	)
+
+	useEffect(() => {
+		const pending = pendingHistory.current
+		if (!pending || !browse.data) return
+		pendingHistory.current = null
+		restoreFromHistory(pending)
+	}, [browse.data, restoreFromHistory])
+
 	// 참조는 한 번 정해지면 고정된다 — 조정본을 다시 참조로 삼지 않아 세대 누적 열화가 없다.
 	// 고정된 참조도 프로파일 일치는 지켜야 한다 — 서버가 시드를 scenario로 조회하므로
 	// 프로파일을 바꾼 뒤의 재생성은 언제나 InvalidSeedImageError가 된다.
@@ -200,6 +266,12 @@ export function ImageStudioProvider({
 	const value = useMemo<ImageStudioValue>(
 		() => ({
 			profiles: { options, browse, select: selectProfile },
+			history: {
+				selectedId: historySelectedId,
+				selectItem: setHistorySelectedId,
+				selectStack: selectHistoryStack,
+				stack: historyStack,
+			},
 			config,
 			controls: { values, bindings, update },
 			prompt: {
@@ -306,6 +378,8 @@ export function ImageStudioProvider({
 			definitions,
 			error,
 			generate,
+			historySelectedId,
+			historyStack,
 			items,
 			loading,
 			options,
@@ -317,6 +391,7 @@ export function ImageStudioProvider({
 			resolutionValue,
 			resultColor,
 			selected,
+			selectHistoryStack,
 			selectProfile,
 			session,
 			setSelected,
@@ -328,6 +403,27 @@ export function ImageStudioProvider({
 	)
 
 	return <ImageStudioContext.Provider value={value}>{children}</ImageStudioContext.Provider>
+}
+
+/**
+ * 복원값 — 프로파일 기본값에서 시작해 저장돼 있던 축만 덮는다.
+ * 🔴 현재 값을 물려받지 않는다. 저장이 없는 축(색·카메라)까지 남기면 어느 결과에도 속하지 않는
+ *    상태가 되므로, 저장된 것만 복원하고 나머지는 기본값으로 되돌리는 쪽이 읽을 수 있다.
+ */
+function restoreHistoryValues(
+	config: ImageStudioConfig,
+	item: GeneratedImageHistoryItem & { prompt: string },
+): ControllerValues {
+	const next = createControllerValues(config.controller.groups)
+	const definitions = getImageStudioControls(config)
+	next[definitions.prompt.id] = item.prompt
+	if (definitions.ratio.options.some((option) => option.value === item.aspectRatio)) {
+		next[definitions.ratio.id] = item.aspectRatio
+	}
+	if (definitions.resolution.options.some((option) => option.value === item.imageSize)) {
+		next[definitions.resolution.id] = item.imageSize
+	}
+	return next
 }
 
 function reconcileProfileValues(

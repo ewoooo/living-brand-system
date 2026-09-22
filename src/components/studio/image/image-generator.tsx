@@ -4,8 +4,8 @@ import { Image as ImageIcon } from '@carbon/icons-react'
 import { ImageCanvas } from '@/components/studio/image/image-canvas'
 import { StudioWorkspace } from '@/components/studio/shared/studio-workspace'
 import { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
+import { ImageLeftPanel } from '@/components/studio/sidebar/image-left-panel'
 import { ImageSidebar } from '@/components/studio/sidebar/image-sidebar'
-import { StudioLeftPanel } from '@/components/studio/sidebar/studio-left-panel'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { toOpenAIImageSize } from '@/features/image-generation/domain/image-size'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
@@ -80,16 +80,8 @@ function ImageWorkspace() {
 
 	return (
 		<StudioWorkspace
-			leftPanel={
-				<StudioLeftPanel
-					empty={{
-						title: '왼쪽 컨트롤이 아직 없습니다',
-						description:
-							'페이지 선택·스타일·판 전체에 걸리는 컨트롤이 이 자리로 옮겨 옵니다.',
-					}}
-				/>
-			}
-			sidebar={<ImageSidebar download={download} preview={preview} />}
+			leftPanel={<ImageLeftPanel download={download} preview={preview} />}
+			sidebar={<ImageSidebar />}
 		>
 			<ImageCanvas />
 		</StudioWorkspace>

@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils'
 export function StudioPanel({
 	slot,
 	top,
+	middle,
 	bottom,
 	grow = 'top',
 	className,
@@ -38,6 +39,11 @@ export function StudioPanel({
 	slot: 'studio-sidebar' | 'studio-left-panel'
 	top: ReactNode
 	/**
+	 * 가운데 상자. 🔴 **넘기지 않으면 상자는 둘 그대로다** — 기존 호출자의 배치를 바꾸지 않으려고
+	 *    선택적으로 두었다(이미지 스튜디오만 프로파일·본보기·내보내기 셋을 세운다).
+	 */
+	middle?: ReactNode
+	/**
 	 * 아래 상자. 🔴 비어 있어도 **자리를 지킨다** — 「레이아웃과 콘텐츠는 별개」(사용자 지시)라
 	 * 상자 두 개인 골격은 채울 것이 없을 때도 그대로 보여야 한다.
 	 */
@@ -46,7 +52,7 @@ export function StudioPanel({
 	 * 남은 높이를 먹는 상자. 🔴 상자가 스스로 정하지 않는다 — 우측은 위(컨트롤러)가 늘어나고
 	 * 좌측은 아래(공통)가 늘어난다. 위가 **내용만큼만** 차지해야 하는 패널이 있기 때문이다.
 	 */
-	grow?: 'top' | 'bottom'
+	grow?: 'top' | 'middle' | 'bottom'
 	className?: string
 }) {
 	return (
@@ -70,12 +76,20 @@ export function StudioPanel({
 					{top}
 				</Controller.Root>
 			)}
+			{middle && (
+				<Controller.Root
+					data-slot="studio-panel-middle"
+					className={cn('lg:h-auto', grow === 'middle' ? 'min-h-0 flex-1' : 'shrink-0')}
+				>
+					{middle}
+				</Controller.Root>
+			)}
 			<Controller.Root
 				data-slot="studio-panel-bottom"
 				className={cn(
 					'lg:h-auto',
 					// 위 상자가 없으면 아래가 남은 높이를 다 먹는다 — 혼자 남은 상자가 쪼그라들면 안 된다.
-					grow === 'bottom' || !top ? 'min-h-0 flex-1' : 'shrink-0',
+					grow === 'bottom' || (!top && !middle) ? 'min-h-0 flex-1' : 'shrink-0',
 				)}
 			>
 				{bottom}
