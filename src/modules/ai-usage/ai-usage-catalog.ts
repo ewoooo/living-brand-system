@@ -52,3 +52,43 @@ export function aiUsageFeatureLabel(value: string): string {
 export function aiUsageStudioLabel(value: string | null): string {
 	return value === null ? AI_USAGE_OUTSIDE_STUDIO_LABEL : labelOf(AI_USAGE_STUDIOS, value)
 }
+
+/**
+ * 표를 접는 축. 🔴 화면이 이 배열을 렌더하므로 축 목록을 JSX에 박지 않는다 — 기능·스튜디오가
+ *    늘어나듯 축도 늘어날 수 있고, 두 군데에 적으면 한쪽이 조용히 낡는다(그래서 카탈로그가 있다).
+ * 🔑 **날짜는 축이 아니다.** 날짜는 다른 축과 배타로 고르는 것이 아니라 언제나 켜져 있는
+ *    시간 분포다 — 화면에서는 축 세그먼트가 아니라 상시 일자 스트립이 맡는다.
+ */
+export const AI_USAGE_AXES = [
+	{ label: '계정', value: 'user' },
+	{ label: '기능', value: 'feature' },
+	{ label: '스튜디오', value: 'studio' },
+	{ label: '모델', value: 'model' },
+] as const satisfies readonly AiUsageOption<string>[]
+
+export type AiUsageAxis = (typeof AI_USAGE_AXES)[number]['value']
+
+/**
+ * 일자 버킷을 자르는 기준 시간대.
+ *
+ * 🔴 생략하면 Postgres 세션 TZ(대개 UTC)를 따라가 「오늘」이 하루 밀린다 — 이 리포가 실제로
+ *    겪은 사고다. 서버 컴포넌트라 「보는 사람의 로컬」을 쓸 수 없으므로 존을 상수로 못박아
+ *    결정론으로 만든다. 팀이 한국에 있어 Asia/Seoul이고, 바꾸려면 여기 한 곳만 고친다.
+ */
+export const AI_USAGE_TIME_ZONE = 'Asia/Seoul'
+
+/** 기간 프리셋. 값은 일수이고 null은 전 기간이다. */
+export const AI_USAGE_PERIODS = [
+	{ days: 7, label: '7일', value: '7' },
+	{ days: 30, label: '30일', value: '30' },
+	{ days: null, label: '전체', value: 'all' },
+] as const
+
+export type AiUsagePeriod = (typeof AI_USAGE_PERIODS)[number]['value']
+
+/** 모델 축만 상한을 둔다 — 계정·기능·스튜디오는 한 화면에 들어가고, 자르면 「잘렸나」로 읽힌다. */
+export const AI_USAGE_MODEL_ROW_LIMIT = 25
+
+export function aiUsageAxisLabel(value: string): string {
+	return labelOf(AI_USAGE_AXES, value)
+}
