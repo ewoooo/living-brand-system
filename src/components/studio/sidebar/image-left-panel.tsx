@@ -2,8 +2,8 @@
 
 import { Controller } from '@/components/shared/controller'
 import { ImageBestSamplePanel } from '@/components/studio/image/image-best-sample-panel'
-import { ImageExportPanel } from '@/components/studio/image/image-export-panel'
 import { ImageProfilePicker } from '@/components/studio/image/image-profile-picker'
+import { ImageSettingPanel } from '@/components/studio/image/image-setting-panel'
 import { browseEmptyMessage } from '@/components/studio/shared/browse-status'
 import { PreviewRefreshSlot } from '@/components/studio/shared/preview-refresh-slot'
 import type { useProfilePreview } from '@/components/studio/shared/use-profile-preview'
@@ -57,7 +57,7 @@ export function ImageLeftPanel({
 					</Controller.AssetCard>
 				</PreviewRefreshSlot>
 			}
-			footer={<ImageExportPanel download={download} />}
+			footer={<ImageSettingPanel download={download} />}
 		>
 			<ImageBestSamplePanel />
 		</StudioLeftPanel>

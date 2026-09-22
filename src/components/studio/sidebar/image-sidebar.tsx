@@ -1,8 +1,5 @@
 'use client'
 
-import { Copy, Crop, SquareOutline } from '@carbon/icons-react'
-import type * as React from 'react'
-import { Controller } from '@/components/shared/controller'
 import {
 	ControllerControlRenderer,
 	ControllerGroupRenderer,
@@ -10,23 +7,12 @@ import {
 import { ImageProfileFeatureRenderer } from '@/components/studio/image/image-profile-feature-renderer'
 import { StudioSidebar } from '@/components/studio/sidebar/studio-sidebar'
 import { Button } from '@/components/ui/button'
-import { FieldError } from '@/components/ui/field'
 import { Typography } from '@/components/ui/typography'
-import type {
-	ImageAspectRatio,
-	ImageOutputSize,
-} from '@/features/image-generation/domain/image-size'
 import {
-	getImageStudioControls,
 	getImageStudioFeatureControlIds,
 	IMAGE_STUDIO_CONTROL_IDS,
 } from '@/features/image-generation/domain/image-studio-config'
 import { useImageStudio } from '@/features/image-generation/hooks/use-image-studio'
-import {
-	type ControllerControlDefinition,
-	type ControllerRuntimeBinding,
-	resolveControllerAvailability,
-} from '@/modules/studio-controller/controller-definition'
 
 /**
  * 이미지 스튜디오의 사이드바(컨트롤러 패널) — 캔버스를 모른다.
@@ -36,7 +22,6 @@ import {
  */
 export function ImageSidebar() {
 	const { config, controls, generation, camera, reference } = useImageStudio()
-	const { batch, ratio, resolution } = getImageStudioControls(config)
 	const generationControlIds = new Set<string>([
 		IMAGE_STUDIO_CONTROL_IDS.batch,
 		IMAGE_STUDIO_CONTROL_IDS.ratio,
@@ -52,45 +37,7 @@ export function ImageSidebar() {
 	})
 
 	return (
-		<StudioSidebar
-			footer={
-				<>
-					<div className="flex flex-col gap-1">
-						<div className="flex h-9 items-center pt-1">
-							<span className="font-semibold text-muted-foreground text-sm">
-								Setting
-							</span>
-						</div>
-						{/* 디자인 SSOT(16:9079): 장수·비율·해상도가 한 줄에 3등분으로 앉는다. */}
-						<div className="grid grid-cols-3 gap-1">
-							<SettingRow
-								icon={<Copy aria-hidden />}
-								definition={batch}
-								binding={controls.bindings[batch.id]}
-								value={String(generation.batch)}
-								onChange={(value) => generation.setBatch(Number(value))}
-							/>
-							<SettingRow
-								icon={<SquareOutline aria-hidden />}
-								definition={ratio}
-								binding={controls.bindings[ratio.id]}
-								value={generation.ratio}
-								onChange={(value) => generation.setRatio(value as ImageAspectRatio)}
-							/>
-							<SettingRow
-								icon={<Crop aria-hidden />}
-								definition={resolution}
-								binding={controls.bindings[resolution.id]}
-								value={generation.resolution}
-								onChange={(value) =>
-									generation.setResolution(value as ImageOutputSize)
-								}
-							/>
-						</div>
-					</div>
-				</>
-			}
-		>
+		<StudioSidebar>
 			{/*
 			 * 생성 CTA는 그룹 밖이 아니라 프롬프트가 사는 그룹 안, 프롬프트 바로 아래에 붙는다 —
 			 * 그룹 밖에 두면 바로 위 feature 그룹의 CTA(카메라 재생성)와 나란히 보여 무엇을
@@ -168,52 +115,5 @@ export function ImageSidebar() {
 				}}
 			/>
 		</StudioSidebar>
-	)
-}
-
-type SettingRowProps = {
-	/** 아이콘 라벨 — 접근 가능한 이름은 name이 sr-only로 동반한다(docs/10 §3.6). */
-	icon: React.ReactNode
-	definition: Extract<ControllerControlDefinition, { kind: 'select' }>
-	binding?: ControllerRuntimeBinding
-	value: string
-	onChange: (value: string) => void
-}
-
-/** Setting 푸터의 압축 레이아웃에 Definition의 상태와 선택지를 결합한다. */
-function SettingRow({ icon, definition, binding, value, onChange }: SettingRowProps) {
-	const availability = resolveControllerAvailability(
-		definition.availability,
-		binding?.availability,
-	)
-	const disabled = availability === 'disabled'
-	const readonly = availability === 'readonly' || (!disabled && definition.options.length <= 1)
-
-	return (
-		<div className="flex flex-col gap-1">
-			<Controller.Row
-				label={
-					<>
-						{icon}
-						<span className="sr-only">{definition.label}</span>
-					</>
-				}
-				readonly={readonly}
-				disabled={disabled}
-				// 압축 행은 패딩이 10px — 셀렉트 트리거가 행 폭을 재려면 변수도 같이 좁힌다.
-				className="px-2.5 [--controller-row-px:0.625rem]"
-			>
-				{readonly ? (
-					<span className="text-muted-foreground text-sm">{value}</span>
-				) : (
-					<Controller.Select
-						options={definition.options}
-						value={value}
-						onChange={onChange}
-					/>
-				)}
-			</Controller.Row>
-			{binding?.error && <FieldError>{binding.error}</FieldError>}
-		</div>
 	)
 }
