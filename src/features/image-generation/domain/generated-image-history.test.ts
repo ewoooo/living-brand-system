@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { type GeneratedImageHistoryItem, groupHistoryByDate } from './generated-image-history'
 
+/**
+ * 🔴 로컬 시각으로 만든다. 묶기 경계가 **보는 사람의 로컬 자정**이라, 날짜 문자열에 오프셋을
+ *    박아 두면 러너 타임존에 따라 하루가 밀린다(2026-09-22에 CI가 UTC라 실제로 밀렸다).
+ */
+function at(year: number, month: number, day: number, hour: number): string {
+	return new Date(year, month - 1, day, hour).toISOString()
+}
+
 function item(
 	id: number,
 	createdAt: string,
@@ -21,15 +29,15 @@ function item(
 
 describe('groupHistoryByDate', () => {
 	// 로컬 자정이 경계다 — 한국(UTC+9)에서 09-21 01:00은 오늘이고, 09-20 23:00 UTC도 오늘이다.
-	const today = new Date('2026-09-21T12:00:00+09:00')
+	const today = new Date(2026, 8, 21, 12)
 
 	it('오늘·어제는 이름으로, 그 앞은 날짜로 적는다', () => {
 		const groups = groupHistoryByDate(
 			[
-				item(1, '2026-09-21T01:00:00+09:00'),
-				item(2, '2026-09-20T22:00:00+09:00'),
-				item(3, '2026-09-11T09:00:00+09:00'),
-				item(4, '2025-12-24T09:00:00+09:00'),
+				item(1, at(2026, 9, 21, 1)),
+				item(2, at(2026, 9, 20, 22)),
+				item(3, at(2026, 9, 11, 9)),
+				item(4, at(2025, 12, 24, 9)),
 			],
 			today,
 		)
@@ -46,9 +54,9 @@ describe('groupHistoryByDate', () => {
 	it('같은 날이 이어지면 한 묶음이 된다', () => {
 		const groups = groupHistoryByDate(
 			[
-				item(1, '2026-09-21T15:00:00+09:00'),
-				item(2, '2026-09-21T09:00:00+09:00'),
-				item(3, '2026-09-20T09:00:00+09:00'),
+				item(1, at(2026, 9, 21, 15)),
+				item(2, at(2026, 9, 21, 9)),
+				item(3, at(2026, 9, 20, 9)),
 			],
 			today,
 		)
@@ -61,11 +69,7 @@ describe('groupHistoryByDate', () => {
 	//    다시 모으면 페이지가 이어 붙을 때 이미 그린 그룹에 항목이 끼어들어 격자가 흔들린다.
 	it('같은 날짜가 떨어져 있으면 묶지 않고 순서를 지킨다', () => {
 		const groups = groupHistoryByDate(
-			[
-				item(1, '2026-09-21T09:00:00+09:00'),
-				item(2, '2026-09-20T09:00:00+09:00'),
-				item(3, '2026-09-21T08:00:00+09:00'),
-			],
+			[item(1, at(2026, 9, 21, 9)), item(2, at(2026, 9, 20, 9)), item(3, at(2026, 9, 21, 8))],
 			today,
 		)
 
@@ -78,14 +82,14 @@ describe('groupHistoryByDate', () => {
 })
 
 describe('한 번에 생성한 것 묶기', () => {
-	const today = new Date('2026-09-21T12:00:00+09:00')
+	const today = new Date(2026, 8, 21, 12)
 
 	it('같은 batchKey가 이어지면 한 겹침이 된다', () => {
 		const [group] = groupHistoryByDate(
 			[
-				item(1, '2026-09-21T15:00:00+09:00', 'b1'),
-				item(2, '2026-09-21T15:00:00+09:00', 'b1'),
-				item(3, '2026-09-21T14:00:00+09:00', 'b2'),
+				item(1, at(2026, 9, 21, 15), 'b1'),
+				item(2, at(2026, 9, 21, 15), 'b1'),
+				item(3, at(2026, 9, 21, 14), 'b2'),
 			],
 			today,
 		)
@@ -98,7 +102,7 @@ describe('한 번에 생성한 것 묶기', () => {
 	// 🔴 batchKey가 없는 항목을 서로 묶으면 남남인 이미지가 한 묶음으로 보인다.
 	it('batchKey가 없으면 서로 묶지 않는다', () => {
 		const [group] = groupHistoryByDate(
-			[item(1, '2026-09-21T15:00:00+09:00'), item(2, '2026-09-21T14:00:00+09:00')],
+			[item(1, at(2026, 9, 21, 15)), item(2, at(2026, 9, 21, 14))],
 			today,
 		)
 
@@ -107,10 +111,7 @@ describe('한 번에 생성한 것 묶기', () => {
 
 	it('날짜가 갈리면 같은 batchKey여도 겹침이 갈린다', () => {
 		const groups = groupHistoryByDate(
-			[
-				item(1, '2026-09-21T00:30:00+09:00', 'b1'),
-				item(2, '2026-09-20T23:30:00+09:00', 'b1'),
-			],
+			[item(1, at(2026, 9, 21, 0), 'b1'), item(2, at(2026, 9, 20, 23), 'b1')],
 			today,
 		)
 
