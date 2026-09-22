@@ -39,7 +39,7 @@ import {
 	ImageGenerationUnavailableError,
 	normalizeImageProfilePrompt,
 } from '@/features/image-generation/services/normalize-image-profile-prompt.service'
-import type { AiUsageSource, AiUsageTokens } from '@/modules/ai-usage/ai-usage'
+import type { AiUsageSource, AiUsageStudio, AiUsageTokens } from '@/modules/ai-usage/ai-usage'
 import { recordAiUsage } from '@/modules/ai-usage/repositories/ai-usage.payload.repository'
 import { acceptsControllerExecutionValue } from '@/modules/studio-controller/controller-definition'
 import { IMAGE_REFERENCE_MAX_BYTES } from '../domain/reference-image/contract'
@@ -167,11 +167,17 @@ export async function generateImages({
 	imageSize,
 	camera,
 	reference,
+	studio,
 }: {
 	userInput: string
 	profileId: number
 	user: unknown
 	count: number
+	/**
+	 * 호출이 들어온 스튜디오 화면. 🔴 서비스가 추측할 수 없다 — 같은 함수를 이미지 스튜디오·
+	 *    admin·MCP·챗 도구가 부른다. 스튜디오 밖이면 넘기지 않는다.
+	 */
+	studio?: AiUsageStudio
 	/** 템플릿 이미지 슬롯 박스에서 유도한 비율 오버라이드 — 없으면 프로파일 비율. */
 	aspectRatio?: ImageAspectRatio
 	/** 스튜디오 해상도 선택 오버라이드 — 없으면 프로파일 해상도. */
@@ -249,6 +255,7 @@ export async function generateImages({
 			feature: 'image-generation',
 			model: normalization.usage.model,
 			...normalization.usage.tokens,
+			...(studio ? { studio } : {}),
 			...(source ? { source } : {}),
 		})
 	}
@@ -257,6 +264,7 @@ export async function generateImages({
 		feature: 'image-generation',
 		model: generated.model,
 		...usage,
+		...(studio ? { studio } : {}),
 		...(source ? { source } : {}),
 	})
 

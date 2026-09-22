@@ -313,6 +313,8 @@ describe('custom MCP tools', () => {
 		expect(mocks.generateImages).toHaveBeenCalledWith({
 			count: 1,
 			profileId: 5,
+			// 브라우저가 아니라 MCP로 들어온 사용량이라 따로 집계된다.
+			studio: 'mcp',
 			user: requestUser,
 			userInput: '파란 세럼병',
 		})

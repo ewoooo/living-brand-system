@@ -209,6 +209,8 @@ export const customMcpTools = [
 			const result = await generateImages({
 				count: args.count ?? 1,
 				profileId: args.profileId,
+				// 브라우저 화면이 아니라 MCP로 들어온 호출이다 — 사용량 집계에서 갈라 보여야 한다.
+				studio: 'mcp',
 				user: authenticatedUser,
 				userInput: args.prompt,
 			})

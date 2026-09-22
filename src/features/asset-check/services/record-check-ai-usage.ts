@@ -15,6 +15,8 @@ export async function recordCheckAiUsage(
 		await recordAiUsage({
 			createdBy: user.id,
 			feature: 'asset-check',
+			// 검수는 review 스튜디오에서만 들어온다 — 호출자가 하나뿐이라 여기서 못박는다.
+			studio: 'review',
 			model: usage.model,
 			inputTokens: usage.inputTokens,
 			outputTokens: usage.outputTokens,

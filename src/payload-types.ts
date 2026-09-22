@@ -2545,6 +2545,10 @@ export interface AiUsageEvent {
    */
   feature: 'image-generation' | 'asset-check' | 'agent-chat';
   /**
+   * AI를 호출한 스튜디오 화면입니다. 비어 있으면 스튜디오 밖에서 온 호출입니다.
+   */
+  studio?: ('image' | 'graphic' | 'graph' | 'template' | 'review' | 'assets' | 'mcp') | null;
+  /**
    * 호출한 모델 식별자입니다.
    */
   model: string;
@@ -4192,6 +4196,7 @@ export interface AgentChatSessionsSelect<T extends boolean = true> {
 export interface AiUsageEventsSelect<T extends boolean = true> {
   createdBy?: T;
   feature?: T;
+  studio?: T;
   model?: T;
   inputTokens?: T;
   outputTokens?: T;

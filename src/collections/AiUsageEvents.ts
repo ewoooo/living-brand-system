@@ -68,6 +68,28 @@ export const AiUsageEvents: CollectionConfig = {
 			},
 		},
 		{
+			// 어느 화면에서 들어온 호출인가. `feature`와 직교한다 — 같은 image-generation이
+			// 이미지 스튜디오에서도, 에이전트 챗 도구에서도, MCP에서도 불린다.
+			// 🔴 nullable이다. admin 미리보기처럼 스튜디오 밖에서 오는 호출이 실제로 있고,
+			//    그것을 아무 스튜디오에 욱여넣으면 집계가 거짓이 된다.
+			name: 'studio',
+			type: 'select',
+			index: true,
+			options: [
+				{ label: '이미지', value: 'image' },
+				{ label: '그래픽', value: 'graphic' },
+				{ label: '그래프', value: 'graph' },
+				{ label: '템플릿', value: 'template' },
+				{ label: '검수', value: 'review' },
+				{ label: '자산', value: 'assets' },
+				{ label: 'MCP', value: 'mcp' },
+			],
+			admin: {
+				description:
+					'AI를 호출한 스튜디오 화면입니다. 비어 있으면 스튜디오 밖에서 온 호출입니다.',
+			},
+		},
+		{
 			name: 'model',
 			type: 'text',
 			required: true,

@@ -22,10 +22,26 @@ export type AiUsageFeature = AiUsageEvent['feature']
 /** 이 호출이 남긴 작업 기록. 남기지 않는 호출(관리자 미리보기 등)은 없어도 된다. */
 export type AiUsageSource = NonNullable<AiUsageEvent['source']>
 
+/** 컬렉션 enum이 정본. null = 스튜디오 밖(admin 미리보기 등). */
+export type AiUsageStudio = NonNullable<AiUsageEvent['studio']>
+
+/** 사용량 화면이 행으로 세우는 스튜디오 — 안 쓴 것도 0으로 서야 하므로 목록이 고정이다. */
+export const AI_USAGE_STUDIOS = [
+	'image',
+	'graphic',
+	'graph',
+	'template',
+	'review',
+	'assets',
+	'mcp',
+] as const satisfies readonly AiUsageStudio[]
+
 export interface AiUsageRecord extends AiUsageTokens {
 	createdBy: number
 	feature: AiUsageFeature
 	model: string
+	/** 어느 스튜디오 화면에서 온 호출인가. 스튜디오 밖이면 넘기지 않는다. */
+	studio?: AiUsageStudio
 	source?: AiUsageSource
 }
 
@@ -67,6 +83,18 @@ export function sumAiUsageTokens(list: readonly (AiUsageTokens | undefined)[]): 
 		cacheWriteInputTokens: total((t) => t.cacheWriteInputTokens),
 		reasoningTokens: total((t) => t.reasoningTokens),
 	}
+}
+
+/**
+ * 스튜디오 한 곳의 누적량. 🔴 **안 쓴 스튜디오도 0으로 선다** — 행이 없는 것과 0을 쓴 것은
+ * 보는 사람에게 같은 말이 아니다(사용자 지시, 2026-09-22).
+ */
+export interface AiUsageStudioRow {
+	studio: AiUsageStudio
+	callCount: number
+	inputTokens: number
+	outputTokens: number
+	totalTokens: number
 }
 
 /** 한 사람이 한 기능의 한 모델에 쓴 누적량 — 사용량 화면이 그리는 최소 단위. */
