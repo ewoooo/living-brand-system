@@ -72,10 +72,11 @@ describe('GlobalHeader', () => {
 		})
 		const links = within(navigation)
 
-		expect(within(desktop as HTMLElement).getByRole('link', { name: 'Login' })).toHaveAttribute(
-			'href',
-			'/admin',
-		)
+		// 🔴 이 단언이 「Payload 주소가 헤더에 노출되지 않는다」를 지키는 유일한 검사기다.
+		expect(
+			within(desktop as HTMLElement).getByRole('link', { name: 'Account' }),
+		).toHaveAttribute('href', '/account')
+		expect(within(desktop as HTMLElement).queryByRole('link', { name: 'Login' })).toBeNull()
 		expect(links.getByRole('link', { name: /Guideline/ })).toHaveAttribute('href', '/guideline')
 		expect(links.getByRole('link', { name: 'Template' })).toHaveAttribute(
 			'href',

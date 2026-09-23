@@ -159,17 +159,21 @@ export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderPr
 			label: 'Usage',
 		},
 	] as const
+	// 🔴 데스크톱과 컴팩트가 같은 것을 두 번 그린다 — 한 상수로 묶어 한쪽만 고쳐지는 일을 막는다.
+	// 로그인 여부를 헤더가 알지 않는다: 비로그인으로 누르면 /account가 로그인으로 보내고 돌아온다.
+	// 그래야 루트 레이아웃이 세션을 읽지 않고, `/`와 `/guideline`의 정적 렌더가 유지된다.
+	const accountItem = {
+		current: isCurrentPath(pathname, routes.account),
+		href: routes.account,
+		label: 'Account',
+	} as const
 	const closeCompact = () => setCompactOpen(false)
 
 	return (
 		<NavigationHeader.Root>
 			<NavigationHeader.Desktop>
 				<NavigationHeader.Start>
-					<NavigationHeader.Link
-						current={pathname === routes.admin}
-						href={routes.admin}
-						label="Login"
-					/>
+					<NavigationHeader.Link {...accountItem} />
 				</NavigationHeader.Start>
 				<NavigationHeader.Center aria-label="주요 메뉴">
 					<NavigationHeader.SymbolLink href={routes.home} />
@@ -248,10 +252,8 @@ export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderPr
 							</NavigationHeader.CompactLinkGroup>
 							<NavigationHeader.CompactLinkGroup className="pt-6">
 								<NavigationHeader.Link
+									{...accountItem}
 									className="justify-center bg-muted"
-									current={pathname === routes.admin}
-									href={routes.admin}
-									label="Login"
 									onClick={closeCompact}
 									surface="compact"
 								/>

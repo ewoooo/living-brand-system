@@ -4,8 +4,39 @@ import {
 	getStudioImageRoute,
 	getStudioTemplateRoute,
 	legacyPageRedirects,
+	loginHref,
 	routes,
+	safeRedirectPath,
 } from './routes'
+
+describe('로그인 이동', () => {
+	it('로그인 문은 앱 안이다 — Payload Admin으로 보내지 않는다', () => {
+		// 🔴 이 단언이 깨지면 worker가 CMS 로그인 화면을 보게 된다(docs/07 #14).
+		expect(loginHref('/studio/mcp')).toBe('/login?redirect=%2Fstudio%2Fmcp')
+		expect(loginHref('/studio/mcp')).not.toContain('/admin')
+	})
+
+	it('돌아갈 곳은 내부 경로만 통과시킨다', () => {
+		expect(safeRedirectPath('/studio/usage', '/account')).toBe('/studio/usage')
+		expect(safeRedirectPath(undefined, '/account')).toBe('/account')
+		// 🔴 바깥으로 보내는 모양들 — 하나라도 통과하면 로그인 링크가 피싱 통로가 된다.
+		expect(safeRedirectPath('https://evil.test', '/account')).toBe('/account')
+		expect(safeRedirectPath('//evil.test', '/account')).toBe('/account')
+		expect(safeRedirectPath('/\\evil.test', '/account')).toBe('/account')
+		expect(safeRedirectPath('javascript:alert(1)', '/account')).toBe('/account')
+	})
+
+	it('🔴 탭·개행으로 감춘 외부 주소도 막는다', () => {
+		// 브라우저 파서는 읽기 전에 이 문자들을 지운다 — `/<TAB>//evil`이 파서 안에서 `//evil`이 된다.
+		// 접두사 검사만 하던 시절 이 줄들이 전부 통과했고, 검증 넷은 초록이었다.
+		expect(safeRedirectPath('/\t//evil.test', '/account')).toBe('/account')
+		expect(safeRedirectPath('/\n//evil.test', '/account')).toBe('/account')
+		expect(safeRedirectPath('/\r//evil.test', '/account')).toBe('/account')
+		expect(safeRedirectPath('/\t/evil.test', '/account')).toBe('/account')
+		// 내부 경로는 쿼리까지 살아서 돌아온다 — 기간·필터를 들고 로그인해도 잃지 않는다.
+		expect(safeRedirectPath('/studio/usage?days=7', '/account')).toBe('/studio/usage?days=7')
+	})
+})
 
 describe('routes', () => {
 	it('세 스튜디오가 /studio/<kind>/<slug> 한 모양으로 대상을 지목한다', () => {

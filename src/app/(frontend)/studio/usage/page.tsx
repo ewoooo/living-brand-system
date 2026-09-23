@@ -8,7 +8,7 @@ import { AiUsageSegment } from '@/components/studio/usage/ai-usage-segment'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { isManager, isPayloadUser } from '@/lib/auth'
 import { requireUser } from '@/lib/request-auth'
-import { routes } from '@/lib/routes'
+import { loginHref, routes } from '@/lib/routes'
 import { AI_USAGE_AXES, AI_USAGE_PERIODS } from '@/modules/ai-usage/ai-usage-catalog'
 import { foldAiUsage } from '@/modules/ai-usage/ai-usage-fold'
 import {
@@ -36,8 +36,7 @@ export default async function StudioUsagePage({
 }) {
 	const { user } = await requireUser(routes.studio.usage)
 	// MCP API 키로는 이 화면을 열 수 없다 — 집계는 사람 계정 단위이므로 로그인으로 돌려보낸다.
-	if (!isPayloadUser(user))
-		redirect(`/admin/login?redirect=${encodeURIComponent(routes.studio.usage)}`)
+	if (!isPayloadUser(user)) redirect(loginHref(routes.studio.usage))
 
 	const query = parseAiUsageQuery(await searchParams)
 	// 범위 제한은 repository가 소유한다 — manager가 아니면 쿼리 자체가 본인 행으로 좁혀진다.
