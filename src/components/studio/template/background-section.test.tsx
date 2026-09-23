@@ -5,7 +5,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Controller } from '@/components/shared/controller'
 import { resolveGraphicStudioOutput } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
-import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
+import {
+	CAMERA_AZIMUTHS,
+	CAMERA_ELEVATIONS,
+} from '@/features/image-generation/domain/camera-control'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import {
 	resolveTemplateImageConfig,
@@ -421,6 +424,21 @@ describe('BackgroundSection', () => {
 			'aria-valuetext',
 			'가로 0%, 세로 0%',
 		)
+	})
+
+	it('🔴 배경 그래픽도 창작자에게 보이는 축만 그린다 — admin 전용 축이 여기서 되살아나면 안 된다', async () => {
+		const user = userEvent.setup()
+		render(<Harness allowedTypes={['color', 'image', 'graphic']} />)
+		await selectBackgroundType(user, 'Graphic')
+
+		// 우측 축은 그린다.
+		expect(screen.getByRole('slider', { name: '열 간격' })).toBeInTheDocument()
+		expect(screen.getByRole('slider', { name: '기준점 두께' })).toBeInTheDocument()
+		// 🔴 좌·우 어느 쪽에도 없는 축은 Graphic 스튜디오에서 내려간 것이다 — 같은 런타임이
+		//    화면마다 다른 축 수를 보여주면 worker가 manager 전용 값을 만진다.
+		for (const axis of ['선 길이', '여백', '두께 감쇠 거리']) {
+			expect(screen.queryByRole('slider', { name: axis }), axis).toBeNull()
+		}
 	})
 
 	it('Background를 접으면 선택한 Graphic의 그룹도 함께 닫힌다', async () => {

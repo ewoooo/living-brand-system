@@ -1,12 +1,17 @@
 'use client'
 
-import { type CSSProperties, useEffect, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ControllerBar } from '@/components/shared/controller'
 import { fitPreviewSize } from '@/components/studio/shared/fit-preview-size'
 import {
 	DEFAULT_PREVIEW_SIZE,
 	PreviewSizeControl,
 } from '@/components/studio/shared/preview-size-control'
+import {
+	clampSlotBox,
+	type SlotHighlightBox,
+	slotHighlightStyle,
+} from '@/components/studio/template/slot-highlight'
 import { Typography } from '@/components/ui/typography'
 import type { GraphicStudioConfig } from '@/features/graphic-generation/domain/graphic-studio-config'
 import {
@@ -14,7 +19,10 @@ import {
 	loadGraphicRuntimeAdapter,
 } from '@/features/graphic-generation/runtime/client/graphic-runtime.client'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
-import type { ControllerValues } from '@/modules/studio-controller/controller-definition'
+import {
+	type ControllerValues,
+	controllerRemountKey,
+} from '@/modules/studio-controller/controller-definition'
 
 /**
  * 템플릿 스튜디오의 작업 공간(미리보기 캔버스) — 사이드바를 모른다.
@@ -23,7 +31,7 @@ import type { ControllerValues } from '@/modules/studio-controller/controller-de
  * CORS 로드를 깨뜨린다. 임포트 HTML은 스크립트 없는 inline-style이다.
  */
 export function TemplateCanvas() {
-	const { config, canvas, background } = useTemplateStudio()
+	const { config, canvas, background, focus } = useTemplateStudio()
 	const { width, height } = config.template.exportOption.canvas
 	const stageRef = useRef<HTMLDivElement>(null)
 	const [preview, setPreview] = useState({ width, height })
@@ -32,6 +40,36 @@ export function TemplateCanvas() {
 	const graphicConfig = config.template.graphicConfigs.find(
 		(candidate) => candidate.id === background.state.graphicConfigId,
 	)
+
+	const target = focus.target
+	const [highlights, setHighlights] = useState<readonly SlotHighlightBox[]>([])
+	// biome-ignore lint/correctness/useExhaustiveDependencies: canvas.html은 본문이 읽는 값이 아니라 **재측정 방아쇠**다 — 그 문자열이 바뀌면 subtree가 통째로 갈려 슬롯의 사각형이 달라진다(정적 분석이 볼 수 없는 의존이다)
+	useLayoutEffect(() => {
+		const root = canvas.previewRef.current
+		if (!root || !target) {
+			setHighlights([])
+			return
+		}
+		// 🔴 배경은 노드가 아니라 도화지를 집는다 — 잴 것이 없고 캔버스 상자가 곧 답이다.
+		if (target.kind === 'canvas') {
+			setHighlights([{ left: 0, top: 0, width, height }])
+			return
+		}
+		const rootRect = root.getBoundingClientRect()
+		// 🔑 nodeId에 콜론이 섞여 선택자를 조립하지 않는다 — compose와 같은 규칙(순회 후 정확 일치).
+		const nodes = Array.from(root.querySelectorAll('[data-node-id]'))
+		setHighlights(
+			target.nodeIds.flatMap((nodeId) => {
+				const node = nodes.find(
+					(candidate) => candidate.getAttribute('data-node-id') === nodeId,
+				)
+				const box = node
+					? clampSlotBox(node.getBoundingClientRect(), rootRect, { width, height })
+					: null
+				return box ? [box] : []
+			}),
+		)
+	}, [canvas.html, canvas.previewRef, height, target, width])
 
 	useEffect(() => {
 		const stage = stageRef.current
@@ -50,7 +88,11 @@ export function TemplateCanvas() {
 	}, [height, width])
 
 	return (
-		<div ref={stageRef} className="relative grid h-full min-h-0 min-w-0 overflow-hidden">
+		// 🔴 하단 예약의 근거는 graphic-canvas.tsx와 같다 — 떠 있는 바가 프리뷰를 덮지 않게.
+		<div
+			ref={stageRef}
+			className="relative grid h-full min-h-0 min-w-0 overflow-hidden lg:pb-28"
+		>
 			<div
 				data-slot="template-preview"
 				className="m-auto shrink-0 overflow-hidden shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none lg:[transform:scale(var(--preview-scale))]"
@@ -85,6 +127,24 @@ export function TemplateCanvas() {
 						// biome-ignore lint/security/noDangerouslySetInnerHtml: 서버 컨버터가 만든 inline-style HTML(스크립트 없음) — 어드민 캔버스와 동일 렌더
 						dangerouslySetInnerHTML={{ __html: canvas.html }}
 					/>
+					{/* 🔴 주입된 HTML의 **형제**다 — 루트 프레임 안에 두면 캔버스를 넘는 슬롯의 강조가
+					    그 프레임의 overflow:hidden에 잘린다(`slot-highlight.ts`가 이유를 갖는다).
+					    🔑 여러 개인 이유: Text 섹션은 텍스트 상자를 전부 집는다. */}
+					{highlights.map((box) => (
+						<div
+							key={`${box.left}:${box.top}:${box.width}:${box.height}`}
+							data-slot="template-slot-highlight"
+							style={{
+								// 도화지 전체를 집을 때는 면을 깔지 않는다 — 가릴 것과 구별할 것이 없다.
+								...slotHighlightStyle(
+									scale,
+									focus.color,
+									target?.kind !== 'canvas',
+								),
+								...box,
+							}}
+						/>
+					))}
 				</div>
 			</div>
 			<ControllerBar placement="canvas">
@@ -113,6 +173,10 @@ function TemplateGraphicBackground({
 	const valuesRef = useRef(values)
 	const updateRef = useRef(background.updateGraphic)
 	const [error, setError] = useState<string | null>(null)
+	// 🔴 「모양」처럼 셰이더 프로그램을 갈아끼우는 축은 update로 반영되지 않는다 — 이 지문이
+	//    바뀌면 런타임을 다시 세운다. Graphic 캔버스와 같은 함수를 쓴다(한쪽만 갖고 있으면
+	//    Template 배경에서만 모양이 안 갈린다).
+	const remountKey = controllerRemountKey(config.controller.remountOn, values)
 	useEffect(() => {
 		valuesRef.current = values
 		runtimeRef.current?.update(values)
@@ -122,6 +186,7 @@ function TemplateGraphicBackground({
 		updateRef.current = background.updateGraphic
 	}, [background.updateGraphic])
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies(remountKey): 위 주석 — 재마운트 트리거다
 	useEffect(() => {
 		const container = containerRef.current
 		if (!container) return
@@ -180,7 +245,14 @@ function TemplateGraphicBackground({
 			runtime?.destroy()
 			runtimeRef.current = null
 		}
-	}, [canvas.registerGraphicFrame, canvas.registerGraphicVideo, config, height, width])
+	}, [
+		canvas.registerGraphicFrame,
+		canvas.registerGraphicVideo,
+		config,
+		height,
+		remountKey,
+		width,
+	])
 
 	return (
 		<div

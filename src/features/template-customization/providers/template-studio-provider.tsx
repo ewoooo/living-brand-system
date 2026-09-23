@@ -24,6 +24,7 @@ import {
 	type TemplateAssignedImage,
 	type TemplateBackgroundPatch,
 	type TemplateBackgroundState,
+	type TemplateFocusTarget,
 	type TemplateImageSlotPatch,
 	type TemplateImageSlotState,
 	TemplateStudioContext,
@@ -32,6 +33,7 @@ import {
 import {
 	findTemplateControl,
 	listCompatibleTemplateImageConfigs,
+	mapTemplateNodeLayers,
 	type PublishedTemplateView,
 	partitionTemplateSlots,
 	type ResolvedTemplateImageConfig,
@@ -39,12 +41,14 @@ import {
 	type TemplateBackgroundType,
 	type TemplateImageConfigSlot,
 	type TemplateStudioConfig,
+	type TemplateStudioConfigSlot,
 	type TemplateTextSlot,
 	type TemplateVectorSlot,
 } from '@/features/template-customization/domain/template-studio-config'
 import {
 	composeTemplateStudioHtml,
 	createTemplateRasterArtifact,
+	createTemplateVectorArtifact,
 	createTemplateVideoArtifact,
 	type TemplateRasterArtifact,
 	type TemplateVideoArtifact,
@@ -147,9 +151,15 @@ function useTemplateImageSession(
 	const update = useCallback(
 		(slotId: string, patch: TemplateImageSlotPatch) =>
 			setStates((current) =>
-				updateTemplateImageSlot(current, slotId, patch, contracts[slotId] ?? []),
+				// 🔴 잠긴 슬롯을 여기서 막는다. 지금까지 이미지 슬롯의 readonly를 집행하는 코드는
+				//    사이드바 컴포넌트의 prop뿐이었다 — 챗 저작은 사이드바를 우회하므로(그게 목적이다)
+				//    모든 호출자가 지나는 이 자리에 둔다. 대조: vectors.setColor·layers.setVisible은
+				//    이미 슬롯 정책을 본다.
+				imageSlots.find((slot) => slot.id === slotId)?.access === 'editable'
+					? updateTemplateImageSlot(current, slotId, patch, contracts[slotId] ?? [])
+					: current,
 			),
-		[contracts],
+		[contracts, imageSlots],
 	)
 	const updateFeature = useCallback(
 		(slotId: string, controlId: string, next: ControllerControlValue) => {
@@ -206,12 +216,17 @@ function useTemplateImageSession(
 		[],
 	)
 	const generate = useCallback(
-		async (slotId: string) => {
+		/**
+		 * 🔑 `promptOverride`가 있는 이유: 챗이 얹은 패치를 **같은 tick에** 생성까지 태우려면
+		 *    `states` 클로저가 아직 옛 프롬프트를 보고 있다. 렌더 타이밍에 기대는 대신 값을 인자로
+		 *    받아 그 문제를 없앤다. 사이드바 호출부는 인자를 주지 않아 영향이 없다.
+		 */
+		async (slotId: string, promptOverride?: string) => {
 			const state = states[slotId]
 			const contract = contracts[slotId]?.find(
 				(candidate) => candidate.config.id === state?.profileId,
 			)
-			const prompt = state?.prompt ?? ''
+			const prompt = promptOverride ?? state?.prompt ?? ''
 			if (!state || state.generating || !contract || !validPrompt(prompt, contract)) return
 			const requestProfileId = contract.config.id
 			updateState(slotId, { generating: true, error: null })
@@ -272,23 +287,35 @@ function useTemplateVectorSession(
 	)
 }
 
+/**
+ * 🔴 목록이 둘인 이유: 표시/숨김은 **편집 가능한 레이어만** 갖고(배경은 정책이 없다), 선택은
+ *    배경까지 포함한 **묶음**을 대상으로 한다 — 배경도 레이어 패널의 한 줄이다(사용자 지시, 2026-09-10).
+ */
 function useTemplateLayerSession(
-	slots: readonly (TemplateTextSlot | TemplateImageConfigSlot | TemplateVectorSlot)[],
+	editable: readonly (TemplateTextSlot | TemplateImageConfigSlot | TemplateVectorSlot)[],
+	all: readonly TemplateStudioConfigSlot[],
 ): TemplateStudioValue['layers'] {
 	const [visibility, setVisibility] = useState<Record<string, boolean>>(() =>
-		Object.fromEntries(slots.map((slot) => [slot.id, slot.visibility.defaultVisible])),
+		Object.fromEntries(editable.map((slot) => [slot.id, slot.visibility.defaultVisible])),
 	)
 	const setVisible = useCallback(
 		(slotId: string, visible: boolean) =>
 			setVisibility((current) => {
-				const slot = slots.find((candidate) => candidate.id === slotId)
+				const slot = editable.find((candidate) => candidate.id === slotId)
 				return slot?.access === 'editable' && slot.visibility.allowToggle
 					? { ...current, [slotId]: visible }
 					: current
 			}),
-		[slots],
+		[editable],
 	)
-	return useMemo(() => ({ visibility, setVisible }), [setVisible, visibility])
+	const [selected, setSelected] = useState<string | null>(null)
+	// 🔴 읽을 때 걸러 낸다 — 템플릿을 바꾸면 슬롯 id가 통째로 달라지고, 그때 남은 선택은
+	//    아무 컨트롤도 못 내면서 「고른 상태」로 보인다. 초기화 effect를 두는 대신 유도한다.
+	const selectedId = selected && all.some((slot) => slot.id === selected) ? selected : null
+	return useMemo(
+		() => ({ visibility, setVisible, selectedId, select: setSelected }),
+		[selectedId, setVisible, visibility],
+	)
 }
 
 function useTemplateBackgroundSession(
@@ -452,11 +479,14 @@ export function TemplateStudioProvider({
 	config,
 	template,
 	categoryTitle,
+	highlightColor = null,
 	children,
 }: {
 	config: TemplateStudioConfig
 	template: PublishedTemplateView
 	categoryTitle: string | null
+	/** 강조 색 — 서버가 `brand-colors`에서 찾아 내린다. 없으면 캔버스가 토큰으로 폴백한다. */
+	highlightColor?: string | null
 	children: ReactNode
 }) {
 	// 교체 후보 목록은 자산 브라우저가 열릴 때 가져온다 — 페이지는 현재 카테고리 이름 하나만 싣는다.
@@ -466,6 +496,12 @@ export function TemplateStudioProvider({
 	const navigation = useMemo<TemplateStudioValue['navigation']>(
 		() => ({ categoryTitle, browse: templateBrowse }),
 		[categoryTitle, templateBrowse],
+	)
+	// 사이드바가 만지는 섹션. 편집 값이 아니라 표현 상태이므로 compose에도 export에도 안 들어간다.
+	const [focusTarget, setFocusTarget] = useState<TemplateFocusTarget | null>(null)
+	const focus = useMemo<TemplateStudioValue['focus']>(
+		() => ({ target: focusTarget, set: setFocusTarget, color: highlightColor }),
+		[focusTarget, highlightColor],
 	)
 	const previewRef = useRef<HTMLDivElement>(null)
 	const graphicFrameRef = useRef<(() => string) | null>(null)
@@ -490,7 +526,7 @@ export function TemplateStudioProvider({
 	const text = useTemplateTextSession(config, textSlots, html, previewRef)
 	const images = useTemplateImageSession(config, imageSlots)
 	const vectors = useTemplateVectorSession(vectorSlots)
-	const layers = useTemplateLayerSession(editableSlots)
+	const layers = useTemplateLayerSession(editableSlots, slots)
 	const background = useTemplateBackgroundSession(config, backgroundSlot)
 	const deferredTextColor = useDeferredValue(text.color)
 	const deferredImageStates = useDeferredValue(images.states)
@@ -537,21 +573,56 @@ export function TemplateStudioProvider({
 			templateControllerValues(config, textSlots, text.values, text.color, background.state),
 		[background.state, config, text.color, text.values, textSlots],
 	)
-	const artifact = useCallback((): TemplateRasterArtifact => {
-		const graphicFrame =
-			background.state.type === 'graphic' ? graphicFrameRef.current?.() : undefined
-		return createTemplateRasterArtifact({
-			height,
-			html: graphicFrame
-				? composeTemplateHtml(
-						composedHtml,
-						{},
-						{ canvasBackground: { imageUrl: graphicFrame } },
-					)
-				: composedHtml,
-			width,
-		})
-	}, [background.state.type, composedHtml, height, width])
+	/**
+	 * 내보내기용 합성 HTML. 배경이 graphic이면 셰이더 캔버스를 그 시점의 한 장으로 굳혀 판의 배경
+	 * 이미지로 얹는다 — `composedHtml`은 미리보기용이라 캔버스 자리를 transparent로 비워 둔다.
+	 *
+	 * 🔴 **래스터와 벡터가 같은 HTML을 쓴다.** 예전에는 벡터만 이걸 건너뛰었고(「래스터 프레임이 판
+	 *    전체를 이미지로 덮어 인쇄용 벡터의 목적을 없앤다」), 그 결과 PDF·SVG에서 배경이 통째로
+	 *    사라졌다. 거짓 이항대립이었다 — 셰이더 그라디언트는 원리적으로 벡터가 될 수 없고, 벡터의
+	 *    목적(글자·로고가 선명한 것)은 전경이 지킨다. 조용히 없어지는 쪽이 훨씬 나쁘다.
+	 * 🔑 정지 이미지 계열(png·jpeg·tiff·pdf·svg)이 이걸 공유한다. MP4만 프레임마다 셰이더를 다시
+	 *    그려야 하므로 `videoArtifact`가 따로 합성한다.
+	 */
+	const exportHtml = useCallback((): string => {
+		if (background.state.type !== 'graphic') return composedHtml
+		// 🔴 **내보내기는 미리보기와 같은 조건으로 판단한다.** 캔버스는 고른 그래픽 설정이 있을 때만
+		//    셰이더를 그리므로(`template-canvas`의 `graphicConfig &&`), 목록이 비었거나 id가 안 맞으면
+		//    화면에도 그래픽이 없다. 그때 아래 가드가 걸리면 **모든 형식의 내보내기가 영구 차단된다** —
+		//    창작자가 고칠 방법이 없는 「막힌 실패」다. 그릴 것이 없으면 화면처럼 그래픽 없이 낸다.
+		const selected = background.graphicConfigs.some(
+			(candidate) => candidate.id === background.state.graphicConfigId,
+		)
+		if (!selected) return composedHtml
+		// 🔴 캡처가 등록되기 전에 내보내면 배경이 **조용히 빠진 판**이 나간다 — `composedHtml`은
+		//    캔버스 자리를 transparent로 비워 두기 때문이다. 창작자가 스스로 고칠 수 있는 사유이므로
+		//    거부하고 알린다(`useExport`가 이 message를 화면에 그대로 띄운다).
+		const graphicFrame = graphicFrameRef.current?.()
+		if (!graphicFrame) {
+			throw new Error('그래픽 배경 미리보기가 준비된 뒤 다시 시도해 주세요.')
+		}
+		return composeTemplateHtml(
+			composedHtml,
+			{},
+			{ canvasBackground: { imageUrl: graphicFrame } },
+		)
+	}, [background.graphicConfigs, background.state, composedHtml])
+	const artifact = useCallback(
+		(): TemplateRasterArtifact =>
+			createTemplateRasterArtifact({ height, html: exportHtml(), width }),
+		[exportHtml, height, width],
+	)
+	const vectorArtifact = useCallback(
+		() =>
+			createTemplateVectorArtifact({
+				height,
+				html: exportHtml(),
+				// 레이어 패널과 같은 정본을 읽는다 — 화면의 묶음과 PDF의 그룹이 갈라지지 않는다.
+				nodeLayers: mapTemplateNodeLayers(config.template.slots),
+				width,
+			}),
+		[config.template.slots, exportHtml, height, width],
+	)
 	// 배경이 graphic이어도 video artifact를 내지 않는 runtime이 있다(forward-straight는 vector·raster뿐).
 	// 타입만 보고 MP4를 Video 경로로 돌리면 producer가 던진다 — 선언을 보고 정적 MP4로 떨어뜨린다.
 	const supportsBackgroundVideo =
@@ -587,9 +658,11 @@ export function TemplateStudioProvider({
 			vectors,
 			layers,
 			background,
+			focus,
 			canvas: {
 				html: composedHtml,
 				artifact,
+				vectorArtifact,
 				videoArtifact: supportsBackgroundVideo ? videoArtifact : null,
 				previewRef,
 				registerGraphicFrame,
@@ -605,12 +678,14 @@ export function TemplateStudioProvider({
 			sampleImages,
 			config,
 			controllerValues,
+			focus,
 			images,
 			layers,
 			navigation,
 			registerGraphicFrame,
 			registerGraphicVideo,
 			text,
+			vectorArtifact,
 			vectors,
 			videoArtifact,
 		],

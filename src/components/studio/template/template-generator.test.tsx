@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import userEvent from '@testing-library/user-event'
 import { type ComponentProps, useEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { TemplateLayerPanel } from '@/components/studio/sidebar/template-layer-panel'
 import { TemplateSidebar } from '@/components/studio/sidebar/template-sidebar'
 import type {
 	GraphicRuntimeManifest,
@@ -12,14 +13,22 @@ import {
 	resolveGraphicStudioOutput,
 } from '@/features/graphic-generation/domain/graphic-studio-manifest'
 import forwardStraightRuntimeManifest from '@/features/graphic-generation/graphic-runtimes/forward-straight/definition'
-import { CAMERA_AZIMUTHS, CAMERA_ELEVATIONS } from '@/features/image-generation/camera-control'
+import {
+	CAMERA_AZIMUTHS,
+	CAMERA_ELEVATIONS,
+} from '@/features/image-generation/domain/camera-control'
 import type { ImageStudioConfig } from '@/features/image-generation/domain/image-studio-config'
 import { useTemplateExport } from '@/features/studio-export/hooks/use-template-export'
+import type { TemplateSessionPatch } from '@/features/template-customization/domain/template-session-patch'
 import {
 	deriveTemplateStudioConfig,
 	type PublishedHtmlTemplate,
 } from '@/features/template-customization/domain/template-studio-config'
 import { useTemplateStudio } from '@/features/template-customization/hooks/use-template-studio'
+import {
+	TemplateAuthoringHandoffProvider,
+	useTemplateAuthoringHandoff,
+} from '@/features/template-customization/providers/template-authoring-handoff'
 import { TemplateStudioProvider } from '@/features/template-customization/providers/template-studio-provider'
 import type { TemplateRasterArtifactProducer } from '@/features/template-customization/runtime/template-runtime.client'
 import type { GetCreateNavigationOutput } from '@/features/template-customization/services/get-create-navigation.service'
@@ -36,6 +45,7 @@ const mocks = vi.hoisted(() => ({
 	resizeGraphicPreview: vi.fn(),
 	resizeObserverCallback: undefined as ResizeObserverCallback | undefined,
 	templateArtifact: undefined as TemplateRasterArtifactProducer | undefined,
+	templateVectorArtifact: undefined as (() => Promise<unknown>) | undefined,
 	updateGraphicPreview: vi.fn(),
 }))
 
@@ -112,6 +122,19 @@ const effectiveGraphicConfigs = graphicRuntimeManifests.map((manifest) => ({
 	output: resolveGraphicStudioOutput(manifest),
 }))
 
+/**
+ * 런타임을 이름으로 집는다.
+ *
+ * 🔴 `effectiveGraphicConfigs[0]`으로 집으면 카탈로그가 늘거나 줄 때 조용히 다른 런타임을 가리킨다 —
+ *    Fluted 넷을 하나로 합치면서 첫 항목이 forward-straight에서 fluted-glass로 바뀌어 세 테스트가
+ *    함께 죽었다(2026-09-03).
+ */
+function graphicConfigOf(id: string) {
+	const found = effectiveGraphicConfigs.find((config) => config.id === id)
+	if (!found) throw new Error(`그래픽 런타임 fixture가 없습니다: ${id}`)
+	return found
+}
+
 function TemplateGenerator({
 	imageConfigs: providedImageConfigs = imageConfigs,
 	graphicConfigs: providedGraphicConfigs = effectiveGraphicConfigs,
@@ -161,6 +184,22 @@ function FeatureMutationProbe() {
 	)
 }
 
+/** 챗 자리를 대신해 편집안을 통로에 밀어 넣는다 — 실제 챗은 이 `send`를 부른다. */
+function AuthoringProbe({
+	templateId,
+	patch,
+}: {
+	templateId: number
+	patch: TemplateSessionPatch
+}) {
+	const { send } = useTemplateAuthoringHandoff()
+	return (
+		<button type="button" onClick={() => send({ templateId, patch })}>
+			send patch
+		</button>
+	)
+}
+
 function GraphicMutationProbe() {
 	const { background } = useTemplateStudio()
 	return (
@@ -201,7 +240,14 @@ function TemplateOutputProbe() {
 }
 
 function TemplateSidebarTestBridge() {
-	return <TemplateSidebar exporting={useTestTemplateExport()} />
+	return (
+		<>
+			{/* 🔴 레이어 패널은 **좌측 패널**에 산다 — 컨트롤은 여기서 묶음을 고른 그때만 나오므로,
+			    사이드바만 세운 테스트는 아무 컨트롤도 못 본다. 미리보기 카드는 좌측 소관이라 뺀다. */}
+			<TemplateLayerPanel />
+			<TemplateSidebar exporting={useTestTemplateExport()} />
+		</>
+	)
 }
 
 function useTestTemplateExport() {
@@ -256,16 +302,23 @@ function GraphicCaptureProbe() {
 	const { background, canvas } = useTemplateStudio()
 	useEffect(() => {
 		mocks.templateArtifact = canvas.artifact
+		mocks.templateVectorArtifact = canvas.vectorArtifact
 		canvas.registerGraphicFrame(mocks.captureGraphicFrame)
 		return () => {
 			mocks.templateArtifact = undefined
+			mocks.templateVectorArtifact = undefined
 			canvas.registerGraphicFrame(null)
 		}
 	}, [canvas])
 	return (
-		<button type="button" onClick={() => background.selectType('graphic')}>
-			select graphic for export
-		</button>
+		<>
+			<button type="button" onClick={() => background.selectType('graphic')}>
+				select graphic for export
+			</button>
+			<button type="button" onClick={() => canvas.registerGraphicFrame(null)}>
+				unregister graphic frame
+			</button>
+		</>
 	)
 }
 
@@ -299,6 +352,22 @@ function ImageRaceProbe() {
 			</button>
 		</>
 	)
+}
+
+/**
+ * 컨트롤은 **레이어를 고른 그때만** 나온다(사용자 지시, 2026-09-10) — 슬롯 컨트롤을 보는
+ * 테스트는 먼저 레이어 패널에서 그 레이어를 고른다.
+ */
+/**
+ * 레이어 패널에서 **레이어**를 고른다 — 컨트롤은 고른 그때만 나온다(사용자 지시, 2026-09-10).
+ * 🔴 묶음 머리글(Text·Image·CI)은 클릭되지 않는다 — `layer-row`(button)만 고를 수 있고,
+ *    배경은 하위가 없어 자기 자신이 잎이다.
+ */
+function selectLayer(label: string) {
+	const rows = screen.getAllByRole('button', { name: label })
+	const row = rows.find((candidate) => candidate.dataset.slot === 'layer-row')
+	if (!row) throw new Error(`레이어 행을 찾지 못했습니다: ${label}`)
+	fireEvent.click(row)
 }
 
 describe('TemplateGenerator', () => {
@@ -344,10 +413,11 @@ describe('TemplateGenerator', () => {
 			'lg:overflow-hidden',
 		)
 		expect(container.querySelector('[data-slot="studio-sidebar"]')).not.toBeNull()
-		const header = container.querySelector('[data-slot="controller-header"]')
-		expect(header).not.toBeNull()
+		// 🔑 페이지 선택은 **왼쪽 패널의 위 블록**이 소유한다 — 오른쪽 헤더가 아니다.
+		const left = container.querySelector('[data-slot="studio-left-panel"]')
+		expect(left).not.toBeNull()
 		expect(
-			within(header as HTMLElement).getByRole('button', { name: '템플릿 변경' }),
+			within(left as HTMLElement).getByRole('button', { name: '템플릿 변경' }),
 		).toBeInTheDocument()
 
 		fireEvent.click(screen.getByRole('button', { name: '내보내기' }))
@@ -402,6 +472,76 @@ describe('TemplateGenerator', () => {
 		})
 	})
 
+	/**
+	 * 🔴 벡터도 그래픽 배경을 굳혀 실어야 한다. 예전에는 벡터만 이걸 건너뛰어(「래스터 프레임이 판
+	 * 전체를 이미지로 덮어 인쇄용 벡터의 목적을 없앤다」) PDF·SVG에서 배경이 통째로 사라졌다.
+	 * 래스터와 벡터가 **같은 합성 HTML**을 쓰는 것이 그 재발을 막는 불변식이다.
+	 */
+	it('Vector Artifact producer도 export 실행 시점의 그래픽 프레임을 합성한다', () => {
+		mocks.captureGraphicFrame.mockReturnValue('/graphic-frame.png')
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				template={template}
+				categoryTitle="카드"
+			>
+				<GraphicCaptureProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic for export' }))
+		mocks.captureGraphicFrame.mockClear()
+		void mocks.templateVectorArtifact?.()
+
+		expect(mocks.captureGraphicFrame).toHaveBeenCalledTimes(1)
+	})
+
+	/**
+	 * 🔴 **내보내기는 미리보기와 같은 조건으로 판단한다.** 캔버스는 고른 그래픽 설정이 있을 때만
+	 * 셰이더를 그리므로, 목록이 비면 화면에도 그래픽이 없다. 그때 프레임을 요구하면 **모든 형식의
+	 * 내보내기가 영구 차단된다** — 창작자가 고칠 방법이 없는 「막힌 실패」다.
+	 */
+	it('그릴 그래픽이 없으면 차단하지 않는다', () => {
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateStudioConfig(template, imageConfigs, [])}
+				template={template}
+				categoryTitle="카드"
+			>
+				<GraphicCaptureProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic for export' }))
+		fireEvent.click(screen.getByRole('button', { name: 'unregister graphic frame' }))
+
+		expect(() => mocks.templateArtifact?.()).not.toThrow()
+	})
+
+	/**
+	 * 🔴 캡처가 등록되기 전에 내보내면 배경이 조용히 빠진 판이 나간다. 창작자가 「미리보기를 기다렸다
+	 * 다시」로 고칠 수 있는 사유이므로 거부하고 알린다 — 조용한 누락이 이 작업의 고치는 대상이다.
+	 */
+	it('그래픽 프레임이 없으면 내보내기를 거부한다', () => {
+		render(
+			<TemplateStudioProvider
+				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				template={template}
+				categoryTitle="카드"
+			>
+				<GraphicCaptureProbe />
+			</TemplateStudioProvider>,
+		)
+
+		fireEvent.click(screen.getByRole('button', { name: 'select graphic for export' }))
+		fireEvent.click(screen.getByRole('button', { name: 'unregister graphic frame' }))
+
+		// 🔑 두 producer 모두 `exportHtml()`을 본문 진입 전에 평가하므로 **동기로** 던진다.
+		//    `useExport`의 try가 그것을 잡아 message를 화면에 띄운다.
+		expect(() => mocks.templateArtifact?.()).toThrow('미리보기가 준비된 뒤')
+		expect(() => mocks.templateVectorArtifact?.()).toThrow('미리보기가 준비된 뒤')
+	})
+
 	it('출력 캔버스 비율을 작업 영역에 맞춰 프리뷰에 반영한다', () => {
 		const { container } = render(<TemplateGenerator categoryTitle="카드" template={template} />)
 
@@ -449,6 +589,8 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
+		selectLayer('배경')
+
 		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '파스텔 배경' } })
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
@@ -478,6 +620,8 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
+		selectLayer('배경')
+
 		await user.click(screen.getByRole('radio', { name: 'Preset' }))
 
 		expect(screen.getByRole('radio', { name: 'Preset' })).toHaveAttribute(
@@ -503,6 +647,8 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
+
+		selectLayer('배경')
 
 		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '파스텔 배경' } })
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
@@ -545,6 +691,8 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
+		selectLayer('배경')
+
 		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '원본 이미지' } })
 		fireEvent.click(screen.getByRole('button', { name: '이미지 생성' }))
 
@@ -578,6 +726,8 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
+
+		selectLayer('배경')
 		const slot = container.querySelector<HTMLElement>('[data-slot="image-slot-input"]')
 		expect(slot).not.toBeNull()
 		if (!slot) return
@@ -607,6 +757,8 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
+		selectLayer('Title')
+
 		// 만지기 전 — 저작 색 유지.
 		expect(container.innerHTML).not.toContain('rgb(255, 0, 0)')
 
@@ -616,6 +768,287 @@ describe('TemplateGenerator', () => {
 		expect(
 			preview?.querySelectorAll('p[style*="rgb(255, 0, 0)"], p[style*="#ff0000"]').length,
 		).toBe(2)
+	})
+
+	it('챗이 보낸 편집안이 캔버스까지 반영된다 — 두 트리를 잇는 유일한 통로다', () => {
+		const { container } = render(
+			<TemplateAuthoringHandoffProvider>
+				<AuthoringProbe templateId={1} patch={{ text: { t1: '바뀐 제목' } }} />
+				<TemplateGenerator
+					categoryTitle="카드"
+					template={{
+						...template,
+						html: '<p data-node-id="t1">TITLE</p>',
+						nodeConfigs: { t1: { input: { label: 'Title' } } },
+					}}
+				/>
+			</TemplateAuthoringHandoffProvider>,
+		)
+		const canvas = () => container.querySelector('[data-slot="studio-workspace-canvas"]')
+		expect(canvas()?.textContent).toContain('TITLE')
+
+		fireEvent.click(screen.getByRole('button', { name: 'send patch' }))
+		expect(canvas()?.textContent).toContain('바뀐 제목')
+	})
+
+	it('🔴 이미지 슬롯 프롬프트는 사이드바를 거치지 않고 곧바로 생성까지 돈다', () => {
+		mocks.requestImageGeneration.mockResolvedValue({
+			generatedImages: [{ id: 9, url: '/api/generated-images/file/x.png' }],
+		})
+		render(
+			<TemplateAuthoringHandoffProvider>
+				<AuthoringProbe
+					templateId={1}
+					patch={{ images: { '1:1': { prompt: '컨테이너선 라인아트' } } }}
+				/>
+				<TemplateGenerator
+					categoryTitle="카드"
+					template={{
+						...template,
+						html: '<div data-node-id="1:1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>',
+						nodeConfigs: { '1:1': { imageInput: { profileId: 7 } } },
+					}}
+				/>
+			</TemplateAuthoringHandoffProvider>,
+		)
+		expect(mocks.requestImageGeneration).not.toHaveBeenCalled()
+
+		fireEvent.click(screen.getByRole('button', { name: 'send patch' }))
+
+		// 🔑 프롬프트를 인자로 넘기므로 세션 상태 반영을 기다리지 않고 같은 tick에 돈다.
+		expect(mocks.requestImageGeneration).toHaveBeenCalledWith(
+			expect.objectContaining({ prompt: '컨테이너선 라인아트', profileId: 7 }),
+		)
+	})
+
+	it('🔴 다른 템플릿용 편집안은 집어 가지 않는다 — 슬롯 id가 겹치면 조용히 엉뚱한 값이 든다', () => {
+		const { container } = render(
+			<TemplateAuthoringHandoffProvider>
+				<AuthoringProbe templateId={999} patch={{ text: { t1: '다른 템플릿' } }} />
+				<TemplateGenerator
+					categoryTitle="카드"
+					template={{
+						...template,
+						html: '<p data-node-id="t1">TITLE</p>',
+						nodeConfigs: { t1: { input: { label: 'Title' } } },
+					}}
+				/>
+			</TemplateAuthoringHandoffProvider>,
+		)
+		fireEvent.click(screen.getByRole('button', { name: 'send patch' }))
+		const canvas = container.querySelector('[data-slot="studio-workspace-canvas"]')
+		expect(canvas?.textContent).toContain('TITLE')
+		expect(canvas?.textContent).not.toContain('다른 템플릿')
+	})
+
+	/**
+	 * 🔴 레이어 패널은 **일러스트레이터·피그마처럼 모든 레이어를 평평히 보여 주지 않는다.**
+	 * text·image·CI·background의 몇 개의 큰 묶음으로 묶고 그 아래에 레이어 이름을 늘어놓는다
+	 * (사용자 지시, 2026-09-10).
+	 * 🔴 **묶음 머리글은 클릭되지 않는다 — hover만 된다.** 고르는 것은 자식이다.
+	 * 🔴 묶음 순서는 고정이고 배경이 마지막이다. 묶음은 겹침에서 한 자리를 갖지 않으므로(텍스트와
+	 * 이미지가 z에서 엇갈린다) 겹침 순서로 정렬할 수 없다 — 대신 모든 템플릿에서 목록이 같다.
+	 */
+	it('레이어 목록이 묶음 머리글과 그 하위 이름으로 나온다', () => {
+		const { container } = render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html:
+						'<div data-node-id="i1" data-figma-type="FRAME" data-name="배경" data-image-carrier=""></div>' +
+						'<p data-node-id="t1">TITLE</p><p data-node-id="t2">YEARS</p>' +
+						'<p data-node-id="t3">SLOGAN</p>',
+					nodeConfigs: {
+						i1: { imageInput: { profileId: 7 } },
+						t1: { input: { label: 'Title' } },
+						t2: { input: { label: 'Years' } },
+						t3: { input: { label: 'Slogan' } },
+					},
+				}}
+			/>,
+		)
+		const panel = container.querySelector('[data-slot="studio-left-panel"]') as HTMLElement
+		const textOf = (selector: string) =>
+			Array.from(panel.querySelectorAll(selector), (element) => element.textContent)
+
+		// 머리글은 묶음 셋 — 개수는 여럿일 때만 붙는다(Text만).
+		expect(textOf('[data-slot="layer-group-header"]')).toEqual(['Text3', 'Image'])
+		// 고를 수 있는 것은 자식과 배경(하위가 없어 자기 자신이 잎)뿐이다.
+		expect(textOf('[data-slot="layer-row"]')).toEqual([
+			'Title',
+			'Years',
+			'Slogan',
+			'배경',
+			'Background',
+		])
+	})
+
+	it('🔴 묶음 머리글에 hover하면 그 자식이 모두 함께 hover된다', () => {
+		const { container } = render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html: '<p data-node-id="t1">TITLE</p><p data-node-id="t2">YEARS</p>',
+					nodeConfigs: {
+						t1: { input: { label: 'Title' } },
+						t2: { input: { label: 'Years' } },
+					},
+				}}
+			/>,
+		)
+		const panel = container.querySelector('[data-slot="studio-left-panel"]') as HTMLElement
+		const header = panel.querySelector('[data-slot="layer-group-header"]') as HTMLElement
+		const hoveredRows = () =>
+			Array.from(
+				panel.querySelectorAll('[data-slot="layer-row"][data-group-hovered]'),
+				(row) => row.textContent,
+			)
+
+		expect(hoveredRows()).toEqual([])
+		fireEvent.pointerEnter(header)
+		// 🔴 자식 **전부**다 — CSS group-hover를 자식에 얹으면 자식 하나에 hover할 때도 켜진다.
+		expect(hoveredRows()).toEqual(['Title', 'Years'])
+		fireEvent.pointerLeave(header)
+		expect(hoveredRows()).toEqual([])
+	})
+
+	it('레이어를 고르면 그 레이어의 컨트롤만 나온다 — 같은 묶음의 형제도 걸러진다', () => {
+		const { container } = render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html:
+						'<div data-node-id="i1" data-figma-type="FRAME" data-name="배경 A" data-image-carrier=""></div>' +
+						'<div data-node-id="i2" data-figma-type="FRAME" data-name="배경 B" data-image-carrier=""></div>',
+					nodeConfigs: {
+						i1: { imageInput: { profileId: 7 } },
+						i2: { imageInput: { profileId: 7 } },
+					},
+				}}
+			/>,
+		)
+		const titles = () =>
+			Array.from(
+				container.querySelectorAll(
+					'[data-slot="studio-sidebar"] [data-slot="controller-group"]',
+				),
+			).map((group) => group.querySelector('span')?.textContent?.trim())
+
+		expect(titles()).toEqual([])
+		selectLayer('배경 B')
+		// 🔑 제목의 번호는 슬롯 전체에서의 자리다 — 걸러진 뒤에도 2번이 2번으로 남는다.
+		expect(titles()).toContain('Image 2')
+		expect(titles()).not.toContain('Image 1')
+	})
+
+	/**
+	 * 🔴 **평소에는 컨트롤이 하나도 없고, 레이어를 고른 그때만 그 레이어의 컨트롤이 나온다**
+	 * (사용자 지시, 2026-09-10).
+	 * 🔴 선택은 `focus`와 별개다. `focus`는 「지금 만지는 자리」라 입력칸에 커서가 들어가면
+	 * 섹션(`section:text`)으로 바뀐다 — 그것을 선택으로 읽으면 **글자를 치는 순간 컨트롤이
+	 * 통째로 사라진다.** 그래서 글자를 친 뒤에도 남아 있는지를 함께 잠근다.
+	 */
+	it('컨트롤은 묶음을 고른 그때만 나오고, 값을 만져도 풀리지 않는다', () => {
+		const { container } = render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html: '<p data-node-id="t1">TITLE</p><p data-node-id="t2">YEARS</p>',
+					nodeConfigs: {
+						t1: { input: { label: 'Title' } },
+						t2: { input: { label: 'Years' } },
+					},
+				}}
+			/>,
+		)
+		const titles = () =>
+			Array.from(container.querySelectorAll('[data-slot="controller-group"]')).map((group) =>
+				group.querySelector('span')?.textContent?.trim(),
+			)
+
+		// 🔴 아무것도 고르지 않았으면 레이어 목록만 있다.
+		expect(titles()).toContain('Layers')
+		expect(titles()).not.toContain('Text')
+
+		// Text 묶음을 고르면 텍스트 슬롯이 **함께** 나온다 — 선택 단위가 묶음이라서다.
+		// 🔴 캔버스가 같은 컨테이너에 있어 판의 글자까지 잡힌다 — 사이드바로 좁혀서 본다.
+		selectLayer('Title')
+		const sidebar = () =>
+			container.querySelector('[data-slot="studio-sidebar"]')?.textContent ?? ''
+		expect(titles()).toContain('Text')
+		expect(sidebar()).toContain('YEARS')
+		expect(sidebar()).toContain('TITLE')
+
+		// 🔴 그 컨트롤을 만져도 선택이 풀리지 않는다 — `focus`를 선택으로 읽으면 여기서 사라진다.
+		const input = screen.getByDisplayValue('YEARS')
+		fireEvent.focus(input)
+		fireEvent.change(input, { target: { value: 'YEARS 2' } })
+		expect(titles()).toContain('Text')
+		expect(sidebar()).toContain('YEARS 2')
+
+		// 같은 묶음을 다시 누르면 선택이 풀리고 컨트롤도 사라진다.
+		selectLayer('Title')
+		expect(titles()).not.toContain('Text')
+	})
+
+	it('섹션은 노드 개수와 무관하게 눌러서 활성화된다 — Text는 슬롯 여럿, Background는 노드 없음', () => {
+		const { container } = render(
+			<TemplateGenerator
+				categoryTitle="카드"
+				template={{
+					...template,
+					html: '<p data-node-id="t1">TITLE</p><p data-node-id="t2">YEARS</p>',
+					nodeConfigs: {
+						t1: { input: { label: 'Title' } },
+						t2: { input: { label: 'Years' } },
+					},
+				}}
+			/>,
+		)
+
+		const groups = () =>
+			Array.from(container.querySelectorAll('[data-slot="controller-group"]'))
+		const named = (title: string) =>
+			groups().find((group) => group.querySelector('span')?.textContent?.trim() === title)
+
+		// 🔴 Text와 Background는 이제 동시에 뜰 수 없다 — 한 번에 한 묶음만 고르므로 차례로 본다.
+		selectLayer('Title')
+		expect(named('Text')).not.toHaveAttribute('data-active')
+		// 🔴 전에는 이 둘이 활성화되지 않았다 — 대상이 슬롯 하나로 고정돼 있었다.
+		fireEvent.click(named('Text')?.querySelector('span') as Element)
+		expect(named('Text')).toHaveAttribute('data-active', 'true')
+
+		selectLayer('Background')
+		expect(named('Text')).toBeUndefined()
+		// 🔴 배경은 집을 노드가 없다 — 도화지를 집는다(`kind: 'canvas'`). 그래도 활성 면이 켜진다.
+		//    전에는 대상이 슬롯 하나로 고정돼 있어 이것이 안 됐다.
+		expect(named('Background')).toHaveAttribute('data-active', 'true')
+	})
+
+	it('Background 섹션은 노드가 아니라 도화지를 집고, 면 없이 테두리만 그린다', () => {
+		const { container } = render(<TemplateGenerator categoryTitle="카드" template={template} />)
+
+		selectLayer('Background')
+		const groups = Array.from(container.querySelectorAll('[data-slot="controller-group"]'))
+		const background = groups.find(
+			(group) => group.querySelector('span')?.textContent?.trim() === 'Background',
+		)
+		fireEvent.click(background?.querySelector('span') as Element)
+
+		const overlays = container.querySelectorAll<HTMLElement>(
+			'[data-slot="template-slot-highlight"]',
+		)
+		expect(overlays).toHaveLength(1)
+		// 캔버스 상자 그대로 — 잴 것이 없다(노드가 아니므로 getBoundingClientRect를 안 쓴다).
+		expect(overlays[0].style.width).toBe('400px')
+		expect(overlays[0].style.height).toBe('300px')
+		// 🔑 도화지 전체를 집을 때는 구별할 형제가 없다 — 면을 깔면 콘텐츠만 탁해진다.
+		expect(overlays[0].style.backgroundColor).toBe('')
+		expect(overlays[0].style.border).toContain('solid')
 	})
 
 	it('사용자 Line Color가 이미지 교체 시 colorize의 line을 갈아끼운다', async () => {
@@ -634,6 +1067,8 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
+
+		selectLayer('배경')
 
 		fireEvent.change(screen.getByLabelText('Line Color 색상 선택'), {
 			target: { value: '#00ff00' },
@@ -675,6 +1110,8 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
+
+		selectLayer('배경')
 
 		await user.click(screen.getByRole('radio', { name: 'Preset' }))
 		await user.click(await screen.findByRole('button', { name: '샘플 이미지 선택' }))
@@ -731,6 +1168,8 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
+		selectLayer('배경')
+
 		await user.click(screen.getByRole('radio', { name: 'Preset' }))
 		await user.click(await screen.findByRole('button', { name: '샘플 이미지 선택' }))
 
@@ -765,8 +1204,12 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
+		selectLayer('배경')
+
 		// 생성 전 — Transform 섹션은 닫힌 채 잠긴다(내용 미노출 + 트리거 비활성).
-		expect(screen.getByRole('button', { name: 'Image Transform' })).toBeDisabled()
+		expect(
+			screen.getByRole('button', { name: 'Image Transform 섹션 접고 펴기' }),
+		).toBeDisabled()
 		expect(screen.queryByRole('slider', { name: '이미지 위치' })).toBeNull()
 
 		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '파스텔 배경' } })
@@ -776,7 +1219,7 @@ describe('TemplateGenerator', () => {
 		)
 
 		// 생성 후 — 잠금이 풀리며 저장된 열림 상태(defaultOpen)로 펼쳐진다.
-		expect(screen.getByRole('button', { name: 'Image Transform' })).toBeEnabled()
+		expect(screen.getByRole('button', { name: 'Image Transform 섹션 접고 펴기' })).toBeEnabled()
 		const pad = screen.getByRole('slider', { name: '이미지 위치' })
 		fireEvent.keyDown(pad, { key: 'ArrowRight' })
 		// 패드 0.05 × (400/2) = 10px — 어드민과 같은 compose 포맷으로 prepend된다.
@@ -798,6 +1241,7 @@ describe('TemplateGenerator', () => {
 		const canvasOf = () =>
 			container.querySelector('[data-slot="studio-workspace-canvas"] [data-node-id="1:1"]')
 
+		selectLayer('Background')
 		// 만지기 전 — 저작 배경 유지.
 		expect((canvasOf() as HTMLElement).style.backgroundColor).toBe('rgb(0, 40, 10)')
 
@@ -823,6 +1267,7 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
+		selectLayer('Background')
 		screen.getByRole('combobox', { name: 'Type' }).focus()
 		await user.keyboard('{ArrowDown}')
 		await user.click(screen.getByRole('option', { name: 'Image' }))
@@ -859,6 +1304,7 @@ describe('TemplateGenerator', () => {
 			/>,
 		)
 
+		selectLayer('Background')
 		screen.getByRole('combobox', { name: 'Type' }).focus()
 		await user.keyboard('{ArrowDown}')
 		await user.click(screen.getByRole('option', { name: 'Image' }))
@@ -879,6 +1325,12 @@ describe('TemplateGenerator', () => {
 		const { container } = render(
 			<TemplateGenerator
 				categoryTitle="카드"
+				// 🔴 첫 항목이 기본으로 잡힌다 — Fluted Glass가 첫 항목이면 그것으로 「바꾸기」가
+				//    무변화가 되어 재마운트를 확인할 수 없다.
+				graphicConfigs={[
+					graphicConfigOf('forward-straight'),
+					graphicConfigOf('fluted-glass'),
+				]}
 				template={{
 					...template,
 					html: '<div data-node-id="1:1" data-figma-type="FRAME" style="width:400px;height:300px;background-color:rgb(0,40,10)"></div>',
@@ -890,6 +1342,7 @@ describe('TemplateGenerator', () => {
 				'[data-slot="studio-workspace-canvas"] [data-node-id="1:1"]',
 			) as HTMLElement
 
+		selectLayer('Background')
 		screen.getByRole('combobox', { name: 'Type' }).focus()
 		await user.keyboard('{ArrowDown}')
 		await user.click(screen.getByRole('option', { name: 'Graphic' }))
@@ -903,7 +1356,7 @@ describe('TemplateGenerator', () => {
 
 		screen.getByRole('combobox', { name: 'Graphic Type' }).focus()
 		await user.keyboard('{ArrowDown}')
-		await user.click(screen.getByRole('option', { name: 'Radial Fluted Glass' }))
+		await user.click(screen.getByRole('option', { name: 'Fluted Glass' }))
 		await waitFor(() => expect(mocks.mountGraphicPreview).toHaveBeenCalledTimes(2))
 		expect(mocks.destroyGraphicPreview).toHaveBeenCalledOnce()
 		fireEvent.keyDown(screen.getByRole('slider', { name: '광선 강도' }), {
@@ -957,6 +1410,8 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
+
+		selectLayer('배경')
 		expect(
 			pinned.container.querySelector('[data-slot="image-slot-input"]')?.textContent,
 		).toContain('고정된 이미지 프로파일을 사용할 수 없습니다.')
@@ -973,6 +1428,8 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
+
+		selectLayer('배경')
 		expect(screen.getByText('사용 가능한 이미지 프로파일이 없습니다.')).toBeInTheDocument()
 	})
 
@@ -988,6 +1445,8 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
+
+		selectLayer('배경')
 
 		expect(screen.getByText('16:9')).toBeInTheDocument()
 		fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: '파스텔 배경' } })
@@ -1019,6 +1478,8 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
+
+		selectLayer('배경')
 
 		if (availability === 'readonly') {
 			expect(screen.getByText('고정 프롬프트')).toBeInTheDocument()
@@ -1071,7 +1532,9 @@ describe('TemplateGenerator', () => {
 		expect(forwardStraightRuntimeManifest.artifacts).not.toHaveProperty('video')
 		render(
 			<TemplateStudioProvider
-				config={deriveTemplateStudioConfig(template, imageConfigs, effectiveGraphicConfigs)}
+				config={deriveTemplateStudioConfig(template, imageConfigs, [
+					graphicConfigOf('forward-straight'),
+				])}
 				template={template}
 				categoryTitle="카드"
 			>
@@ -1108,6 +1571,8 @@ describe('TemplateGenerator', () => {
 				<ImageRaceProbe />
 			</TemplateStudioProvider>,
 		)
+
+		selectLayer('배경')
 
 		fireEvent.click(screen.getByRole('button', { name: 'start slot generation' }))
 		expect(screen.getByTestId('slot-generating')).toHaveTextContent('true')
@@ -1166,6 +1631,8 @@ describe('TemplateGenerator', () => {
 				}}
 			/>,
 		)
+
+		selectLayer('배경')
 		const slot = container.querySelector<HTMLElement>('[data-slot="image-slot-input"]')
 		expect(slot).not.toBeNull()
 		if (!slot) return
@@ -1276,14 +1743,14 @@ describe('TemplateGenerator', () => {
 		first.unmount()
 
 		const secondary = {
-			...effectiveGraphicConfigs[0],
+			...graphicConfigOf('forward-straight'),
 			id: 'secondary',
 			name: 'Secondary',
 		} satisfies GraphicStudioConfig
 		render(
 			<TemplateStudioProvider
 				config={deriveTemplateStudioConfig(template, imageConfigs, [
-					effectiveGraphicConfigs[0],
+					graphicConfigOf('forward-straight'),
 					secondary,
 				])}
 				template={template}

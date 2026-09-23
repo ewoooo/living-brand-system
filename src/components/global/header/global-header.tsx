@@ -19,12 +19,14 @@ type GuidelineSearchChapter = GetGuidelineNavigationOutput['chapters'][number]
 
 type NavigationHeaderUpdateKey =
 	| 'assets'
+	| 'graph'
 	| 'graphic'
 	| 'guideline'
 	| 'image'
 	| 'mcp'
 	| 'review'
 	| 'template'
+	| 'usage'
 
 type NavigationHeaderUpdates = Partial<Record<NavigationHeaderUpdateKey, boolean>>
 
@@ -58,16 +60,16 @@ function HeaderGuidelineSearchDialog({
 					<CommandEmpty>검색 결과가 없습니다.</CommandEmpty>
 					{chapters.map((chapter) => (
 						<CommandGroup heading={chapter.title} key={chapter.id}>
-							{chapter.sections.map((section) => (
+							{chapter.topics.map((topic) => (
 								<CommandItem
-									key={section.id}
-									value={`${chapter.title} ${section.title}`}
+									key={topic.id}
+									value={`${chapter.title} ${topic.title}`}
 									onSelect={() => {
 										onOpenChange(false)
-										router.push(section.href)
+										router.push(topic.href)
 									}}
 								>
-									<span>{section.title}</span>
+									<span>{topic.title}</span>
 								</CommandItem>
 							))}
 						</CommandGroup>
@@ -124,6 +126,12 @@ export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderPr
 			href: routes.studio.graphic,
 			label: 'Graphic',
 		},
+		{
+			current: isCurrentPath(pathname, routes.studio.graph),
+			hasUpdate: updates.graph,
+			href: routes.studio.graph,
+			label: 'Graph',
+		},
 	] as const
 	const studioSettingItems = [
 		{
@@ -143,6 +151,12 @@ export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderPr
 			hasUpdate: updates.assets,
 			href: routes.studio.assets,
 			label: 'Assets',
+		},
+		{
+			current: isCurrentPath(pathname, routes.studio.usage),
+			hasUpdate: updates.usage,
+			href: routes.studio.usage,
+			label: 'Usage',
 		},
 	] as const
 	const closeCompact = () => setCompactOpen(false)
