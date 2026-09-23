@@ -5,6 +5,8 @@ import { SidebarProvider } from '@/components/ui/sidebar'
 import { GlobalHeader, type NavigationHeaderUpdates } from './global-header'
 
 let pathname = ''
+// 헤더는 마운트 때 /api/users/me를 묻는다 — 테스트가 그 답을 정한다.
+let sessionUser: { email: string } | null = null
 const push = vi.fn()
 
 vi.stubGlobal(
@@ -45,6 +47,11 @@ describe('GlobalHeader', () => {
 		pathname = '/studio/graphic'
 		push.mockReset()
 		localStorage.clear()
+		sessionUser = null
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => ({ json: async () => ({ user: sessionUser }), ok: true })),
+		)
 		vi.stubGlobal(
 			'matchMedia',
 			vi.fn(() => ({
@@ -57,7 +64,21 @@ describe('GlobalHeader', () => {
 
 	afterEach(cleanup)
 
-	it('메가 메뉴 없이 직접 링크와 current·update 상태를 표시한다', () => {
+	it('로그인하면 Log in 대신 계정 메뉴가 선다', async () => {
+		sessionUser = { email: 'someone@plus-ex.com' }
+		renderHeader()
+
+		const desktop = document.querySelector<HTMLElement>(
+			'[data-slot="navigation-header-desktop"]',
+		) as HTMLElement
+		// 🔑 Carbon: 헤더는 「로그인했는지」와 「어느 계정인지」를 드러낸다.
+		expect(
+			await within(desktop).findByRole('button', { name: /someone@plus-ex\.com/ }),
+		).toBeInTheDocument()
+		expect(within(desktop).queryByRole('link', { name: 'Log in' })).toBeNull()
+	})
+
+	it('메가 메뉴 없이 직접 링크와 current·update 상태를 표시한다', async () => {
 		renderHeader({ guideline: true, image: true })
 
 		const header = document.querySelector('[data-slot="navigation-header"]')
@@ -74,8 +95,8 @@ describe('GlobalHeader', () => {
 
 		// 🔴 이 단언이 「Payload 주소가 헤더에 노출되지 않는다」를 지키는 유일한 검사기다.
 		expect(
-			within(desktop as HTMLElement).getByRole('link', { name: 'Account' }),
-		).toHaveAttribute('href', '/account')
+			await within(desktop as HTMLElement).findByRole('link', { name: 'Log in' }),
+		).toHaveAttribute('href', '/login')
 		expect(within(desktop as HTMLElement).queryByRole('link', { name: 'Login' })).toBeNull()
 		expect(links.getByRole('link', { name: /Guideline/ })).toHaveAttribute('href', '/guideline')
 		expect(links.getByRole('link', { name: 'Template' })).toHaveAttribute(

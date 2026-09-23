@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { AccountMenu } from '@/components/auth/account-menu'
 import { NavigationHeader } from '@/components/global/header/navigation-header'
 import {
 	Command,
@@ -12,6 +13,7 @@ import {
 	CommandItem,
 	CommandList,
 } from '@/components/ui/command'
+import { useSession } from '@/features/auth/hooks/use-session'
 import type { GetGuidelineNavigationOutput } from '@/features/guideline/services/get-guideline-navigation.service'
 import { routes } from '@/lib/routes'
 
@@ -82,6 +84,7 @@ function HeaderGuidelineSearchDialog({
 
 export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderProps) {
 	const pathname = usePathname()
+	const session = useSession()
 	const [compactOpen, setCompactOpen] = useState(false)
 	const [searchOpen, setSearchOpen] = useState(false)
 
@@ -159,13 +162,13 @@ export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderPr
 			label: 'Usage',
 		},
 	] as const
-	// 🔴 데스크톱과 컴팩트가 같은 것을 두 번 그린다 — 한 상수로 묶어 한쪽만 고쳐지는 일을 막는다.
-	// 로그인 여부를 헤더가 알지 않는다: 비로그인으로 누르면 /account가 로그인으로 보내고 돌아온다.
-	// 그래야 루트 레이아웃이 세션을 읽지 않고, `/`와 `/guideline`의 정적 렌더가 유지된다.
-	const accountItem = {
-		current: isCurrentPath(pathname, routes.account),
-		href: routes.account,
-		label: 'Account',
+	// 🔴 데스크톱과 컴팩트가 같은 것을 두 번 그린다 — 한 자리로 묶어 한쪽만 고쳐지는 일을 막는다.
+	// 세션은 서버가 아니라 브라우저가 묻는다 — 루트 레이아웃이 세션을 읽으면 `/`와 `/guideline`의
+	// 정적 렌더가 깨지기 때문이다(docs/05). 모르는 동안(`unknown`)은 아무것도 그리지 않는다.
+	const loginItem = {
+		current: isCurrentPath(pathname, routes.login),
+		href: routes.login,
+		label: 'Log in',
 	} as const
 	const closeCompact = () => setCompactOpen(false)
 
@@ -173,7 +176,8 @@ export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderPr
 		<NavigationHeader.Root>
 			<NavigationHeader.Desktop>
 				<NavigationHeader.Start>
-					<NavigationHeader.Link {...accountItem} />
+					{session.status === 'in' && <AccountMenu email={session.email} />}
+					{session.status === 'out' && <NavigationHeader.Link {...loginItem} />}
 				</NavigationHeader.Start>
 				<NavigationHeader.Center aria-label="주요 메뉴">
 					<NavigationHeader.SymbolLink href={routes.home} />
@@ -251,12 +255,24 @@ export function GlobalHeader({ guidelineChapters, updates = {} }: GlobalHeaderPr
 								))}
 							</NavigationHeader.CompactLinkGroup>
 							<NavigationHeader.CompactLinkGroup className="pt-6">
-								<NavigationHeader.Link
-									{...accountItem}
-									className="justify-center bg-muted"
-									onClick={closeCompact}
-									surface="compact"
-								/>
+								{session.status === 'in' && (
+									<NavigationHeader.Link
+										className="justify-center bg-muted"
+										current={isCurrentPath(pathname, routes.account)}
+										href={routes.account}
+										label={session.email}
+										onClick={closeCompact}
+										surface="compact"
+									/>
+								)}
+								{session.status === 'out' && (
+									<NavigationHeader.Link
+										{...loginItem}
+										className="justify-center bg-muted"
+										onClick={closeCompact}
+										surface="compact"
+									/>
+								)}
 							</NavigationHeader.CompactLinkGroup>
 						</NavigationHeader.CompactContent>
 					</NavigationHeader.CompactBody>
