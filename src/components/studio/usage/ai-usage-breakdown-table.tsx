@@ -8,6 +8,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
+import { getStudioUsageUserRoute } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 import { type AiUsageAxis, aiUsageAxisLabel } from '@/modules/ai-usage/ai-usage-catalog'
 import type { AiUsageFold } from '@/modules/ai-usage/ai-usage-fold'
@@ -25,6 +26,7 @@ import { formatTokens, HEAD_CLASS, NUMBER_CLASS } from './ai-usage-format'
  * 🔴 바닥 총계는 보이는 행이 아니라 **자르기 전 전량**이다. 보이는 행을 더하면 상한에 걸리거나
  *    정렬이 바뀌는 순간 조용히 틀린 숫자가 된다.
  * 🔑 첫 열이 Link다 — 누르면 그 값이 필터 칩으로 붙고 KPI·스트립·표가 동시에 좁혀진다.
+ *    계정 축만 예외로 그 사람의 페이지로 나간다(권한 경계가 주소에 드러나야 하므로).
  */
 export function AiUsageBreakdownTable({
 	axis,
@@ -36,6 +38,14 @@ export function AiUsageBreakdownTable({
 	query: AiUsageQuery
 }) {
 	const filterKey = axis
+	// 🔴 계정 축의 값은 칩이 아니라 **그 사람의 페이지**로 간다 — 권한 경계가 주소에 드러나야 한다.
+	//    기간과 다른 칩은 그대로 들고 가고, 그 페이지에 없는 「계정」 축만 기본값으로 내린다.
+	const carried = { ...query.filters }
+	delete carried.user
+	const cellHref = (key: string | null) =>
+		axis === 'user' && key !== null
+			? `${getStudioUsageUserRoute(key)}${aiUsageHref(query, { axis: 'feature', filters: carried })}`
+			: aiUsageFilterHref(query, filterKey, key)
 	return (
 		<>
 			<Table>
@@ -82,7 +92,7 @@ export function AiUsageBreakdownTable({
 									) : (
 										<Link
 											className="relative underline-offset-4 hover:underline"
-											href={aiUsageFilterHref(query, filterKey, row.key)}
+											href={cellHref(row.key)}
 											scroll={false}
 										>
 											{row.label}

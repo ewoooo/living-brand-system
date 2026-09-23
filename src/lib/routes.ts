@@ -37,6 +37,14 @@ export function getStudioTemplateRoute(templateSlug: string) {
 	return `${routes.studio.template}/${templateSlug}`
 }
 
+/**
+ * 한 계정의 사용량. 🔴 여기만 숫자 id를 쓴다 — 대상이 콘텐츠가 아니라 사람이라 slug가 없다.
+ * 링크가 환경을 넘지 못하는 것은 위와 같은 한계이지만, 계정은 환경마다 다른 것이 정상이다.
+ */
+export function getStudioUsageUserRoute(userId: number | string) {
+	return `${routes.studio.usage}/${userId}`
+}
+
 export const legacyPageRedirects = [
 	{
 		source: '/studio',
