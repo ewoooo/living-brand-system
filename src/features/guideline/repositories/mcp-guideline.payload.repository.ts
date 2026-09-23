@@ -2,7 +2,7 @@ import type { PayloadRequest } from 'payload'
 import type { Guideline, Rule } from '@/payload-types'
 import { collectGuidelineCheckSources } from '../checks/collect-guideline-check-sources'
 import { formatCheckEvidence } from '../checks/format-check-evidence'
-import type { GuidelineSourceDocument } from '../sections/read-document'
+import type { GuidelineSourceDocument } from '../domain/reading/read-document'
 import { findPublishedUnifiedGuidelineCheckDocuments } from './published-guideline-checks.payload.repository'
 
 export interface McpGuidelineCheck {

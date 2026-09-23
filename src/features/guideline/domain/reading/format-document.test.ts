@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 import type { BrandIcon } from '@/payload-types'
-import { formatSectionForAgent } from './agent-format'
-import type { CmsCard, CmsSection } from './model'
+import type { CmsCard, CmsSection } from '../../sections/model'
+import { formatSectionForAgent } from './format-document'
 import { toGuidelineReadDocument } from './read-document'
 
 const figure: CmsCard = {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { formatGuidelineReadDocument } from '@/features/guideline/sections/agent-format'
-import { toGuidelineReadDocument } from '@/features/guideline/sections/read-document'
+import { formatGuidelineReadDocument } from '@/features/guideline/domain/reading/format-document'
+import { toGuidelineReadDocument } from '@/features/guideline/domain/reading/read-document'
 import {
 	findAgentGuidelineDocument,
 	findGuidelineSearchPhraseCandidates,

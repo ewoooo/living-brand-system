@@ -204,9 +204,9 @@ CMS 저장·UI 계약은 `containers → cards → display`를 유지합니다. 
 | --- | --- |
 | `sections/schema.ts`·`display-schema.ts` | CMS 저장·검증 |
 | `sections/model.ts` | 공통 타입·위계·파일 해석·자기 섹션 다운로드 |
-| `sections/read-document.ts` | `GuidelineReadDocument` 계약과 원본→문서 변환 |
-| `sections/read-visual.ts` | 활성 도판 입력과 지원 조작·동작 해석 |
-| `sections/agent-format.ts` | 읽기 모델→텍스트 표현 |
+| `domain/reading/read-document.ts` | `GuidelineReadDocument` 계약과 원본→문서 변환 |
+| `domain/reading/read-visual.ts` | 활성 도판 입력과 지원 조작·동작 해석 |
+| `domain/reading/format-document.ts` | 읽기 모델→텍스트 표현 |
 | `sections/projection.ts` | 기존 검색·검수 투영 |
 | `sections/render.tsx`·`display-render.tsx` | CMS→공통 표현 API 연결 |
 

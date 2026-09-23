@@ -1,3 +1,4 @@
+import { toGuidelineReadDocument } from '../domain/reading/read-document'
 import {
 	findPublishedMcpGuideline,
 	listPublishedMcpGuidelineChecks,
@@ -5,7 +6,6 @@ import {
 } from '../repositories/mcp-guideline.payload.repository'
 import { findPaletteCatalog } from '../repositories/palette.payload.repository'
 import { needsPaletteCatalog } from '../sections/model'
-import { toGuidelineReadDocument } from '../sections/read-document'
 
 export interface FindMcpGuidelineListInput {
 	limit?: number

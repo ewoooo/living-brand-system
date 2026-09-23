@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { formatGuidelineReadDocument } from '../domain/reading/format-document'
+import { toGuidelineReadDocument } from '../domain/reading/read-document'
 import {
 	findPublishedMcpGuideline,
 	listPublishedMcpGuidelineChecks,
 	listPublishedMcpGuidelineDocuments,
 } from '../repositories/mcp-guideline.payload.repository'
 import { findPaletteCatalog } from '../repositories/palette.payload.repository'
-import { formatGuidelineReadDocument } from '../sections/agent-format'
-import { toGuidelineReadDocument } from '../sections/read-document'
 import {
 	findMcpChecks,
 	findMcpGuideline,

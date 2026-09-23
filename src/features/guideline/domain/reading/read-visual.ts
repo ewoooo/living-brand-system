@@ -1,8 +1,8 @@
-import { WEIGHTS } from '../cards/displays/dynamics/brand-typeface'
-import { GUTTER_X, GUTTER_Y, MARGIN } from '../cards/displays/dynamics/layout-grid/manifest'
-import { GUIDE_LINE_WIDTH, guideColorOf } from '../cards/displays/guide-style'
-import { type PaletteCatalog, resolvePalette } from '../domain/contract/palette'
-import { type CmsCard, resolveColor, resolveFile } from './model'
+import { WEIGHTS } from '../../cards/displays/dynamics/brand-typeface'
+import { GUTTER_X, GUTTER_Y, MARGIN } from '../../cards/displays/dynamics/layout-grid/manifest'
+import { GUIDE_LINE_WIDTH, guideColorOf } from '../../cards/displays/guide-style'
+import { type CmsCard, resolveColor, resolveFile } from '../../sections/model'
+import { type PaletteCatalog, resolvePalette } from '../contract/palette'
 
 export type GuidelineReadControl = {
 	kind: 'toggle' | 'color'

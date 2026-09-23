@@ -1,8 +1,8 @@
 import { expect, it } from 'vitest'
 import type { ApplicationImage, BrandColor } from '@/payload-types'
-import type { PaletteCatalog } from '../domain/contract/palette'
-import { formatGuidelineReadDocument } from './agent-format'
-import type { CmsCard, CmsSection } from './model'
+import type { CmsCard, CmsSection } from '../../sections/model'
+import type { PaletteCatalog } from '../contract/palette'
+import { formatGuidelineReadDocument } from './format-document'
 import { type GuidelineSourceDocument, toGuidelineReadDocument } from './read-document'
 
 const image = {

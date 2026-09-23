@@ -1,7 +1,6 @@
 import type { GuidelineDocument, Rule } from '@/payload-types'
-import { formatBlockForAgent } from '../blocks/projection'
-import { collectGuidelineCheckSources } from '../checks/collect-guideline-check-sources'
-import type { PaletteCatalog } from '../domain/contract/palette'
+import { formatBlockForAgent } from '../../blocks/projection'
+import { collectGuidelineCheckSources } from '../../checks/collect-guideline-check-sources'
 import {
 	type CmsCard,
 	type CmsContainer,
@@ -11,7 +10,8 @@ import {
 	resolveFile,
 	sectionFiles,
 	withSectionHierarchy,
-} from './model'
+} from '../../sections/model'
+import type { PaletteCatalog } from '../contract/palette'
 import { type GuidelineReadAction, toReadVisual, visualInteractions } from './read-visual'
 
 export type GuidelineSourceDocument = Pick<

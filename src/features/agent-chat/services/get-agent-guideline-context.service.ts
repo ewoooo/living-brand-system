@@ -1,8 +1,8 @@
-import { formatGuidelineReadDocument } from '@/features/guideline/sections/agent-format'
+import { formatGuidelineReadDocument } from '@/features/guideline/domain/reading/format-document'
 import {
 	type GuidelineReadDocument,
 	toGuidelineReadDocument,
-} from '@/features/guideline/sections/read-document'
+} from '@/features/guideline/domain/reading/read-document'
 import {
 	type AgentGuidelineSearchCandidate,
 	findAgentGuidelineDocument,
