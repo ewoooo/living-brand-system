@@ -39,6 +39,8 @@ import {
 	ImageGenerationUnavailableError,
 	normalizeImageProfilePrompt,
 } from '@/features/image-generation/services/normalize-image-profile-prompt.service'
+import type { AiUsageSource, AiUsageStudio, AiUsageTokens } from '@/modules/ai-usage/ai-usage'
+import { recordAiUsage } from '@/modules/ai-usage/repositories/ai-usage.payload.repository'
 import { acceptsControllerExecutionValue } from '@/modules/studio-controller/controller-definition'
 import { IMAGE_REFERENCE_MAX_BYTES } from '../domain/reference-image/contract'
 
@@ -165,11 +167,17 @@ export async function generateImages({
 	imageSize,
 	camera,
 	reference,
+	studio,
 }: {
 	userInput: string
 	profileId: number
 	user: unknown
 	count: number
+	/**
+	 * 호출이 들어온 스튜디오 화면. 🔴 서비스가 추측할 수 없다 — 같은 함수를 이미지 스튜디오·
+	 *    admin·MCP·챗 도구가 부른다. 스튜디오 밖이면 넘기지 않는다.
+	 */
+	studio?: AiUsageStudio
 	/** 템플릿 이미지 슬롯 박스에서 유도한 비율 오버라이드 — 없으면 프로파일 비율. */
 	aspectRatio?: ImageAspectRatio
 	/** 스튜디오 해상도 선택 오버라이드 — 없으면 프로파일 해상도. */
@@ -202,16 +210,15 @@ export async function generateImages({
 	const inherited = resolved?.prompt
 	if (!trimmed && !inherited) throw new InvalidImageControllerInputError('prompt')
 
-	const composed = trimmed
-		? JSON.stringify(
-				(
-					await normalizeImageProfilePrompt({
-						profilePrompt: profile.profilePrompt,
-						userPromptNormalization: profile.userPromptNormalization ?? [],
-						userPrompt: effective.userInput,
-					})
-				).finalPrompt,
-			)
+	const normalization = trimmed
+		? await normalizeImageProfilePrompt({
+				profilePrompt: profile.profilePrompt,
+				userPromptNormalization: profile.userPromptNormalization ?? [],
+				userPrompt: effective.userInput,
+			})
+		: null
+	const composed = normalization
+		? JSON.stringify(normalization.finalPrompt)
 		: (inherited as { effective: string }).effective
 
 	const prompt = resolvedCamera
@@ -225,8 +232,8 @@ export async function generateImages({
 		imageSize: effective.imageSize,
 		...(resolved ? { seedImage: resolved.data } : {}),
 	})
-	const generated = await runImageGeneration(plan, user)
-	return storeProfileGeneration(generated, {
+	const { generated, usage } = await runImageGeneration(plan, user)
+	const stored = await storeProfileGeneration(generated, {
 		inputPrompt: trimmed ? userInput : (inherited as { input: string }).input,
 		// 저장 메타데이터의 비율·해상도는 실제 생성에 쓴 plan이 정본 — 오버라이드 시 프로파일 값과 다르다.
 		profile: {
@@ -238,6 +245,36 @@ export async function generateImages({
 		...(resolved?.generatedImageId ? { sourceImage: resolved.generatedImageId } : {}),
 		user,
 	})
+
+	// 한 요청이 모델을 둘 쓴다(프롬프트 정규화 + 이미지 생성). 단가가 다르므로 모델별로 따로 남긴다.
+	const createdBy = getAuthenticatedUserId(user)
+	const source = toUsageSource(stored)
+	if (normalization?.usage) {
+		await recordAiUsage({
+			createdBy,
+			feature: 'image-generation',
+			model: normalization.usage.model,
+			...normalization.usage.tokens,
+			...(studio ? { studio } : {}),
+			...(source ? { source } : {}),
+		})
+	}
+	await recordAiUsage({
+		createdBy,
+		feature: 'image-generation',
+		model: generated.model,
+		...usage,
+		...(studio ? { studio } : {}),
+		...(source ? { source } : {}),
+	})
+
+	return stored
+}
+
+/** 생성 결과의 첫 장을 작업 기록으로 삼는다 — 한 요청의 여러 장은 같은 호출이 만든 것이다. */
+function toUsageSource(stored: GeneratedImages): AiUsageSource | null {
+	const id = stored.generatedImages?.[0]?.id
+	return typeof id === 'number' ? { relationTo: 'generated-images', value: id } : null
 }
 
 /**
@@ -255,7 +292,18 @@ export async function generateImagesWithSettings({
 	imageSize: ImageOutputSize
 	user: unknown
 }): Promise<GeneratedImages> {
-	return runImageGeneration(planImageGenerationFromSettings(input), user)
+	const { generated, usage } = await runImageGeneration(
+		planImageGenerationFromSettings(input),
+		user,
+	)
+	// 관리자 미리보기는 결과를 저장하지 않으므로 이어 줄 작업 기록이 없다. 사용량은 그래도 센다.
+	await recordAiUsage({
+		createdBy: getAuthenticatedUserId(user),
+		feature: 'image-generation',
+		model: generated.model,
+		...usage,
+	})
+	return generated
 }
 
 /**
@@ -371,7 +419,7 @@ function assertSelectInput(
 async function runImageGeneration(
 	plan: ImageGenerationPlan,
 	user: unknown,
-): Promise<GeneratedImages> {
+): Promise<{ generated: GeneratedImages; usage: AiUsageTokens }> {
 	const {
 		prompt,
 		count,
@@ -389,7 +437,7 @@ async function runImageGeneration(
 
 	const release = acquireImageGenerationSlot(getAuthenticatedUserId(user))
 	try {
-		const generation = await generateBrandImages({
+		const { usage, ...generation } = await generateBrandImages({
 			prompt,
 			count,
 			modelPreset,
@@ -397,12 +445,16 @@ async function runImageGeneration(
 			imageSize,
 			...(seedImage ? { seedImage } : {}),
 		})
+		// usage는 ImageGenerationResult(클라이언트 응답 계약) 밖에 둔다 — 브라우저로 보낼 값이 아니다.
 		return {
-			...generation,
-			aspectRatio,
-			imageSize,
-			prompt,
-			...(profileId ? { profileId, profileName } : {}),
+			generated: {
+				...generation,
+				aspectRatio,
+				imageSize,
+				prompt,
+				...(profileId ? { profileId, profileName } : {}),
+			},
+			usage,
 		}
 	} finally {
 		release()

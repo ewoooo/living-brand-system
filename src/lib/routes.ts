@@ -10,6 +10,7 @@ export const routes = {
 		mcp: '/studio/mcp',
 		review: '/studio/review',
 		template: '/studio/template',
+		usage: '/studio/usage',
 	},
 } as const
 

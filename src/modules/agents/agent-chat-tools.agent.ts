@@ -182,6 +182,9 @@ export function getAgentTools() {
 						profileId,
 						user: context.user,
 						count: count ?? 2,
+						// 🔴 챗은 스튜디오 밖에서도 열린다(전역 헤더 챗). 어느 화면에서 띄운
+						//    챗인지 도구는 알 수 없으므로 studio를 넘기지 않는다 — 스튜디오를
+						//    찍으면 집계가 거짓이 된다.
 					})
 				} catch (error) {
 					// 한도 초과는 크래시 대신 기존 실패 계약({status, message})으로 모델에 알린다.

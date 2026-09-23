@@ -128,6 +128,8 @@ describe('POST /api/generate-image', () => {
 			userInput: 'sample',
 			count: 1,
 			profileId: 5,
+			// 이 라우트의 사용량은 언제나 이미지 스튜디오로 집계된다.
+			studio: 'image',
 			user: { id: 1 },
 		})
 	})
@@ -143,6 +145,8 @@ describe('POST /api/generate-image', () => {
 			count: 1,
 			profileId: 5,
 			aspectRatio: '16:9',
+			// 이 라우트의 사용량은 언제나 이미지 스튜디오로 집계된다.
+			studio: 'image',
 			user: { id: 1 },
 		})
 	})
@@ -158,6 +162,8 @@ describe('POST /api/generate-image', () => {
 			count: 1,
 			profileId: 5,
 			imageSize: '4K',
+			// 이 라우트의 사용량은 언제나 이미지 스튜디오로 집계된다.
+			studio: 'image',
 			user: { id: 1 },
 		})
 	})

@@ -80,6 +80,8 @@ export async function POST(request: Request) {
 				profileId,
 				user,
 				count,
+				// 이 라우트의 유일한 화면이 이미지 스튜디오다.
+				studio: 'image',
 				aspectRatio,
 				imageSize,
 				...(camera ? { camera } : {}),
